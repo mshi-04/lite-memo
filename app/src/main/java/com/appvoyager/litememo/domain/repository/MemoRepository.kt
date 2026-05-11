@@ -12,6 +12,7 @@ interface MemoRepository {
 
     suspend fun saveMemo(memo: Memo)
 
-    suspend fun deleteMemo(id: MemoId)
+    suspend fun saveMemoWithTagCheck(memo: Memo): Result<Unit>
 
+    suspend fun deleteMemo(id: MemoId)
 }

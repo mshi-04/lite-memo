@@ -5,5 +5,4 @@ import com.appvoyager.litememo.domain.model.value.TagId
 interface TagIdProvider {
 
     fun newTagId(): TagId
-
 }

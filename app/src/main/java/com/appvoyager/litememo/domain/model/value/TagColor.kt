@@ -11,5 +11,4 @@ value class TagColor(val argb: Long) {
         private const val MIN_ARGB = 0x00000000L
         private const val MAX_ARGB = 0xFFFFFFFFL
     }
-
 }

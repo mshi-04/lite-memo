@@ -7,5 +7,4 @@ import com.appvoyager.litememo.domain.repository.TagRepository
 class GetTagUseCase(private val tagRepository: TagRepository) {
 
     suspend operator fun invoke(id: TagId): Tag? = tagRepository.getTag(id)
-
 }

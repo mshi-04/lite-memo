@@ -16,4 +16,5 @@ interface TagRepository {
 
     suspend fun deleteTag(id: TagId)
 
+    suspend fun deleteTagWithMemoReferences(id: TagId)
 }

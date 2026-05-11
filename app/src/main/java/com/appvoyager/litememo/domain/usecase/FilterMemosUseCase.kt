@@ -11,5 +11,4 @@ class FilterMemosUseCase {
         MemoFilter.Important -> memos.filter { it.isImportant }
         is MemoFilter.ByTag -> memos.filter { filter.tagId in it.tagIds }
     }
-
 }

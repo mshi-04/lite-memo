@@ -17,9 +17,11 @@ data class Memo(
 ) {
 
     init {
+        require(updatedAt.value >= createdAt.value) {
+            "Memo updatedAt must be greater than or equal to createdAt."
+        }
         require(title.value.isNotBlank() || body.value.isNotBlank()) {
             "Memo title and body must not both be blank."
         }
     }
-
 }

@@ -7,5 +7,4 @@ import kotlinx.coroutines.flow.Flow
 class ObserveTagsUseCase(private val tagRepository: TagRepository) {
 
     operator fun invoke(): Flow<List<Tag>> = tagRepository.observeTags()
-
 }

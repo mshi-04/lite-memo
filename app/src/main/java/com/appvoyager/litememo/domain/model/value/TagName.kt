@@ -10,5 +10,4 @@ value class TagName private constructor(val value: String) {
             return TagName(value)
         }
     }
-
 }
