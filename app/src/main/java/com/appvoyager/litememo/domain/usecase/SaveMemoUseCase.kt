@@ -2,28 +2,26 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
-import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
+import com.appvoyager.litememo.domain.repository.TagRepository
 
 class SaveMemoUseCase(
     private val memoRepository: MemoRepository,
+    private val tagRepository: TagRepository,
     private val memoIdProvider: MemoIdProvider,
     private val currentTimeProvider: CurrentTimeProvider
 ) {
 
-    suspend operator fun invoke(command: SaveMemoCommand): Result<Memo> {
+    suspend operator fun invoke(command: SaveMemoCommand): Memo {
         val now = currentTimeProvider.now()
-        val existingMemo = command.id?.let { id ->
-            memoRepository.getMemo(id)
-                ?: return Result.failure(SaveMemoError.MemoNotFound(id))
-        }
-
+        val existingMemo = command.id?.let { id -> memoRepository.getMemo(id) }
         val tagIds = command.tagIds.distinct()
+        validateTagIds(tagIds)
         val memo = Memo(
-            id = existingMemo?.id ?: memoIdProvider.newMemoId(),
+            id = existingMemo?.id ?: command.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
             createdAt = existingMemo?.createdAt ?: now,
@@ -32,18 +30,17 @@ class SaveMemoUseCase(
             isImportant = command.isImportant
         )
 
-        return memoRepository.saveMemoWithTagCheck(memo)
-            .fold(
-                onSuccess = { Result.success(memo) },
-                onFailure = { Result.failure(it) }
-            )
+        memoRepository.saveMemo(memo)
+        return memo
     }
-}
 
-sealed class SaveMemoError(message: String) : RuntimeException(message) {
+    private suspend fun validateTagIds(tagIds: List<TagId>) {
+        if (tagIds.isEmpty()) return
+        val existingIds = tagRepository.getTagsByIds(tagIds).map { it.id }.toSet()
+        val missingIds = tagIds.filterNot { it in existingIds }
+        require(missingIds.isEmpty()) {
+            "Memo references tags that do not exist: ${missingIds.joinToString { it.value }}."
+        }
+    }
 
-    data class MemoNotFound(val id: MemoId) : SaveMemoError("Memo not found: ${id.value}")
-
-    data class TagsNotFound(val ids: List<TagId>) :
-        SaveMemoError("Memo references tags that do not exist: ${ids.joinToString { it.value }}.")
 }

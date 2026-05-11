@@ -6,4 +6,5 @@ value class TimestampMillis(val value: Long) {
     init {
         require(value >= 0L) { "TimestampMillis must not be negative." }
     }
+
 }

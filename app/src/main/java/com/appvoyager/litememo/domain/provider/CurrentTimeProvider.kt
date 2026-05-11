@@ -5,4 +5,5 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 interface CurrentTimeProvider {
 
     fun now(): TimestampMillis
+
 }

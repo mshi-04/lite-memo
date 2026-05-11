@@ -24,4 +24,5 @@ data class Memo(
             "Memo title and body must not both be blank."
         }
     }
+
 }

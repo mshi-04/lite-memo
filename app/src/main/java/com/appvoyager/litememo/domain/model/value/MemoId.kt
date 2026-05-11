@@ -9,4 +9,5 @@ value class MemoId private constructor(val value: String) {
             return MemoId(rawValue.trim())
         }
     }
+
 }
