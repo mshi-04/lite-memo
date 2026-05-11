@@ -1,0 +1,122 @@
+<svg width="760" height="900" viewBox="0 0 760 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="phoneShadow" x="48" y="48" width="424" height="844" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .jp { font-family: "Noto Sans JP", "Inter", sans-serif; }
+      .title { font-weight: 700; font-size: 22px; fill: #1D1B20; }
+      .headline { font-weight: 700; font-size: 26px; fill: #1D1B20; }
+      .body { font-weight: 400; font-size: 13px; fill: #49454F; }
+      .label { font-weight: 600; font-size: 12px; fill: #79747E; }
+      .small { font-weight: 500; font-size: 11px; fill: #79747E; }
+    </style>
+  </defs>
+
+  <rect width="760" height="900" fill="#F7F2FA"/>
+
+  <g filter="url(#phoneShadow)">
+    <rect x="80" y="60" width="360" height="800" rx="28" fill="#FFFBFE" stroke="#D0C4D9"/>
+    <clipPath id="phoneClip"><rect x="80" y="60" width="360" height="800" rx="28"/></clipPath>
+    <g clip-path="url(#phoneClip)">
+      <rect x="80" y="60" width="360" height="800" fill="#FFFBFE"/>
+
+      <text class="jp small" x="104" y="79" fill="#1D1B20">18:52</text>
+      <path d="M374 76h4M382 72v8M388 69v11" stroke="#1D1B20" stroke-width="1.5" stroke-linecap="round"/>
+      <rect x="400" y="68" width="22" height="10" rx="2" stroke="#1D1B20" stroke-width="1.4"/>
+      <rect x="423" y="71" width="2" height="4" rx="1" fill="#1D1B20"/>
+      <rect x="403" y="71" width="16" height="4" rx="1" fill="#1D1B20"/>
+
+      <rect x="80" y="84" width="360" height="64" fill="#FFFBFE"/>
+      <text class="jp title" x="100" y="124">LiteMemo</text>
+      <circle cx="360" cy="116" r="8" stroke="#49454F" stroke-width="2"/>
+      <path d="M366 122l7 7" stroke="#49454F" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="404" cy="109" r="2" fill="#49454F"/>
+      <circle cx="404" cy="116" r="2" fill="#49454F"/>
+      <circle cx="404" cy="123" r="2" fill="#49454F"/>
+      <rect x="80" y="147" width="360" height="1" fill="#E7E0EC"/>
+
+      <text class="jp label" x="96" y="124" transform="translate(0 62)" fill="#6750A4">おかえりなさい</text>
+      <text class="jp headline" x="96" y="231">最近のメモ</text>
+
+      <rect x="96" y="248" width="328" height="92" rx="8" fill="#F2EAFE"/>
+      <text class="jp" x="114" y="283" font-size="20" font-weight="700" fill="#21005D">4 件のメモ</text>
+      <text class="jp body" x="114" y="312" fill="#4F378B">未整理 2件 / 重要 1件</text>
+      <rect x="334" y="264" width="72" height="60" rx="8" fill="#FFFFFF" opacity="0.72"/>
+      <text class="jp" x="370" y="293" text-anchor="middle" font-size="24" font-weight="700" fill="#6750A4">2</text>
+      <text class="jp small" x="370" y="315" text-anchor="middle">今日</text>
+
+      <rect x="96" y="358" width="78" height="34" rx="17" fill="#EADDFF"/>
+      <text class="jp label" x="135" y="380" text-anchor="middle" fill="#4F378B">すべて</text>
+      <rect x="184" y="358" width="82" height="34" rx="17" fill="#F4EFF7"/>
+      <text class="jp label" x="225" y="380" text-anchor="middle" fill="#49454F">未整理</text>
+      <rect x="276" y="358" width="70" height="34" rx="17" fill="#F4EFF7"/>
+      <text class="jp label" x="311" y="380" text-anchor="middle" fill="#49454F">重要</text>
+
+      <g>
+        <rect x="96" y="408" width="328" height="100" rx="8" fill="#FFFFFF" stroke="#E7E0EC"/>
+        <rect x="96" y="408" width="4" height="100" rx="2" fill="#6750A4"/>
+        <text class="jp" x="114" y="437" font-size="16" font-weight="700" fill="#1D1B20">買い物リスト</text>
+        <text class="jp body" x="114" y="466">卵、牛乳、コーヒー豆。帰りに駅前で買う。</text>
+        <rect x="114" y="480" width="74" height="20" rx="10" fill="#F3EDF7"/>
+        <text class="jp small" x="151" y="494" text-anchor="middle" fill="#6750A4">生活</text>
+        <text class="jp small" x="390" y="494" text-anchor="end">18:12</text>
+      </g>
+
+      <g>
+        <rect x="96" y="520" width="328" height="100" rx="8" fill="#FFFFFF" stroke="#E7E0EC"/>
+        <rect x="96" y="520" width="4" height="100" rx="2" fill="#B3261E"/>
+        <text class="jp" x="114" y="549" font-size="16" font-weight="700" fill="#1D1B20">会議メモ</text>
+        <text class="jp body" x="114" y="578">次回までに画面構成と保存方式を確認する。</text>
+        <rect x="114" y="592" width="74" height="20" rx="10" fill="#F3EDF7"/>
+        <text class="jp small" x="151" y="606" text-anchor="middle" fill="#6750A4">仕事</text>
+        <text class="jp small" x="390" y="606" text-anchor="end">昨日</text>
+      </g>
+
+      <g>
+        <rect x="96" y="632" width="328" height="100" rx="8" fill="#FFFFFF" stroke="#E7E0EC"/>
+        <rect x="96" y="632" width="4" height="100" rx="2" fill="#006D3B"/>
+        <text class="jp" x="114" y="661" font-size="16" font-weight="700" fill="#1D1B20">アプリのアイデア</text>
+        <text class="jp body" x="114" y="690">ワンタップで下書き、あとから整理できるメモ。</text>
+        <rect x="114" y="704" width="74" height="20" rx="10" fill="#F3EDF7"/>
+        <text class="jp small" x="151" y="718" text-anchor="middle" fill="#6750A4">案</text>
+        <text class="jp small" x="390" y="718" text-anchor="end">5/10</text>
+      </g>
+
+      <rect x="364" y="692" width="56" height="56" rx="16" fill="#6750A4"/>
+      <path d="M392 710v20M382 720h20" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+
+      <rect x="80" y="764" width="360" height="96" fill="#FFFBFE"/>
+      <rect x="80" y="764" width="360" height="1" fill="#E7E0EC"/>
+      <rect x="112" y="776" width="56" height="32" rx="16" fill="#EADDFF"/>
+      <path d="M140 784l-16 13v18h10v-10h12v10h10v-18l-16-13z" fill="#4F378B"/>
+      <text class="jp label" x="140" y="834" text-anchor="middle" fill="#4F378B">ホーム</text>
+      <rect x="247" y="780" width="26" height="26" rx="3" stroke="#79747E" stroke-width="2"/>
+      <path d="M253 777v7M267 777v7M248 789h24" stroke="#79747E" stroke-width="2" stroke-linecap="round"/>
+      <text class="jp label" x="260" y="834" text-anchor="middle">カレンダー</text>
+      <path d="M380 783l3 7 7 2-7 3-3 7-3-7-7-3 7-2 3-7z" stroke="#79747E" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="380" cy="792" r="3" fill="#79747E"/>
+      <text class="jp label" x="380" y="834" text-anchor="middle">設定</text>
+      <rect x="220" y="842" width="80" height="4" rx="2" fill="#1D1B20" opacity="0.28"/>
+    </g>
+  </g>
+
+  <rect x="480" y="60" width="280" height="318" rx="8" fill="#FFFFFF" stroke="#E7E0EC"/>
+  <text class="jp" x="500" y="100" font-size="18" font-weight="700" fill="#1D1B20">Home tab spec</text>
+  <text class="jp body" x="500" y="138">
+    <tspan x="500" dy="0">Android / Material 3</tspan>
+    <tspan x="500" dy="22">Size: 360 x 800</tspan>
+    <tspan x="500" dy="22">Top bar: LiteMemo + search + menu</tspan>
+    <tspan x="500" dy="22">Bottom nav: ホーム / カレンダー / 設定</tspan>
+    <tspan x="500" dy="22">Primary action: メモ作成 FAB</tspan>
+    <tspan x="500" dy="22">Home: summary + filters + recent notes</tspan>
+  </text>
+  <rect x="500" y="272" width="44" height="44" rx="8" fill="#6750A4"/>
+  <rect x="560" y="272" width="44" height="44" rx="8" fill="#EADDFF"/>
+  <rect x="620" y="272" width="44" height="44" rx="8" fill="#FFFBFE" stroke="#E7E0EC"/>
+  <rect x="680" y="272" width="44" height="44" rx="8" fill="#E7E0EC"/>
+  <text class="jp small" x="522" y="338" text-anchor="middle">Primary</text>
+  <text class="jp small" x="582" y="338" text-anchor="middle">Container</text>
+  <text class="jp small" x="642" y="338" text-anchor="middle">Surface</text>
+  <text class="jp small" x="702" y="338" text-anchor="middle">Outline</text>
+</svg>
