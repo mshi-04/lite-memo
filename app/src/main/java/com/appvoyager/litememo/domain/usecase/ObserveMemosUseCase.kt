@@ -9,4 +9,5 @@ class ObserveMemosUseCase(private val memoRepository: MemoRepository) {
 
     operator fun invoke(): Flow<List<Memo>> = memoRepository.observeMemos()
         .map { memos -> memos.sortedByDescending { it.updatedAt.value } }
+
 }

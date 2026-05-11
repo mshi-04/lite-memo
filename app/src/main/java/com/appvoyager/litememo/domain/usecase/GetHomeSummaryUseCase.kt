@@ -9,7 +9,7 @@ import java.time.ZoneId
 
 class GetHomeSummaryUseCase(
     private val currentTimeProvider: CurrentTimeProvider,
-    private val zoneId: ZoneId
+    private val zoneId: ZoneId = ZoneId.systemDefault()
 ) {
 
     operator fun invoke(memos: List<Memo>): HomeSummary {
@@ -28,4 +28,5 @@ class GetHomeSummaryUseCase(
 
     private fun TimestampMillis.toLocalDate() =
         Instant.ofEpochMilli(value).atZone(zoneId).toLocalDate()
+
 }

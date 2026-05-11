@@ -5,5 +5,7 @@ import com.appvoyager.litememo.domain.provider.TagIdProvider
 import java.util.UUID
 
 class UuidTagIdProvider : TagIdProvider {
+
     override fun newTagId(): TagId = TagId(UUID.randomUUID().toString())
+
 }

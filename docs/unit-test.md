@@ -39,8 +39,8 @@ import org.junit.jupiter.api.Test
 
 class MemoTitleTest {
     @Test
-    fun createReturnsTitleWhenValueIsValid() {
-        val title = MemoTitle.create("shopping")
+    fun constructorReturnsTrimmedValueWhenInputHasSurroundingWhitespace() {
+        val title = MemoTitle("  shopping  ")
 
         assertEquals("shopping", title.value)
     }
@@ -56,6 +56,6 @@ class MemoTitleTest {
 ## AAA Comments
 
 - テストは Arrange / Act / Assert の流れで書く
-- 流れが読み取りにくい場合は、`// Arrange`、`// Act`、`// Assert` コメントを使う
-- テストが短く明らかな場合は、AAA コメントを省略してよい
-- AAA コメントを入れる場合は、各ブロックの責務を混ぜない
+- 基本は `// Arrange`、`// Act`、`// Assert` コメントを入れる
+- 各ブロックの責務を混ぜない
+- Arrange が不要な場合（準備するものがない）は `// Arrange` を省略してよい
