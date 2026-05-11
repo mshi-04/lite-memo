@@ -40,8 +40,13 @@ import org.junit.jupiter.api.Test
 class MemoTitleTest {
     @Test
     fun constructorReturnsTrimmedValueWhenInputHasSurroundingWhitespace() {
-        val title = MemoTitle("  shopping  ")
+        // Arrange
+        val input = "  shopping  "
 
+        // Act
+        val title = MemoTitle(input)
+
+        // Assert
         assertEquals("shopping", title.value)
     }
 }

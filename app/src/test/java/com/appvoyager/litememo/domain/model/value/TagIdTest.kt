@@ -23,4 +23,12 @@ class TagIdTest {
         }
     }
 
+    @Test
+    fun constructorThrowsWhenValueIsWhitespace() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            TagId("   ")
+        }
+    }
+
 }

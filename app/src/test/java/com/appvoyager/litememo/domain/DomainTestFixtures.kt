@@ -112,14 +112,26 @@ class QueueMemoIdProvider(ids: List<MemoId> = listOf(MemoId("memo-1"))) : MemoId
 
     private val memoIds = ids.toMutableList()
 
-    override fun newMemoId(): MemoId = memoIds.removeAt(0)
+    override fun newMemoId(): MemoId {
+        if (memoIds.isEmpty()) {
+            throw IllegalStateException("No more MemoId available in QueueMemoIdProvider.")
+        }
+
+        return memoIds.removeAt(0)
+    }
 }
 
 class QueueTagIdProvider(ids: List<TagId> = listOf(TagId("tag-1"))) : TagIdProvider {
 
     private val tagIds = ids.toMutableList()
 
-    override fun newTagId(): TagId = tagIds.removeAt(0)
+    override fun newTagId(): TagId {
+        if (tagIds.isEmpty()) {
+            throw IllegalStateException("No more TagId available in QueueTagIdProvider.")
+        }
+
+        return tagIds.removeAt(0)
+    }
 }
 
 class MutableTimeProvider(var current: TimestampMillis = TimestampMillis(1000L)) :
