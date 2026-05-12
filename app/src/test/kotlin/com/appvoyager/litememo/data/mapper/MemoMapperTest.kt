@@ -113,6 +113,7 @@ class MemoMapperTest {
                 body = MemoBody("Body"),
                 createdAt = TimestampMillis(1000L),
                 updatedAt = TimestampMillis(2000L),
+                tagIds = emptyList(),
                 isImportant = true
             ),
             memo

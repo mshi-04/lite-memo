@@ -71,6 +71,7 @@ class RoomTagRepositoryTest {
         assertEquals(emptyList<Tag>(), tags)
     }
 
+    // 空リスト時に不要なDBクエリを発行しない最適化を検証する
     @Test
     fun getTagsByIdsDoesNotCallDaoWhenIdsAreEmpty() = runBlocking {
         // Arrange

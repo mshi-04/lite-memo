@@ -10,6 +10,7 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -122,15 +123,20 @@ class RoomMemoRepositoryTest {
         var deletedMemoId: String? = null
 
         override fun observeMemos(): Flow<List<MemoEntity>> =
-            MutableStateFlow(memosWithTagRefs.value.map { it.memo })
+            memosWithTagRefs.map { it.map { memoWithTagRefs -> memoWithTagRefs.memo } }
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
 
         override fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>> =
-            MutableStateFlow(memosWithTagRefs.value.flatMap { it.tagRefs })
+            memosWithTagRefs.map { it.flatMap { memoWithTagRefs -> memoWithTagRefs.tagRefs } }
 
         override suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs? =
             memosWithTagRefs.value.firstOrNull { it.memo.id == id }
+
+        override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
+            savedMemo = memo
+            savedTagRefs = tagRefs
+        }
 
         override suspend fun upsertMemo(memo: MemoEntity) {
             savedMemo = memo
