@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 class MemoDaoTest {
 
     @Test
-    fun upsertMemoWithTagsThrowsBeforeWritingWhenTagRefsReferenceAnotherMemo() = runBlocking {
+    fun upsertMemoWithTagsThrowsBeforeWritingWhenTagRefsReferenceAnotherMemo() {
         // Arrange
         val dao = RecordingMemoDao()
         val memo = memoEntity(id = "memo-1")
