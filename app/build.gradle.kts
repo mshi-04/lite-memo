@@ -1,5 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ktlint)
 }
@@ -52,6 +55,10 @@ ktlint {
     outputToConsole.set(true)
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -64,9 +71,18 @@ dependencies {
     // AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)
+
+    // DI
+    implementation(libs.hilt.android)
+
+    // Annotation processors
+    ksp(libs.androidx.room.compiler)
+    ksp(libs.hilt.compiler)
 
     // Unit test
     testImplementation(libs.junit.jupiter.api)
