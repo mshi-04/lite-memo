@@ -7,7 +7,6 @@ import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toTagRefs
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -39,10 +38,6 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
 
     override suspend fun deleteMemo(id: MemoId) {
         memoDao.deleteMemo(id.value)
-    }
-
-    override suspend fun removeTagFromMemos(tagId: TagId) {
-        memoDao.deleteTagRefsByTagId(tagId.value)
     }
 
 }

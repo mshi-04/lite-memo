@@ -17,11 +17,13 @@ class SaveMemoUseCase(
 
     suspend operator fun invoke(command: SaveMemoCommand): Memo {
         val now = currentTimeProvider.now()
-        val existingMemo = command.id?.let { id -> memoRepository.getMemo(id) }
+        val existingMemo = command.id?.let { id ->
+            requireNotNull(memoRepository.getMemo(id)) { "Memo not found: ${id.value}" }
+        }
         val tagIds = command.tagIds.distinct()
         validateTagIds(tagIds)
         val memo = Memo(
-            id = existingMemo?.id ?: command.id ?: memoIdProvider.newMemoId(),
+            id = existingMemo?.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
             createdAt = existingMemo?.createdAt ?: now,

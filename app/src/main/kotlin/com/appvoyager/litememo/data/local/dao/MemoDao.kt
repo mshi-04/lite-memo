@@ -37,9 +37,6 @@ interface MemoDao {
     @Query("DELETE FROM memos WHERE id = :id")
     suspend fun deleteMemo(id: String)
 
-    @Query("DELETE FROM memo_tag_refs WHERE tagId = :tagId")
-    suspend fun deleteTagRefsByTagId(tagId: String)
-
     @Transaction
     suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
         upsertMemo(memo)

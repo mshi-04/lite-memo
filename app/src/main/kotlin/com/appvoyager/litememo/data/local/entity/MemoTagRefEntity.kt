@@ -17,7 +17,8 @@ import androidx.room.Index
         ForeignKey(
             entity = TagEntity::class,
             parentColumns = ["id"],
-            childColumns = ["tagId"]
+            childColumns = ["tagId"],
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
@@ -25,8 +26,4 @@ import androidx.room.Index
         Index(value = ["tagId"])
     ]
 )
-data class MemoTagRefEntity(
-    val memoId: String,
-    val tagId: String,
-    val position: Int
-)
+data class MemoTagRefEntity(val memoId: String, val tagId: String, val position: Int)

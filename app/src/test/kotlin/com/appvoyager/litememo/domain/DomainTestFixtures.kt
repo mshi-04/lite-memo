@@ -68,12 +68,10 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     }
 
     fun currentMemos(): List<Memo> = memos.value
+
 }
 
-class FakeTagRepository(
-    initialTags: List<Tag> = emptyList(),
-    private val memoRepository: FakeMemoRepository? = null
-) : TagRepository {
+class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
 
     private val tags = MutableStateFlow(initialTags)
     val savedTags = mutableListOf<Tag>()
@@ -96,16 +94,8 @@ class FakeTagRepository(
         tags.value = tags.value.filterNot { it.id == id }
     }
 
-    override suspend fun deleteTagWithMemoReferences(id: TagId) {
-        deleteTag(id)
-        memoRepository?.currentMemos()
-            ?.filter { memo -> id in memo.tagIds }
-            ?.forEach { memo ->
-                memoRepository.saveMemo(memo.copy(tagIds = memo.tagIds.filterNot { it == id }))
-            }
-    }
-
     fun currentTags(): List<Tag> = tags.value
+
 }
 
 class QueueMemoIdProvider(ids: List<MemoId> = listOf(MemoId("memo-1"))) : MemoIdProvider {
@@ -132,6 +122,7 @@ class QueueTagIdProvider(ids: List<TagId> = listOf(TagId("tag-1"))) : TagIdProvi
 
         return tagIds.removeAt(0)
     }
+
 }
 
 class MutableTimeProvider(var current: TimestampMillis = TimestampMillis(1000L)) :

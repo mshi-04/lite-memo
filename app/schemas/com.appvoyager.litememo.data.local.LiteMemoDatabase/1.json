@@ -90,7 +90,7 @@
       },
       {
         "tableName": "memo_tag_refs",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`memoId` TEXT NOT NULL, `tagId` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`memoId`, `tagId`), FOREIGN KEY(`memoId`) REFERENCES `memos`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`memoId` TEXT NOT NULL, `tagId` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`memoId`, `tagId`), FOREIGN KEY(`memoId`) REFERENCES `memos`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "memoId",
@@ -152,7 +152,7 @@
           },
           {
             "table": "tags",
-            "onDelete": "NO ACTION",
+            "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
               "tagId"
