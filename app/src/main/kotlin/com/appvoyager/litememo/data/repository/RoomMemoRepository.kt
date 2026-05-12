@@ -18,8 +18,8 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
     }
 
     override suspend fun getMemo(id: MemoId): Memo? {
-        val memo = memoDao.getMemo(id.value) ?: return null
-        return memo.toDomain(memoDao.getTagRefsForMemo(id.value))
+        val memo = memoDao.getMemoWithTagRefs(id.value) ?: return null
+        return memo.toDomain()
     }
 
     override suspend fun saveMemo(memo: Memo) {

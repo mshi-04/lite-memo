@@ -24,11 +24,9 @@ interface MemoDao {
     @Query("SELECT * FROM memo_tag_refs ORDER BY memoId ASC, position ASC")
     fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>>
 
+    @Transaction
     @Query("SELECT * FROM memos WHERE id = :id")
-    suspend fun getMemo(id: String): MemoEntity?
-
-    @Query("SELECT * FROM memo_tag_refs WHERE memoId = :memoId ORDER BY position ASC")
-    suspend fun getTagRefsForMemo(memoId: String): List<MemoTagRefEntity>
+    suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs?
 
     @Upsert
     suspend fun upsertMemo(memo: MemoEntity)
