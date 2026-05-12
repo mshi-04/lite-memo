@@ -42,6 +42,10 @@ interface MemoDao {
 
     @Transaction
     suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
+        require(tagRefs.all { it.memoId == memo.id }) {
+            "All tagRefs must reference memoId=${memo.id}."
+        }
+
         upsertMemo(memo)
         deleteTagRefsForMemo(memo.id)
         if (tagRefs.isNotEmpty()) {
