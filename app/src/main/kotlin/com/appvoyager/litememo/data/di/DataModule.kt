@@ -50,12 +50,15 @@ object DataModule {
     fun provideTagRepository(repository: RoomTagRepository): TagRepository = repository
 
     @Provides
+    @Singleton
     fun provideCurrentTimeProvider(): CurrentTimeProvider = SystemCurrentTimeProvider()
 
     @Provides
+    @Singleton
     fun provideMemoIdProvider(): MemoIdProvider = UuidMemoIdProvider()
 
     @Provides
+    @Singleton
     fun provideTagIdProvider(): TagIdProvider = UuidTagIdProvider()
 
 }

@@ -1,7 +1,6 @@
 package com.appvoyager.litememo.data.repository
 
 import com.appvoyager.litememo.data.local.dao.MemoDao
-import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.mapper.toDomain
 import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toTagRefs
@@ -10,18 +9,12 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : MemoRepository {
 
-    override fun observeMemos(): Flow<List<Memo>> = combine(
-        memoDao.observeMemos(),
-        memoDao.observeMemoTagRefs()
-    ) { memos, tagRefs ->
-        val tagRefsByMemoId = tagRefs.groupBy(MemoTagRefEntity::memoId)
-        memos.map { memo ->
-            memo.toDomain(tagRefsByMemoId[memo.id].orEmpty())
-        }
+    override fun observeMemos(): Flow<List<Memo>> = memoDao.observeMemosWithTagRefs().map { memos ->
+        memos.map { memo -> memo.toDomain() }
     }
 
     override suspend fun getMemo(id: MemoId): Memo? {

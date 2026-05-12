@@ -2,6 +2,7 @@ package com.appvoyager.litememo.data.mapper
 
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -35,3 +36,5 @@ fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>) = Memo(
     tagIds = tagRefs.sortedBy { it.position }.map { TagId(it.tagId) },
     isImportant = isImportant
 )
+
+fun MemoWithTagRefs.toDomain() = memo.toDomain(tagRefs)

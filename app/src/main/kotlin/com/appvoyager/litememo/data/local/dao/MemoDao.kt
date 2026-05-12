@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,7 +17,11 @@ interface MemoDao {
     @Query("SELECT * FROM memos")
     fun observeMemos(): Flow<List<MemoEntity>>
 
-    @Query("SELECT * FROM memo_tag_refs")
+    @Transaction
+    @Query("SELECT * FROM memos")
+    fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>>
+
+    @Query("SELECT * FROM memo_tag_refs ORDER BY memoId ASC, position ASC")
     fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>>
 
     @Query("SELECT * FROM memos WHERE id = :id")
