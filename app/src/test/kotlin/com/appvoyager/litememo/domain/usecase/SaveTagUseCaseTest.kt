@@ -64,7 +64,13 @@ class SaveTagUseCaseTest {
 
         // Act
         val tag =
-            useCase(SaveTagCommand(id = existing.id, name = TagName("New"), color = TagColor(0xFF006D3B)))
+            useCase(
+                SaveTagCommand(
+                    id = existing.id,
+                    name = TagName("New"),
+                    color = TagColor(0xFF006D3B)
+                )
+            )
 
         // Assert
         assertEquals(TimestampMillis(1000L), tag.createdAt)
@@ -78,7 +84,11 @@ class SaveTagUseCaseTest {
         // Act
         val tag =
             useCase(
-                SaveTagCommand(id = TagId("client-id"), name = TagName("New"), color = TagColor(0xFF006D3B))
+                SaveTagCommand(
+                    id = TagId("client-id"),
+                    name = TagName("New"),
+                    color = TagColor(0xFF006D3B)
+                )
             )
 
         // Assert

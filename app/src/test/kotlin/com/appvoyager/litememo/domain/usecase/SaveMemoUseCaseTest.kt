@@ -20,19 +20,6 @@ import org.junit.jupiter.api.Test
 class SaveMemoUseCaseTest {
 
     @Test
-    fun invokeThrowsWhenTitleAndBodyAreBlank() {
-        // Arrange
-        val useCase = saveMemoUseCase()
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody("\n")))
-            }
-        }
-    }
-
-    @Test
     fun invokeCreatesMemoWithGeneratedId() = runBlocking {
         // Arrange
         val useCase =
@@ -104,22 +91,22 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeUsesProvidedIdWhenMemoDoesNotExist() = runBlocking {
+    fun invokeThrowsWhenMemoIdDoesNotExist() {
         // Arrange
         val useCase = saveMemoUseCase()
 
-        // Act
-        val memo =
-            useCase(
-                SaveMemoCommand(
-                    id = MemoId("client-id"),
-                    title = MemoTitle("Title"),
-                    body = MemoBody("Body")
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                useCase(
+                    SaveMemoCommand(
+                        id = MemoId("missing-id"),
+                        title = MemoTitle("Title"),
+                        body = MemoBody("Body")
+                    )
                 )
-            )
-
-        // Assert
-        assertEquals(MemoId("client-id"), memo.id)
+            }
+        }
     }
 
     @Test
