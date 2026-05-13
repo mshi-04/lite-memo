@@ -1,13 +1,18 @@
 default_platform(:android)
 
 platform :android do
-  desc "Run KtLint and unit tests"
-  lane :ci do
+  desc "Run KtLint"
+  lane :ktlint do
     gradle(
-      tasks: [
-        "app:ktlintCheck",
-        "app:testDebugUnitTest"
-      ],
+      tasks: ["app:ktlintCheck"],
+      flags: "--no-daemon"
+    )
+  end
+
+  desc "Run unit tests"
+  lane :unit_test do
+    gradle(
+      tasks: ["app:testDebugUnitTest"],
       flags: "--no-daemon"
     )
   end
