@@ -6,10 +6,11 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import java.time.Instant
 import java.time.ZoneId
+import javax.inject.Inject
 
-class GetHomeSummaryUseCase(
+class GetHomeSummaryUseCase @Inject constructor(
     private val currentTimeProvider: CurrentTimeProvider,
-    private val zoneId: ZoneId = ZoneId.systemDefault()
+    private val zoneId: ZoneId
 ) {
 
     operator fun invoke(memos: List<Memo>): HomeSummary {
