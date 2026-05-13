@@ -11,6 +11,6 @@ class FilterMemosUseCase @Inject constructor() {
         MemoFilter.Unorganized -> memos.filter { it.tagIds.isEmpty() }
         MemoFilter.Important -> memos.filter { it.isImportant }
         is MemoFilter.ByTag -> memos.filter { filter.tagId in it.tagIds }
-    }.sortedByDescending { it.updatedAt.value }
+    }
 
 }

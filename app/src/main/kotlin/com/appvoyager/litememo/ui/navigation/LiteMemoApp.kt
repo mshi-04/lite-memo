@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -51,7 +52,12 @@ fun LiteMemoApp() {
                                 restoreState = true
                             }
                         },
-                        icon = { Text(text = destination.iconText) },
+                        icon = {
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = stringResource(destination.labelResId)
+                            )
+                        },
                         label = { Text(text = stringResource(destination.labelResId)) }
                     )
                 }

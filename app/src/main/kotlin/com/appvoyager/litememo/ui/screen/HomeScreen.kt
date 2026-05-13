@@ -6,9 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,33 +39,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeMemoUiModel
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.viewmodel.HomeViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
-@Composable
-fun HomeRoute(
-    modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    HomeScreen(
-        uiState = uiState,
-        onFilterSelected = viewModel::selectFilter,
-        modifier = modifier
-    )
-}
 
 @Composable
 fun HomeScreen(
@@ -277,11 +261,11 @@ private fun MemoCard(memo: HomeMemoUiModel) {
         ),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .height(104.dp)
+                    .fillMaxHeight()
                     .background(memo.accentColor())
             )
             Column(
@@ -340,7 +324,7 @@ private fun MemoTag(label: String?) {
 @Composable
 private fun HomeMemoUiModel.accentColor(): Color {
     if (isImportant) return MaterialTheme.colorScheme.error
-    return tagColorArgb?.let { Color(it.toInt()) } ?: MaterialTheme.colorScheme.primary
+    return tagColorArgb?.let { Color(it.toULong()) } ?: MaterialTheme.colorScheme.primary
 }
 
 @Composable
@@ -351,7 +335,7 @@ private fun updatedAtLabel(updatedAtMillis: Long): String {
     val updatedAt = remember(updatedAtMillis, zoneId) {
         Instant.ofEpochMilli(updatedAtMillis).atZone(zoneId)
     }
-    val today = remember(zoneId) { LocalDate.now(zoneId) }
+    val today = LocalDate.now(zoneId)
 
     return when (updatedAt.toLocalDate()) {
         today -> timeFormatter.format(updatedAt)
