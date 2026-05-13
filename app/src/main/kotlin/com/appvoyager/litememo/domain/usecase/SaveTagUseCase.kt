@@ -5,8 +5,9 @@ import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.TagRepository
+import javax.inject.Inject
 
-class SaveTagUseCase(
+class SaveTagUseCase @Inject constructor(
     private val tagRepository: TagRepository,
     private val tagIdProvider: TagIdProvider,
     private val currentTimeProvider: CurrentTimeProvider

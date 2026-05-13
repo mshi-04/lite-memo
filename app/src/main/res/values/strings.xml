@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">LiteMemo</string>
+    <string name="home_tab">ホーム</string>
+    <string name="calendar_tab">カレンダー</string>
+    <string name="settings_tab">設定</string>
+    <string name="welcome_back">おかえりなさい</string>
+    <string name="recent_memos">最近のメモ</string>
+    <string name="memo_count">%1$d 件のメモ</string>
+    <string name="home_summary_detail">未整理 %1$d件 / 重要 %2$d件</string>
+    <string name="today_label">今日</string>
+    <string name="yesterday_label">昨日</string>
+    <string name="filter_all">すべて</string>
+    <string name="filter_unorganized">未整理</string>
+    <string name="filter_important">重要</string>
+    <string name="untagged_label">未整理</string>
+    <string name="empty_home_title">まだメモがありません</string>
+    <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
+    <string name="calendar_placeholder_title">カレンダーは準備中です</string>
+    <string name="calendar_placeholder_body">日付ごとのメモ表示は今後追加します。</string>
+    <string name="settings_placeholder_title">設定は準備中です</string>
+    <string name="settings_placeholder_body">テーマや表示設定は今後追加します。</string>
+    <string name="create_memo">メモ作成</string>
+    <string name="search">検索</string>
+    <string name="more_options">その他</string>
+    <string name="unknown_error">メモを読み込めませんでした。</string>
 </resources>

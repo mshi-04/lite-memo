@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.appvoyager.litememo.ui.navigation.LiteMemoApp
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -14,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LiteMemoTheme {
-                // UI will be added after the domain and data layers are wired.
+                LiteMemoApp()
             }
         }
     }

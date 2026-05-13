@@ -7,8 +7,9 @@ import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
+import javax.inject.Inject
 
-class SaveMemoUseCase(
+class SaveMemoUseCase @Inject constructor(
     private val memoRepository: MemoRepository,
     private val tagRepository: TagRepository,
     private val memoIdProvider: MemoIdProvider,
