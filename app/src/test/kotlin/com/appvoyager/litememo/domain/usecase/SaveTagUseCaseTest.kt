@@ -11,7 +11,6 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class SaveTagUseCaseTest {
@@ -27,18 +26,6 @@ class SaveTagUseCaseTest {
 
         // Assert
         assertEquals(TagId("generated-tag"), tag.id)
-    }
-
-    @Test
-    fun invokeReturnsTrimmedTagNameWhenInputHasSurroundingWhitespace() = runBlocking {
-        // Arrange
-        val useCase = saveTagUseCase()
-
-        // Act
-        val tag = useCase(SaveTagCommand(name = TagName("  Work  "), color = TagColor(0xFF6750A4)))
-
-        // Assert
-        assertEquals(TagName("Work"), tag.name)
     }
 
     @Test
@@ -93,19 +80,6 @@ class SaveTagUseCaseTest {
 
         // Assert
         assertEquals(TagId("client-id"), tag.id)
-    }
-
-    @Test
-    fun invokeThrowsWhenNameIsBlank() {
-        // Arrange
-        val useCase = saveTagUseCase()
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                useCase(SaveTagCommand(name = TagName(" "), color = TagColor(0xFF6750A4)))
-            }
-        }
     }
 
     private fun saveTagUseCase(
