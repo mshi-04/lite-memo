@@ -16,8 +16,8 @@ Lite Memo は Android 向けの軽量メモアプリです。
 ## 主な確認先
 
 - `app/`: Android アプリ本体
-- `app/src/main/java/com/appvoyager/litememo/`: Kotlin ソース
-- `app/src/main/java/com/appvoyager/litememo/ui/theme/`: Compose / Material 3 テーマ
+- `app/src/main/kotlin/com/appvoyager/litememo/`: Kotlin ソース
+- `app/src/main/kotlin/com/appvoyager/litememo/ui/theme/`: Compose / Material 3 テーマ
 - `app/src/main/res/`: Android リソース
 - `gradle/libs.versions.toml`: 依存関係とプラグインのバージョン管理
 - `.github/workflows/`: GitHub Actions を追加する場所

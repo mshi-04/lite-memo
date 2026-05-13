@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 class RoomMemoRepositoryTest {
 
     @Test
-    fun observeMemosReturnsDomainMemosFromDao() = runBlocking {
+    fun observeMemosReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(
@@ -41,7 +41,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun getMemoReturnsNullWhenDaoReturnsNull() = runBlocking {
+    fun getMemoReturnsNullWhenDaoReturnsNull() = runTest {
         // Arrange
         val repository = RoomMemoRepository(FakeMemoDao())
 
@@ -53,7 +53,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun saveMemoWritesMemoEntityToDao() = runBlocking {
+    fun saveMemoWritesMemoEntityToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
@@ -66,7 +66,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun saveMemoWritesTagRefsToDao() = runBlocking {
+    fun saveMemoWritesTagRefsToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
@@ -90,7 +90,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun deleteMemoDelegatesMemoIdValueToDao() = runBlocking {
+    fun deleteMemoDelegatesMemoIdValueToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
