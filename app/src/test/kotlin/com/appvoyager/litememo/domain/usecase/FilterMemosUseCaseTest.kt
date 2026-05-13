@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 class FilterMemosUseCaseTest {
 
     @Test
-    fun invokeReturnsMemosSortedByUpdatedAtDescendingWhenFilterIsAll() {
+    fun invokeReturnsMemosInInputOrderWhenFilterIsAll() {
         // Arrange
         val older = memoFixture(id = "older", updatedAt = 1000L)
         val newer = memoFixture(id = "newer", updatedAt = 2000L)
@@ -18,7 +18,7 @@ class FilterMemosUseCaseTest {
         val memos = FilterMemosUseCase()(listOf(older, newer), MemoFilter.All)
 
         // Assert
-        assertEquals(listOf(newer.id, older.id), memos.map { it.id })
+        assertEquals(listOf(older.id, newer.id), memos.map { it.id })
     }
 
     @Test
