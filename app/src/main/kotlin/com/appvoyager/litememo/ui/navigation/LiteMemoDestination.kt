@@ -10,7 +10,7 @@ import com.appvoyager.litememo.R
 
 enum class LiteMemoDestination(
     val route: String,
-    @param:StringRes val labelResId: Int,
+    @StringRes val labelResId: Int,
     val icon: ImageVector
 ) {
     Home("home", R.string.home_tab, Icons.Default.Home),

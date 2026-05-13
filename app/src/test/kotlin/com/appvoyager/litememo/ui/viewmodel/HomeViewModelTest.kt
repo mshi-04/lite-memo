@@ -4,8 +4,12 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
@@ -16,7 +20,9 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -118,11 +124,25 @@ class HomeViewModelTest {
         assertEquals(emptyList<String>(), state.memos.map { it.id })
     }
 
+    @Test
+    fun uiStateKeepsErrorCauseWhenObserveMemosFails() = runTest(dispatcher) {
+        // Arrange
+        val expected = IllegalStateException("Failed to observe memos.")
+        val viewModel = homeViewModel(memoRepository = FailingMemoRepository(expected))
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.hasError }
+
+        // Assert
+        assertEquals(expected.message, state.errorCause?.message)
+    }
+
     private fun homeViewModel(
-        memos: List<com.appvoyager.litememo.domain.model.Memo> = emptyList(),
-        tags: List<com.appvoyager.litememo.domain.model.Tag> = emptyList()
+        memos: List<Memo> = emptyList(),
+        tags: List<Tag> = emptyList(),
+        memoRepository: MemoRepository = FakeMemoRepository(memos)
     ): HomeViewModel {
-        val memoRepository = FakeMemoRepository(memos)
         val tagRepository = FakeTagRepository(tags)
         return HomeViewModel(
             observeMemosUseCase = ObserveMemosUseCase(memoRepository),
@@ -133,5 +153,18 @@ class HomeViewModelTest {
                 zoneId = ZoneId.of("UTC")
             )
         )
+    }
+
+    private class FailingMemoRepository(private val throwable: Throwable) : MemoRepository {
+
+        override fun observeMemos(): Flow<List<Memo>> = flow {
+            throw throwable
+        }
+
+        override suspend fun getMemo(id: MemoId): Memo? = null
+
+        override suspend fun saveMemo(memo: Memo) = Unit
+
+        override suspend fun deleteMemo(id: MemoId) = Unit
     }
 }

@@ -1,6 +1,8 @@
 package com.appvoyager.litememo.ui.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -16,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.screen.CalendarPlaceholderScreen
 import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.SettingsPlaceholderScreen
@@ -31,7 +34,10 @@ fun LiteMemoApp() {
         floatingActionButton = {
             if (currentRoute == LiteMemoDestination.Home.route) {
                 FloatingActionButton(onClick = {}) {
-                    Text(text = "+")
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.create_memo)
+                    )
                 }
             }
         },

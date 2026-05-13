@@ -51,8 +51,8 @@ class HomeViewModel @Inject constructor(
             ),
             memos = filteredMemos.toUiModels(tags)
         )
-    }.catch {
-        emit(HomeUiState(isLoading = false, hasError = true))
+    }.catch { throwable ->
+        emit(HomeUiState(isLoading = false, hasError = true, errorCause = throwable))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
