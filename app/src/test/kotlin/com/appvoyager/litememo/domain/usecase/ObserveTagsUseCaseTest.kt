@@ -1,0 +1,25 @@
+package com.appvoyager.litememo.domain.usecase
+
+import com.appvoyager.litememo.domain.FakeTagRepository
+import com.appvoyager.litememo.domain.tagFixture
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class ObserveTagsUseCaseTest {
+
+    @Test
+    fun invokeReturnsTagsEmittedByRepository() = runBlocking {
+        // Arrange
+        val tag = tagFixture(id = "tag-1")
+        val repository = FakeTagRepository(listOf(tag))
+
+        // Act
+        val tags = ObserveTagsUseCase(repository)().first()
+
+        // Assert
+        assertEquals(listOf(tag), tags)
+    }
+
+}
