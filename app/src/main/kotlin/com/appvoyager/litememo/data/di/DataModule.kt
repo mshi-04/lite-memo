@@ -55,6 +55,7 @@ object DataModule {
     fun provideCurrentTimeProvider(): CurrentTimeProvider = SystemCurrentTimeProvider()
 
     @Provides
+    @Singleton
     fun provideZoneId(): ZoneId = ZoneId.systemDefault()
 
     @Provides

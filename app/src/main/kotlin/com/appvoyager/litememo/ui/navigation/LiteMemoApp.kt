@@ -1,9 +1,6 @@
 package com.appvoyager.litememo.ui.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -28,19 +25,8 @@ fun LiteMemoApp() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
-    val currentRoute = currentDestination?.route ?: LiteMemoDestination.Home.route
 
     Scaffold(
-        floatingActionButton = {
-            if (currentRoute == LiteMemoDestination.Home.route) {
-                FloatingActionButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.create_memo)
-                    )
-                }
-            }
-        },
         bottomBar = {
             NavigationBar {
                 LiteMemoDestination.entries.forEach { destination ->

@@ -52,7 +52,14 @@ class HomeViewModel @Inject constructor(
             memos = filteredMemos.toUiModels(tags)
         )
     }.catch { throwable ->
-        emit(HomeUiState(isLoading = false, hasError = true, errorCause = throwable))
+        emit(
+            HomeUiState(
+                isLoading = false,
+                hasError = true,
+                errorCause = throwable,
+                selectedFilter = selectedFilter.value
+            )
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -74,11 +81,11 @@ class HomeViewModel @Inject constructor(
         return map { memo ->
             val tag = memo.tagIds.firstNotNullOfOrNull { id -> tagsById[id] }
             HomeMemoUiModel(
-                id = memo.id.value,
+                id = memo.id,
                 title = memo.title.value,
                 body = memo.body.value,
                 tagName = tag?.name?.value,
-                tagColorArgb = tag?.color?.argb,
+                tagColor = tag?.color,
                 updatedAtMillis = memo.updatedAt.value,
                 isImportant = memo.isImportant
             )

@@ -17,15 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeMemoUiModel
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
@@ -140,20 +137,6 @@ private fun HomeTopBar() {
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        IconButton(onClick = {}) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = stringResource(R.string.search),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        IconButton(onClick = {}) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = stringResource(R.string.more_options),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
 
@@ -233,7 +216,7 @@ private fun HomeFilters(
             onClick = { onFilterSelected(HomeFilterUiState.All) }
         )
         FilterButton(
-            label = stringResource(R.string.filter_unorganized),
+            label = stringResource(R.string.unorganized_label),
             selected = selectedFilter == HomeFilterUiState.Unorganized,
             onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
         )
@@ -319,7 +302,7 @@ private fun MemoTag(label: String?) {
             .padding(horizontal = 14.dp, vertical = 4.dp)
     ) {
         Text(
-            text = label ?: stringResource(R.string.untagged_label),
+            text = label ?: stringResource(R.string.unorganized_label),
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.labelMedium,
             maxLines = 1,
@@ -331,7 +314,7 @@ private fun MemoTag(label: String?) {
 @Composable
 private fun HomeMemoUiModel.accentColor(): Color {
     if (isImportant) return MaterialTheme.colorScheme.error
-    return tagColorArgb?.let { Color(it.toULong()) } ?: MaterialTheme.colorScheme.primary
+    return tagColor?.let { Color(it.argb.toULong()) } ?: MaterialTheme.colorScheme.primary
 }
 
 @Composable
@@ -428,20 +411,20 @@ private fun previewHomeState() = HomeUiState(
     ),
     memos = listOf(
         HomeMemoUiModel(
-            id = "memo-1",
+            id = MemoId("memo-1"),
             title = "買い物リスト",
             body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
             tagName = "生活",
-            tagColorArgb = 0xFF6750A4,
+            tagColor = TagColor(0xFF6750A4),
             updatedAtMillis = System.currentTimeMillis(),
             isImportant = false
         ),
         HomeMemoUiModel(
-            id = "memo-2",
+            id = MemoId("memo-2"),
             title = "会議メモ",
             body = "次回までに画面構成と保存方式を確認する。",
             tagName = "仕事",
-            tagColorArgb = 0xFFB3261E,
+            tagColor = TagColor(0xFFB3261E),
             updatedAtMillis = System.currentTimeMillis(),
             isImportant = true
         )

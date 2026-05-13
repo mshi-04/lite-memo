@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 class GetHomeSummaryUseCase @Inject constructor(
     private val currentTimeProvider: CurrentTimeProvider,
-    private val zoneId: ZoneId = ZoneId.systemDefault()
+    private val zoneId: ZoneId
 ) {
 
     operator fun invoke(memos: List<Memo>): HomeSummary {

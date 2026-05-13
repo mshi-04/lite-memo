@@ -1,11 +1,14 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TagColor
+
 data class HomeMemoUiModel(
-    val id: String,
+    val id: MemoId,
     val title: String,
     val body: String,
     val tagName: String?,
-    val tagColorArgb: Long?,
+    val tagColor: TagColor?,
     val updatedAtMillis: Long,
     val isImportant: Boolean
 )

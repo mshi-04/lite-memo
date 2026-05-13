@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -36,11 +37,12 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
-    private val dispatcher = StandardTestDispatcher()
+    private lateinit var dispatcher: TestDispatcher
     private val today = Instant.parse("2026-05-11T12:00:00Z").toEpochMilli()
 
     @BeforeEach
     fun setUp() {
+        dispatcher = StandardTestDispatcher()
         Dispatchers.setMain(dispatcher)
     }
 
@@ -121,7 +123,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.first { !it.isLoading }
 
         // Assert
-        assertEquals(emptyList<String>(), state.memos.map { it.id })
+        assertEquals(emptyList<MemoId>(), state.memos.map { it.id })
     }
 
     @Test
