@@ -16,4 +16,10 @@ platform :android do
       flags: "--no-daemon"
     )
   end
+
+  desc "Run CI checks (KtLint + Unit Test)"
+  lane :ci do
+    ktlint
+    unit_test
+  end
 end

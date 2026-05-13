@@ -27,6 +27,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -36,7 +39,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "4.0.3"
+          ruby-version: "4.0.2"
           bundler-cache: true
 
       - name: Set up Gradle
@@ -56,6 +59,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -65,7 +71,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "4.0.3"
+          ruby-version: "4.0.2"
           bundler-cache: true
 
       - name: Set up Gradle
