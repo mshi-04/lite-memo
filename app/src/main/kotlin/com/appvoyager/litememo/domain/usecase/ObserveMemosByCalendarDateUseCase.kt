@@ -15,8 +15,12 @@ class ObserveMemosByCalendarDateUseCase @Inject constructor(
 ) {
 
     operator fun invoke(date: CalendarDate): Flow<List<Memo>> {
-        val from = TimestampMillis(date.value.atStartOfDay(zoneId).toInstant().toEpochMilli())
-        val to = TimestampMillis(date.value.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli())
+        val from = TimestampMillis(
+            date.value.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        )
+        val to = TimestampMillis(
+            date.value.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        )
         return memoRepository.observeMemos(from, to).map { memos ->
             memos.sortedWith(
                 compareByDescending<Memo> { memo -> memo.updatedAt.value }
