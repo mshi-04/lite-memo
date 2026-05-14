@@ -17,8 +17,12 @@ class ObserveCalendarMonthSummaryUseCase @Inject constructor(
 ) {
 
     operator fun invoke(month: CalendarMonth): Flow<CalendarMonthSummary> {
-        val from = TimestampMillis(month.value.atDay(1).atStartOfDay(zoneId).toInstant().toEpochMilli())
-        val to = TimestampMillis(month.value.plusMonths(1).atDay(1).atStartOfDay(zoneId).toInstant().toEpochMilli())
+        val from = TimestampMillis(
+            month.value.atDay(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        )
+        val to = TimestampMillis(
+            month.value.plusMonths(1).atDay(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        )
         return memoRepository.observeMemos(from, to).map { memos ->
             val countsByDate = memos
                 .groupingBy { memo -> CalendarDate.from(memo.createdAt, zoneId) }

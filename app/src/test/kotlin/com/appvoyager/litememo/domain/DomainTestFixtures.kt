@@ -55,6 +55,9 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     override fun observeMemos(): Flow<List<Memo>> = memos
 
+    override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> =
+        memos.map { list -> list.filter { it.createdAt.value >= from.value && it.createdAt.value < to.value } }
+
     override suspend fun getMemo(id: MemoId): Memo? = memos.value.firstOrNull { it.id == id }
 
     override suspend fun saveMemo(memo: Memo) {
