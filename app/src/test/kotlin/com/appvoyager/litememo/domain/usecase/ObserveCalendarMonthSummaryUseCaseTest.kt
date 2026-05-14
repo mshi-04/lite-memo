@@ -1,0 +1,133 @@
+package com.appvoyager.litememo.domain.usecase
+
+import com.appvoyager.litememo.domain.FakeMemoRepository
+import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.CalendarDate
+import com.appvoyager.litememo.domain.model.CalendarMonth
+import com.appvoyager.litememo.domain.model.CalendarMonthSummary
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class ObserveCalendarMonthSummaryUseCaseTest {
+
+    private val zoneId = ZoneId.of("UTC")
+
+    @Test
+    fun invokeReturnsOneDayPerDateInMonth() = runBlocking {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 2))
+        val repository = FakeMemoRepository()
+
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
+
+        // Assert
+        assertEquals(month.dates(), summary.days.map { it.date })
+    }
+
+    @Test
+    fun invokeCountsMemosCreatedOnEachDate() = runBlocking {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 5))
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(id = "first", createdAt = epochMillis("2026-05-11T08:00:00Z")),
+                memoFixture(id = "second", createdAt = epochMillis("2026-05-11T20:00:00Z")),
+                memoFixture(id = "third", createdAt = epochMillis("2026-05-12T09:00:00Z"))
+            )
+        )
+
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
+
+        // Assert
+        assertEquals(
+            mapOf(
+                CalendarDate(LocalDate.of(2026, 5, 11)) to 2,
+                CalendarDate(LocalDate.of(2026, 5, 12)) to 1
+            ),
+            summary.days
+                .filter { day -> day.memoCount > 0 }
+                .associate { day -> day.date to day.memoCount }
+        )
+    }
+
+    @Test
+    fun invokeExcludesMemoWhenOnlyUpdatedAtMatchesDate() = runBlocking {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 5))
+        val targetDate = LocalDate.of(2026, 5, 11)
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(
+                    id = "updated-on-target-date",
+                    createdAt = epochMillis("2026-05-10T23:00:00Z"),
+                    updatedAt = epochMillis("2026-05-11T01:00:00Z")
+                )
+            )
+        )
+
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
+
+        // Assert
+        assertEquals(0, summary.memoCountOn(targetDate))
+    }
+
+    @Test
+    fun invokeReturnsZeroMemoCountForEmptyDays() = runBlocking {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 5))
+        val emptyDate = LocalDate.of(2026, 5, 12)
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(
+                    id = "created-on-other-date",
+                    createdAt = epochMillis("2026-05-11T08:00:00Z")
+                )
+            )
+        )
+
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
+
+        // Assert
+        assertEquals(0, summary.memoCountOn(emptyDate))
+    }
+
+    @Test
+    fun invokeMapsCreatedAtUsingConfiguredZoneIdBoundary() = runBlocking {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 6))
+        val boundaryDate = LocalDate.of(2026, 6, 1)
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(
+                    id = "jst-start-of-day",
+                    createdAt = epochMillis("2026-05-31T15:00:00Z")
+                )
+            )
+        )
+
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(
+            memoRepository = repository,
+            zoneId = ZoneId.of("Asia/Tokyo")
+        )(month).first()
+
+        // Assert
+        assertEquals(1, summary.memoCountOn(boundaryDate))
+    }
+
+    private fun CalendarMonthSummary.memoCountOn(date: LocalDate): Int =
+        days.first { day -> day.date == CalendarDate(date) }.memoCount
+
+    private fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
+
+}
