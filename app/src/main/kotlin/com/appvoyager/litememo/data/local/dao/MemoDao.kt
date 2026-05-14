@@ -21,6 +21,10 @@ interface MemoDao {
     @Query("SELECT * FROM memos")
     fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>>
 
+    @Transaction
+    @Query("SELECT * FROM memos WHERE createdAt >= :fromMillis AND createdAt < :toMillis")
+    fun observeMemosWithTagRefsBetween(fromMillis: Long, toMillis: Long): Flow<List<MemoWithTagRefs>>
+
     @Query("SELECT * FROM memo_tag_refs ORDER BY memoId ASC, position ASC")
     fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>>
 

@@ -6,6 +6,7 @@ import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toTagRefs
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,11 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
     override fun observeMemos(): Flow<List<Memo>> = memoDao.observeMemosWithTagRefs().map { memos ->
         memos.map { memo -> memo.toDomain() }
     }
+
+    override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> =
+        memoDao.observeMemosWithTagRefsBetween(from.value, to.value).map { memos ->
+            memos.map { memo -> memo.toDomain() }
+        }
 
     override suspend fun getMemo(id: MemoId): Memo? {
         val memo = memoDao.getMemoWithTagRefs(id.value) ?: return null
