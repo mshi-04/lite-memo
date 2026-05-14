@@ -1,0 +1,7 @@
+#!/bin/sh
+echo "Running KtLint..."
+./gradlew app:ktlintCheck --no-daemon -p .
+if [ $? -ne 0 ]; then
+    echo "KtLint failed. Push aborted."
+    exit 1
+fi

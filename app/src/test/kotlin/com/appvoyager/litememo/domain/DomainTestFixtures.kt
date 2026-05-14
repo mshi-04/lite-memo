@@ -16,6 +16,7 @@ import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 fun memoFixture(
     id: String = "memo-1",
@@ -56,7 +57,11 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     override fun observeMemos(): Flow<List<Memo>> = memos
 
     override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> =
-        memos.map { list -> list.filter { it.createdAt.value >= from.value && it.createdAt.value < to.value } }
+        memos.map { list ->
+            list.filter { memo ->
+                memo.createdAt.value >= from.value && memo.createdAt.value < to.value
+            }
+        }
 
     override suspend fun getMemo(id: MemoId): Memo? = memos.value.firstOrNull { it.id == id }
 

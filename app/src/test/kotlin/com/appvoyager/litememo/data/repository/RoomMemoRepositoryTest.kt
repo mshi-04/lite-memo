@@ -129,7 +129,7 @@ class RoomMemoRepositoryTest {
 
         override fun observeMemosWithTagRefsBetween(
             fromMillis: Long,
-            toMillis: Long,
+            toMillis: Long
         ): Flow<List<MemoWithTagRefs>> = memosWithTagRefs.map { list ->
             list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
         }
