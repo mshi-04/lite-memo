@@ -7,6 +7,7 @@ import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class RoomMemoRepositoryTest {
@@ -38,6 +40,76 @@ class RoomMemoRepositoryTest {
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
+    }
+
+    @Test
+    fun observeMemosWithRangeDelegatesTimestampValuesToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.observeMemos(
+            from = TimestampMillis(1_000L),
+            to = TimestampMillis(2_000L)
+        ).first()
+
+        // Assert
+        assertEquals(1_000L to 2_000L, dao.observedRange)
+    }
+
+    @Test
+    fun observeMemosWithRangeReturnsDomainMemosFromDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            memosWithTagRefs = listOf(memoWithTagRefs(memoId = "memo-1"))
+        )
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        val memos = repository.observeMemos(
+            from = TimestampMillis(500L),
+            to = TimestampMillis(2_000L)
+        ).first()
+
+        // Assert
+        assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
+    }
+
+    @Test
+    fun observeMemosWithEqualRangeThrowsBeforeCallingDao() {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        assertThrows(IllegalArgumentException::class.java) {
+            repository.observeMemos(
+                from = TimestampMillis(1_000L),
+                to = TimestampMillis(1_000L)
+            )
+        }
+
+        // Assert
+        assertEquals(0, dao.observeMemosBetweenCallCount)
+    }
+
+    @Test
+    fun observeMemosWithDescendingRangeThrowsBeforeCallingDao() {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        assertThrows(IllegalArgumentException::class.java) {
+            repository.observeMemos(
+                from = TimestampMillis(2_000L),
+                to = TimestampMillis(1_000L)
+            )
+        }
+
+        // Assert
+        assertEquals(0, dao.observeMemosBetweenCallCount)
     }
 
     @Test
@@ -102,18 +174,22 @@ class RoomMemoRepositoryTest {
         assertEquals("memo-1", dao.deletedMemoId)
     }
 
-    private fun memoWithTagRefs(memoId: String, tagRefs: List<MemoTagRefEntity> = emptyList()) =
-        MemoWithTagRefs(
-            memo = MemoEntity(
-                id = memoId,
-                title = "Title",
-                body = "Body",
-                createdAt = 1000L,
-                updatedAt = 1000L,
-                isImportant = false
-            ),
-            tagRefs = tagRefs
-        )
+    private fun memoWithTagRefs(
+        memoId: String,
+        createdAt: Long = 1000L,
+        updatedAt: Long = 1000L,
+        tagRefs: List<MemoTagRefEntity> = emptyList()
+    ) = MemoWithTagRefs(
+        memo = MemoEntity(
+            id = memoId,
+            title = "Title",
+            body = "Body",
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            isImportant = false
+        ),
+        tagRefs = tagRefs
+    )
 
     private class FakeMemoDao(memosWithTagRefs: List<MemoWithTagRefs> = emptyList()) : MemoDao {
 
@@ -121,6 +197,8 @@ class RoomMemoRepositoryTest {
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
         var deletedMemoId: String? = null
+        var observedRange: Pair<Long, Long>? = null
+        var observeMemosBetweenCallCount = 0
 
         override fun observeMemos(): Flow<List<MemoEntity>> =
             memosWithTagRefs.map { it.map { memoWithTagRefs -> memoWithTagRefs.memo } }
@@ -130,8 +208,12 @@ class RoomMemoRepositoryTest {
         override fun observeMemosWithTagRefsBetween(
             fromMillis: Long,
             toMillis: Long
-        ): Flow<List<MemoWithTagRefs>> = memosWithTagRefs.map { list ->
-            list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
+        ): Flow<List<MemoWithTagRefs>> {
+            observedRange = fromMillis to toMillis
+            observeMemosBetweenCallCount += 1
+            return memosWithTagRefs.map { list ->
+                list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
+            }
         }
 
         override fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>> =
