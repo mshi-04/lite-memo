@@ -56,12 +56,14 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     override fun observeMemos(): Flow<List<Memo>> = memos
 
-    override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> =
-        memos.map { list ->
+    override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> {
+        require(from.value < to.value) { "from must be earlier than to." }
+        return memos.map { list ->
             list.filter { memo ->
                 memo.createdAt.value >= from.value && memo.createdAt.value < to.value
             }
         }
+    }
 
     override suspend fun getMemo(id: MemoId): Memo? = memos.value.firstOrNull { it.id == id }
 
