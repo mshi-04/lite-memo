@@ -7,7 +7,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -16,7 +16,7 @@ class ObserveMemosByCalendarDateUseCaseTest {
     private val zoneId = ZoneId.of("UTC")
 
     @Test
-    fun invokeReturnsOnlyMemosCreatedOnSelectedDate() = runBlocking {
+    fun invokeReturnsOnlyMemosCreatedOnSelectedDate() = runTest {
         // Arrange
         val selectedDate = CalendarDate(LocalDate.of(2026, 5, 11))
         val included = memoFixture(id = "included", createdAt = epochMillis("2026-05-11T08:00:00Z"))
@@ -35,7 +35,7 @@ class ObserveMemosByCalendarDateUseCaseTest {
     }
 
     @Test
-    fun invokeSortsMemosByUpdatedAtDescendingThenCreatedAtDescending() = runBlocking {
+    fun invokeSortsMemosByUpdatedAtDescendingThenCreatedAtDescending() = runTest {
         // Arrange
         val selectedDate = CalendarDate(LocalDate.of(2026, 5, 11))
         val tieEarlyCreatedAt = memoFixture(
@@ -68,7 +68,7 @@ class ObserveMemosByCalendarDateUseCaseTest {
     }
 
     @Test
-    fun invokeMapsCreatedAtUsingConfiguredZoneIdBoundary() = runBlocking {
+    fun invokeMapsCreatedAtUsingConfiguredZoneIdBoundary() = runTest {
         // Arrange
         val selectedDate = CalendarDate(LocalDate.of(2026, 6, 1))
         val included = memoFixture(
