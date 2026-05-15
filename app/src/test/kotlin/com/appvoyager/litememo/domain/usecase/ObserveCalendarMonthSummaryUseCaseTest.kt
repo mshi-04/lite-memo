@@ -28,7 +28,7 @@ class ObserveCalendarMonthSummaryUseCaseTest {
         val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
 
         // Assert
-        assertEquals(month.dates(), summary.days.map { it.date })
+        assertEquals(month.toCalendarDates(), summary.days.map { it.date })
     }
 
     @Test
