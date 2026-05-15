@@ -5,7 +5,7 @@ import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class MemoDaoTest {
 
         // Act
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { dao.upsertMemoWithTags(memo, tagRefs) }
+            runTest { dao.upsertMemoWithTags(memo, tagRefs) }
         }
 
         // Assert
@@ -29,7 +29,7 @@ class MemoDaoTest {
     }
 
     @Test
-    fun upsertMemoWithTagsReplacesTagRefsAfterWritingMemo() = runBlocking {
+    fun upsertMemoWithTagsReplacesTagRefsAfterWritingMemo() = runTest {
         // Arrange
         val dao = RecordingMemoDao()
         val memo = memoEntity(id = "memo-1")
@@ -53,7 +53,7 @@ class MemoDaoTest {
     }
 
     @Test
-    fun upsertMemoWithTagsSkipsInsertWhenTagRefsAreEmpty() = runBlocking {
+    fun upsertMemoWithTagsSkipsInsertWhenTagRefsAreEmpty() = runTest {
         // Arrange
         val dao = RecordingMemoDao()
         val memo = memoEntity(id = "memo-1")
