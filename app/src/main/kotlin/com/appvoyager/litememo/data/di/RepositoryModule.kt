@@ -4,22 +4,22 @@ import com.appvoyager.litememo.data.repository.RoomMemoRepository
 import com.appvoyager.litememo.data.repository.RoomTagRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+abstract class RepositoryModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideMemoRepository(repository: RoomMemoRepository): MemoRepository = repository
+    abstract fun bindMemoRepository(repository: RoomMemoRepository): MemoRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideTagRepository(repository: RoomTagRepository): TagRepository = repository
+    abstract fun bindTagRepository(repository: RoomTagRepository): TagRepository
 
 }
