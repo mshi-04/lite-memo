@@ -163,6 +163,9 @@ class HomeViewModelTest {
             throw throwable
         }
 
+        override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> =
+            flow { throw throwable }
+
         override suspend fun getMemo(id: MemoId): Memo? = null
 
         override suspend fun saveMemo(memo: Memo) = Unit

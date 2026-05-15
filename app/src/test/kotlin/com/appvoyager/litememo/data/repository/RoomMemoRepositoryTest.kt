@@ -127,6 +127,13 @@ class RoomMemoRepositoryTest {
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
 
+        override fun observeMemosWithTagRefsBetween(
+            fromMillis: Long,
+            toMillis: Long
+        ): Flow<List<MemoWithTagRefs>> = memosWithTagRefs.map { list ->
+            list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
+        }
+
         override fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>> =
             memosWithTagRefs.map { it.flatMap { memoWithTagRefs -> memoWithTagRefs.tagRefs } }
 

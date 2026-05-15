@@ -45,6 +45,11 @@ class MemoDaoTest {
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
 
+        override fun observeMemosWithTagRefsBetween(
+            fromMillis: Long,
+            toMillis: Long
+        ): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
+
         override fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>> = flowOf(emptyList())
 
         override suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs? = null
