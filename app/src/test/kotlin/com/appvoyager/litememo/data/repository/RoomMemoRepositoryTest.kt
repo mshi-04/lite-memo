@@ -77,20 +77,42 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun observeMemosWithRangeUsesInclusiveStartAndExclusiveEnd() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            memosWithTagRefs = listOf(
+                memoWithTagRefs(memoId = "memo-before", createdAt = 999L),
+                memoWithTagRefs(memoId = "memo-start", createdAt = 1000L),
+                memoWithTagRefs(memoId = "memo-end", createdAt = 2000L),
+                memoWithTagRefs(memoId = "memo-after", createdAt = 2001L)
+            )
+        )
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        val memos = repository.observeMemos(
+            from = TimestampMillis(1_000L),
+            to = TimestampMillis(2_000L)
+        ).first()
+
+        // Assert
+        assertEquals(listOf(MemoId("memo-start")), memos.map { it.id })
+    }
+
+    @Test
     fun observeMemosWithEqualRangeThrowsBeforeCallingDao() {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
-        // Act
+        // Act & Assert
+        // observeMemos は Flow を返す前に即時バリデーションを行うため runTest 不要
         assertThrows(IllegalArgumentException::class.java) {
             repository.observeMemos(
                 from = TimestampMillis(1_000L),
                 to = TimestampMillis(1_000L)
             )
         }
-
-        // Assert
         assertEquals(0, dao.observeMemosBetweenCallCount)
     }
 
@@ -100,15 +122,14 @@ class RoomMemoRepositoryTest {
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
-        // Act
+        // Act & Assert
+        // observeMemos は Flow を返す前に即時バリデーションを行うため runTest 不要
         assertThrows(IllegalArgumentException::class.java) {
             repository.observeMemos(
                 from = TimestampMillis(2_000L),
                 to = TimestampMillis(1_000L)
             )
         }
-
-        // Assert
         assertEquals(0, dao.observeMemosBetweenCallCount)
     }
 
