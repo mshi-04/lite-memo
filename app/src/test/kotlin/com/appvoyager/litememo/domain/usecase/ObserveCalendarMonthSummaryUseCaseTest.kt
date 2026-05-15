@@ -1,16 +1,16 @@
 package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoRepository
+import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.CalendarDate
 import com.appvoyager.litememo.domain.model.CalendarMonth
 import com.appvoyager.litememo.domain.model.CalendarMonthSummary
-import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -19,7 +19,7 @@ class ObserveCalendarMonthSummaryUseCaseTest {
     private val zoneId = ZoneId.of("UTC")
 
     @Test
-    fun invokeReturnsOneDayPerDateInMonth() = runBlocking {
+    fun invokeReturnsOneDayPerDateInMonth() = runTest {
         // Arrange
         val month = CalendarMonth(YearMonth.of(2026, 2))
         val repository = FakeMemoRepository()
@@ -32,7 +32,7 @@ class ObserveCalendarMonthSummaryUseCaseTest {
     }
 
     @Test
-    fun invokeCountsMemosCreatedOnEachDate() = runBlocking {
+    fun invokeCountsMemosCreatedOnEachDate() = runTest {
         // Arrange
         val month = CalendarMonth(YearMonth.of(2026, 5))
         val repository = FakeMemoRepository(
@@ -59,7 +59,7 @@ class ObserveCalendarMonthSummaryUseCaseTest {
     }
 
     @Test
-    fun invokeExcludesMemoWhenOnlyUpdatedAtMatchesDate() = runBlocking {
+    fun invokeExcludesMemoWhenOnlyUpdatedAtMatchesDate() = runTest {
         // Arrange
         val month = CalendarMonth(YearMonth.of(2026, 5))
         val targetDate = LocalDate.of(2026, 5, 11)
@@ -81,7 +81,7 @@ class ObserveCalendarMonthSummaryUseCaseTest {
     }
 
     @Test
-    fun invokeReturnsZeroMemoCountForEmptyDays() = runBlocking {
+    fun invokeReturnsZeroMemoCountForEmptyDays() = runTest {
         // Arrange
         val month = CalendarMonth(YearMonth.of(2026, 5))
         val emptyDate = LocalDate.of(2026, 5, 12)
@@ -102,7 +102,7 @@ class ObserveCalendarMonthSummaryUseCaseTest {
     }
 
     @Test
-    fun invokeMapsCreatedAtUsingConfiguredZoneIdBoundary() = runBlocking {
+    fun invokeMapsCreatedAtUsingConfiguredZoneIdBoundary() = runTest {
         // Arrange
         val month = CalendarMonth(YearMonth.of(2026, 6))
         val boundaryDate = LocalDate.of(2026, 6, 1)
@@ -125,9 +125,30 @@ class ObserveCalendarMonthSummaryUseCaseTest {
         assertEquals(1, summary.memoCountOn(boundaryDate))
     }
 
-    private fun CalendarMonthSummary.memoCountOn(date: LocalDate): Int =
-        days.first { day -> day.date == CalendarDate(date) }.memoCount
+    @Test
+    fun invokeExcludesMemosCreatedAtNextMonthStartBoundary() = runTest {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 6))
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(
+                    id = "next-month-start",
+                    createdAt = epochMillis("2026-07-01T00:00:00Z")
+                )
+            )
+        )
 
-    private fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
+
+        // Assert
+        assertEquals(0, summary.days.sumOf { day -> day.memoCount })
+    }
+
+    private fun CalendarMonthSummary.memoCountOn(date: LocalDate): Int =
+        days.find { day -> day.date == CalendarDate(date) }?.memoCount
+            ?: throw AssertionError(
+                "Expected day for $date in CalendarMonthSummary but none found."
+            )
 
 }

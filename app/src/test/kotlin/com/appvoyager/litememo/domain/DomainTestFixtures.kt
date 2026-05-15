@@ -14,6 +14,7 @@ import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -47,6 +48,8 @@ fun tagFixture(
     color = TagColor(color),
     createdAt = TimestampMillis(createdAt)
 )
+
+fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
 
 class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepository {
 

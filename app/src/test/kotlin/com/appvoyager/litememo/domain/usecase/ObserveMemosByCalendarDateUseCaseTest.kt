@@ -1,9 +1,9 @@
 package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoRepository
+import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.CalendarDate
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.flow.first
@@ -90,7 +90,5 @@ class ObserveMemosByCalendarDateUseCaseTest {
         // Assert
         assertEquals(listOf("jst-start-of-day"), memos.map { memo -> memo.id.value })
     }
-
-    private fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
 
 }
