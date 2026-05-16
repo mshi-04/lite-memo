@@ -46,9 +46,19 @@ class CalendarViewModel @Inject constructor(
     private val isDatePickerVisible = MutableStateFlow(false)
 
     private val observedCalendarData = combine(
-        selectedMonth.flatMapLatest { month -> observeCalendarMonthSummaryUseCase(month) },
-        selectedDate.flatMapLatest { date -> observeMemosByCalendarDateUseCase(date) },
+        selectedMonth.flatMapLatest { month ->
+            observeCalendarMonthSummaryUseCase(month)
+                .map<CalendarMonthSummary, CalendarMonthSummary?> { it }
+                .catch { emit(null) }
+        },
+        selectedDate.flatMapLatest { date ->
+            observeMemosByCalendarDateUseCase(date)
+                .map<List<Memo>, List<Memo>?> { it }
+                .catch { emit(null) }
+        },
         observeTagsUseCase()
+            .map<List<Tag>, List<Tag>?> { it }
+            .catch { emit(null) }
     ) { monthSummary, memos, tags ->
         ObservedCalendarData(
             monthSummary = monthSummary,
@@ -64,25 +74,16 @@ class CalendarViewModel @Inject constructor(
         isCalendarExpanded,
         isDatePickerVisible
     ) { observed, month, date, expanded, datePickerVisible ->
+        val hasError = observed.monthSummary == null || observed.memos == null
         CalendarUiState(
             isLoading = false,
+            hasError = hasError,
             selectedMonth = month,
             selectedDate = date,
             isCalendarExpanded = expanded,
             isDatePickerVisible = datePickerVisible,
-            days = observed.monthSummary.toDayUiStates(date),
-            memos = observed.memos.toUiModels(observed.tags)
-        )
-    }.catch { throwable ->
-        emit(
-            CalendarUiState(
-                isLoading = false,
-                hasError = true,
-                selectedMonth = selectedMonth.value,
-                selectedDate = selectedDate.value,
-                isCalendarExpanded = isCalendarExpanded.value,
-                isDatePickerVisible = isDatePickerVisible.value
-            )
+            days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
+            memos = observed.memos?.toUiModels(observed.tags ?: emptyList()) ?: emptyList()
         )
     }.stateIn(
         scope = viewModelScope,
@@ -160,8 +161,8 @@ class CalendarViewModel @Inject constructor(
     }
 
     private data class ObservedCalendarData(
-        val monthSummary: CalendarMonthSummary,
-        val memos: List<Memo>,
-        val tags: List<Tag>
+        val monthSummary: CalendarMonthSummary?,
+        val memos: List<Memo>?,
+        val tags: List<Tag>?
     )
 }

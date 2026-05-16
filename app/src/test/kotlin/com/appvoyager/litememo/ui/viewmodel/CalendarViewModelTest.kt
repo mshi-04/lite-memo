@@ -24,6 +24,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -80,6 +82,7 @@ class CalendarViewModelTest {
         // Arrange
         val viewModel = calendarViewModel()
         advanceUntilIdle()
+        assertTrue(viewModel.uiState.first { !it.isLoading }.isCalendarExpanded)
 
         // Act
         viewModel.toggleCalendarExpanded()
@@ -87,7 +90,7 @@ class CalendarViewModelTest {
         val state = viewModel.uiState.first { !it.isLoading }
 
         // Assert
-        assertEquals(false, state.isCalendarExpanded)
+        assertFalse(state.isCalendarExpanded)
     }
 
     @Test
@@ -102,10 +105,8 @@ class CalendarViewModelTest {
         val state = viewModel.uiState.first { !it.isLoading }
 
         // Assert
-        assertEquals(
-            YearMonth.of(2026, 7) to LocalDate.of(2026, 7, 3),
-            state.selectedMonth?.value to state.selectedDate?.value
-        )
+        assertEquals(YearMonth.of(2026, 7), state.selectedMonth?.value)
+        assertEquals(LocalDate.of(2026, 7, 3), state.selectedDate?.value)
     }
 
     @Test

@@ -79,6 +79,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -504,7 +505,7 @@ private fun CalendarDatePickerDialog(
     onDismiss: () -> Unit
 ) {
     val selectedDateMillis = remember(selectedDate) {
-        selectedDate.value.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        selectedDate.value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
     }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
 
