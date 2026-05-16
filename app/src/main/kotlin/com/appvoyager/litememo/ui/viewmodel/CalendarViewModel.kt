@@ -1,0 +1,167 @@
+package com.appvoyager.litememo.ui.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.appvoyager.litememo.domain.model.CalendarDate
+import com.appvoyager.litememo.domain.model.CalendarMonth
+import com.appvoyager.litememo.domain.model.CalendarMonthSummary
+import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
+import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.ui.state.CalendarDayUiState
+import com.appvoyager.litememo.ui.state.CalendarMemoUiModel
+import com.appvoyager.litememo.ui.state.CalendarUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
+import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@HiltViewModel
+class CalendarViewModel @Inject constructor(
+    private val observeCalendarMonthSummaryUseCase: ObserveCalendarMonthSummaryUseCase,
+    private val observeMemosByCalendarDateUseCase: ObserveMemosByCalendarDateUseCase,
+    observeTagsUseCase: ObserveTagsUseCase,
+    currentTimeProvider: CurrentTimeProvider,
+    private val zoneId: ZoneId
+) : ViewModel() {
+
+    private val initialDate = CalendarDate.from(currentTimeProvider.now(), zoneId)
+    private val selectedMonth = MutableStateFlow(CalendarMonth(YearMonth.from(initialDate.value)))
+    private val selectedDate = MutableStateFlow(initialDate)
+    private val isCalendarExpanded = MutableStateFlow(true)
+    private val isDatePickerVisible = MutableStateFlow(false)
+
+    private val observedCalendarData = combine(
+        selectedMonth.flatMapLatest { month -> observeCalendarMonthSummaryUseCase(month) },
+        selectedDate.flatMapLatest { date -> observeMemosByCalendarDateUseCase(date) },
+        observeTagsUseCase()
+    ) { monthSummary, memos, tags ->
+        ObservedCalendarData(
+            monthSummary = monthSummary,
+            memos = memos,
+            tags = tags
+        )
+    }
+
+    val uiState: StateFlow<CalendarUiState> = combine(
+        observedCalendarData,
+        selectedMonth,
+        selectedDate,
+        isCalendarExpanded,
+        isDatePickerVisible
+    ) { observed, month, date, expanded, datePickerVisible ->
+        CalendarUiState(
+            isLoading = false,
+            selectedMonth = month,
+            selectedDate = date,
+            isCalendarExpanded = expanded,
+            isDatePickerVisible = datePickerVisible,
+            days = observed.monthSummary.toDayUiStates(date),
+            memos = observed.memos.toUiModels(observed.tags)
+        )
+    }.catch { throwable ->
+        emit(
+            CalendarUiState(
+                isLoading = false,
+                hasError = true,
+                selectedMonth = selectedMonth.value,
+                selectedDate = selectedDate.value,
+                isCalendarExpanded = isCalendarExpanded.value,
+                isDatePickerVisible = isDatePickerVisible.value
+            )
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = CalendarUiState(
+            selectedMonth = selectedMonth.value,
+            selectedDate = selectedDate.value
+        )
+    )
+
+    fun previousMonth() {
+        selectMonth(selectedMonth.value.value.minusMonths(1))
+    }
+
+    fun nextMonth() {
+        selectMonth(selectedMonth.value.value.plusMonths(1))
+    }
+
+    fun selectDate(date: CalendarDate) {
+        selectedDate.value = date
+        selectedMonth.value = CalendarMonth(YearMonth.from(date.value))
+    }
+
+    fun toggleCalendarExpanded() {
+        isCalendarExpanded.value = !isCalendarExpanded.value
+    }
+
+    fun showDatePicker() {
+        isDatePickerVisible.value = true
+    }
+
+    fun dismissDatePicker() {
+        isDatePickerVisible.value = false
+    }
+
+    fun selectDateFromPicker(millis: Long) {
+        val date = Instant.ofEpochMilli(millis).atZone(zoneId).toLocalDate()
+        selectDate(CalendarDate(date))
+        dismissDatePicker()
+    }
+
+    private fun selectMonth(yearMonth: YearMonth) {
+        selectedMonth.value = CalendarMonth(yearMonth)
+        selectedDate.value = CalendarDate(coerceDateToMonth(selectedDate.value.value, yearMonth))
+    }
+
+    private fun coerceDateToMonth(date: LocalDate, yearMonth: YearMonth): LocalDate {
+        val day = minOf(date.dayOfMonth, yearMonth.lengthOfMonth())
+        return yearMonth.atDay(day)
+    }
+
+    private fun CalendarMonthSummary.toDayUiStates(selectedDate: CalendarDate) = days.map { day ->
+        CalendarDayUiState(
+            date = day.date,
+            dayOfMonth = day.date.value.dayOfMonth,
+            isSelected = day.date == selectedDate,
+            hasMemo = day.memoCount > 0
+        )
+    }
+
+    private fun List<Memo>.toUiModels(tags: List<Tag>): List<CalendarMemoUiModel> {
+        val tagsById = tags.associateBy { it.id }
+        return map { memo ->
+            val tag = memo.tagIds.firstNotNullOfOrNull { id -> tagsById[id] }
+            CalendarMemoUiModel(
+                id = memo.id,
+                title = memo.title.value,
+                body = memo.body.value,
+                tagName = tag?.name?.value,
+                tagColor = tag?.color,
+                updatedAtMillis = memo.updatedAt.value,
+                isImportant = memo.isImportant
+            )
+        }
+    }
+
+    private data class ObservedCalendarData(
+        val monthSummary: CalendarMonthSummary,
+        val memos: List<Memo>,
+        val tags: List<Tag>
+    )
+}
