@@ -15,8 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.screen.CalendarPlaceholderScreen
+import com.appvoyager.litememo.ui.screen.CalendarRoute
 import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.SettingsPlaceholderScreen
 
@@ -65,7 +64,7 @@ fun LiteMemoApp() {
                 HomeRoute()
             }
             composable(LiteMemoDestination.Calendar.route) {
-                CalendarPlaceholderScreen()
+                CalendarRoute()
             }
             composable(LiteMemoDestination.Settings.route) {
                 SettingsPlaceholderScreen()

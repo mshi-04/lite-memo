@@ -1,25 +1,50 @@
 <resources>
+    <!-- Common -->
     <string name="app_name">LiteMemo</string>
     <string name="home_tab">ホーム</string>
     <string name="calendar_tab">カレンダー</string>
     <string name="settings_tab">設定</string>
-    <string name="welcome_back">おかえりなさい</string>
-    <string name="recent_memos">最近のメモ</string>
-    <string name="memo_count">%1$d件のメモ</string>
-    <string name="home_summary_detail">未整理 %1$d件 / 重要 %2$d件</string>
     <string name="today_label">今日</string>
     <string name="yesterday_label">昨日</string>
-    <string name="filter_all">すべて</string>
     <string name="unorganized_label">未整理</string>
-    <string name="filter_important">重要</string>
-    <string name="empty_home_title">まだメモがありません</string>
-    <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
-    <string name="calendar_placeholder_title">カレンダーは準備中です</string>
-    <string name="calendar_placeholder_body">日付ごとのメモ表示は今後追加します。</string>
-    <string name="settings_placeholder_title">設定は準備中です</string>
-    <string name="settings_placeholder_body">テーマや表示設定は今後追加します。</string>
     <string name="create_memo">メモ作成</string>
     <string name="search">検索</string>
     <string name="more_options">その他</string>
     <string name="unknown_error">メモを読み込めませんでした。</string>
+
+    <!-- Home -->
+    <string name="welcome_back">おかえりなさい</string>
+    <string name="recent_memos">最近のメモ</string>
+    <string name="memo_count">%1$d件のメモ</string>
+    <string name="home_summary_detail">未整理 %1$d件 / 重要 %2$d件</string>
+    <string name="filter_all">すべて</string>
+    <string name="filter_important">重要</string>
+    <string name="empty_home_title">まだメモがありません</string>
+    <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
+
+    <!-- Calendar -->
+    <string name="calendar_placeholder_title">カレンダーは準備中です</string>
+    <string name="calendar_placeholder_body">日付ごとのメモ表示は今後追加します。</string>
+    <string name="calendar_title">カレンダー</string>
+    <string name="previous_month">前の月</string>
+    <string name="next_month">次の月</string>
+    <string name="toggle_calendar">カレンダーを開閉</string>
+    <string name="select_month">年月を選択</string>
+    <string name="empty_calendar_title">この日のメモはありません</string>
+    <string name="empty_calendar_body">別の日付を選ぶと、その日に作成したメモを確認できます。</string>
+    <string name="month_title_format">yyyy年M月</string>
+    <string name="selected_date_title_format">M月d日のメモ</string>
+    <string-array name="week_day_labels">
+        <item>日</item>
+        <item>月</item>
+        <item>火</item>
+        <item>水</item>
+        <item>木</item>
+        <item>金</item>
+        <item>土</item>
+    </string-array>
+
+    <!-- Settings -->
+    <string name="settings_placeholder_title">設定は準備中です</string>
+    <string name="settings_placeholder_body">テーマや表示設定は今後追加します。</string>
 </resources>
