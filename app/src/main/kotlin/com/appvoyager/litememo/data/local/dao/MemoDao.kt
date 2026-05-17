@@ -2,7 +2,6 @@ package com.appvoyager.litememo.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -13,9 +12,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MemoDao {
-
-    @Query("SELECT * FROM memos")
-    fun observeMemos(): Flow<List<MemoEntity>>
 
     @Transaction
     @Query("SELECT * FROM memos")
@@ -28,9 +24,6 @@ interface MemoDao {
         toMillis: Long
     ): Flow<List<MemoWithTagRefs>>
 
-    @Query("SELECT * FROM memo_tag_refs ORDER BY memoId ASC, position ASC")
-    fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>>
-
     @Transaction
     @Query("SELECT * FROM memos WHERE id = :id")
     suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs?
@@ -38,7 +31,7 @@ interface MemoDao {
     @Upsert
     suspend fun upsertMemo(memo: MemoEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insertTagRefs(tagRefs: List<MemoTagRefEntity>)
 
     @Query("DELETE FROM memo_tag_refs WHERE memoId = :memoId")

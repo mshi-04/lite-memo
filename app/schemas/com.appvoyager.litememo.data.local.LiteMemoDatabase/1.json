@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0b2561bb1dbc9c3c18fc5d2ff3a2a5c7",
+    "identityHash": "fd8f09fa45e58b72ecfab8a42d985c4b",
     "entities": [
       {
         "tableName": "memos",
@@ -50,7 +50,27 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_memos_createdAt",
+            "unique": false,
+            "columnNames": [
+              "createdAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_memos_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
+          },
+          {
+            "name": "index_memos_updatedAt",
+            "unique": false,
+            "columnNames": [
+              "updatedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_memos_updatedAt` ON `${TABLE_NAME}` (`updatedAt`)"
+          }
+        ]
       },
       {
         "tableName": "tags",
@@ -120,13 +140,14 @@
         },
         "indices": [
           {
-            "name": "index_memo_tag_refs_memoId",
-            "unique": false,
+            "name": "index_memo_tag_refs_memoId_position",
+            "unique": true,
             "columnNames": [
-              "memoId"
+              "memoId",
+              "position"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_memo_tag_refs_memoId` ON `${TABLE_NAME}` (`memoId`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_memo_tag_refs_memoId_position` ON `${TABLE_NAME}` (`memoId`, `position`)"
           },
           {
             "name": "index_memo_tag_refs_tagId",
@@ -166,7 +187,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0b2561bb1dbc9c3c18fc5d2ff3a2a5c7')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fd8f09fa45e58b72ecfab8a42d985c4b')"
     ]
   }
 }

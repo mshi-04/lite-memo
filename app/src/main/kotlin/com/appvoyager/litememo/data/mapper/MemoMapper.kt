@@ -27,14 +27,20 @@ fun Memo.toTagRefs() = tagIds.mapIndexed { index, tagId ->
     )
 }
 
-fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>) = Memo(
-    id = MemoId(id),
-    title = MemoTitle(title),
-    body = MemoBody(body),
-    createdAt = TimestampMillis(createdAt),
-    updatedAt = TimestampMillis(updatedAt),
-    tagIds = tagRefs.sortedBy { it.position }.map { TagId(it.tagId) },
-    isImportant = isImportant
-)
+fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>): Memo {
+    require(tagRefs.all { it.memoId == id }) {
+        "All tagRefs must reference memoId=$id."
+    }
+
+    return Memo(
+        id = MemoId(id),
+        title = MemoTitle(title),
+        body = MemoBody(body),
+        createdAt = TimestampMillis(createdAt),
+        updatedAt = TimestampMillis(updatedAt),
+        tagIds = tagRefs.sortedBy { it.position }.map { TagId(it.tagId) },
+        isImportant = isImportant
+    )
+}
 
 fun MemoWithTagRefs.toDomain() = memo.toDomain(tagRefs)

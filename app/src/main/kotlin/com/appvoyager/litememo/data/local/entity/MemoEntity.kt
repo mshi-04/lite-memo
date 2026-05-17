@@ -1,9 +1,16 @@
 package com.appvoyager.litememo.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "memos")
+@Entity(
+    tableName = "memos",
+    indices = [
+        Index(value = ["createdAt"]),
+        Index(value = ["updatedAt"])
+    ]
+)
 data class MemoEntity(
     @PrimaryKey val id: String,
     val title: String,
