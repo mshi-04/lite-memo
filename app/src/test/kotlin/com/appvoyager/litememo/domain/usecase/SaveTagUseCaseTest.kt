@@ -10,6 +10,7 @@ import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -71,7 +72,7 @@ class SaveTagUseCaseTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
+            runTest {
                 useCase(
                     SaveTagCommand(
                         id = TagId("client-id"),
@@ -84,22 +85,20 @@ class SaveTagUseCaseTest {
     }
 
     @Test
-    fun invokeDoesNotSaveTagWhenTagIdDoesNotExist() {
+    fun invokeDoesNotSaveTagWhenTagIdDoesNotExist() = runTest {
         // Arrange
         val repository = FakeTagRepository()
         val useCase = saveTagUseCase(tagRepository = repository)
 
         // Act
         try {
-            runBlocking {
-                useCase(
-                    SaveTagCommand(
-                        id = TagId("client-id"),
-                        name = TagName("New"),
-                        color = TagColor(0xFF006D3B)
-                    )
+            useCase(
+                SaveTagCommand(
+                    id = TagId("client-id"),
+                    name = TagName("New"),
+                    color = TagColor(0xFF006D3B)
                 )
-            }
+            )
         } catch (_: IllegalArgumentException) {
         }
 

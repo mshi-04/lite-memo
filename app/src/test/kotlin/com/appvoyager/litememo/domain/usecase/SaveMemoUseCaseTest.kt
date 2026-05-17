@@ -13,6 +13,7 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -116,23 +117,21 @@ class SaveMemoUseCaseTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
+            runTest {
                 useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
             }
         }
     }
 
     @Test
-    fun invokeDoesNotSaveMemoWhenTitleAndBodyAreBlank() {
+    fun invokeDoesNotSaveMemoWhenTitleAndBodyAreBlank() = runTest {
         // Arrange
         val repository = FakeMemoRepository()
         val useCase = saveMemoUseCase(memoRepository = repository)
 
         // Act
         try {
-            runBlocking {
-                useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
-            }
+            useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
         } catch (_: IllegalArgumentException) {
         }
 
