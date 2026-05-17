@@ -22,7 +22,7 @@ composeBom = "2026.05.00"
 
 # Kotlin
 kotlinxCoroutines = "1.11.0"
-kotlinxSerialization = "1.8.1"
+kotlinxSerialization = "1.11.0"
 
 # Test
 junitJupiter = "6.0.3"
