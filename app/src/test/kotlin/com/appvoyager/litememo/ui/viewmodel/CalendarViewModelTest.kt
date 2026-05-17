@@ -5,7 +5,6 @@ import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
-import com.appvoyager.litememo.domain.model.CalendarDate
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
@@ -59,7 +58,7 @@ class CalendarViewModelTest {
         val state = viewModel.uiState.first { !it.isLoading }
 
         // Assert
-        assertEquals(YearMonth.of(2026, 6), state.selectedMonth?.value)
+        assertEquals(YearMonth.of(2026, 6), state.selectedMonth)
     }
 
     @Test
@@ -69,12 +68,12 @@ class CalendarViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.selectDate(CalendarDate(LocalDate.of(2026, 5, 11)))
+        viewModel.selectDate(LocalDate.of(2026, 5, 11))
         advanceUntilIdle()
         val state = viewModel.uiState.first { !it.isLoading }
 
         // Assert
-        assertEquals(LocalDate.of(2026, 5, 11), state.selectedDate?.value)
+        assertEquals(LocalDate.of(2026, 5, 11), state.selectedDate)
     }
 
     @Test
@@ -105,8 +104,8 @@ class CalendarViewModelTest {
         val state = viewModel.uiState.first { !it.isLoading }
 
         // Assert
-        assertEquals(YearMonth.of(2026, 7), state.selectedMonth?.value)
-        assertEquals(LocalDate.of(2026, 7, 3), state.selectedDate?.value)
+        assertEquals(YearMonth.of(2026, 7), state.selectedMonth)
+        assertEquals(LocalDate.of(2026, 7, 3), state.selectedDate)
     }
 
     @Test

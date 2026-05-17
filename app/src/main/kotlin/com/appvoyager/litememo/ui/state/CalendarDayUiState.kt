@@ -1,9 +1,9 @@
 package com.appvoyager.litememo.ui.state
 
-import com.appvoyager.litememo.domain.model.CalendarDate
+import java.time.LocalDate
 
 data class CalendarDayUiState(
-    val date: CalendarDate,
+    val date: LocalDate,
     val dayOfMonth: Int,
     val isSelected: Boolean,
     val hasMemo: Boolean

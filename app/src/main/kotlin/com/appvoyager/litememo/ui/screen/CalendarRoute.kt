@@ -13,13 +13,14 @@ fun CalendarRoute(modifier: Modifier = Modifier, viewModel: CalendarViewModel = 
 
     CalendarScreen(
         uiState = uiState,
-        onPreviousMonth = viewModel::previousMonth,
-        onNextMonth = viewModel::nextMonth,
-        onDateSelected = viewModel::selectDate,
-        onCalendarExpandedToggle = viewModel::toggleCalendarExpanded,
-        onDatePickerRequested = viewModel::showDatePicker,
-        onDatePickerDismissed = viewModel::dismissDatePicker,
-        onDatePicked = viewModel::selectDateFromPicker,
+        onPreviousMonth = { viewModel.previousMonth() },
+        onNextMonth = { viewModel.nextMonth() },
+        onDateSelected = { date -> viewModel.selectDate(date) },
+        onCalendarExpandedToggle = { viewModel.toggleCalendarExpanded() },
+        onDatePickerRequested = { viewModel.showDatePicker() },
+        onDatePickerDismissed = { viewModel.dismissDatePicker() },
+        onDatePicked = { date -> viewModel.selectDateFromPicker(date) },
+        onRetry = { viewModel.retry() },
         modifier = modifier
     )
 }
