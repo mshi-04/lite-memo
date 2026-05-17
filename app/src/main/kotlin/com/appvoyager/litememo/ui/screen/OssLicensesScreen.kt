@@ -40,7 +40,7 @@ fun OssLicensesScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.navigate_back)
                         )
                     }
                 }
