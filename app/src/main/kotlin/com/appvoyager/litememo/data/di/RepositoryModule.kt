@@ -1,9 +1,11 @@
 package com.appvoyager.litememo.data.di
 
+import com.appvoyager.litememo.data.repository.DataStoreUserSettingsRepository
 import com.appvoyager.litememo.data.repository.RoomMemoRepository
 import com.appvoyager.litememo.data.repository.RoomTagRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
+import com.appvoyager.litememo.domain.repository.UserSettingsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -22,4 +24,9 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindTagRepository(repository: RoomTagRepository): TagRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindUserSettingsRepository(
+        repository: DataStoreUserSettingsRepository
+    ): UserSettingsRepository
 }

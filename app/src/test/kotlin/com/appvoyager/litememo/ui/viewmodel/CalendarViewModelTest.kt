@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
@@ -144,6 +145,7 @@ class CalendarViewModelTest {
             ),
             observeMemosByCalendarDateUseCase = ObserveMemosByCalendarDateUseCase(
                 memoRepository = memoRepository,
+                userSettingsRepository = FakeUserSettingsRepository(),
                 zoneId = zoneId
             ),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),

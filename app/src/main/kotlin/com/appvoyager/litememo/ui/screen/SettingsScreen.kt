@@ -1,0 +1,330 @@
+package com.appvoyager.litememo.ui.screen
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.ThemeMode
+import com.appvoyager.litememo.ui.state.SettingsUiState
+
+@Composable
+fun SettingsScreen(
+    uiState: SettingsUiState,
+    onThemeModeSelected: (ThemeMode) -> Unit,
+    onMemoSortOrderSelected: (MemoSortOrder) -> Unit,
+    onShowThemeDialog: () -> Unit,
+    onDismissThemeDialog: () -> Unit,
+    onExpandSortOrder: () -> Unit,
+    onCollapseSortOrder: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit,
+    onOpenSourceLicenseClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader(text = stringResource(R.string.settings_section_display))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                ThemeRow(
+                    currentMode = uiState.themeMode,
+                    onClick = onShowThemeDialog
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            item {
+                SortOrderRow(
+                    currentOrder = uiState.memoSortOrder,
+                    expanded = uiState.sortOrderExpanded,
+                    onExpand = onExpandSortOrder,
+                    onCollapse = onCollapseSortOrder,
+                    onSelected = onMemoSortOrderSelected
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                SectionHeader(text = stringResource(R.string.settings_section_app_info))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                VersionRow(version = uiState.appVersion)
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            item {
+                SettingsClickableRow(
+                    label = stringResource(R.string.settings_privacy_policy),
+                    onClick = onPrivacyPolicyClick,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            item {
+                SettingsClickableRow(
+                    label = stringResource(R.string.settings_open_source_licenses),
+                    onClick = onOpenSourceLicenseClick,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    if (uiState.showThemeDialog) {
+        ThemeSelectionDialog(
+            currentMode = uiState.themeMode,
+            onModeSelected = onThemeModeSelected,
+            onDismiss = onDismissThemeDialog
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+private fun ThemeRow(currentMode: ThemeMode, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.settings_theme),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = currentMode.toDisplayString(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun SortOrderRow(
+    currentOrder: MemoSortOrder,
+    expanded: Boolean,
+    onExpand: () -> Unit,
+    onCollapse: () -> Unit,
+    onSelected: (MemoSortOrder) -> Unit
+) {
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onExpand)
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.settings_sort_order),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = currentOrder.toDisplayString(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onCollapse
+        ) {
+            MemoSortOrder.entries.forEach { order ->
+                DropdownMenuItem(
+                    text = { Text(text = order.toDisplayString()) },
+                    onClick = {
+                        onSelected(order)
+                        onCollapse()
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VersionRow(version: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.settings_version),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = version,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun SettingsClickableRow(
+    label: String,
+    onClick: () -> Unit,
+    trailingIcon: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        trailingIcon()
+    }
+}
+
+@Composable
+private fun ThemeSelectionDialog(
+    currentMode: ThemeMode,
+    onModeSelected: (ThemeMode) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedMode by remember(currentMode) { mutableStateOf(currentMode) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.settings_theme)) },
+        text = {
+            Column {
+                ThemeMode.entries.forEach { mode ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedMode = mode }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = mode == selectedMode,
+                            onClick = { selectedMode = mode }
+                        )
+                        Text(
+                            text = mode.toDisplayString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onModeSelected(selectedMode)
+                onDismiss()
+            }) {
+                Text(text = stringResource(R.string.settings_dialog_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.settings_dialog_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ThemeMode.toDisplayString(): String = when (this) {
+    ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
+    ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
+    ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
+}
+
+@Composable
+private fun MemoSortOrder.toDisplayString(): String = when (this) {
+    MemoSortOrder.UPDATED_NEWEST -> stringResource(R.string.settings_sort_updated)
+    MemoSortOrder.CREATED_NEWEST -> stringResource(R.string.settings_sort_created)
+}
