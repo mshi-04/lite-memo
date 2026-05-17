@@ -8,12 +8,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.ui.viewmodel.HomeViewModel
 
 @Composable
-fun HomeRoute(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeRoute(
+    onMemoClick: (String) -> Unit,
+    onCreateMemoClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     HomeScreen(
         uiState = uiState,
         onFilterSelected = { filter -> viewModel.selectFilter(filter) },
+        onMemoClick = onMemoClick,
+        onCreateMemoClick = onCreateMemoClick,
         onRetry = { viewModel.retry() },
         modifier = modifier
     )

@@ -8,7 +8,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.ui.viewmodel.CalendarViewModel
 
 @Composable
-fun CalendarRoute(modifier: Modifier = Modifier, viewModel: CalendarViewModel = hiltViewModel()) {
+fun CalendarRoute(
+    onMemoClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: CalendarViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     CalendarScreen(
@@ -21,6 +25,7 @@ fun CalendarRoute(modifier: Modifier = Modifier, viewModel: CalendarViewModel = 
         onDatePickerDismissed = { viewModel.dismissDatePicker() },
         onDatePicked = { date -> viewModel.selectDateFromPicker(date) },
         onRetry = { viewModel.retry() },
+        onMemoClick = onMemoClick,
         modifier = modifier
     )
 }
