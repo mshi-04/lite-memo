@@ -14,7 +14,11 @@ import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 private const val PRIVACY_POLICY_URL = "https://example.com/privacy-policy"
 
 @Composable
-fun SettingsRoute(modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsRoute(
+    onOpenSourceLicenseClick: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -30,9 +34,7 @@ fun SettingsRoute(modifier: Modifier = Modifier, viewModel: SettingsViewModel = 
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
             context.startActivity(intent)
         },
-        onOpenSourceLicenseClick = {
-            // TODO: OSSライセンス画面を実装（oss-licenses-plugin の AGP 9.x 対応待ち）
-        },
+        onOpenSourceLicenseClick = onOpenSourceLicenseClick,
         modifier = modifier
     )
 }

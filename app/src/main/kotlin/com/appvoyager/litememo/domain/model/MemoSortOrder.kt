@@ -4,3 +4,15 @@ enum class MemoSortOrder {
     UPDATED_NEWEST,
     CREATED_NEWEST
 }
+
+fun List<Memo>.sortedBy(order: MemoSortOrder): List<Memo> = when (order) {
+    MemoSortOrder.UPDATED_NEWEST -> sortedWith(
+        compareByDescending<Memo> { it.updatedAt.value }
+            .thenByDescending { it.createdAt.value }
+    )
+
+    MemoSortOrder.CREATED_NEWEST -> sortedWith(
+        compareByDescending<Memo> { it.createdAt.value }
+            .thenByDescending { it.updatedAt.value }
+    )
+}

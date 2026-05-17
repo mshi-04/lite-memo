@@ -37,6 +37,7 @@ object ProviderModule {
     fun provideTagIdProvider(): TagIdProvider = UuidTagIdProvider()
 
     @Provides
+    @Singleton
     @Named("appVersion")
     fun provideAppVersion(@ApplicationContext context: Context): String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""

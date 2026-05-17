@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Activity Compose",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/activity"
+  },
+  {
+    "name": "Core KTX",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/core"
+  },
+  {
+    "name": "DataStore Preferences",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/datastore"
+  },
+  {
+    "name": "Hilt",
+    "license": "Apache License 2.0",
+    "url": "https://dagger.dev/hilt/"
+  },
+  {
+    "name": "Jetpack Compose",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/compose"
+  },
+  {
+    "name": "Kotlinx Coroutines",
+    "license": "Apache License 2.0",
+    "url": "https://github.com/Kotlin/kotlinx.coroutines"
+  },
+  {
+    "name": "Kotlinx Serialization",
+    "license": "Apache License 2.0",
+    "url": "https://github.com/Kotlin/kotlinx.serialization"
+  },
+  {
+    "name": "Lifecycle",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/lifecycle"
+  },
+  {
+    "name": "Material 3",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3"
+  },
+  {
+    "name": "Navigation Compose",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/navigation"
+  },
+  {
+    "name": "Room",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/room"
+  }
+]

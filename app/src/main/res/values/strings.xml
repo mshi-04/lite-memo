@@ -70,5 +70,4 @@
     <string name="settings_privacy_policy">プライバシーポリシー</string>
     <string name="settings_open_source_licenses">オープンソースライセンス</string>
     <string name="settings_dialog_ok">OK</string>
-    <string name="settings_dialog_cancel">キャンセル</string>
 </resources>

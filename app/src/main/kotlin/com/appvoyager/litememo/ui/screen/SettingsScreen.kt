@@ -310,7 +310,7 @@ private fun ThemeSelectionDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.settings_dialog_cancel))
+                Text(text = stringResource(R.string.cancel_label))
             }
         }
     )

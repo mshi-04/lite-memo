@@ -21,9 +21,10 @@ import androidx.navigation.navArgument
 import com.appvoyager.litememo.ui.screen.CalendarRoute
 import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.MemoEditRoute
+import com.appvoyager.litememo.ui.screen.OssLicensesRoute
 import com.appvoyager.litememo.ui.screen.SettingsRoute
-import com.appvoyager.litememo.ui.screen.SettingsPlaceholderScreen
 
+private const val OSS_LICENSES_ROUTE = "oss_licenses"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}"
 private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
@@ -93,7 +94,16 @@ fun LiteMemoApp() {
                 )
             }
             composable(LiteMemoDestination.Settings.route) {
-                SettingsRoute()
+                SettingsRoute(
+                    onOpenSourceLicenseClick = {
+                        navController.navigate(OSS_LICENSES_ROUTE)
+                    }
+                )
+            }
+            composable(OSS_LICENSES_ROUTE) {
+                OssLicensesRoute(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(
                 route = MEMO_EDIT_ROUTE,

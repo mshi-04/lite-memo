@@ -2,7 +2,7 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.model.CalendarDate
 import com.appvoyager.litememo.domain.model.Memo
-import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.sortedBy
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository
@@ -28,17 +28,7 @@ class ObserveMemosByCalendarDateUseCase @Inject constructor(
             memoRepository.observeMemosCreatedBetween(from, to),
             userSettingsRepository.observeMemoSortOrder()
         ) { memos, sortOrder ->
-            when (sortOrder) {
-                MemoSortOrder.UPDATED_NEWEST -> memos.sortedWith(
-                    compareByDescending<Memo> { it.updatedAt.value }
-                        .thenByDescending { it.createdAt.value }
-                )
-
-                MemoSortOrder.CREATED_NEWEST -> memos.sortedWith(
-                    compareByDescending<Memo> { it.createdAt.value }
-                        .thenByDescending { it.updatedAt.value }
-                )
-            }
+            memos.sortedBy(sortOrder)
         }
     }
 
