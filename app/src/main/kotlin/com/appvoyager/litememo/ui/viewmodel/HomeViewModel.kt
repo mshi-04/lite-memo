@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -74,7 +75,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun retry() {
-        retryTrigger.value++
+        retryTrigger.update { it + 1 }
     }
 
     private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (this) {

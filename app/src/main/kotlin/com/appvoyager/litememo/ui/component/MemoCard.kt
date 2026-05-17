@@ -108,7 +108,7 @@ private fun MemoTag(label: String?) {
 @Composable
 private fun memoAccentColor(memo: MemoUiModel): Color {
     if (memo.isImportant) return MaterialTheme.colorScheme.error
-    return memo.tagColorArgb?.let { Color(it.toULong()) } ?: MaterialTheme.colorScheme.primary
+    return memo.tagColorArgb?.let { Color(it.toInt()) } ?: MaterialTheme.colorScheme.primary
 }
 
 @Composable
@@ -116,7 +116,7 @@ private fun updatedAtLabel(updatedAtMillis: Long): String {
     val zoneId = remember { ZoneId.systemDefault() }
     val timeFormatter = remember { DateTimeFormatter.ofPattern("H:mm") }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("M/d") }
-    val today = remember { LocalDate.now(zoneId) }
+    val today = LocalDate.now(zoneId)
     val updatedAt = remember(updatedAtMillis, zoneId) {
         Instant.ofEpochMilli(updatedAtMillis).atZone(zoneId)
     }
