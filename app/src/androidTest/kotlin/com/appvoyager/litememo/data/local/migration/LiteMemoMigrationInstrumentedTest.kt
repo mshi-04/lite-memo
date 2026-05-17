@@ -20,7 +20,7 @@ class LiteMemoMigrationInstrumentedTest {
     )
 
     @Test
-    fun version1SchemaPreservesMemoAndTagRefFields() {
+    fun version1SchemaCanBeCreatedAndQueried() {
         // Arrange
         helper.createDatabase(TEST_DATABASE_NAME, 1).apply {
             insertMemo()

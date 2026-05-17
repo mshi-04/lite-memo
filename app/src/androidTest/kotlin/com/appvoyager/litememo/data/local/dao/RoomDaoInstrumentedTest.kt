@@ -91,7 +91,7 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun deleteTagWithRefsDeletesMemoTagRefs() = runBlocking {
+    fun deleteTagCascadesDeleteToMemoTagRefs() = runBlocking {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
         tagDao.upsertTag(tagEntity(id = "tag-1"))
@@ -106,7 +106,7 @@ class RoomDaoInstrumentedTest {
         )
 
         // Act
-        tagDao.deleteTagWithRefs("tag-1")
+        tagDao.deleteTag("tag-1")
 
         // Assert
         assertEquals(
