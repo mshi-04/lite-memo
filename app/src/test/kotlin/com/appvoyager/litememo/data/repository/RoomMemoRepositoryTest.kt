@@ -43,13 +43,13 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosWithRangeDelegatesTimestampValuesToDao() = runTest {
+    fun observeMemosCreatedBetweenDelegatesTimestampValuesToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
         // Act
-        repository.observeMemos(
+        repository.observeMemosCreatedBetween(
             from = TimestampMillis(1_000L),
             to = TimestampMillis(2_000L)
         ).first()
@@ -59,7 +59,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosWithRangeReturnsDomainMemosFromDao() = runTest {
+    fun observeMemosCreatedBetweenReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(memoWithTagRefs(memoId = "memo-1"))
@@ -67,7 +67,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemos(
+        val memos = repository.observeMemosCreatedBetween(
             from = TimestampMillis(500L),
             to = TimestampMillis(2_000L)
         ).first()
@@ -77,7 +77,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosWithRangeUsesInclusiveStartAndExclusiveEnd() = runTest {
+    fun observeMemosCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(
@@ -90,7 +90,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemos(
+        val memos = repository.observeMemosCreatedBetween(
             from = TimestampMillis(1_000L),
             to = TimestampMillis(2_000L)
         ).first()
@@ -100,15 +100,15 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosWithEqualRangeThrowsBeforeCallingDao() {
+    fun observeMemosCreatedBetweenWithEqualRangeThrowsBeforeCallingDao() {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
         // Act & Assert
-        // observeMemos は Flow を返す前に即時バリデーションを行うため runTest 不要
+        // observeMemosCreatedBetween は Flow を返す前に即時バリデーションを行うため runTest 不要
         assertThrows(IllegalArgumentException::class.java) {
-            repository.observeMemos(
+            repository.observeMemosCreatedBetween(
                 from = TimestampMillis(1_000L),
                 to = TimestampMillis(1_000L)
             )
@@ -117,15 +117,15 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosWithDescendingRangeThrowsBeforeCallingDao() {
+    fun observeMemosCreatedBetweenWithDescendingRangeThrowsBeforeCallingDao() {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
         // Act & Assert
-        // observeMemos は Flow を返す前に即時バリデーションを行うため runTest 不要
+        // observeMemosCreatedBetween は Flow を返す前に即時バリデーションを行うため runTest 不要
         assertThrows(IllegalArgumentException::class.java) {
-            repository.observeMemos(
+            repository.observeMemosCreatedBetween(
                 from = TimestampMillis(2_000L),
                 to = TimestampMillis(1_000L)
             )
@@ -226,7 +226,7 @@ class RoomMemoRepositoryTest {
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
 
-        override fun observeMemosWithTagRefsBetween(
+        override fun observeMemosWithTagRefsCreatedBetween(
             fromMillis: Long,
             toMillis: Long
         ): Flow<List<MemoWithTagRefs>> {

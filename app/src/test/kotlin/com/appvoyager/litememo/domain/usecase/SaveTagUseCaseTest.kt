@@ -11,6 +11,7 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class SaveTagUseCaseTest {
@@ -64,22 +65,46 @@ class SaveTagUseCaseTest {
     }
 
     @Test
-    fun invokeUsesProvidedIdWhenTagDoesNotExist() = runBlocking {
+    fun invokeThrowsWhenTagIdDoesNotExist() {
         // Arrange
         val useCase = saveTagUseCase()
 
-        // Act
-        val tag =
-            useCase(
-                SaveTagCommand(
-                    id = TagId("client-id"),
-                    name = TagName("New"),
-                    color = TagColor(0xFF006D3B)
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                useCase(
+                    SaveTagCommand(
+                        id = TagId("client-id"),
+                        name = TagName("New"),
+                        color = TagColor(0xFF006D3B)
+                    )
                 )
-            )
+            }
+        }
+    }
+
+    @Test
+    fun invokeDoesNotSaveTagWhenTagIdDoesNotExist() {
+        // Arrange
+        val repository = FakeTagRepository()
+        val useCase = saveTagUseCase(tagRepository = repository)
+
+        // Act
+        try {
+            runBlocking {
+                useCase(
+                    SaveTagCommand(
+                        id = TagId("client-id"),
+                        name = TagName("New"),
+                        color = TagColor(0xFF006D3B)
+                    )
+                )
+            }
+        } catch (_: IllegalArgumentException) {
+        }
 
         // Assert
-        assertEquals(TagId("client-id"), tag.id)
+        assertEquals(emptyList<Any>(), repository.savedTags)
     }
 
     private fun saveTagUseCase(

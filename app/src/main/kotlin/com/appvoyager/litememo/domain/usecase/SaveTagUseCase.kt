@@ -14,9 +14,11 @@ class SaveTagUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(command: SaveTagCommand): Tag {
-        val existingTag = command.id?.let { id -> tagRepository.getTag(id) }
+        val existingTag = command.id?.let { id ->
+            requireNotNull(tagRepository.getTag(id)) { "Tag not found: ${id.value}" }
+        }
         val tag = Tag(
-            id = existingTag?.id ?: command.id ?: tagIdProvider.newTagId(),
+            id = existingTag?.id ?: tagIdProvider.newTagId(),
             name = command.name,
             color = command.color,
             createdAt = existingTag?.createdAt ?: currentTimeProvider.now()

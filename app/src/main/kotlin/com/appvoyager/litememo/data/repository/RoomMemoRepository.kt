@@ -18,9 +18,12 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         memos.map { memo -> memo.toDomain() }
     }
 
-    override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> {
+    override fun observeMemosCreatedBetween(
+        from: TimestampMillis,
+        to: TimestampMillis
+    ): Flow<List<Memo>> {
         require(from.value < to.value) { "from must be earlier than to." }
-        return memoDao.observeMemosWithTagRefsBetween(from.value, to.value).map { memos ->
+        return memoDao.observeMemosWithTagRefsCreatedBetween(from.value, to.value).map { memos ->
             memos.map { memo -> memo.toDomain() }
         }
     }

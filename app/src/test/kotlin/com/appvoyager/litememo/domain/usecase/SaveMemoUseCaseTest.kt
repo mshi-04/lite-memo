@@ -110,6 +110,37 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
+    fun invokeThrowsWhenTitleAndBodyAreBlank() {
+        // Arrange
+        val useCase = saveMemoUseCase()
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
+            }
+        }
+    }
+
+    @Test
+    fun invokeDoesNotSaveMemoWhenTitleAndBodyAreBlank() {
+        // Arrange
+        val repository = FakeMemoRepository()
+        val useCase = saveMemoUseCase(memoRepository = repository)
+
+        // Act
+        try {
+            runBlocking {
+                useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
+            }
+        } catch (_: IllegalArgumentException) {
+        }
+
+        // Assert
+        assertEquals(emptyList<Any>(), repository.savedMemos)
+    }
+
+    @Test
     fun invokeReturnsMemoWithUniqueTagIdsWhenDuplicateTagIdsAreProvided() = runBlocking {
         // Arrange
         val tagId = TagId("tag-1")

@@ -23,7 +23,7 @@ interface MemoDao {
 
     @Transaction
     @Query("SELECT * FROM memos WHERE createdAt >= :fromMillis AND createdAt < :toMillis")
-    fun observeMemosWithTagRefsBetween(
+    fun observeMemosWithTagRefsCreatedBetween(
         fromMillis: Long,
         toMillis: Long
     ): Flow<List<MemoWithTagRefs>>

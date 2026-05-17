@@ -59,7 +59,10 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     override fun observeMemos(): Flow<List<Memo>> = memos
 
-    override fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>> {
+    override fun observeMemosCreatedBetween(
+        from: TimestampMillis,
+        to: TimestampMillis
+    ): Flow<List<Memo>> {
         require(from.value < to.value) { "from must be earlier than to." }
         return memos.map { list ->
             list.filter { memo ->

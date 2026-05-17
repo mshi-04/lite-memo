@@ -21,7 +21,7 @@ class ObserveMemosByCalendarDateUseCase @Inject constructor(
         val to = TimestampMillis(
             date.value.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
         )
-        return memoRepository.observeMemos(from, to).map { memos ->
+        return memoRepository.observeMemosCreatedBetween(from, to).map { memos ->
             memos.sortedWith(
                 compareByDescending<Memo> { memo -> memo.updatedAt.value }
                     .thenByDescending { memo -> memo.createdAt.value }
