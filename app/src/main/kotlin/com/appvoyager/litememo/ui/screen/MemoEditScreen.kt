@@ -45,6 +45,7 @@ fun MemoEditScreen(
     onBackRequest: () -> Unit,
     onDismissDiscard: () -> Unit,
     onConfirmDiscard: () -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -55,7 +56,7 @@ fun MemoEditScreen(
                     IconButton(onClick = onBackRequest) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.navigate_back)
                         )
                     }
                 },
@@ -65,14 +66,14 @@ fun MemoEditScreen(
                         IconButton(onClick = onDelete) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = null
+                                contentDescription = stringResource(R.string.delete_memo)
                             )
                         }
                     }
                     IconButton(onClick = onSave) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.save_memo),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -83,7 +84,7 @@ fun MemoEditScreen(
         when {
             uiState.isLoading -> LoadingContent()
 
-            uiState.hasError -> ErrorContent(onRetry = {})
+            uiState.hasError -> ErrorContent(onRetry = onRetry)
 
             else -> {
                 val colorScheme = MaterialTheme.colorScheme
@@ -183,7 +184,8 @@ private fun MemoEditScreenPreview() {
             onDelete = {},
             onBackRequest = {},
             onDismissDiscard = {},
-            onConfirmDiscard = {}
+            onConfirmDiscard = {},
+            onRetry = {}
         )
     }
 }

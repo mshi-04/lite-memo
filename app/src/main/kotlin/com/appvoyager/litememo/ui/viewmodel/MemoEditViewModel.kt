@@ -41,6 +41,11 @@ class MemoEditViewModel @Inject constructor(
         loadMemo()
     }
 
+    fun reload() {
+        _uiState.update { it.copy(isLoading = true, hasError = false) }
+        loadMemo()
+    }
+
     private fun loadMemo() {
         if (memoId == null) {
             _uiState.update { it.copy(isLoading = false) }
@@ -49,7 +54,7 @@ class MemoEditViewModel @Inject constructor(
         viewModelScope.launch {
             val memo = getMemoUseCase(MemoId(memoId!!))
             if (memo == null) {
-                _uiState.update { it.copy(hasError = true) }
+                _uiState.update { it.copy(isLoading = false, hasError = true) }
             } else {
                 _uiState.update {
                     it.copy(
@@ -96,9 +101,10 @@ class MemoEditViewModel @Inject constructor(
     }
 
     fun delete() {
+        val id = memoId ?: return
         viewModelScope.launch {
             runCatching {
-                deleteMemoUseCase(MemoId(memoId!!))
+                deleteMemoUseCase(MemoId(id))
             }.onSuccess {
                 _navigationEvent.trySend(Unit)
             }.onFailure {

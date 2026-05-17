@@ -23,7 +23,7 @@ fun MemoEditRoute(
         }
     }
 
-    BackHandler {
+    BackHandler(enabled = !uiState.showDiscardDialog) {
         viewModel.requestBack()
     }
 
@@ -36,6 +36,7 @@ fun MemoEditRoute(
         onBackRequest = { viewModel.requestBack() },
         onDismissDiscard = { viewModel.dismissDiscardDialog() },
         onConfirmDiscard = { viewModel.confirmDiscard() },
+        onRetry = { viewModel.reload() },
         modifier = modifier
     )
 }
