@@ -9,7 +9,7 @@ interface MemoRepository {
 
     fun observeMemos(): Flow<List<Memo>>
 
-    fun observeMemos(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>>
+    fun observeMemosCreatedBetween(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>>
 
     suspend fun getMemo(id: MemoId): Memo?
 

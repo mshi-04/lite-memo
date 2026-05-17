@@ -4,6 +4,6 @@ package com.appvoyager.litememo.domain.model.value
 value class MemoBody private constructor(val value: String) {
 
     companion object {
-        operator fun invoke(rawValue: String): MemoBody = MemoBody(rawValue.trim())
+        operator fun invoke(rawValue: String): MemoBody = MemoBody(rawValue)
     }
 }

@@ -23,7 +23,7 @@ class ObserveCalendarMonthSummaryUseCase @Inject constructor(
         val to = TimestampMillis(
             month.value.plusMonths(1).atDay(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
         )
-        return memoRepository.observeMemos(from, to).map { memos ->
+        return memoRepository.observeMemosCreatedBetween(from, to).map { memos ->
             val countsByDate = memos
                 .groupingBy { memo -> CalendarDate.from(memo.createdAt, zoneId) }
                 .eachCount()

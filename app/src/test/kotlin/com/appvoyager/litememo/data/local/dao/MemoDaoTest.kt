@@ -88,7 +88,7 @@ class MemoDaoTest {
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
 
-        override fun observeMemosWithTagRefsBetween(
+        override fun observeMemosWithTagRefsCreatedBetween(
             fromMillis: Long,
             toMillis: Long
         ): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())

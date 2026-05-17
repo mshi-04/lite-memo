@@ -6,21 +6,21 @@ import org.junit.jupiter.api.Test
 class MemoBodyTest {
 
     @Test
-    fun constructorReturnsTrimmedValueWhenInputHasSurroundingWhitespace() {
+    fun constructorReturnsInputValueWhenInputHasSurroundingWhitespace() {
         // Act
         val body = MemoBody("  body  ")
 
         // Assert
-        assertEquals("body", body.value)
+        assertEquals("  body  ", body.value)
     }
 
     @Test
-    fun constructorReturnsEmptyStringWhenValueIsBlank() {
+    fun constructorReturnsInputValueWhenValueIsBlank() {
         // Act
         val body = MemoBody(" ")
 
         // Assert
-        assertEquals("", body.value)
+        assertEquals(" ", body.value)
     }
 
 }
