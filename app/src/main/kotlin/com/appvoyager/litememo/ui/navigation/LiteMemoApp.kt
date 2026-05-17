@@ -23,6 +23,10 @@ import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.MemoEditRoute
 import com.appvoyager.litememo.ui.screen.SettingsPlaceholderScreen
 
+private const val MEMO_EDIT_BASE = "memo_edit"
+private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}"
+private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
+
 @Composable
 fun LiteMemoApp() {
     val navController = rememberNavController()
@@ -73,17 +77,17 @@ fun LiteMemoApp() {
             composable(LiteMemoDestination.Home.route) {
                 HomeRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate("memo_edit?memoId=${Uri.encode(memoId)}")
+                        navController.navigate(memoEditRouteWithId(memoId))
                     },
                     onCreateMemoClick = {
-                        navController.navigate("memo_edit")
+                        navController.navigate(MEMO_EDIT_BASE)
                     }
                 )
             }
             composable(LiteMemoDestination.Calendar.route) {
                 CalendarRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate("memo_edit?memoId=${Uri.encode(memoId)}")
+                        navController.navigate(memoEditRouteWithId(memoId))
                     }
                 )
             }
@@ -91,7 +95,7 @@ fun LiteMemoApp() {
                 SettingsPlaceholderScreen()
             }
             composable(
-                route = "memo_edit?memoId={memoId}",
+                route = MEMO_EDIT_ROUTE,
                 arguments = listOf(
                     navArgument("memoId") {
                         type = NavType.StringType

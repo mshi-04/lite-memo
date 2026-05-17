@@ -3,7 +3,6 @@ package com.appvoyager.litememo.ui.screen
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,7 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -54,30 +53,26 @@ fun HomeScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            when {
-                uiState.isLoading -> LoadingContent()
-
-                uiState.hasError -> ErrorContent(onRetry = onRetry)
-
-                else -> HomeContent(
-                    uiState = uiState,
-                    onFilterSelected = onFilterSelected,
-                    onMemoClick = onMemoClick
-                )
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            FloatingActionButton(onClick = onCreateMemoClick) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_memo))
             }
         }
-        FloatingActionButton(
-            onClick = onCreateMemoClick,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 16.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_memo))
+    ) { innerPadding ->
+        when {
+            uiState.isLoading -> LoadingContent()
+
+            uiState.hasError -> ErrorContent(onRetry = onRetry)
+
+            else -> HomeContent(
+                uiState = uiState,
+                onFilterSelected = onFilterSelected,
+                onMemoClick = onMemoClick,
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 }
@@ -86,10 +81,11 @@ fun HomeScreen(
 private fun HomeContent(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
-    onMemoClick: (String) -> Unit
+    onMemoClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

@@ -17,7 +17,7 @@ fun MemoEditRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(viewModel) {
         viewModel.navigationEvent.collect {
             onNavigateBack()
         }

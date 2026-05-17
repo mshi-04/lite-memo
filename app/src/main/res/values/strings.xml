@@ -46,8 +46,6 @@
     </string-array>
 
     <!-- Memo Edit -->
-    <string name="memo_edit_new_title">新しいメモ</string>
-    <string name="memo_edit_title">メモ編集</string>
     <string name="memo_edit_title_hint">タイトル</string>
     <string name="memo_edit_body_hint">メモ</string>
     <string name="save_memo">保存</string>

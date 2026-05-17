@@ -47,23 +47,26 @@ class MemoEditViewModel @Inject constructor(
     }
 
     private fun loadMemo() {
-        if (memoId == null) {
-            _uiState.update { it.copy(isLoading = false) }
-            return
-        }
+        if (memoId == null) return
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val memo = getMemoUseCase(MemoId(memoId!!))
-            if (memo == null) {
-                _uiState.update { it.copy(isLoading = false, hasError = true) }
-            } else {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        memoId = memo.id.value,
-                        title = memo.title.value,
-                        body = memo.body.value
-                    )
+            runCatching {
+                getMemoUseCase(MemoId(memoId))
+            }.onSuccess { memo ->
+                if (memo == null) {
+                    _uiState.update { it.copy(isLoading = false, hasError = true) }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            memoId = memo.id.value,
+                            title = memo.title.value,
+                            body = memo.body.value
+                        )
+                    }
                 }
+            }.onFailure {
+                _uiState.update { it.copy(isLoading = false, hasError = true) }
             }
         }
     }
@@ -95,7 +98,7 @@ class MemoEditViewModel @Inject constructor(
             }.onSuccess {
                 _navigationEvent.trySend(Unit)
             }.onFailure {
-                _uiState.update { it.copy(hasError = true) }
+                _uiState.update { state -> state.copy(hasError = true) }
             }
         }
     }
@@ -108,7 +111,7 @@ class MemoEditViewModel @Inject constructor(
             }.onSuccess {
                 _navigationEvent.trySend(Unit)
             }.onFailure {
-                _uiState.update { it.copy(hasError = true) }
+                _uiState.update { state -> state.copy(hasError = true) }
             }
         }
     }
