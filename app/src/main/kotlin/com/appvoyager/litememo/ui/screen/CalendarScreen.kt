@@ -278,8 +278,6 @@ private fun CalendarMonthHeader(
     }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalendarDatePickerDialog(
@@ -313,8 +311,6 @@ private fun CalendarDatePickerDialog(
     }
 }
 
-
-
 @Composable
 private fun calendarContainerColor(): Color {
     if (isSystemInDarkTheme()) {
@@ -331,14 +327,12 @@ private fun selectedDateTitle(date: LocalDate?): String {
     return date?.format(formatter) ?: ""
 }
 
-
 @Composable
 private fun monthTitle(month: YearMonth?): String {
     val pattern = stringResource(R.string.month_title_format)
     val formatter = remember(pattern) { DateTimeFormatter.ofPattern(pattern) }
     return month?.format(formatter) ?: ""
 }
-
 
 @Preview(showBackground = true)
 @Composable

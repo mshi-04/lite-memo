@@ -226,7 +226,6 @@ private fun FilterButton(label: String, selected: Boolean, onClick: () -> Unit) 
     )
 }
 
-
 @Composable
 private fun EmptyHomeContent() {
     MessageContent(
@@ -234,7 +233,6 @@ private fun EmptyHomeContent() {
         body = stringResource(R.string.empty_home_body)
     )
 }
-
 
 @Preview(showBackground = true)
 @Composable
