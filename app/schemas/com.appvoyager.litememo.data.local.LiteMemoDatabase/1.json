@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "fd8f09fa45e58b72ecfab8a42d985c4b",
+    "identityHash": "20e9c9530c85fc86cfc48042efbe84d9",
     "entities": [
       {
         "tableName": "memos",
@@ -106,7 +106,19 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_tags_createdAt_id",
+            "unique": false,
+            "columnNames": [
+              "createdAt",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tags_createdAt_id` ON `${TABLE_NAME}` (`createdAt`, `id`)"
+          }
+        ]
       },
       {
         "tableName": "memo_tag_refs",
@@ -187,7 +199,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fd8f09fa45e58b72ecfab8a42d985c4b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '20e9c9530c85fc86cfc48042efbe84d9')"
     ]
   }
 }

@@ -9,7 +9,7 @@ import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.entity.TagEntity
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -38,7 +38,7 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun observeTagsReturnsTagsOrderedByCreatedAtThenId() = runBlocking {
+    fun observeTagsReturnsTagsOrderedByCreatedAtThenId() = runTest {
         // Arrange
         tagDao.upsertTag(tagEntity(id = "tag-c", createdAt = 2_000L))
         tagDao.upsertTag(tagEntity(id = "tag-b", createdAt = 1_000L))
@@ -52,7 +52,7 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun observeMemosWithTagRefsCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runBlocking {
+    fun observeMemosWithTagRefsCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-before", createdAt = 999L))
         memoDao.upsertMemo(memoEntity(id = "memo-start", createdAt = 1_000L))
@@ -69,7 +69,7 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun observeMemosWithTagRefsReturnsRelatedTagRefs() = runBlocking {
+    fun observeMemosWithTagRefsReturnsRelatedTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
         tagDao.upsertTag(tagEntity(id = "tag-1"))
@@ -91,7 +91,7 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun deleteTagCascadesDeleteToMemoTagRefs() = runBlocking {
+    fun deleteTagCascadesDeleteToMemoTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
         tagDao.upsertTag(tagEntity(id = "tag-1"))
@@ -117,28 +117,28 @@ class RoomDaoInstrumentedTest {
 
     @Test
     fun insertTagRefsThrowsWhenPositionsDuplicateForSameMemo() {
-        // Arrange
-        runBlocking {
-            memoDao.upsertMemo(memoEntity(id = "memo-1"))
-            tagDao.upsertTag(tagEntity(id = "tag-1"))
-            tagDao.upsertTag(tagEntity(id = "tag-2"))
-        }
-        val tagRefs = listOf(
-            MemoTagRefEntity(
-                memoId = "memo-1",
-                tagId = "tag-1",
-                position = 0
-            ),
-            MemoTagRefEntity(
-                memoId = "memo-1",
-                tagId = "tag-2",
-                position = 0
-            )
-        )
-
-        // Act & Assert
         assertThrows(SQLiteConstraintException::class.java) {
-            runBlocking { memoDao.insertTagRefs(tagRefs) }
+            runTest {
+                // Arrange
+                memoDao.upsertMemo(memoEntity(id = "memo-1"))
+                tagDao.upsertTag(tagEntity(id = "tag-1"))
+                tagDao.upsertTag(tagEntity(id = "tag-2"))
+                val tagRefs = listOf(
+                    MemoTagRefEntity(
+                        memoId = "memo-1",
+                        tagId = "tag-1",
+                        position = 0
+                    ),
+                    MemoTagRefEntity(
+                        memoId = "memo-1",
+                        tagId = "tag-2",
+                        position = 0
+                    )
+                )
+
+                // Act
+                memoDao.insertTagRefs(tagRefs)
+            }
         }
     }
 
