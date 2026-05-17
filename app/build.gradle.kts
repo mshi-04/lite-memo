@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
 
     // Kotlin
+    implementation(platform(libs.kotlinx.serialization.bom))
     implementation(libs.kotlinx.coroutines.core)
 
     // DI
@@ -97,9 +98,12 @@ dependencies {
 
     // Instrumented test
     androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(platform(libs.kotlinx.serialization.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 
     // Debug tooling
     debugImplementation(libs.androidx.compose.ui.test.manifest)

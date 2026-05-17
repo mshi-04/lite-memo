@@ -3,6 +3,7 @@ package com.appvoyager.litememo.data.di
 import android.content.Context
 import androidx.room.Room
 import com.appvoyager.litememo.data.local.LiteMemoDatabase
+import com.appvoyager.litememo.data.local.migration.LiteMemoMigrations
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,6 +22,7 @@ object DatabaseModule {
             context,
             LiteMemoDatabase::class.java,
             LiteMemoDatabase.DATABASE_NAME
-        ).build()
+        ).addMigrations(*LiteMemoMigrations.ALL)
+            .build()
 
 }

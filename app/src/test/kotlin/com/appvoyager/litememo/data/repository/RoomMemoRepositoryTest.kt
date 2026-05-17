@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 
 class RoomMemoRepositoryTest {
@@ -102,35 +103,31 @@ class RoomMemoRepositoryTest {
     @Test
     fun observeMemosCreatedBetweenWithEqualRangeThrowsBeforeCallingDao() {
         // Arrange
-        val dao = FakeMemoDao()
+        val dao = FakeMemoDao(failOnObserveMemosBetween = true)
         val repository = RoomMemoRepository(dao)
 
         // Act & Assert
-        // observeMemosCreatedBetween は Flow を返す前に即時バリデーションを行うため runTest 不要
         assertThrows(IllegalArgumentException::class.java) {
             repository.observeMemosCreatedBetween(
                 from = TimestampMillis(1_000L),
                 to = TimestampMillis(1_000L)
             )
         }
-        assertEquals(0, dao.observeMemosBetweenCallCount)
     }
 
     @Test
     fun observeMemosCreatedBetweenWithDescendingRangeThrowsBeforeCallingDao() {
         // Arrange
-        val dao = FakeMemoDao()
+        val dao = FakeMemoDao(failOnObserveMemosBetween = true)
         val repository = RoomMemoRepository(dao)
 
         // Act & Assert
-        // observeMemosCreatedBetween は Flow を返す前に即時バリデーションを行うため runTest 不要
         assertThrows(IllegalArgumentException::class.java) {
             repository.observeMemosCreatedBetween(
                 from = TimestampMillis(2_000L),
                 to = TimestampMillis(1_000L)
             )
         }
-        assertEquals(0, dao.observeMemosBetweenCallCount)
     }
 
     @Test
@@ -212,17 +209,16 @@ class RoomMemoRepositoryTest {
         tagRefs = tagRefs
     )
 
-    private class FakeMemoDao(memosWithTagRefs: List<MemoWithTagRefs> = emptyList()) : MemoDao {
+    private class FakeMemoDao(
+        memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),
+        private val failOnObserveMemosBetween: Boolean = false
+    ) : MemoDao {
 
         private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
         var deletedMemoId: String? = null
         var observedRange: Pair<Long, Long>? = null
-        var observeMemosBetweenCallCount = 0
-
-        override fun observeMemos(): Flow<List<MemoEntity>> =
-            memosWithTagRefs.map { it.map { memoWithTagRefs -> memoWithTagRefs.memo } }
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
 
@@ -230,15 +226,14 @@ class RoomMemoRepositoryTest {
             fromMillis: Long,
             toMillis: Long
         ): Flow<List<MemoWithTagRefs>> {
+            if (failOnObserveMemosBetween) {
+                fail<Nothing>("observeMemosWithTagRefsCreatedBetween should not be called.")
+            }
             observedRange = fromMillis to toMillis
-            observeMemosBetweenCallCount += 1
             return memosWithTagRefs.map { list ->
                 list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
             }
         }
-
-        override fun observeMemoTagRefs(): Flow<List<MemoTagRefEntity>> =
-            memosWithTagRefs.map { it.flatMap { memoWithTagRefs -> memoWithTagRefs.tagRefs } }
 
         override suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs? =
             memosWithTagRefs.value.firstOrNull { it.memo.id == id }

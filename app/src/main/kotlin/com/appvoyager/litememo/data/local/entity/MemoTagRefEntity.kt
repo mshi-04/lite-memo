@@ -22,7 +22,7 @@ import androidx.room.Index
         )
     ],
     indices = [
-        Index(value = ["memoId"]),
+        Index(value = ["memoId", "position"], unique = true),
         Index(value = ["tagId"])
     ]
 )

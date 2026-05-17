@@ -11,6 +11,7 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class MemoMapperTest {
@@ -118,6 +119,45 @@ class MemoMapperTest {
             ),
             memo
         )
+    }
+
+    @Test
+    fun toDomainThrowsWhenTagRefReferencesAnotherMemo() {
+        // Arrange
+        val entity = MemoEntity(
+            id = "memo-1",
+            title = "Title",
+            body = "Body",
+            createdAt = 1000L,
+            updatedAt = 2000L,
+            isImportant = false
+        )
+        val tagRefs = listOf(
+            MemoTagRefEntity(memoId = "memo-2", tagId = "tag-1", position = 0)
+        )
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            entity.toDomain(tagRefs)
+        }
+    }
+
+    @Test
+    fun toDomainThrowsWhenCreatedAtIsNegative() {
+        // Arrange
+        val entity = MemoEntity(
+            id = "memo-1",
+            title = "Title",
+            body = "Body",
+            createdAt = -1L,
+            updatedAt = 2000L,
+            isImportant = false
+        )
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            entity.toDomain(emptyList())
+        }
     }
 
 }
