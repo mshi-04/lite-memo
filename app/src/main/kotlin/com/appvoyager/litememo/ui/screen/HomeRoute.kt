@@ -13,8 +13,8 @@ fun HomeRoute(modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltView
 
     HomeScreen(
         uiState = uiState,
-        onFilterSelected = viewModel::selectFilter,
-        onRetry = viewModel::retry,
+        onFilterSelected = { filter -> viewModel.selectFilter(filter) },
+        onRetry = { viewModel.retry() },
         modifier = modifier
     )
 }
