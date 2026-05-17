@@ -22,6 +22,7 @@ class ObserveMemosUseCase @Inject constructor(
                 compareByDescending<Memo> { it.updatedAt.value }
                     .thenByDescending { it.createdAt.value }
             )
+
             MemoSortOrder.CREATED_NEWEST -> memos.sortedWith(
                 compareByDescending<Memo> { it.createdAt.value }
                     .thenByDescending { it.updatedAt.value }
