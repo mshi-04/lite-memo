@@ -11,12 +11,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.appvoyager.litememo.ui.screen.CalendarRoute
 import com.appvoyager.litememo.ui.screen.HomeRoute
+import com.appvoyager.litememo.ui.screen.MemoEditRoute
 import com.appvoyager.litememo.ui.screen.SettingsPlaceholderScreen
 
 @Composable
@@ -25,32 +28,38 @@ fun LiteMemoApp() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
 
+    val showBottomBar = LiteMemoDestination.entries.any { dest ->
+        currentDestination?.hierarchy?.any { it.route == dest.route } == true
+    }
+
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                LiteMemoDestination.entries.forEach { destination ->
-                    val selected = currentDestination
-                        ?.hierarchy
-                        ?.any { it.route == destination.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
+            if (showBottomBar) {
+                NavigationBar {
+                    LiteMemoDestination.entries.forEach { destination ->
+                        val selected = currentDestination
+                            ?.hierarchy
+                            ?.any { it.route == destination.route } == true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = stringResource(destination.labelResId)
-                            )
-                        },
-                        label = { Text(text = stringResource(destination.labelResId)) }
-                    )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = destination.icon,
+                                    contentDescription = stringResource(destination.labelResId)
+                                )
+                            },
+                            label = { Text(text = stringResource(destination.labelResId)) }
+                        )
+                    }
                 }
             }
         }
@@ -61,13 +70,38 @@ fun LiteMemoApp() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(LiteMemoDestination.Home.route) {
-                HomeRoute()
+                HomeRoute(
+                    onMemoClick = { memoId ->
+                        navController.navigate("memo_edit?memoId=$memoId")
+                    },
+                    onCreateMemoClick = {
+                        navController.navigate("memo_edit")
+                    }
+                )
             }
             composable(LiteMemoDestination.Calendar.route) {
-                CalendarRoute()
+                CalendarRoute(
+                    onMemoClick = { memoId ->
+                        navController.navigate("memo_edit?memoId=$memoId")
+                    }
+                )
             }
             composable(LiteMemoDestination.Settings.route) {
                 SettingsPlaceholderScreen()
+            }
+            composable(
+                route = "memo_edit?memoId={memoId}",
+                arguments = listOf(
+                    navArgument("memoId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) {
+                MemoEditRoute(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }

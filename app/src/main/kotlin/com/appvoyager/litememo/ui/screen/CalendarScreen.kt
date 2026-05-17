@@ -77,6 +77,7 @@ fun CalendarScreen(
     onDatePickerDismissed: () -> Unit,
     onDatePicked: (Long) -> Unit,
     onRetry: () -> Unit,
+    onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -94,7 +95,8 @@ fun CalendarScreen(
                 onNextMonth = onNextMonth,
                 onDateSelected = onDateSelected,
                 onCalendarExpandedToggle = onCalendarExpandedToggle,
-                onDatePickerRequested = onDatePickerRequested
+                onDatePickerRequested = onDatePickerRequested,
+                onMemoClick = onMemoClick
             )
         }
 
@@ -115,7 +117,8 @@ private fun CalendarContent(
     onNextMonth: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
-    onDatePickerRequested: () -> Unit
+    onDatePickerRequested: () -> Unit,
+    onMemoClick: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -154,7 +157,7 @@ private fun CalendarContent(
                 items = uiState.memos,
                 key = { memo -> memo.id }
             ) { memo ->
-                MemoCard(memo = memo)
+                MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
             }
         }
     }
@@ -347,7 +350,8 @@ private fun CalendarScreenPreview() {
             onDatePickerRequested = {},
             onDatePickerDismissed = {},
             onDatePicked = {},
-            onRetry = {}
+            onRetry = {},
+            onMemoClick = {}
         )
     }
 }
@@ -368,7 +372,8 @@ private fun CalendarScreenDarkPreview() {
             onDatePickerRequested = {},
             onDatePickerDismissed = {},
             onDatePicked = {},
-            onRetry = {}
+            onRetry = {},
+            onMemoClick = {}
         )
     }
 }

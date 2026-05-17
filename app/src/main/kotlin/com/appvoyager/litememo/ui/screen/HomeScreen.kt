@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.screen
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,9 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -44,28 +49,35 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 fun HomeScreen(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
+    onMemoClick: (String) -> Unit,
+    onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        when {
-            uiState.isLoading -> LoadingContent()
-
-            uiState.hasError -> ErrorContent(onRetry = onRetry)
-
-            else -> HomeContent(
-                uiState = uiState,
-                onFilterSelected = onFilterSelected
-            )
+    Box(modifier = modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            when {
+                uiState.isLoading -> LoadingContent()
+                uiState.hasError -> ErrorContent(onRetry = onRetry)
+                else -> HomeContent(uiState = uiState, onFilterSelected = onFilterSelected, onMemoClick = onMemoClick)
+            }
+        }
+        FloatingActionButton(
+            onClick = onCreateMemoClick,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_memo))
         }
     }
 }
 
 @Composable
-private fun HomeContent(uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -> Unit) {
+private fun HomeContent(uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -> Unit, onMemoClick: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -106,7 +118,7 @@ private fun HomeContent(uiState: HomeUiState, onFilterSelected: (HomeFilterUiSta
                 items = uiState.memos,
                 key = { memo -> memo.id }
             ) { memo ->
-                MemoCard(memo = memo)
+                MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
             }
         }
     }
@@ -241,6 +253,8 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
+            onMemoClick = {},
+            onCreateMemoClick = {},
             onRetry = {}
         )
     }
@@ -256,6 +270,8 @@ private fun HomeScreenDarkPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
+            onMemoClick = {},
+            onCreateMemoClick = {},
             onRetry = {}
         )
     }

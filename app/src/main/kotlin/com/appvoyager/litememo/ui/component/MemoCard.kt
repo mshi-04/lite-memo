@@ -33,10 +33,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MemoCard(memo: MemoUiModel, modifier: Modifier = Modifier) {
+fun MemoCard(memo: MemoUiModel, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     val accentColor = memoAccentColor(memo)
 
     Card(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),

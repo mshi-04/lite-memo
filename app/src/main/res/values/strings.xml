@@ -45,6 +45,19 @@
         <item>土</item>
     </string-array>
 
+    <!-- Memo Edit -->
+    <string name="memo_edit_new_title">新しいメモ</string>
+    <string name="memo_edit_title">メモ編集</string>
+    <string name="memo_edit_title_hint">タイトル</string>
+    <string name="memo_edit_body_hint">メモ</string>
+    <string name="save_memo">保存</string>
+    <string name="delete_memo">削除</string>
+    <string name="navigate_back">戻る</string>
+    <string name="discard_dialog_title">編集内容の破棄</string>
+    <string name="discard_dialog_message">編集中の内容は保存されません。破棄しますか？</string>
+    <string name="discard_label">破棄</string>
+    <string name="cancel_label">キャンセル</string>
+
     <!-- Settings -->
     <string name="settings_placeholder_title">設定は準備中です</string>
     <string name="settings_placeholder_body">テーマや表示設定は今後追加します。</string>
