@@ -62,7 +62,11 @@ fun HomeScreen(
             when {
                 uiState.isLoading -> LoadingContent()
                 uiState.hasError -> ErrorContent(onRetry = onRetry)
-                else -> HomeContent(uiState = uiState, onFilterSelected = onFilterSelected, onMemoClick = onMemoClick)
+                else -> HomeContent(
+                    uiState = uiState,
+                    onFilterSelected = onFilterSelected,
+                    onMemoClick = onMemoClick,
+                )
             }
         }
         FloatingActionButton(
@@ -77,7 +81,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeContent(uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -> Unit, onMemoClick: (String) -> Unit) {
+private fun HomeContent(
+    uiState: HomeUiState,
+    onFilterSelected: (HomeFilterUiState) -> Unit,
+    onMemoClick: (String) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
