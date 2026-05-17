@@ -8,6 +8,7 @@ import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class TagMapperTest {
@@ -60,6 +61,22 @@ class TagMapperTest {
             ),
             tag
         )
+    }
+
+    @Test
+    fun toDomainThrowsWhenNameIsBlank() {
+        // Arrange
+        val entity = TagEntity(
+            id = "tag-1",
+            name = " ",
+            colorArgb = 0xFF6750A4,
+            createdAt = 1000L
+        )
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            entity.toDomain()
+        }
     }
 
 }
