@@ -13,6 +13,7 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -107,6 +108,35 @@ class SaveMemoUseCaseTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun invokeThrowsWhenTitleAndBodyAreBlank() {
+        // Arrange
+        val useCase = saveMemoUseCase()
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
+            }
+        }
+    }
+
+    @Test
+    fun invokeDoesNotSaveMemoWhenTitleAndBodyAreBlank() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository()
+        val useCase = saveMemoUseCase(memoRepository = repository)
+
+        // Act
+        try {
+            useCase(SaveMemoCommand(title = MemoTitle(" "), body = MemoBody(" ")))
+        } catch (_: IllegalArgumentException) {
+        }
+
+        // Assert
+        assertEquals(emptyList<Any>(), repository.savedMemos)
     }
 
     @Test

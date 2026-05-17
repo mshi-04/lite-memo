@@ -14,8 +14,10 @@ import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 fun memoFixture(
     id: String = "memo-1",
@@ -47,6 +49,8 @@ fun tagFixture(
     createdAt = TimestampMillis(createdAt)
 )
 
+fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
+
 class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepository {
 
     private val memos = MutableStateFlow(initialMemos)
@@ -54,6 +58,18 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     val deletedIds = mutableListOf<MemoId>()
 
     override fun observeMemos(): Flow<List<Memo>> = memos
+
+    override fun observeMemosCreatedBetween(
+        from: TimestampMillis,
+        to: TimestampMillis
+    ): Flow<List<Memo>> {
+        require(from.value < to.value) { "from must be earlier than to." }
+        return memos.map { list ->
+            list.filter { memo ->
+                memo.createdAt.value >= from.value && memo.createdAt.value < to.value
+            }
+        }
+    }
 
     override suspend fun getMemo(id: MemoId): Memo? = memos.value.firstOrNull { it.id == id }
 

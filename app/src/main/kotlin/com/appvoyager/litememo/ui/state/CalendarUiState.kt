@@ -1,0 +1,15 @@
+package com.appvoyager.litememo.ui.state
+
+import java.time.LocalDate
+import java.time.YearMonth
+
+data class CalendarUiState(
+    val isLoading: Boolean = true,
+    val hasError: Boolean = false,
+    val selectedMonth: YearMonth? = null,
+    val selectedDate: LocalDate? = null,
+    val isCalendarExpanded: Boolean = true,
+    val isDatePickerVisible: Boolean = false,
+    val days: List<CalendarDayUiState> = emptyList(),
+    val memos: List<MemoUiModel> = emptyList()
+)

@@ -64,3 +64,9 @@ class MemoTitleTest {
 - 基本は `// Arrange`、`// Act`、`// Assert` コメントを入れる
 - 各ブロックの責務を混ぜない
 - Arrange が不要な場合（準備するものがない）は `// Arrange` を省略してよい
+
+## Coroutine Test
+
+- suspend 関数や Flow を扱う Unit Test は `kotlinx.coroutines.test.runTest` を使う
+- `runBlocking` は既存テストの保守を除き、新規・更新する Unit Test では使わない
+- 仮想時間制御、coroutine leak 検出、テスト間の分離を `runTest` に任せる

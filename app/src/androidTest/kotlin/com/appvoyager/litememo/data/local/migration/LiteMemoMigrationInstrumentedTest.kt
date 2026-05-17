@@ -1,0 +1,113 @@
+package com.appvoyager.litememo.data.local.migration
+
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.appvoyager.litememo.data.local.LiteMemoDatabase
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class LiteMemoMigrationInstrumentedTest {
+
+    @get:Rule
+    val helper = MigrationTestHelper(
+        InstrumentationRegistry.getInstrumentation(),
+        LiteMemoDatabase::class.java
+    )
+
+    @Test
+    fun version1SchemaCanBeCreatedAndQueried() {
+        // Arrange
+        helper.createDatabase(TEST_DATABASE_NAME, 1).apply {
+            insertMemo()
+            insertTag()
+            insertTagRef()
+            close()
+        }
+
+        // Act
+        val database = helper.runMigrationsAndValidate(
+            TEST_DATABASE_NAME,
+            1,
+            true,
+            *LiteMemoMigrations.ALL
+        )
+        val row = database.readMemoWithTagRef()
+        database.close()
+
+        // Assert
+        assertEquals(
+            StoredMemoWithTagRef(
+                title = "Title",
+                body = "Body",
+                createdAt = 1_000L,
+                updatedAt = 2_000L,
+                isImportant = 1,
+                tagId = "tag-1",
+                position = 0
+            ),
+            row
+        )
+    }
+
+    private fun SupportSQLiteDatabase.insertMemo() {
+        execSQL(
+            "INSERT INTO memos (id, title, body, createdAt, updatedAt, isImportant) VALUES (?, ?, ?, ?, ?, ?)",
+            arrayOf<Any>("memo-1", "Title", "Body", 1_000L, 2_000L, 1)
+        )
+    }
+
+    private fun SupportSQLiteDatabase.insertTag() {
+        execSQL(
+            "INSERT INTO tags (id, name, colorArgb, createdAt) VALUES (?, ?, ?, ?)",
+            arrayOf<Any>("tag-1", "Work", 0xFF6750A4, 1_000L)
+        )
+    }
+
+    private fun SupportSQLiteDatabase.insertTagRef() {
+        execSQL(
+            "INSERT INTO memo_tag_refs (memoId, tagId, position) VALUES (?, ?, ?)",
+            arrayOf<Any>("memo-1", "tag-1", 0)
+        )
+    }
+
+    private fun SupportSQLiteDatabase.readMemoWithTagRef(): StoredMemoWithTagRef = query(
+        """
+        SELECT memos.title, memos.body, memos.createdAt, memos.updatedAt, memos.isImportant,
+            memo_tag_refs.tagId, memo_tag_refs.position
+        FROM memos
+        INNER JOIN memo_tag_refs ON memo_tag_refs.memoId = memos.id
+        WHERE memos.id = ?
+        """.trimIndent(),
+        arrayOf("memo-1")
+    ).use { cursor ->
+        check(cursor.moveToFirst()) { "Expected memo row." }
+        StoredMemoWithTagRef(
+            title = cursor.getString(cursor.getColumnIndexOrThrow("title")),
+            body = cursor.getString(cursor.getColumnIndexOrThrow("body")),
+            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow("createdAt")),
+            updatedAt = cursor.getLong(cursor.getColumnIndexOrThrow("updatedAt")),
+            isImportant = cursor.getInt(cursor.getColumnIndexOrThrow("isImportant")),
+            tagId = cursor.getString(cursor.getColumnIndexOrThrow("tagId")),
+            position = cursor.getInt(cursor.getColumnIndexOrThrow("position"))
+        )
+    }
+
+    private data class StoredMemoWithTagRef(
+        val title: String,
+        val body: String,
+        val createdAt: Long,
+        val updatedAt: Long,
+        val isImportant: Int,
+        val tagId: String,
+        val position: Int
+    )
+
+    private companion object {
+        const val TEST_DATABASE_NAME = "lite_memo_migration_test.db"
+    }
+}

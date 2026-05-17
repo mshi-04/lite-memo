@@ -31,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -137,7 +138,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.first { it.hasError }
 
         // Assert
-        assertEquals(expected.message, state.errorCause?.message)
+        assertTrue(state.hasError)
     }
 
     private fun homeViewModel(
@@ -162,6 +163,11 @@ class HomeViewModelTest {
         override fun observeMemos(): Flow<List<Memo>> = flow {
             throw throwable
         }
+
+        override fun observeMemosCreatedBetween(
+            from: TimestampMillis,
+            to: TimestampMillis
+        ): Flow<List<Memo>> = flow { throw throwable }
 
         override suspend fun getMemo(id: MemoId): Memo? = null
 

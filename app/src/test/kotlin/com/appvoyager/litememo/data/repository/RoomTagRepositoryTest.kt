@@ -8,7 +8,7 @@ import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 class RoomTagRepositoryTest {
 
     @Test
-    fun observeTagsReturnsDomainTagsFromDao() = runBlocking {
+    fun observeTagsReturnsDomainTagsFromDao() = runTest {
         // Arrange
         val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1")))
         val repository = RoomTagRepository(dao)
@@ -29,7 +29,7 @@ class RoomTagRepositoryTest {
     }
 
     @Test
-    fun getTagReturnsNullWhenDaoReturnsNull() = runBlocking {
+    fun getTagReturnsNullWhenDaoReturnsNull() = runTest {
         // Arrange
         val repository = RoomTagRepository(FakeTagDao())
 
@@ -41,7 +41,7 @@ class RoomTagRepositoryTest {
     }
 
     @Test
-    fun getTagsByIdsReturnsTagsInRequestedOrder() = runBlocking {
+    fun getTagsByIdsReturnsTagsInRequestedOrder() = runTest {
         // Arrange
         val dao = FakeTagDao(
             tags = listOf(
@@ -59,7 +59,7 @@ class RoomTagRepositoryTest {
     }
 
     @Test
-    fun getTagsByIdsReturnsEmptyListWhenIdsAreEmpty() = runBlocking {
+    fun getTagsByIdsReturnsEmptyListWhenIdsAreEmpty() = runTest {
         // Arrange
         val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1")))
         val repository = RoomTagRepository(dao)
@@ -73,7 +73,7 @@ class RoomTagRepositoryTest {
 
     // 空リスト時に不要なDBクエリを発行しない最適化を検証する
     @Test
-    fun getTagsByIdsDoesNotCallDaoWhenIdsAreEmpty() = runBlocking {
+    fun getTagsByIdsDoesNotCallDaoWhenIdsAreEmpty() = runTest {
         // Arrange
         val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1")))
         val repository = RoomTagRepository(dao)
@@ -86,7 +86,7 @@ class RoomTagRepositoryTest {
     }
 
     @Test
-    fun saveTagWritesTagEntityToDao() = runBlocking {
+    fun saveTagWritesTagEntityToDao() = runTest {
         // Arrange
         val dao = FakeTagDao()
         val repository = RoomTagRepository(dao)
@@ -99,7 +99,7 @@ class RoomTagRepositoryTest {
     }
 
     @Test
-    fun deleteTagDelegatesTagIdValueToDao() = runBlocking {
+    fun deleteTagDelegatesTagIdValueToDao() = runTest {
         // Arrange
         val dao = FakeTagDao()
         val repository = RoomTagRepository(dao)

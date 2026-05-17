@@ -17,6 +17,9 @@ class SaveMemoUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(command: SaveMemoCommand): Memo {
+        require(command.title.value.isNotBlank() || command.body.value.isNotBlank()) {
+            "Memo title or body must not be blank."
+        }
         val now = currentTimeProvider.now()
         val existingMemo = command.id?.let { id ->
             requireNotNull(memoRepository.getMemo(id)) { "Memo not found: ${id.value}" }
