@@ -61,11 +61,13 @@ fun HomeScreen(
         ) {
             when {
                 uiState.isLoading -> LoadingContent()
+
                 uiState.hasError -> ErrorContent(onRetry = onRetry)
+
                 else -> HomeContent(
                     uiState = uiState,
                     onFilterSelected = onFilterSelected,
-                    onMemoClick = onMemoClick,
+                    onMemoClick = onMemoClick
                 )
             }
         }
@@ -84,7 +86,7 @@ fun HomeScreen(
 private fun HomeContent(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
