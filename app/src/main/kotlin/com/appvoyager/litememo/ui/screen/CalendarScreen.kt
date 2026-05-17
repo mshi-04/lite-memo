@@ -1,37 +1,27 @@
 package com.appvoyager.litememo.ui.screen
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -41,7 +31,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,29 +45,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.domain.model.CalendarDate
-import com.appvoyager.litememo.domain.model.CalendarMonth
-import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.domain.model.value.TagColor
+import com.appvoyager.litememo.ui.component.AnimatedCalendarGrid
+import com.appvoyager.litememo.ui.component.ErrorContent
+import com.appvoyager.litememo.ui.component.LoadingContent
+import com.appvoyager.litememo.ui.component.MemoCard
+import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
-import com.appvoyager.litememo.ui.state.CalendarMemoUiModel
 import com.appvoyager.litememo.ui.state.CalendarUiState
+import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -88,11 +71,12 @@ fun CalendarScreen(
     uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDateSelected: (CalendarDate) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
     onDatePickerRequested: () -> Unit,
     onDatePickerDismissed: () -> Unit,
     onDatePicked: (Long) -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -100,12 +84,9 @@ fun CalendarScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         when {
-            uiState.isLoading -> CalendarLoadingContent()
+            uiState.isLoading -> LoadingContent()
 
-            uiState.hasError -> CalendarMessageContent(
-                title = stringResource(R.string.unknown_error),
-                body = null
-            )
+            uiState.hasError -> ErrorContent(onRetry = onRetry)
 
             else -> CalendarContent(
                 uiState = uiState,
@@ -132,7 +113,7 @@ private fun CalendarContent(
     uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDateSelected: (CalendarDate) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
     onDatePickerRequested: () -> Unit
 ) {
@@ -163,7 +144,7 @@ private fun CalendarContent(
         }
         if (uiState.memos.isEmpty()) {
             item {
-                CalendarMessageContent(
+                MessageContent(
                     title = stringResource(R.string.empty_calendar_title),
                     body = stringResource(R.string.empty_calendar_body)
                 )
@@ -173,7 +154,7 @@ private fun CalendarContent(
                 items = uiState.memos,
                 key = { memo -> memo.id }
             ) { memo ->
-                CalendarMemoCard(memo = memo)
+                MemoCard(memo = memo)
             }
         }
     }
@@ -201,7 +182,7 @@ private fun CalendarMonthCard(
     uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDateSelected: (CalendarDate) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
     onDatePickerRequested: () -> Unit
 ) {
@@ -253,7 +234,7 @@ private fun CalendarMonthCard(
 
 @Composable
 private fun CalendarMonthHeader(
-    month: CalendarMonth?,
+    month: YearMonth?,
     isExpanded: Boolean,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -297,215 +278,17 @@ private fun CalendarMonthHeader(
     }
 }
 
-@Composable
-private fun AnimatedCalendarGrid(
-    month: CalendarMonth?,
-    days: List<CalendarDayUiState>,
-    onDateSelected: (CalendarDate) -> Unit
-) {
-    AnimatedContent(
-        targetState = CalendarGridAnimationState(
-            month = month?.value,
-            days = days
-        ),
-        transitionSpec = {
-            val direction = if (targetState.month.isAfter(initialState.month)) 1 else -1
-            (
-                slideInHorizontally(
-                    animationSpec = tween(220),
-                    initialOffsetX = { width -> width / 4 * direction }
-                ) + fadeIn(animationSpec = tween(160))
-                ).togetherWith(
-                slideOutHorizontally(
-                    animationSpec = tween(220),
-                    targetOffsetX = { width -> -width / 4 * direction }
-                ) + fadeOut(animationSpec = tween(120))
-            ).using(SizeTransform(clip = false))
-        },
-        label = "calendar-month-grid"
-    ) { state ->
-        CalendarGrid(
-            days = state.days,
-            onDateSelected = onDateSelected
-        )
-    }
-}
 
-@Composable
-private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelected: (CalendarDate) -> Unit) {
-    // ISO DayOfWeek: MON=1..SUN=7。% 7 で SUN=0 になり、日曜始まりの列オフセットになる
-    val leadingBlankCount = days.firstOrNull()?.date?.value?.dayOfWeek?.value?.rem(DAY_COUNT) ?: 0
-    val cells = List(leadingBlankCount) { null } + days
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CalendarWeekHeader()
-        cells.chunked(DAY_COUNT).forEach { week ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                repeat(DAY_COUNT) { index ->
-                    val day = week.getOrNull(index)
-                    CalendarDayCell(
-                        day = day,
-                        onDateSelected = onDateSelected,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CalendarWeekHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        stringArrayResource(R.array.week_day_labels).forEach { label ->
-            Text(
-                text = label,
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun CalendarDayCell(
-    day: CalendarDayUiState?,
-    onDateSelected: (CalendarDate) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    if (day == null) {
-        Spacer(modifier = modifier.aspectRatio(1f))
-        return
-    }
-
-    val containerColor = if (day.isSelected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        Color.Transparent
-    }
-    val contentColor = if (day.isSelected) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(CircleShape)
-            .background(containerColor)
-            .clickable { onDateSelected(day.date) },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = day.dayOfMonth.toString(),
-            color = contentColor,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold
-        )
-        if (day.hasMemo) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 5.dp)
-                    .size(4.dp)
-                    .clip(CircleShape)
-                    .background(contentColor)
-            )
-        }
-    }
-}
-
-@Composable
-private fun CalendarMemoCard(memo: CalendarMemoUiModel) {
-    val accentColor = memo.accentColor()
-
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .drawBehind {
-                    drawRect(
-                        color = accentColor,
-                        size = size.copy(width = 4.dp.toPx())
-                    )
-                }
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 18.dp, top = 14.dp, end = 14.dp, bottom = 14.dp)
-            ) {
-                Text(
-                    text = memo.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = memo.body,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    CalendarMemoTag(label = memo.tagName)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = updatedAtLabel(memo.updatedAtMillis),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CalendarMemoTag(label: String?) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 14.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = label ?: stringResource(R.string.unorganized_label),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalendarDatePickerDialog(
-    selectedDate: CalendarDate,
+    selectedDate: LocalDate,
     onDatePicked: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
     val selectedDateMillis = remember(selectedDate) {
-        selectedDate.value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
     }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
 
@@ -530,45 +313,7 @@ private fun CalendarDatePickerDialog(
     }
 }
 
-@Composable
-private fun CalendarLoadingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
-}
 
-@Composable
-private fun CalendarMessageContent(title: String, body: String?) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        if (body != null) {
-            Text(
-                text = body,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
-
-@Composable
-private fun CalendarMemoUiModel.accentColor(): Color {
-    if (isImportant) return MaterialTheme.colorScheme.error
-    return tagColor?.let { Color(it.argb.toInt()) } ?: MaterialTheme.colorScheme.primary
-}
 
 @Composable
 private fun calendarContainerColor(): Color {
@@ -580,47 +325,20 @@ private fun calendarContainerColor(): Color {
 }
 
 @Composable
-private fun selectedDateTitle(date: CalendarDate?): String {
+private fun selectedDateTitle(date: LocalDate?): String {
     val pattern = stringResource(R.string.selected_date_title_format)
     val formatter = remember(pattern) { DateTimeFormatter.ofPattern(pattern) }
-    return date?.value?.format(formatter) ?: ""
+    return date?.format(formatter) ?: ""
 }
 
-@Composable
-private fun updatedAtLabel(updatedAtMillis: Long): String {
-    val zoneId = remember { ZoneId.systemDefault() }
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("H:mm") }
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("M/d") }
-    val updatedAt = remember(updatedAtMillis, zoneId) {
-        Instant.ofEpochMilli(updatedAtMillis).atZone(zoneId)
-    }
-    val today = LocalDate.now(zoneId)
-
-    return when (updatedAt.toLocalDate()) {
-        today -> timeFormatter.format(updatedAt)
-        today.minusDays(1) -> stringResource(R.string.yesterday_label)
-        else -> dateFormatter.format(updatedAt)
-    }
-}
 
 @Composable
-private fun monthTitle(month: CalendarMonth?): String {
+private fun monthTitle(month: YearMonth?): String {
     val pattern = stringResource(R.string.month_title_format)
     val formatter = remember(pattern) { DateTimeFormatter.ofPattern(pattern) }
-    return month?.value?.format(formatter) ?: ""
+    return month?.format(formatter) ?: ""
 }
 
-private const val DAY_COUNT = 7
-
-private data class CalendarGridAnimationState(
-    val month: YearMonth?,
-    val days: List<CalendarDayUiState>
-)
-
-private fun YearMonth?.isAfter(other: YearMonth?): Boolean {
-    if (this == null || other == null) return true
-    return this > other
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -634,7 +352,8 @@ private fun CalendarScreenPreview() {
             onCalendarExpandedToggle = {},
             onDatePickerRequested = {},
             onDatePickerDismissed = {},
-            onDatePicked = {}
+            onDatePicked = {},
+            onRetry = {}
         )
     }
 }
@@ -654,42 +373,44 @@ private fun CalendarScreenDarkPreview() {
             onCalendarExpandedToggle = {},
             onDatePickerRequested = {},
             onDatePickerDismissed = {},
-            onDatePicked = {}
+            onDatePicked = {},
+            onRetry = {}
         )
     }
 }
 
 private fun previewCalendarState(): CalendarUiState {
-    val month = CalendarMonth(YearMonth.of(2026, 5))
-    val selectedDate = CalendarDate(LocalDate.of(2026, 5, 15))
+    val month = YearMonth.of(2026, 5)
+    val selectedDate = LocalDate.of(2026, 5, 15)
     return CalendarUiState(
         isLoading = false,
         selectedMonth = month,
         selectedDate = selectedDate,
-        days = month.toCalendarDates().map { date ->
+        days = (1..month.lengthOfMonth()).map { dayOfMonth ->
+            val date = month.atDay(dayOfMonth)
             CalendarDayUiState(
                 date = date,
-                dayOfMonth = date.value.dayOfMonth,
+                dayOfMonth = dayOfMonth,
                 isSelected = date == selectedDate,
-                hasMemo = date.value.dayOfMonth in listOf(9, 11, 14, 15, 19, 28)
+                hasMemo = dayOfMonth in listOf(9, 11, 14, 15, 19, 28)
             )
         },
         memos = listOf(
-            CalendarMemoUiModel(
-                id = MemoId("memo-1"),
+            MemoUiModel(
+                id = "memo-1",
                 title = "週次レビュー",
                 body = "完了したタスクと来週の優先度を整理する。",
                 tagName = "仕事",
-                tagColor = TagColor(0xFF6750A4),
+                tagColorArgb = 0xFF6750A4,
                 updatedAtMillis = System.currentTimeMillis(),
                 isImportant = false
             ),
-            CalendarMemoUiModel(
-                id = MemoId("memo-2"),
+            MemoUiModel(
+                id = "memo-2",
                 title = "献立メモ",
                 body = "冷蔵庫の野菜を使い切る。買い足しは卵。",
                 tagName = "生活",
-                tagColor = TagColor(0xFF006D3B),
+                tagColorArgb = 0xFF006D3B,
                 updatedAtMillis = System.currentTimeMillis(),
                 isImportant = false
             )

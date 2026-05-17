@@ -16,15 +16,6 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 
 @Composable
-fun CalendarPlaceholderScreen(modifier: Modifier = Modifier) {
-    PlaceholderScreen(
-        title = stringResource(R.string.calendar_placeholder_title),
-        body = stringResource(R.string.calendar_placeholder_body),
-        modifier = modifier
-    )
-}
-
-@Composable
 fun SettingsPlaceholderScreen(modifier: Modifier = Modifier) {
     PlaceholderScreen(
         title = stringResource(R.string.settings_placeholder_title),

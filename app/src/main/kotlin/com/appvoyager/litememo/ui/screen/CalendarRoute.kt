@@ -20,6 +20,7 @@ fun CalendarRoute(modifier: Modifier = Modifier, viewModel: CalendarViewModel = 
         onDatePickerRequested = viewModel::showDatePicker,
         onDatePickerDismissed = viewModel::dismissDatePicker,
         onDatePicked = viewModel::selectDateFromPicker,
+        onRetry = viewModel::retry,
         modifier = modifier
     )
 }

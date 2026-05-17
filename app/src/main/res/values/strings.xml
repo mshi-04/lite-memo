@@ -11,6 +11,7 @@
     <string name="search">検索</string>
     <string name="more_options">その他</string>
     <string name="unknown_error">メモを読み込めませんでした。</string>
+    <string name="retry_label">再試行</string>
 
     <!-- Home -->
     <string name="welcome_back">おかえりなさい</string>
