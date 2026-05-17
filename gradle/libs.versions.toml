@@ -2,7 +2,7 @@
 # Build plugins
 agp = "9.2.1"
 hilt = "2.59.2"
-kotlin = "2.2.10"
+kotlin = "2.3.21"
 ksp = "2.2.10-2.0.2"
 ktlintCli = "1.8.0"
 ktlintGradle = "14.2.0"
