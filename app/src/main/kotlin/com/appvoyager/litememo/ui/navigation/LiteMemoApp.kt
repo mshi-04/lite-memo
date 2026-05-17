@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -72,7 +73,7 @@ fun LiteMemoApp() {
             composable(LiteMemoDestination.Home.route) {
                 HomeRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate("memo_edit?memoId=$memoId")
+                        navController.navigate("memo_edit?memoId=${Uri.encode(memoId)}")
                     },
                     onCreateMemoClick = {
                         navController.navigate("memo_edit")
@@ -82,7 +83,7 @@ fun LiteMemoApp() {
             composable(LiteMemoDestination.Calendar.route) {
                 CalendarRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate("memo_edit?memoId=$memoId")
+                        navController.navigate("memo_edit?memoId=${Uri.encode(memoId)}")
                     }
                 )
             }
