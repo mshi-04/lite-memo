@@ -10,6 +10,7 @@ import com.appvoyager.litememo.ui.viewmodel.CalendarViewModel
 @Composable
 fun CalendarRoute(
     onMemoClick: (String) -> Unit,
+    onCreateMemoClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
@@ -26,6 +27,9 @@ fun CalendarRoute(
         onDatePicked = { date -> viewModel.selectDateFromPicker(date) },
         onRetry = { viewModel.retry() },
         onMemoClick = onMemoClick,
+        onCreateMemoClick = {
+            viewModel.selectedDateMillis()?.let(onCreateMemoClick)
+        },
         modifier = modifier
     )
 }

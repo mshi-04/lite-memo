@@ -26,8 +26,9 @@ import com.appvoyager.litememo.ui.screen.SettingsRoute
 
 private const val OSS_LICENSES_ROUTE = "oss_licenses"
 private const val MEMO_EDIT_BASE = "memo_edit"
-private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}"
+private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
 private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
+private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"
 
 @Composable
 fun LiteMemoApp() {
@@ -90,6 +91,9 @@ fun LiteMemoApp() {
                 CalendarRoute(
                     onMemoClick = { memoId ->
                         navController.navigate(memoEditRouteWithId(memoId))
+                    },
+                    onCreateMemoClick = { createdAt ->
+                        navController.navigate(memoEditRouteWithCreatedAt(createdAt))
                     }
                 )
             }
@@ -112,6 +116,10 @@ fun LiteMemoApp() {
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
+                    },
+                    navArgument("createdAt") {
+                        type = NavType.LongType
+                        defaultValue = -1L
                     }
                 )
             ) {
