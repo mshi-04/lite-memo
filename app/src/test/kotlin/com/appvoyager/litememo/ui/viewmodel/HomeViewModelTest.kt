@@ -9,6 +9,7 @@ import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
@@ -148,7 +149,7 @@ class HomeViewModelTest {
     ): HomeViewModel {
         val tagRepository = FakeTagRepository(tags)
         return HomeViewModel(
-            observeMemosUseCase = ObserveMemosUseCase(memoRepository),
+            observeMemosUseCase = ObserveMemosUseCase(memoRepository, FakeUserSettingsRepository()),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             filterMemosUseCase = FilterMemosUseCase(),
             getHomeSummaryUseCase = GetHomeSummaryUseCase(

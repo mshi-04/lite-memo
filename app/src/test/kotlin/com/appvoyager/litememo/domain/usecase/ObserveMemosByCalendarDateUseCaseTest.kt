@@ -4,6 +4,7 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.CalendarDate
+import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.flow.first
@@ -28,41 +29,49 @@ class ObserveMemosByCalendarDateUseCaseTest {
         val repository = FakeMemoRepository(listOf(createdOnOtherDate, included))
 
         // Act
-        val memos = ObserveMemosByCalendarDateUseCase(repository, zoneId)(selectedDate).first()
+        val memos = ObserveMemosByCalendarDateUseCase(
+            repository,
+            FakeUserSettingsRepository(),
+            zoneId
+        )(selectedDate).first()
 
         // Assert
         assertEquals(listOf("included"), memos.map { memo -> memo.id.value })
     }
 
     @Test
-    fun invokeSortsMemosByUpdatedAtDescendingThenCreatedAtDescending() = runTest {
+    fun invokeSortsMemosByUpdatedAtDescending() = runTest {
         // Arrange
         val selectedDate = CalendarDate(LocalDate.of(2026, 5, 11))
-        val tieEarlyCreatedAt = memoFixture(
-            id = "tie-early-created-at",
+        val olderUpdatedAt = memoFixture(
+            id = "older-updated-at",
             createdAt = epochMillis("2026-05-11T09:00:00Z"),
-            updatedAt = epochMillis("2026-05-11T11:00:00Z")
+            updatedAt = epochMillis("2026-05-11T10:00:00Z")
         )
         val newestUpdatedAt = memoFixture(
             id = "newest-updated-at",
             createdAt = epochMillis("2026-05-11T08:00:00Z"),
             updatedAt = epochMillis("2026-05-11T12:00:00Z")
         )
-        val tieLaterCreatedAt = memoFixture(
-            id = "tie-later-created-at",
+        val middleUpdatedAt = memoFixture(
+            id = "middle-updated-at",
             createdAt = epochMillis("2026-05-11T10:00:00Z"),
             updatedAt = epochMillis("2026-05-11T11:00:00Z")
         )
         val repository = FakeMemoRepository(
-            listOf(tieEarlyCreatedAt, newestUpdatedAt, tieLaterCreatedAt)
+            listOf(olderUpdatedAt, newestUpdatedAt, middleUpdatedAt)
         )
 
         // Act
-        val memos = ObserveMemosByCalendarDateUseCase(repository, zoneId)(selectedDate).first()
+        val memos = ObserveMemosByCalendarDateUseCase(
+            repository,
+            FakeUserSettingsRepository(),
+            zoneId
+        )(selectedDate).first()
 
         // Assert
         assertEquals(
-            listOf("newest-updated-at", "tie-later-created-at", "tie-early-created-at"),
+            listOf("newest-updated-at", "middle-updated-at", "older-updated-at"),
             memos.map { memo -> memo.id.value }
         )
     }
@@ -84,6 +93,7 @@ class ObserveMemosByCalendarDateUseCaseTest {
         // Act
         val memos = ObserveMemosByCalendarDateUseCase(
             memoRepository = repository,
+            userSettingsRepository = FakeUserSettingsRepository(),
             zoneId = ZoneId.of("Asia/Tokyo")
         )(selectedDate).first()
 
