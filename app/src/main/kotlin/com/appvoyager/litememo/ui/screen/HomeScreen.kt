@@ -259,10 +259,7 @@ private fun HomeFilterAndSortRow(
 }
 
 @Composable
-private fun SortOrderDropdown(
-    currentOrder: MemoSortOrder,
-    onSelected: (MemoSortOrder) -> Unit
-) {
+private fun SortOrderDropdown(currentOrder: MemoSortOrder, onSelected: (MemoSortOrder) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     Box {
