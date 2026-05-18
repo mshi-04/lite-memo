@@ -47,6 +47,7 @@ fun AnimatedCalendarGrid(
             month = month,
             days = days
         ),
+        contentKey = { it.month },
         transitionSpec = {
             val direction = if (targetState.month.isAfter(initialState.month)) 1 else -1
             (

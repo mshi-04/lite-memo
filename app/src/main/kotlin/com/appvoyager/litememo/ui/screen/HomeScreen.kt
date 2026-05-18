@@ -15,11 +15,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,13 +48,20 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 fun HomeScreen(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
+    onMemoClick: (String) -> Unit,
+    onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Scaffold(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            FloatingActionButton(onClick = onCreateMemoClick) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_memo))
+            }
+        }
+    ) { innerPadding ->
         when {
             uiState.isLoading -> LoadingContent()
 
@@ -58,16 +69,23 @@ fun HomeScreen(
 
             else -> HomeContent(
                 uiState = uiState,
-                onFilterSelected = onFilterSelected
+                onFilterSelected = onFilterSelected,
+                onMemoClick = onMemoClick,
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }
 }
 
 @Composable
-private fun HomeContent(uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -> Unit) {
+private fun HomeContent(
+    uiState: HomeUiState,
+    onFilterSelected: (HomeFilterUiState) -> Unit,
+    onMemoClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -106,7 +124,7 @@ private fun HomeContent(uiState: HomeUiState, onFilterSelected: (HomeFilterUiSta
                 items = uiState.memos,
                 key = { memo -> memo.id }
             ) { memo ->
-                MemoCard(memo = memo)
+                MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
             }
         }
     }
@@ -241,6 +259,8 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
+            onMemoClick = {},
+            onCreateMemoClick = {},
             onRetry = {}
         )
     }
@@ -256,6 +276,8 @@ private fun HomeScreenDarkPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
+            onMemoClick = {},
+            onCreateMemoClick = {},
             onRetry = {}
         )
     }

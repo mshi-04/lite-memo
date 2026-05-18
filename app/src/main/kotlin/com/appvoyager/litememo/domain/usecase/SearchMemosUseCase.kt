@@ -8,16 +8,25 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-class ObserveMemosUseCase @Inject constructor(
+class SearchMemosUseCase @Inject constructor(
     private val memoRepository: MemoRepository,
     private val userSettingsRepository: UserSettingsRepository
 ) {
 
-    operator fun invoke(): Flow<List<Memo>> = combine(
+    operator fun invoke(query: String): Flow<List<Memo>> = combine(
         memoRepository.observeMemos(),
         userSettingsRepository.observeMemoSortOrder()
     ) { memos, sortOrder ->
-        memos.sortedBy(sortOrder)
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            emptyList()
+        } else {
+            memos
+                .filter { memo ->
+                    memo.title.value.contains(trimmed, ignoreCase = true) ||
+                        memo.body.value.contains(trimmed, ignoreCase = true)
+                }
+                .sortedBy(sortOrder)
+        }
     }
-
 }

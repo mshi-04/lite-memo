@@ -181,6 +181,64 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
+    fun invokeUsesCommandCreatedAtWhenProvided() = runTest {
+        // Arrange
+        val useCase = saveMemoUseCase(timeProvider = MutableTimeProvider(TimestampMillis(5000L)))
+
+        // Act
+        val memo = useCase(
+            SaveMemoCommand(
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                createdAt = TimestampMillis(1000L)
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(1000L), memo.createdAt)
+    }
+
+    @Test
+    fun invokeUsesCurrentTimeWhenCommandCreatedAtIsNull() = runTest {
+        // Arrange
+        val useCase = saveMemoUseCase(timeProvider = MutableTimeProvider(TimestampMillis(5000L)))
+
+        // Act
+        val memo = useCase(
+            SaveMemoCommand(
+                title = MemoTitle("Title"),
+                body = MemoBody("Body")
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), memo.createdAt)
+    }
+
+    @Test
+    fun invokePreservesExistingCreatedAtEvenWhenCommandCreatedAtIsProvided() = runTest {
+        // Arrange
+        val existing = memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 1500L)
+        val useCase = saveMemoUseCase(
+            memoRepository = FakeMemoRepository(listOf(existing)),
+            timeProvider = MutableTimeProvider(TimestampMillis(5000L))
+        )
+
+        // Act
+        val memo = useCase(
+            SaveMemoCommand(
+                id = existing.id,
+                title = MemoTitle("New"),
+                body = MemoBody("Body"),
+                createdAt = TimestampMillis(9000L)
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(1000L), memo.createdAt)
+    }
+
+    @Test
     fun invokeDoesNotSaveMemoWhenTagIdDoesNotExist() {
         // Arrange
         val repository = FakeMemoRepository()

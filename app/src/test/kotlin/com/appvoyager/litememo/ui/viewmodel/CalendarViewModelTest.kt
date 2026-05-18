@@ -6,9 +6,11 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -137,6 +139,7 @@ class CalendarViewModelTest {
         memoRepository: FakeMemoRepository = FakeMemoRepository()
     ): CalendarViewModel {
         val tagRepository = FakeTagRepository()
+        val userSettingsRepository = FakeUserSettingsRepository()
         return CalendarViewModel(
             observeCalendarMonthSummaryUseCase = ObserveCalendarMonthSummaryUseCase(
                 memoRepository = memoRepository,
@@ -144,9 +147,14 @@ class CalendarViewModelTest {
             ),
             observeMemosByCalendarDateUseCase = ObserveMemosByCalendarDateUseCase(
                 memoRepository = memoRepository,
+                userSettingsRepository = userSettingsRepository,
                 zoneId = zoneId
             ),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
+            searchMemosUseCase = SearchMemosUseCase(
+                memoRepository = memoRepository,
+                userSettingsRepository = userSettingsRepository
+            ),
             currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
             zoneId = zoneId
         )

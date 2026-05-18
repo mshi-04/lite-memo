@@ -1,0 +1,366 @@
+package com.appvoyager.litememo.ui.screen
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.component.ErrorContent
+import com.appvoyager.litememo.ui.component.LoadingContent
+import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.state.DEFAULT_TAG_COLORS
+import com.appvoyager.litememo.ui.state.TagEditState
+import com.appvoyager.litememo.ui.state.TagManageUiState
+import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TagManageScreen(
+    uiState: TagManageUiState,
+    onBackClick: () -> Unit,
+    onCreateClick: () -> Unit,
+    onEditClick: (String) -> Unit,
+    onDeleteRequest: (TagUiModel) -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
+    onDismissDeleteError: () -> Unit,
+    onEditNameChanged: (String) -> Unit,
+    onEditColorSelected: (Long) -> Unit,
+    onSaveEdit: () -> Unit,
+    onCancelEdit: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.navigate_back)
+                        )
+                    }
+                },
+                title = { Text(text = stringResource(R.string.tag_manage_title)) }
+            )
+        },
+        floatingActionButton = {
+            if (!uiState.isLoading && !uiState.hasError) {
+                FloatingActionButton(onClick = onCreateClick) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.tag_create)
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        when {
+            uiState.isLoading -> LoadingContent(modifier = Modifier.padding(innerPadding))
+
+            uiState.hasError -> ErrorContent(
+                onRetry = onRetry,
+                modifier = Modifier.padding(innerPadding)
+            )
+
+            uiState.tags.isEmpty() -> {
+                MessageContent(
+                    title = stringResource(R.string.tag_empty_title),
+                    body = stringResource(R.string.tag_empty_body),
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(
+                        items = uiState.tags,
+                        key = { it.id }
+                    ) { tag ->
+                        TagRow(
+                            tag = tag,
+                            onEditClick = { onEditClick(tag.id) },
+                            onDeleteClick = { onDeleteRequest(tag) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    uiState.editingTag?.let { editState ->
+        TagEditDialog(
+            state = editState,
+            onNameChanged = onEditNameChanged,
+            onColorSelected = onEditColorSelected,
+            onSave = onSaveEdit,
+            onDismiss = onCancelEdit
+        )
+    }
+
+    uiState.showDeleteDialog?.let { tag ->
+        AlertDialog(
+            onDismissRequest = onDismissDelete,
+            title = { Text(text = stringResource(R.string.tag_delete_confirm_title)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.tag_delete_confirm_message, tag.name)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onConfirmDelete) {
+                    Text(
+                        text = stringResource(R.string.delete_label),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissDelete) {
+                    Text(text = stringResource(R.string.cancel_label))
+                }
+            }
+        )
+    }
+
+    if (uiState.hasDeleteError) {
+        AlertDialog(
+            onDismissRequest = onDismissDeleteError,
+            title = { Text(text = stringResource(R.string.tag_delete_error_title)) },
+            text = { Text(text = stringResource(R.string.tag_delete_error_body)) },
+            confirmButton = {
+                TextButton(onClick = onDismissDeleteError) {
+                    Text(text = stringResource(R.string.settings_dialog_ok))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun TagRow(tag: TagUiModel, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onEditClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(Color(tag.colorArgb.toInt()))
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = tag.name,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        IconButton(onClick = onEditClick) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = stringResource(R.string.tag_edit),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        IconButton(onClick = onDeleteClick) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = stringResource(R.string.delete_label),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TagEditDialog(
+    state: TagEditState,
+    onNameChanged: (String) -> Unit,
+    onColorSelected: (Long) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isNew = state.id == null
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(
+                    if (isNew) R.string.tag_create else R.string.tag_edit
+                )
+            )
+        },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = state.name,
+                    onValueChange = onNameChanged,
+                    label = { Text(text = stringResource(R.string.tag_name_hint)) },
+                    isError = state.nameError,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (state.saveError) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.tag_save_error),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.tag_color_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DEFAULT_TAG_COLORS.forEach { colorArgb ->
+                        val isSelected = colorArgb == state.colorArgb
+                        val colorCode = colorArgb.toString(16).uppercase().padStart(8, '0')
+                        val colorDescription = stringResource(
+                            R.string.tag_color_option_content_description,
+                            colorCode
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(colorArgb.toInt()))
+                                .semantics {
+                                    role = Role.RadioButton
+                                    selected = isSelected
+                                    contentDescription = colorDescription
+                                }
+                                .then(
+                                    if (isSelected) {
+                                        Modifier.border(
+                                            width = 2.dp,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            shape = CircleShape
+                                        )
+                                    } else {
+                                        Modifier
+                                    }
+                                )
+                                .clickable { onColorSelected(colorArgb) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onSave) {
+                Text(text = stringResource(R.string.save_label))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel_label))
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TagManageScreenPreview() {
+    LiteMemoTheme {
+        TagManageScreen(
+            uiState = TagManageUiState(
+                isLoading = false,
+                tags = listOf(
+                    TagUiModel("1", "仕事", 0xFFB3261E),
+                    TagUiModel("2", "生活", 0xFF6750A4),
+                    TagUiModel("3", "趣味", 0xFF006D3B)
+                )
+            ),
+            onBackClick = {},
+            onCreateClick = {},
+            onEditClick = {},
+            onDeleteRequest = {},
+            onConfirmDelete = {},
+            onDismissDelete = {},
+            onDismissDeleteError = {},
+            onEditNameChanged = {},
+            onEditColorSelected = {},
+            onSaveEdit = {},
+            onCancelEdit = {},
+            onRetry = {}
+        )
+    }
+}
