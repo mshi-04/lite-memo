@@ -65,6 +65,7 @@
     <string name="tag_delete_confirm_message">「%1$s」を削除しますか？このタグが付いたメモからタグが外れます。</string>
     <string name="tag_name_hint">タグ名</string>
     <string name="tag_color_label">色</string>
+    <string name="tag_color_option_content_description">タグ色 #%1$s</string>
     <string name="tag_empty_title">タグがありません</string>
     <string name="tag_empty_body">新しいタグを作成するとここに表示されます。</string>
     <string name="save_label">保存</string>

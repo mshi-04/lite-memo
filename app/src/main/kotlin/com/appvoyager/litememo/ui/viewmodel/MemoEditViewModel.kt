@@ -50,8 +50,10 @@ class MemoEditViewModel @Inject constructor(
         observeTagsUseCase()
             .onEach { tags ->
                 _uiState.update { state ->
+                    val validTagIds = tags.map { it.id.value }.toSet()
                     state.copy(
-                        availableTags = tags.map { TagUiModel.fromDomain(it) }
+                        availableTags = tags.map { TagUiModel.fromDomain(it) },
+                        selectedTagIds = state.selectedTagIds.intersect(validTagIds)
                     )
                 }
             }

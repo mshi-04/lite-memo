@@ -76,11 +76,11 @@ class TagManageViewModel @Inject constructor(
     }
 
     fun updateEditName(name: String) {
-        editingTag.update { it?.copy(name = name, nameError = false) }
+        editingTag.update { it?.copy(name = name, nameError = false, saveError = false) }
     }
 
     fun selectEditColor(colorArgb: Long) {
-        editingTag.update { it?.copy(colorArgb = colorArgb) }
+        editingTag.update { it?.copy(colorArgb = colorArgb, saveError = false) }
     }
 
     fun saveEdit() {

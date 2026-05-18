@@ -242,7 +242,7 @@ private fun CalendarTopBar(
 
     LaunchedEffect(isSearchActive) {
         if (isSearchActive) {
-            focusRequester.requestFocus()
+            runCatching { focusRequester.requestFocus() }
         }
     }
 

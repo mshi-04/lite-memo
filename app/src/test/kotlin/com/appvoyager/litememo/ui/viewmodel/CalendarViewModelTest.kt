@@ -10,6 +10,7 @@ import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -149,6 +150,10 @@ class CalendarViewModelTest {
                 zoneId = zoneId
             ),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
+            searchMemosUseCase = SearchMemosUseCase(
+                memoRepository = memoRepository,
+                userSettingsRepository = FakeUserSettingsRepository()
+            ),
             currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
             zoneId = zoneId
         )
