@@ -139,6 +139,7 @@ class CalendarViewModelTest {
         memoRepository: FakeMemoRepository = FakeMemoRepository()
     ): CalendarViewModel {
         val tagRepository = FakeTagRepository()
+        val userSettingsRepository = FakeUserSettingsRepository()
         return CalendarViewModel(
             observeCalendarMonthSummaryUseCase = ObserveCalendarMonthSummaryUseCase(
                 memoRepository = memoRepository,
@@ -146,13 +147,13 @@ class CalendarViewModelTest {
             ),
             observeMemosByCalendarDateUseCase = ObserveMemosByCalendarDateUseCase(
                 memoRepository = memoRepository,
-                userSettingsRepository = FakeUserSettingsRepository(),
+                userSettingsRepository = userSettingsRepository,
                 zoneId = zoneId
             ),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             searchMemosUseCase = SearchMemosUseCase(
                 memoRepository = memoRepository,
-                userSettingsRepository = FakeUserSettingsRepository()
+                userSettingsRepository = userSettingsRepository
             ),
             currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
             zoneId = zoneId
