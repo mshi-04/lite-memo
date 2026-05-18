@@ -31,6 +31,7 @@ fun MemoEditRoute(
         uiState = uiState,
         onTitleChanged = { viewModel.updateTitle(it) },
         onBodyChanged = { viewModel.updateBody(it) },
+        onTagToggled = { viewModel.toggleTag(it) },
         onSave = { viewModel.save() },
         onDelete = { viewModel.delete() },
         onBackRequest = { viewModel.requestBack() },

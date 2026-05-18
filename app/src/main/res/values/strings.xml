@@ -56,6 +56,35 @@
     <string name="discard_label">破棄</string>
     <string name="cancel_label">キャンセル</string>
 
+    <!-- Tag Manage -->
+    <string name="settings_tag_manage">タグ管理</string>
+    <string name="tag_manage_title">タグ管理</string>
+    <string name="tag_create">タグを作成</string>
+    <string name="tag_edit">タグを編集</string>
+    <string name="tag_delete_confirm_title">タグの削除</string>
+    <string name="tag_delete_confirm_message">「%1$s」を削除しますか？このタグが付いたメモからタグが外れます。</string>
+    <string name="tag_name_hint">タグ名</string>
+    <string name="tag_color_label">色</string>
+    <string name="tag_color_option_content_description">タグ色 #%1$s</string>
+    <string name="tag_empty_title">タグがありません</string>
+    <string name="tag_empty_body">新しいタグを作成するとここに表示されます。</string>
+    <string name="save_label">保存</string>
+    <string name="delete_label">削除</string>
+    <string name="tag_save_error">保存に失敗しました。もう一度お試しください。</string>
+    <string name="tag_delete_error_title">削除に失敗しました</string>
+    <string name="tag_delete_error_body">タグの削除中にエラーが発生しました。もう一度お試しください。</string>
+    <string name="tag_selection_label">タグ</string>
+
+    <!-- Search -->
+    <string name="search_hint">タイトルや本文で検索</string>
+    <string name="search_hint_body">キーワードを入力するとメモを検索できます。</string>
+    <string name="clear_search">検索をクリア</string>
+    <string name="close_search">検索を閉じる</string>
+    <string name="no_search_results_title">検索結果がありません</string>
+    <string name="no_search_results_body">別のキーワードで検索してください。</string>
+    <string name="search_error_title">検索でエラーが発生しました</string>
+    <string name="search_error_body">しばらく経ってからもう一度お試しください。</string>
+
     <!-- Settings -->
     <string name="settings_section_display">表示</string>
     <string name="settings_theme">テーマ</string>

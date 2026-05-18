@@ -23,8 +23,10 @@ import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.MemoEditRoute
 import com.appvoyager.litememo.ui.screen.OssLicensesRoute
 import com.appvoyager.litememo.ui.screen.SettingsRoute
+import com.appvoyager.litememo.ui.screen.TagManageRoute
 
 private const val OSS_LICENSES_ROUTE = "oss_licenses"
+private const val TAG_MANAGE_ROUTE = "tag_manage"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
 private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
@@ -101,7 +103,15 @@ fun LiteMemoApp() {
                 SettingsRoute(
                     onOpenSourceLicenseClick = {
                         navController.navigate(OSS_LICENSES_ROUTE)
+                    },
+                    onTagManageClick = {
+                        navController.navigate(TAG_MANAGE_ROUTE)
                     }
+                )
+            }
+            composable(TAG_MANAGE_ROUTE) {
+                TagManageRoute(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable(OSS_LICENSES_ROUTE) {

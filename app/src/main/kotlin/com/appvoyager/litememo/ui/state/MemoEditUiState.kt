@@ -7,5 +7,7 @@ data class MemoEditUiState(
     val title: String = "",
     val body: String = "",
     val isModified: Boolean = false,
-    val showDiscardDialog: Boolean = false
+    val showDiscardDialog: Boolean = false,
+    val availableTags: List<TagUiModel> = emptyList(),
+    val selectedTagIds: Set<String> = emptySet()
 )

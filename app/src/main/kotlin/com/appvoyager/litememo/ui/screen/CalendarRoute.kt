@@ -25,6 +25,8 @@ fun CalendarRoute(
         onDatePickerRequested = { viewModel.showDatePicker() },
         onDatePickerDismissed = { viewModel.dismissDatePicker() },
         onDatePicked = { date -> viewModel.selectDateFromPicker(date) },
+        onSearchToggle = { viewModel.toggleSearch() },
+        onSearchQueryChanged = { viewModel.updateSearchQuery(it) },
         onRetry = { viewModel.retry() },
         onMemoClick = onMemoClick,
         onCreateMemoClick = {

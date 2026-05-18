@@ -16,6 +16,7 @@ private const val PRIVACY_POLICY_URL = "https://example.com/privacy-policy"
 @Composable
 fun SettingsRoute(
     onOpenSourceLicenseClick: () -> Unit = {},
+    onTagManageClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -30,6 +31,7 @@ fun SettingsRoute(
         onDismissThemeDialog = { viewModel.dismissThemeDialog() },
         onExpandSortOrder = { viewModel.expandSortOrder() },
         onCollapseSortOrder = { viewModel.collapseSortOrder() },
+        onTagManageClick = onTagManageClick,
         onPrivacyPolicyClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
             context.startActivity(intent)

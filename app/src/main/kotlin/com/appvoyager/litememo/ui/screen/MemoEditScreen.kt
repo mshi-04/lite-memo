@@ -1,11 +1,18 @@
 package com.appvoyager.litememo.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,6 +20,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,9 +32,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,15 +48,17 @@ import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.state.MemoEditUiState
+import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import kotlinx.coroutines.android.awaitFrame
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun MemoEditScreen(
     uiState: MemoEditUiState,
     onTitleChanged: (String) -> Unit,
     onBodyChanged: (String) -> Unit,
+    onTagToggled: (String) -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
@@ -127,6 +141,30 @@ fun MemoEditScreen(
                             innerTextField()
                         }
                     )
+                    if (uiState.availableTags.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            uiState.availableTags.forEach { tag ->
+                                val selected = tag.id in uiState.selectedTagIds
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = { onTagToggled(tag.id) },
+                                    label = { Text(text = tag.name) },
+                                    leadingIcon = {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(tag.colorArgb.toInt()))
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     BasicTextField(
                         value = uiState.body,
@@ -192,6 +230,7 @@ private fun MemoEditScreenPreview() {
             ),
             onTitleChanged = {},
             onBodyChanged = {},
+            onTagToggled = {},
             onSave = {},
             onDelete = {},
             onBackRequest = {},
