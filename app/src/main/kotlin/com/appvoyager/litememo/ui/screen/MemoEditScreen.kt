@@ -23,7 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import kotlinx.coroutines.android.awaitFrame
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -38,6 +37,7 @@ import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+import kotlinx.coroutines.android.awaitFrame
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
