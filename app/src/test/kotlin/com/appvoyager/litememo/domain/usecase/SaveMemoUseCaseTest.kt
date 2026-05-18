@@ -181,7 +181,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeUsesCommandCreatedAtWhenProvided() = runBlocking {
+    fun invokeUsesCommandCreatedAtWhenProvided() = runTest {
         // Arrange
         val useCase = saveMemoUseCase(timeProvider = MutableTimeProvider(TimestampMillis(5000L)))
 
@@ -199,7 +199,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeUsesCurrentTimeWhenCommandCreatedAtIsNull() = runBlocking {
+    fun invokeUsesCurrentTimeWhenCommandCreatedAtIsNull() = runTest {
         // Arrange
         val useCase = saveMemoUseCase(timeProvider = MutableTimeProvider(TimestampMillis(5000L)))
 
@@ -216,7 +216,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokePreservesExistingCreatedAtEvenWhenCommandCreatedAtIsProvided() = runBlocking {
+    fun invokePreservesExistingCreatedAtEvenWhenCommandCreatedAtIsProvided() = runTest {
         // Arrange
         val existing = memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 1500L)
         val useCase = saveMemoUseCase(

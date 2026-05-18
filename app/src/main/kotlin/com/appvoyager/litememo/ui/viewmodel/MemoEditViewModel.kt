@@ -31,7 +31,7 @@ class MemoEditViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val memoId: String? = savedStateHandle["memoId"]
-    private val createdAtMillis: Long? = savedStateHandle.get<String>("createdAt")?.toLongOrNull()
+    private val createdAtMillis: Long = savedStateHandle["createdAt"] ?: -1L
 
     private val _uiState = MutableStateFlow(MemoEditUiState())
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
@@ -95,7 +95,7 @@ class MemoEditViewModel @Inject constructor(
                         id = memoId?.let { MemoId(it) },
                         title = MemoTitle(title),
                         body = MemoBody(body),
-                        createdAt = createdAtMillis?.let { TimestampMillis(it) }
+                        createdAt = if (createdAtMillis >= 0) TimestampMillis(createdAtMillis) else null
                     )
                 )
             }.onSuccess {
