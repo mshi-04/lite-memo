@@ -48,6 +48,7 @@ fun SettingsScreen(
     onDismissThemeDialog: () -> Unit,
     onExpandSortOrder: () -> Unit,
     onCollapseSortOrder: () -> Unit,
+    onTagManageClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onOpenSourceLicenseClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -82,6 +83,22 @@ fun SettingsScreen(
                     onExpand = onExpandSortOrder,
                     onCollapse = onCollapseSortOrder,
                     onSelected = onMemoSortOrderSelected
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            item {
+                SettingsClickableRow(
+                    label = stringResource(R.string.settings_tag_manage),
+                    onClick = onTagManageClick,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }

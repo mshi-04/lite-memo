@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,8 +29,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,14 +43,19 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,6 +87,8 @@ fun CalendarScreen(
     onDatePickerRequested: () -> Unit,
     onDatePickerDismissed: () -> Unit,
     onDatePicked: (Long) -> Unit,
+    onSearchToggle: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     onRetry: () -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
@@ -101,6 +111,8 @@ fun CalendarScreen(
                     onDateSelected = onDateSelected,
                     onCalendarExpandedToggle = onCalendarExpandedToggle,
                     onDatePickerRequested = onDatePickerRequested,
+                    onSearchToggle = onSearchToggle,
+                    onSearchQueryChanged = onSearchQueryChanged,
                     onMemoClick = onMemoClick
                 )
                 FloatingActionButton(
@@ -135,6 +147,8 @@ private fun CalendarContent(
     onDateSelected: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
     onDatePickerRequested: () -> Unit,
+    onSearchToggle: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     onMemoClick: (String) -> Unit
 ) {
     LazyColumn(
@@ -143,57 +157,149 @@ private fun CalendarContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            CalendarTopBar()
-        }
-        item {
-            CalendarMonthCard(
-                uiState = uiState,
-                onPreviousMonth = onPreviousMonth,
-                onNextMonth = onNextMonth,
-                onDateSelected = onDateSelected,
-                onCalendarExpandedToggle = onCalendarExpandedToggle,
-                onDatePickerRequested = onDatePickerRequested
+            CalendarTopBar(
+                isSearchActive = uiState.isSearchActive,
+                searchQuery = uiState.searchQuery,
+                onSearchToggle = onSearchToggle,
+                onSearchQueryChanged = onSearchQueryChanged
             )
         }
-        item {
-            Text(
-                text = selectedDateTitle(uiState.selectedDate),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        if (uiState.memos.isEmpty()) {
-            item {
-                MessageContent(
-                    title = stringResource(R.string.empty_calendar_title),
-                    body = stringResource(R.string.empty_calendar_body)
-                )
+        if (uiState.isSearchActive) {
+            if (uiState.hasSearchError) {
+                item {
+                    MessageContent(
+                        title = stringResource(R.string.search_error_title),
+                        body = stringResource(R.string.search_error_body)
+                    )
+                }
+            } else if (uiState.searchQuery.isBlank()) {
+                item {
+                    MessageContent(
+                        title = stringResource(R.string.search_hint),
+                        body = stringResource(R.string.search_hint_body)
+                    )
+                }
+            } else if (uiState.searchResults.isEmpty()) {
+                item {
+                    MessageContent(
+                        title = stringResource(R.string.no_search_results_title),
+                        body = stringResource(R.string.no_search_results_body)
+                    )
+                }
+            } else {
+                items(
+                    items = uiState.searchResults,
+                    key = { memo -> memo.id }
+                ) { memo ->
+                    MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+                }
             }
         } else {
-            items(
-                items = uiState.memos,
-                key = { memo -> memo.id }
-            ) { memo ->
-                MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+            item {
+                CalendarMonthCard(
+                    uiState = uiState,
+                    onPreviousMonth = onPreviousMonth,
+                    onNextMonth = onNextMonth,
+                    onDateSelected = onDateSelected,
+                    onCalendarExpandedToggle = onCalendarExpandedToggle,
+                    onDatePickerRequested = onDatePickerRequested
+                )
+            }
+            item {
+                Text(
+                    text = selectedDateTitle(uiState.selectedDate),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (uiState.memos.isEmpty()) {
+                item {
+                    MessageContent(
+                        title = stringResource(R.string.empty_calendar_title),
+                        body = stringResource(R.string.empty_calendar_body)
+                    )
+                }
+            } else {
+                items(
+                    items = uiState.memos,
+                    key = { memo -> memo.id }
+                ) { memo ->
+                    MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CalendarTopBar() {
+private fun CalendarTopBar(
+    isSearchActive: Boolean,
+    searchQuery: String,
+    onSearchToggle: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) {
+            focusRequester.requestFocus()
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = stringResource(R.string.calendar_title),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        if (isSearchActive) {
+            IconButton(onClick = onSearchToggle) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.close_search)
+                )
+            }
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChanged,
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                placeholder = { Text(text = stringResource(R.string.search_hint)) },
+                singleLine = true,
+                trailingIcon = if (searchQuery.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { onSearchQueryChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.clear_search),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                } else {
+                    null
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.calendar_title),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = onSearchToggle) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search)
+                )
+            }
+        }
     }
 }
 
@@ -367,6 +473,8 @@ private fun CalendarScreenPreview() {
             onDatePickerRequested = {},
             onDatePickerDismissed = {},
             onDatePicked = {},
+            onSearchToggle = {},
+            onSearchQueryChanged = {},
             onRetry = {},
             onMemoClick = {},
             onCreateMemoClick = {}
@@ -390,6 +498,8 @@ private fun CalendarScreenDarkPreview() {
             onDatePickerRequested = {},
             onDatePickerDismissed = {},
             onDatePicked = {},
+            onSearchToggle = {},
+            onSearchQueryChanged = {},
             onRetry = {},
             onMemoClick = {},
             onCreateMemoClick = {}

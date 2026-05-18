@@ -7,17 +7,22 @@ import com.appvoyager.litememo.domain.model.SaveMemoCommand
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.DeleteMemoUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoEditUiState
+import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,7 +32,8 @@ class MemoEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getMemoUseCase: GetMemoUseCase,
     private val saveMemoUseCase: SaveMemoUseCase,
-    private val deleteMemoUseCase: DeleteMemoUseCase
+    private val deleteMemoUseCase: DeleteMemoUseCase,
+    private val observeTagsUseCase: ObserveTagsUseCase
 ) : ViewModel() {
 
     private val memoId: String? = savedStateHandle["memoId"]
@@ -41,6 +47,15 @@ class MemoEditViewModel @Inject constructor(
 
     init {
         loadMemo()
+        observeTagsUseCase()
+            .onEach { tags ->
+                _uiState.update { state ->
+                    state.copy(
+                        availableTags = tags.map { TagUiModel.fromDomain(it) }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun reload() {
@@ -63,7 +78,8 @@ class MemoEditViewModel @Inject constructor(
                             isLoading = false,
                             memoId = memo.id.value,
                             title = memo.title.value,
-                            body = memo.body.value
+                            body = memo.body.value,
+                            selectedTagIds = memo.tagIds.map { id -> id.value }.toSet()
                         )
                     }
                 }
@@ -79,6 +95,17 @@ class MemoEditViewModel @Inject constructor(
 
     fun updateBody(body: String) {
         _uiState.update { it.copy(body = body, isModified = true) }
+    }
+
+    fun toggleTag(tagId: String) {
+        _uiState.update { state ->
+            val newIds = if (tagId in state.selectedTagIds) {
+                state.selectedTagIds - tagId
+            } else {
+                state.selectedTagIds + tagId
+            }
+            state.copy(selectedTagIds = newIds, isModified = true)
+        }
     }
 
     fun save() {
@@ -99,7 +126,8 @@ class MemoEditViewModel @Inject constructor(
                             TimestampMillis(createdAtMillis)
                         } else {
                             null
-                        }
+                        },
+                        tagIds = _uiState.value.selectedTagIds.map { TagId(it) }
                     )
                 )
             }.onSuccess {
