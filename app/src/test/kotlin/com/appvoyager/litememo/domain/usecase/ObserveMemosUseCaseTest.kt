@@ -4,14 +4,14 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class ObserveMemosUseCaseTest {
 
     @Test
-    fun invokeReturnsMemosSortedByUpdatedAtDescending() = runBlocking {
+    fun invokeReturnsMemosSortedByUpdatedAtDescending() = runTest {
         // Arrange
         val older = memoFixture(id = "older", updatedAt = 1000L)
         val newer = memoFixture(id = "newer", updatedAt = 2000L)
