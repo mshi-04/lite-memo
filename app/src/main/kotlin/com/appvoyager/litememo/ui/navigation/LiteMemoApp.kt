@@ -28,8 +28,7 @@ private const val OSS_LICENSES_ROUTE = "oss_licenses"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
 private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
-private fun memoEditRouteWithCreatedAt(createdAt: Long) =
-    "$MEMO_EDIT_BASE?createdAt=$createdAt"
+private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"
 
 @Composable
 fun LiteMemoApp() {

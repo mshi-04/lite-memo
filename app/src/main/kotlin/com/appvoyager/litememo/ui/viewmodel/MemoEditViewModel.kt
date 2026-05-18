@@ -95,7 +95,11 @@ class MemoEditViewModel @Inject constructor(
                         id = memoId?.let { MemoId(it) },
                         title = MemoTitle(title),
                         body = MemoBody(body),
-                        createdAt = if (createdAtMillis >= 0) TimestampMillis(createdAtMillis) else null
+                        createdAt = if (createdAtMillis >= 0) {
+                            TimestampMillis(createdAtMillis)
+                        } else {
+                            null
+                        }
                     )
                 )
             }.onSuccess {
