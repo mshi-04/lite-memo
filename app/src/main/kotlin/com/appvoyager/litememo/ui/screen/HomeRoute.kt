@@ -19,6 +19,7 @@ fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onFilterSelected = { filter -> viewModel.selectFilter(filter) },
+        onSortOrderSelected = { order -> viewModel.selectSortOrder(order) },
         onMemoClick = onMemoClick,
         onCreateMemoClick = onCreateMemoClick,
         onRetry = { viewModel.retry() },

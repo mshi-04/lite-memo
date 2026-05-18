@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.screen
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,15 +18,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
@@ -48,6 +58,7 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 fun HomeScreen(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
+    onSortOrderSelected: (MemoSortOrder) -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
@@ -70,6 +81,7 @@ fun HomeScreen(
             else -> HomeContent(
                 uiState = uiState,
                 onFilterSelected = onFilterSelected,
+                onSortOrderSelected = onSortOrderSelected,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -81,6 +93,7 @@ fun HomeScreen(
 private fun HomeContent(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
+    onSortOrderSelected: (MemoSortOrder) -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -110,9 +123,11 @@ private fun HomeContent(
             SummaryCard(summary = uiState.summary)
         }
         item {
-            HomeFilters(
+            HomeFilterAndSortRow(
                 selectedFilter = uiState.selectedFilter,
-                onFilterSelected = onFilterSelected
+                onFilterSelected = onFilterSelected,
+                currentSortOrder = uiState.memoSortOrder,
+                onSortOrderSelected = onSortOrderSelected
             )
         }
         if (uiState.memos.isEmpty()) {
@@ -209,11 +224,14 @@ private fun TodayCountBox(todayCount: Int) {
 }
 
 @Composable
-private fun HomeFilters(
+private fun HomeFilterAndSortRow(
     selectedFilter: HomeFilterUiState,
-    onFilterSelected: (HomeFilterUiState) -> Unit
+    onFilterSelected: (HomeFilterUiState) -> Unit,
+    currentSortOrder: MemoSortOrder,
+    onSortOrderSelected: (MemoSortOrder) -> Unit
 ) {
     Row(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -232,7 +250,54 @@ private fun HomeFilters(
             selected = selectedFilter == HomeFilterUiState.Important,
             onClick = { onFilterSelected(HomeFilterUiState.Important) }
         )
+        Spacer(modifier = Modifier.weight(1f))
+        SortOrderDropdown(
+            currentOrder = currentSortOrder,
+            onSelected = onSortOrderSelected
+        )
     }
+}
+
+@Composable
+private fun SortOrderDropdown(
+    currentOrder: MemoSortOrder,
+    onSelected: (MemoSortOrder) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Text(
+                text = currentOrder.toDisplayString(),
+                style = MaterialTheme.typography.labelMedium
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            MemoSortOrder.entries.forEach { order ->
+                DropdownMenuItem(
+                    text = { Text(text = order.toDisplayString()) },
+                    onClick = {
+                        onSelected(order)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemoSortOrder.toDisplayString(): String = when (this) {
+    MemoSortOrder.UPDATED_NEWEST -> stringResource(R.string.settings_sort_updated)
+    MemoSortOrder.CREATED_NEWEST -> stringResource(R.string.settings_sort_created)
 }
 
 @Composable
@@ -259,6 +324,7 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
+            onSortOrderSelected = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -276,6 +342,7 @@ private fun HomeScreenDarkPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
+            onSortOrderSelected = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}

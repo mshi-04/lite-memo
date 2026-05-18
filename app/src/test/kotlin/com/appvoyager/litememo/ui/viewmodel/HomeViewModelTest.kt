@@ -148,14 +148,16 @@ class HomeViewModelTest {
         memoRepository: MemoRepository = FakeMemoRepository(memos)
     ): HomeViewModel {
         val tagRepository = FakeTagRepository(tags)
+        val userSettingsRepository = FakeUserSettingsRepository()
         return HomeViewModel(
-            observeMemosUseCase = ObserveMemosUseCase(memoRepository, FakeUserSettingsRepository()),
+            observeMemosUseCase = ObserveMemosUseCase(memoRepository, userSettingsRepository),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             filterMemosUseCase = FilterMemosUseCase(),
             getHomeSummaryUseCase = GetHomeSummaryUseCase(
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
                 zoneId = ZoneId.of("UTC")
-            )
+            ),
+            userSettingsRepository = userSettingsRepository
         )
     }
 
