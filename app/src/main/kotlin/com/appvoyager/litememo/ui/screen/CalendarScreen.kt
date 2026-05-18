@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
@@ -34,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,6 +81,7 @@ fun CalendarScreen(
     onDatePicked: (Long) -> Unit,
     onRetry: () -> Unit,
     onMemoClick: (String) -> Unit,
+    onCreateMemoClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -89,15 +93,28 @@ fun CalendarScreen(
 
             uiState.hasError -> ErrorContent(onRetry = onRetry)
 
-            else -> CalendarContent(
-                uiState = uiState,
-                onPreviousMonth = onPreviousMonth,
-                onNextMonth = onNextMonth,
-                onDateSelected = onDateSelected,
-                onCalendarExpandedToggle = onCalendarExpandedToggle,
-                onDatePickerRequested = onDatePickerRequested,
-                onMemoClick = onMemoClick
-            )
+            else -> Box(modifier = Modifier.fillMaxSize()) {
+                CalendarContent(
+                    uiState = uiState,
+                    onPreviousMonth = onPreviousMonth,
+                    onNextMonth = onNextMonth,
+                    onDateSelected = onDateSelected,
+                    onCalendarExpandedToggle = onCalendarExpandedToggle,
+                    onDatePickerRequested = onDatePickerRequested,
+                    onMemoClick = onMemoClick
+                )
+                FloatingActionButton(
+                    onClick = onCreateMemoClick,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.create_memo)
+                    )
+                }
+            }
         }
 
         if (uiState.isDatePickerVisible && uiState.selectedDate != null) {
@@ -122,7 +139,7 @@ private fun CalendarContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -351,7 +368,8 @@ private fun CalendarScreenPreview() {
             onDatePickerDismissed = {},
             onDatePicked = {},
             onRetry = {},
-            onMemoClick = {}
+            onMemoClick = {},
+            onCreateMemoClick = {}
         )
     }
 }
@@ -373,7 +391,8 @@ private fun CalendarScreenDarkPreview() {
             onDatePickerDismissed = {},
             onDatePicked = {},
             onRetry = {},
-            onMemoClick = {}
+            onMemoClick = {},
+            onCreateMemoClick = {}
         )
     }
 }

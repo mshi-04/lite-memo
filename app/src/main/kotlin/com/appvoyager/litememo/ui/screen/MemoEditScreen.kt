@@ -21,7 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import kotlinx.coroutines.android.awaitFrame
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -88,6 +93,11 @@ fun MemoEditScreen(
 
             else -> {
                 val colorScheme = MaterialTheme.colorScheme
+                val bodyFocusRequester = remember { FocusRequester() }
+                LaunchedEffect(Unit) {
+                    awaitFrame()
+                    bodyFocusRequester.requestFocus()
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -121,7 +131,9 @@ fun MemoEditScreen(
                     BasicTextField(
                         value = uiState.body,
                         onValueChange = onBodyChanged,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .focusRequester(bodyFocusRequester),
                         textStyle = TextStyle(
                             fontSize = 14.sp,
                             color = colorScheme.onSurface

@@ -7,6 +7,7 @@ import com.appvoyager.litememo.domain.model.SaveMemoCommand
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.DeleteMemoUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
@@ -30,6 +31,7 @@ class MemoEditViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val memoId: String? = savedStateHandle["memoId"]
+    private val createdAtMillis: Long? = savedStateHandle.get<String>("createdAt")?.toLongOrNull()
 
     private val _uiState = MutableStateFlow(MemoEditUiState())
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
@@ -92,7 +94,8 @@ class MemoEditViewModel @Inject constructor(
                     SaveMemoCommand(
                         id = memoId?.let { MemoId(it) },
                         title = MemoTitle(title),
-                        body = MemoBody(body)
+                        body = MemoBody(body),
+                        createdAt = createdAtMillis?.let { TimestampMillis(it) }
                     )
                 )
             }.onSuccess {

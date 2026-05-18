@@ -30,7 +30,7 @@ class SaveMemoUseCase @Inject constructor(
             id = existingMemo?.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
-            createdAt = existingMemo?.createdAt ?: now,
+            createdAt = existingMemo?.createdAt ?: command.createdAt ?: now,
             updatedAt = now,
             tagIds = tagIds,
             isImportant = command.isImportant
