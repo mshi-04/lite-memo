@@ -197,6 +197,7 @@ class MemoEditViewModel @Inject constructor(
     }
 
     fun requestBack() {
+        if (_uiState.value.isDeletePending) return
         if (_uiState.value.isModified) {
             _uiState.update { it.copy(showDiscardDialog = true) }
         } else {
