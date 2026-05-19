@@ -3,10 +3,13 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.MemoFilter
+import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -29,7 +33,9 @@ class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val filterMemosUseCase: FilterMemosUseCase,
-    private val getHomeSummaryUseCase: GetHomeSummaryUseCase
+    private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
+    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
+    private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow(HomeFilterUiState.All)
@@ -39,14 +45,16 @@ class HomeViewModel @Inject constructor(
         combine(
             observeMemosUseCase(),
             observeTagsUseCase(),
-            selectedFilter
-        ) { memos, tags, filter ->
+            selectedFilter,
+            observeMemoSortOrderUseCase()
+        ) { memos, tags, filter, sortOrder ->
             val summary = getHomeSummaryUseCase(memos)
             val filteredMemos = filterMemosUseCase(memos, filter.toDomainFilter())
 
             HomeUiState(
                 isLoading = false,
                 selectedFilter = filter,
+                memoSortOrder = sortOrder,
                 summary = HomeSummaryUiState(
                     totalCount = summary.totalCount,
                     todayCount = summary.todayCount,
@@ -72,6 +80,12 @@ class HomeViewModel @Inject constructor(
 
     fun selectFilter(filter: HomeFilterUiState) {
         selectedFilter.value = filter
+    }
+
+    fun selectSortOrder(order: MemoSortOrder) {
+        viewModelScope.launch {
+            runCatching { setMemoSortOrderUseCase(order) }
+        }
     }
 
     fun retry() {
