@@ -59,6 +59,18 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     override fun observeMemos(): Flow<List<Memo>> = memos
 
+    override fun observeMemosBySearchQuery(query: String): Flow<List<Memo>> = memos.map { list ->
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            emptyList()
+        } else {
+            list.filter { memo ->
+                memo.title.value.contains(trimmed, ignoreCase = true) ||
+                    memo.body.value.contains(trimmed, ignoreCase = true)
+            }
+        }
+    }
+
     override fun observeMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis

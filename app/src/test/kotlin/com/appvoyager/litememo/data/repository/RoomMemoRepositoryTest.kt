@@ -44,6 +44,41 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun observeMemosBySearchQueryDelegatesEscapedLikePatternToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.observeMemosBySearchQuery("100%_\\").first()
+
+        // Assert
+        assertEquals("%100\\%\\_\\\\%", dao.observedSearchPattern)
+    }
+
+    @Test
+    fun observeMemosBySearchQueryReturnsDomainMemosFromDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            memosWithTagRefs = listOf(
+                memoWithTagRefs(
+                    memoId = "memo-1",
+                    tagRefs = listOf(
+                        MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0)
+                    )
+                )
+            )
+        )
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        val memos = repository.observeMemosBySearchQuery("title").first()
+
+        // Assert
+        assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
+    }
+
+    @Test
     fun observeMemosCreatedBetweenDelegatesTimestampValuesToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
@@ -219,8 +254,16 @@ class RoomMemoRepositoryTest {
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
         var deletedMemoId: String? = null
         var observedRange: Pair<Long, Long>? = null
+        var observedSearchPattern: String? = null
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
+
+        override fun observeMemosWithTagRefsBySearchPattern(
+            pattern: String
+        ): Flow<List<MemoWithTagRefs>> {
+            observedSearchPattern = pattern
+            return memosWithTagRefs
+        }
 
         override fun observeMemosWithTagRefsCreatedBetween(
             fromMillis: Long,

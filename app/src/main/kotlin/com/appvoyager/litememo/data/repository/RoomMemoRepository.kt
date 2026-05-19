@@ -18,6 +18,11 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         memos.map { memo -> memo.toDomain() }
     }
 
+    override fun observeMemosBySearchQuery(query: String): Flow<List<Memo>> =
+        memoDao.observeMemosWithTagRefsBySearchPattern(query.toEscapedLikePattern()).map { memos ->
+            memos.map { memo -> memo.toDomain() }
+        }
+
     override fun observeMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis
@@ -42,6 +47,25 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
 
     override suspend fun deleteMemo(id: MemoId) {
         memoDao.deleteMemo(id.value)
+    }
+
+    private fun String.toEscapedLikePattern(): String = buildString {
+        append(LIKE_MULTI_CHARACTER_WILDCARD)
+        this@toEscapedLikePattern.forEach { char ->
+            when (char) {
+                LIKE_ESCAPE_CHARACTER,
+                LIKE_MULTI_CHARACTER_WILDCARD,
+                LIKE_SINGLE_CHARACTER_WILDCARD -> append(LIKE_ESCAPE_CHARACTER)
+            }
+            append(char)
+        }
+        append(LIKE_MULTI_CHARACTER_WILDCARD)
+    }
+
+    private companion object {
+        const val LIKE_ESCAPE_CHARACTER = '\\'
+        const val LIKE_MULTI_CHARACTER_WILDCARD = '%'
+        const val LIKE_SINGLE_CHARACTER_WILDCARD = '_'
     }
 
 }

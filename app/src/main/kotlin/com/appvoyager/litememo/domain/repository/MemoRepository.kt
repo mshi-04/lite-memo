@@ -9,6 +9,8 @@ interface MemoRepository {
 
     fun observeMemos(): Flow<List<Memo>>
 
+    fun observeMemosBySearchQuery(query: String): Flow<List<Memo>>
+
     fun observeMemosCreatedBetween(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>>
 
     suspend fun getMemo(id: MemoId): Memo?

@@ -258,6 +258,10 @@ class HomeViewModelTest {
             throw throwable
         }
 
+        override fun observeMemosBySearchQuery(query: String): Flow<List<Memo>> = flow {
+            throw throwable
+        }
+
         override fun observeMemosCreatedBetween(
             from: TimestampMillis,
             to: TimestampMillis
