@@ -51,11 +51,11 @@ class SettingsViewModel @Inject constructor(
     )
 
     fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch { setThemeModeUseCase(mode) }
+        viewModelScope.launch { runCatching { setThemeModeUseCase(mode) } }
     }
 
     fun setMemoSortOrder(order: MemoSortOrder) {
-        viewModelScope.launch { setMemoSortOrderUseCase(order) }
+        viewModelScope.launch { runCatching { setMemoSortOrderUseCase(order) } }
     }
 
     fun showThemeDialog() {

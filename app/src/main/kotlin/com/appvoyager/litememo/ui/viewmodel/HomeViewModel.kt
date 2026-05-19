@@ -84,7 +84,7 @@ class HomeViewModel @Inject constructor(
 
     fun selectSortOrder(order: MemoSortOrder) {
         viewModelScope.launch {
-            setMemoSortOrderUseCase(order)
+            runCatching { setMemoSortOrderUseCase(order) }
         }
     }
 
