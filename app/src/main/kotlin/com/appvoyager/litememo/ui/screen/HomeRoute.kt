@@ -20,6 +20,8 @@ fun HomeRoute(
         uiState = uiState,
         onFilterSelected = { filter -> viewModel.selectFilter(filter) },
         onSortOrderSelected = { order -> viewModel.selectSortOrder(order) },
+        onSearchToggle = { viewModel.toggleSearch() },
+        onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
         onMemoClick = onMemoClick,
         onCreateMemoClick = onCreateMemoClick,
         onRetry = { viewModel.retry() },

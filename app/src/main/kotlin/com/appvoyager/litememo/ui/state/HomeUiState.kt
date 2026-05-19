@@ -7,6 +7,10 @@ data class HomeUiState(
     val hasError: Boolean = false,
     val selectedFilter: HomeFilterUiState = HomeFilterUiState.All,
     val memoSortOrder: MemoSortOrder = MemoSortOrder.UPDATED_NEWEST,
+    val isSearchActive: Boolean = false,
+    val searchQuery: String = "",
+    val hasSearchError: Boolean = false,
     val summary: HomeSummaryUiState = HomeSummaryUiState(),
-    val memos: List<MemoUiModel> = emptyList()
+    val memos: List<MemoUiModel> = emptyList(),
+    val searchResults: List<MemoUiModel> = emptyList()
 )

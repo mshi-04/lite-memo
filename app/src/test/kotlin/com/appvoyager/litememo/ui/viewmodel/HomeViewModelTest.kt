@@ -17,6 +17,7 @@ import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import java.time.Instant
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -118,6 +120,45 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun updateSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "shopping", title = "Shopping list"),
+                memoFixture(id = "meeting", title = "Meeting note")
+            )
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceTimeBy(300)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.searchResults.isNotEmpty() }
+
+        // Assert
+        assertEquals(listOf("Shopping list"), state.searchResults.map { it.title })
+    }
+
+    @Test
+    fun toggleSearchClearsQueryWhenSearchIsClosed() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+
+        // Act
+        viewModel.toggleSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals("", state.searchQuery)
+    }
+
+    @Test
     fun uiStateIsEmptyWhenNoMemosExist() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
@@ -160,6 +201,7 @@ class HomeViewModelTest {
                 zoneId = ZoneId.of("UTC")
             ),
             observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
+            searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
             setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository)
         )
     }

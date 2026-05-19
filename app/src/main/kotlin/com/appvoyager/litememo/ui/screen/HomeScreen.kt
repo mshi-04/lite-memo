@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -26,11 +28,15 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +68,8 @@ fun HomeScreen(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
     onSortOrderSelected: (MemoSortOrder) -> Unit,
+    onSearchToggle: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
@@ -83,6 +93,8 @@ fun HomeScreen(
                 uiState = uiState,
                 onFilterSelected = onFilterSelected,
                 onSortOrderSelected = onSortOrderSelected,
+                onSearchToggle = onSearchToggle,
+                onSearchQueryChanged = onSearchQueryChanged,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -95,6 +107,8 @@ private fun HomeContent(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
     onSortOrderSelected: (MemoSortOrder) -> Unit,
+    onSearchToggle: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,62 +118,154 @@ private fun HomeContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            HomeTopBar()
-        }
-        item {
-            Text(
-                text = stringResource(R.string.welcome_back),
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.recent_memos),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+            HomeTopBar(
+                isSearchActive = uiState.isSearchActive,
+                searchQuery = uiState.searchQuery,
+                onSearchToggle = onSearchToggle,
+                onSearchQueryChanged = onSearchQueryChanged
             )
         }
-        item {
-            SummaryCard(summary = uiState.summary)
-        }
-        item {
-            HomeFilterAndSortRow(
-                selectedFilter = uiState.selectedFilter,
-                onFilterSelected = onFilterSelected,
-                currentSortOrder = uiState.memoSortOrder,
-                onSortOrderSelected = onSortOrderSelected
-            )
-        }
-        if (uiState.memos.isEmpty()) {
-            item {
-                EmptyHomeContent()
+        if (uiState.isSearchActive) {
+            when {
+                uiState.hasSearchError -> item {
+                    MessageContent(
+                        title = stringResource(R.string.search_error_title),
+                        body = stringResource(R.string.search_error_body)
+                    )
+                }
+
+                uiState.searchQuery.isBlank() -> item {
+                    MessageContent(
+                        title = stringResource(R.string.search_hint),
+                        body = stringResource(R.string.search_hint_body)
+                    )
+                }
+
+                uiState.searchResults.isEmpty() -> item {
+                    MessageContent(
+                        title = stringResource(R.string.no_search_results_title),
+                        body = stringResource(R.string.no_search_results_body)
+                    )
+                }
+
+                else -> items(
+                    items = uiState.searchResults,
+                    key = { memo -> memo.id }
+                ) { memo ->
+                    MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+                }
             }
         } else {
-            items(
-                items = uiState.memos,
-                key = { memo -> memo.id }
-            ) { memo ->
-                MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+            item {
+                Text(
+                    text = stringResource(R.string.welcome_back),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.recent_memos),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            item {
+                SummaryCard(summary = uiState.summary)
+            }
+            item {
+                HomeFilterAndSortRow(
+                    selectedFilter = uiState.selectedFilter,
+                    onFilterSelected = onFilterSelected,
+                    currentSortOrder = uiState.memoSortOrder,
+                    onSortOrderSelected = onSortOrderSelected
+                )
+            }
+            if (uiState.memos.isEmpty()) {
+                item {
+                    EmptyHomeContent()
+                }
+            } else {
+                items(
+                    items = uiState.memos,
+                    key = { memo -> memo.id }
+                ) { memo ->
+                    MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HomeTopBar() {
+private fun HomeTopBar(
+    isSearchActive: Boolean,
+    searchQuery: String,
+    onSearchToggle: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) {
+            runCatching { focusRequester.requestFocus() }
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        if (isSearchActive) {
+            IconButton(onClick = onSearchToggle) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.close_search)
+                )
+            }
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChanged,
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                placeholder = { Text(text = stringResource(R.string.search_hint)) },
+                singleLine = true,
+                trailingIcon = if (searchQuery.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { onSearchQueryChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.clear_search),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                } else {
+                    null
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.app_name),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = onSearchToggle) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search)
+                )
+            }
+        }
     }
 }
 
@@ -317,6 +423,8 @@ private fun HomeScreenPreview() {
             uiState = previewHomeState(),
             onFilterSelected = {},
             onSortOrderSelected = {},
+            onSearchToggle = {},
+            onSearchQueryChanged = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -335,6 +443,8 @@ private fun HomeScreenDarkPreview() {
             uiState = previewHomeState(),
             onFilterSelected = {},
             onSortOrderSelected = {},
+            onSearchToggle = {},
+            onSearchQueryChanged = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
