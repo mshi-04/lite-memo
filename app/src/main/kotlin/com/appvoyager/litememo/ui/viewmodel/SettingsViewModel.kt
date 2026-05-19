@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
-import com.appvoyager.litememo.domain.repository.UserSettingsRepository
+import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
+import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -18,7 +21,10 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val userSettingsRepository: UserSettingsRepository,
+    private val observeThemeModeUseCase: ObserveThemeModeUseCase,
+    private val setThemeModeUseCase: SetThemeModeUseCase,
+    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
+    private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
     @Named("appVersion") private val appVersion: String
 ) : ViewModel() {
 
@@ -26,8 +32,8 @@ class SettingsViewModel @Inject constructor(
     private val sortOrderExpanded = MutableStateFlow(false)
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        userSettingsRepository.observeThemeMode(),
-        userSettingsRepository.observeMemoSortOrder(),
+        observeThemeModeUseCase(),
+        observeMemoSortOrderUseCase(),
         showThemeDialog,
         sortOrderExpanded
     ) { themeMode, sortOrder, showDialog, expanded ->
@@ -45,11 +51,11 @@ class SettingsViewModel @Inject constructor(
     )
 
     fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch { userSettingsRepository.setThemeMode(mode) }
+        viewModelScope.launch { setThemeModeUseCase(mode) }
     }
 
     fun setMemoSortOrder(order: MemoSortOrder) {
-        viewModelScope.launch { userSettingsRepository.setMemoSortOrder(order) }
+        viewModelScope.launch { setMemoSortOrderUseCase(order) }
     }
 
     fun showThemeDialog() {

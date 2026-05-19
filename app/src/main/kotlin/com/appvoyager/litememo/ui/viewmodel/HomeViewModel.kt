@@ -4,11 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.MemoFilter
 import com.appvoyager.litememo.domain.model.MemoSortOrder
-import com.appvoyager.litememo.domain.repository.UserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
@@ -33,7 +34,8 @@ class HomeViewModel @Inject constructor(
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val filterMemosUseCase: FilterMemosUseCase,
     private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
-    private val userSettingsRepository: UserSettingsRepository
+    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
+    private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow(HomeFilterUiState.All)
@@ -44,7 +46,7 @@ class HomeViewModel @Inject constructor(
             observeMemosUseCase(),
             observeTagsUseCase(),
             selectedFilter,
-            userSettingsRepository.observeMemoSortOrder()
+            observeMemoSortOrderUseCase()
         ) { memos, tags, filter, sortOrder ->
             val summary = getHomeSummaryUseCase(memos)
             val filteredMemos = filterMemosUseCase(memos, filter.toDomainFilter())
@@ -82,7 +84,7 @@ class HomeViewModel @Inject constructor(
 
     fun selectSortOrder(order: MemoSortOrder) {
         viewModelScope.launch {
-            userSettingsRepository.setMemoSortOrder(order)
+            setMemoSortOrderUseCase(order)
         }
     }
 

@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.ui.component.ErrorContent
+import com.appvoyager.litememo.ui.component.toDisplayString
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
@@ -289,12 +290,6 @@ private fun SortOrderDropdown(currentOrder: MemoSortOrder, onSelected: (MemoSort
             }
         }
     }
-}
-
-@Composable
-private fun MemoSortOrder.toDisplayString(): String = when (this) {
-    MemoSortOrder.UPDATED_NEWEST -> stringResource(R.string.settings_sort_updated)
-    MemoSortOrder.CREATED_NEWEST -> stringResource(R.string.settings_sort_created)
 }
 
 @Composable
