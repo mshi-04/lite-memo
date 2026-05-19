@@ -112,8 +112,9 @@ class MemoEditViewModel @Inject constructor(
     }
 
     fun save() {
-        val title = _uiState.value.title
-        val body = _uiState.value.body
+        val state = _uiState.value
+        val title = state.title
+        val body = state.body
         if (title.isBlank() && body.isBlank()) {
             _navigationEvent.trySend(Unit)
             return
@@ -130,8 +131,8 @@ class MemoEditViewModel @Inject constructor(
                         } else {
                             null
                         },
-                        tagIds = _uiState.value.selectedTagIds.map { TagId(it) },
-                        isImportant = _uiState.value.isImportant
+                        tagIds = state.selectedTagIds.map { TagId(it) },
+                        isImportant = state.isImportant
                     )
                 )
             }.onSuccess {

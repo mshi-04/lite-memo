@@ -20,6 +20,7 @@ import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -120,7 +121,12 @@ class HomeViewModel @Inject constructor(
 
     fun selectSortOrder(order: MemoSortOrder) {
         viewModelScope.launch {
-            runCatching { setMemoSortOrderUseCase(order) }
+            try {
+                setMemoSortOrderUseCase(order)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+            }
         }
     }
 
@@ -143,8 +149,11 @@ class HomeViewModel @Inject constructor(
 
     fun setMemoImportant(memoId: String, isImportant: Boolean) {
         viewModelScope.launch {
-            runCatching {
+            try {
                 setMemoImportantUseCase(MemoId(memoId), isImportant)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
             }
         }
     }
