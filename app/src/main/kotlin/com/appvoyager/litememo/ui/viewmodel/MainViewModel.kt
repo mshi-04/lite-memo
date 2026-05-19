@@ -2,15 +2,15 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.appvoyager.litememo.domain.model.ThemeMode
-import com.appvoyager.litememo.domain.repository.UserSettingsRepository
+import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val userSettingsRepository: UserSettingsRepository
+    private val observeThemeModeUseCase: ObserveThemeModeUseCase
 ) : ViewModel() {
 
-    val themeMode: Flow<ThemeMode> = userSettingsRepository.observeThemeMode()
+    val themeMode: Flow<ThemeMode> = observeThemeModeUseCase()
 }
