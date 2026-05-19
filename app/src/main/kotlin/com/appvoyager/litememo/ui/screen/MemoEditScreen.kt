@@ -26,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -65,10 +67,12 @@ fun MemoEditScreen(
     onDismissDiscard: () -> Unit,
     onConfirmDiscard: () -> Unit,
     onRetry: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 navigationIcon = {
@@ -81,7 +85,7 @@ fun MemoEditScreen(
                 },
                 title = {},
                 actions = {
-                    if (uiState.memoId != null) {
+                    if (uiState.memoId != null && !uiState.isDeletePending) {
                         IconButton(onClick = onDelete) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -89,12 +93,14 @@ fun MemoEditScreen(
                             )
                         }
                     }
-                    IconButton(onClick = onSave) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(R.string.save_memo),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    if (!uiState.isDeletePending) {
+                        IconButton(onClick = onSave) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = stringResource(R.string.save_memo),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             )
@@ -236,7 +242,8 @@ private fun MemoEditScreenPreview() {
             onBackRequest = {},
             onDismissDiscard = {},
             onConfirmDiscard = {},
-            onRetry = {}
+            onRetry = {},
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }
