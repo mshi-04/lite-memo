@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -133,7 +132,6 @@ class HomeViewModelTest {
         // Act
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
-        advanceTimeBy(300)
         advanceUntilIdle()
         val state = viewModel.uiState.first { it.searchResults.isNotEmpty() }
 
@@ -156,6 +154,23 @@ class HomeViewModelTest {
 
         // Assert
         assertEquals("", state.searchQuery)
+    }
+
+    @Test
+    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+
+        // Act
+        viewModel.closeSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals(false to "", state.isSearchActive to state.searchQuery)
     }
 
     @Test

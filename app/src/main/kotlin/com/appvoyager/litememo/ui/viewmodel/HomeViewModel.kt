@@ -19,13 +19,11 @@ import com.appvoyager.litememo.ui.state.MemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -33,7 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
@@ -51,7 +49,6 @@ class HomeViewModel @Inject constructor(
     private val retryTrigger = MutableStateFlow(0)
 
     private val searchResults = searchQuery
-        .debounce(SEARCH_DEBOUNCE_MILLIS)
         .flatMapLatest { query ->
             if (query.isBlank()) {
                 flowOf(emptyList())
@@ -128,12 +125,17 @@ class HomeViewModel @Inject constructor(
         val wasActive = isSearchActive.value
         isSearchActive.value = !wasActive
         if (wasActive) {
-            searchQuery.value = ""
+            closeSearch()
         }
     }
 
     fun updateSearchQuery(query: String) {
         searchQuery.value = query
+    }
+
+    fun closeSearch() {
+        isSearchActive.value = false
+        searchQuery.value = ""
     }
 
     fun retry() {
@@ -152,7 +154,4 @@ class HomeViewModel @Inject constructor(
         val query: String
     )
 
-    companion object {
-        private const val SEARCH_DEBOUNCE_MILLIS = 300L
-    }
 }
