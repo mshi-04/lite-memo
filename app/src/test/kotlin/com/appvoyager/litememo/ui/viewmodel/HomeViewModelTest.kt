@@ -133,10 +133,13 @@ class HomeViewModelTest {
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.searchResults.isNotEmpty() }
+        val state = viewModel.uiState.first { it.isSearchActive && it.searchResults.isNotEmpty() }
 
         // Assert
-        assertEquals(listOf("Shopping list"), state.searchResults.map { it.title })
+        assertEquals(
+            Triple(true, "shopping", listOf("Shopping list")),
+            Triple(state.isSearchActive, state.searchQuery, state.searchResults.map { it.title })
+        )
     }
 
     @Test
@@ -146,6 +149,9 @@ class HomeViewModelTest {
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
 
         // Act
         viewModel.toggleSearch()
@@ -163,6 +169,9 @@ class HomeViewModelTest {
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
 
         // Act
         viewModel.closeSearch()

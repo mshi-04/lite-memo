@@ -117,6 +117,9 @@ class CalendarViewModelTest {
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
 
         // Act
         viewModel.closeSearch()
