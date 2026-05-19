@@ -5,12 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoFilter
 import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
@@ -40,6 +42,7 @@ class HomeViewModel @Inject constructor(
     private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
     private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
+    private val setMemoImportantUseCase: SetMemoImportantUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
@@ -136,6 +139,14 @@ class HomeViewModel @Inject constructor(
     fun closeSearch() {
         isSearchActive.value = false
         searchQuery.value = ""
+    }
+
+    fun setMemoImportant(memoId: String, isImportant: Boolean) {
+        viewModelScope.launch {
+            runCatching {
+                setMemoImportantUseCase(MemoId(memoId), isImportant)
+            }
+        }
     }
 
     fun retry() {

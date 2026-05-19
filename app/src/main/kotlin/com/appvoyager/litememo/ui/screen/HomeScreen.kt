@@ -70,6 +70,7 @@ fun HomeScreen(
     onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    onImportantToggle: (String, Boolean) -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
@@ -95,6 +96,7 @@ fun HomeScreen(
                 onSortOrderSelected = onSortOrderSelected,
                 onSearchToggle = onSearchToggle,
                 onSearchQueryChanged = onSearchQueryChanged,
+                onImportantToggle = onImportantToggle,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -109,6 +111,7 @@ private fun HomeContent(
     onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    onImportantToggle: (String, Boolean) -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -152,7 +155,13 @@ private fun HomeContent(
                     items = uiState.searchResults,
                     key = { memo -> memo.id }
                 ) { memo ->
-                    MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+                    MemoCard(
+                        memo = memo,
+                        onClick = { onMemoClick(memo.id) },
+                        onImportantToggle = {
+                            onImportantToggle(memo.id, !memo.isImportant)
+                        }
+                    )
                 }
             }
         } else {
@@ -190,7 +199,13 @@ private fun HomeContent(
                     items = uiState.memos,
                     key = { memo -> memo.id }
                 ) { memo ->
-                    MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
+                    MemoCard(
+                        memo = memo,
+                        onClick = { onMemoClick(memo.id) },
+                        onImportantToggle = {
+                            onImportantToggle(memo.id, !memo.isImportant)
+                        }
+                    )
                 }
             }
         }
@@ -425,6 +440,7 @@ private fun HomeScreenPreview() {
             onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
+            onImportantToggle = { _, _ -> },
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -445,6 +461,7 @@ private fun HomeScreenDarkPreview() {
             onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
+            onImportantToggle = { _, _ -> },
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}

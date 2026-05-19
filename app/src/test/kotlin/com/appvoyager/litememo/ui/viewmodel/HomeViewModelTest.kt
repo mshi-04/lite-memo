@@ -18,6 +18,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import java.time.Instant
@@ -183,6 +184,23 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun setMemoImportantUpdatesMemoImportantState() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1", title = "Pinned"))
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.setMemoImportant("memo-1", true)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.memos.singleOrNull()?.isImportant == true }
+
+        // Assert
+        assertTrue(state.memos.single().isImportant)
+    }
+
+    @Test
     fun uiStateIsEmptyWhenNoMemosExist() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
@@ -226,6 +244,10 @@ class HomeViewModelTest {
             ),
             observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
             searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
+            setMemoImportantUseCase = SetMemoImportantUseCase(
+                memoRepository,
+                MutableTimeProvider(TimestampMillis(today + 1))
+            ),
             setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository)
         )
     }

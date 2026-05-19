@@ -24,4 +24,18 @@ class ObserveMemosUseCaseTest {
         assertEquals(listOf(newer.id, older.id), memos.map { it.id })
     }
 
+    @Test
+    fun invokeReturnsImportantMemosBeforeNormalMemos() = runTest {
+        // Arrange
+        val normal = memoFixture(id = "normal", updatedAt = 2000L)
+        val important = memoFixture(id = "important", updatedAt = 1000L, isImportant = true)
+        val repository = FakeMemoRepository(listOf(normal, important))
+
+        // Act
+        val memos = ObserveMemosUseCase(repository, FakeUserSettingsRepository())().first()
+
+        // Assert
+        assertEquals(listOf(important.id, normal.id), memos.map { it.id })
+    }
+
 }
