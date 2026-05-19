@@ -111,6 +111,26 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = calendarViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+
+        // Act
+        viewModel.closeSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals(false to "", state.isSearchActive to state.searchQuery)
+    }
+
+    @Test
     fun uiStateMarksOnlyMemoDatesWithDot() = runTest(dispatcher) {
         // Arrange
         val viewModel = calendarViewModel(

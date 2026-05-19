@@ -17,6 +17,7 @@ import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import java.time.Instant
@@ -118,6 +119,70 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun updateSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "shopping", title = "Shopping list"),
+                memoFixture(id = "meeting", title = "Meeting note")
+            )
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.isSearchActive && it.searchResults.isNotEmpty() }
+
+        // Assert
+        assertEquals(
+            Triple(true, "shopping", listOf("Shopping list")),
+            Triple(state.isSearchActive, state.searchQuery, state.searchResults.map { it.title })
+        )
+    }
+
+    @Test
+    fun toggleSearchClearsQueryWhenSearchIsClosed() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+
+        // Act
+        viewModel.toggleSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals("", state.searchQuery)
+    }
+
+    @Test
+    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+
+        // Act
+        viewModel.closeSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals(false to "", state.isSearchActive to state.searchQuery)
+    }
+
+    @Test
     fun uiStateIsEmptyWhenNoMemosExist() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
@@ -160,6 +225,7 @@ class HomeViewModelTest {
                 zoneId = ZoneId.of("UTC")
             ),
             observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
+            searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
             setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository)
         )
     }

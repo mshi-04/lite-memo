@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -16,10 +17,16 @@ fun HomeRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.closeSearch() }
+    }
+
     HomeScreen(
         uiState = uiState,
         onFilterSelected = { filter -> viewModel.selectFilter(filter) },
         onSortOrderSelected = { order -> viewModel.selectSortOrder(order) },
+        onSearchToggle = { viewModel.toggleSearch() },
+        onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
         onMemoClick = onMemoClick,
         onCreateMemoClick = onCreateMemoClick,
         onRetry = { viewModel.retry() },
