@@ -5,12 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoFilter
 import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
@@ -18,6 +20,7 @@ import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -40,6 +43,7 @@ class HomeViewModel @Inject constructor(
     private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
     private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
+    private val setMemoImportantUseCase: SetMemoImportantUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
@@ -117,7 +121,12 @@ class HomeViewModel @Inject constructor(
 
     fun selectSortOrder(order: MemoSortOrder) {
         viewModelScope.launch {
-            runCatching { setMemoSortOrderUseCase(order) }
+            try {
+                setMemoSortOrderUseCase(order)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+            }
         }
     }
 
@@ -136,6 +145,17 @@ class HomeViewModel @Inject constructor(
     fun closeSearch() {
         isSearchActive.value = false
         searchQuery.value = ""
+    }
+
+    fun setMemoImportant(memoId: String, isImportant: Boolean) {
+        viewModelScope.launch {
+            try {
+                setMemoImportantUseCase(MemoId(memoId), isImportant)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+            }
+        }
     }
 
     fun retry() {

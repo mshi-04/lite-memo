@@ -27,6 +27,9 @@ fun HomeRoute(
         onSortOrderSelected = { order -> viewModel.selectSortOrder(order) },
         onSearchToggle = { viewModel.toggleSearch() },
         onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
+        onImportantToggle = { memoId, isImportant ->
+            viewModel.setMemoImportant(memoId, isImportant)
+        },
         onMemoClick = onMemoClick,
         onCreateMemoClick = onCreateMemoClick,
         onRetry = { viewModel.retry() },

@@ -20,6 +20,8 @@
     <string name="home_summary_detail">未整理 %1$d件 / 重要 %2$d件</string>
     <string name="filter_all">すべて</string>
     <string name="filter_important">重要</string>
+    <string name="pin_memo">ピン留め</string>
+    <string name="unpin_memo">ピン留め解除</string>
     <string name="empty_home_title">まだメモがありません</string>
     <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
 
