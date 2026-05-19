@@ -47,6 +47,23 @@ class SetMemoImportantUseCaseTest {
     }
 
     @Test
+    fun invokeKeepsUpdatedAtWhenImportantStateDoesNotChange() = runTest {
+        // Arrange
+        val memo = memoFixture(id = "memo-1", updatedAt = 1000L, isImportant = true)
+        val repository = FakeMemoRepository(listOf(memo))
+        val useCase = SetMemoImportantUseCase(
+            memoRepository = repository,
+            currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
+        )
+
+        // Act
+        val updatedMemo = useCase(MemoId("memo-1"), true)
+
+        // Assert
+        assertEquals(TimestampMillis(1000L), updatedMemo.updatedAt)
+    }
+
+    @Test
     fun invokeThrowsWhenMemoDoesNotExist() {
         // Arrange
         val useCase = SetMemoImportantUseCase(

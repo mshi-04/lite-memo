@@ -15,6 +15,8 @@ class SetMemoImportantUseCase @Inject constructor(
         val memo = requireNotNull(memoRepository.getMemo(id)) {
             "Memo not found: ${id.value}"
         }
+        if (memo.isImportant == isImportant) return memo
+
         val updatedMemo = memo.copy(
             updatedAt = currentTimeProvider.now(),
             isImportant = isImportant

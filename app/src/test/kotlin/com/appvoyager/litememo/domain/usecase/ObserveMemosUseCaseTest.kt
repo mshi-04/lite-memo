@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -33,6 +34,22 @@ class ObserveMemosUseCaseTest {
 
         // Act
         val memos = ObserveMemosUseCase(repository, FakeUserSettingsRepository())().first()
+
+        // Assert
+        assertEquals(listOf(important.id, normal.id), memos.map { it.id })
+    }
+
+    @Test
+    fun invokeReturnsImportantMemosBeforeNormalMemosWhenSortedByCreatedAt() = runTest {
+        // Arrange
+        val normal = memoFixture(id = "normal", createdAt = 2000L)
+        val important = memoFixture(id = "important", createdAt = 1000L, isImportant = true)
+        val repository = FakeMemoRepository(listOf(normal, important))
+        val settingsRepository = FakeUserSettingsRepository()
+        settingsRepository.setMemoSortOrder(MemoSortOrder.CREATED_NEWEST)
+
+        // Act
+        val memos = ObserveMemosUseCase(repository, settingsRepository)().first()
 
         // Assert
         assertEquals(listOf(important.id, normal.id), memos.map { it.id })
