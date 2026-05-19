@@ -340,4 +340,3 @@ private fun ThemeMode.toDisplayString(): String = when (this) {
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
 }
-
