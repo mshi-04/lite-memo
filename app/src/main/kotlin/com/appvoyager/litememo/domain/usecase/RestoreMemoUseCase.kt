@@ -1,0 +1,14 @@
+package com.appvoyager.litememo.domain.usecase
+
+import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.repository.MemoRepository
+import javax.inject.Inject
+
+class RestoreMemoUseCase @Inject constructor(private val memoRepository: MemoRepository) {
+
+    suspend operator fun invoke(memo: Memo): Memo {
+        memoRepository.saveMemo(memo)
+        return memo
+    }
+
+}
