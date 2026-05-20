@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
+import com.appvoyager.litememo.ui.component.toDisplayString
 import com.appvoyager.litememo.ui.state.SettingsUiState
 
 @Composable
@@ -338,10 +339,4 @@ private fun ThemeMode.toDisplayString(): String = when (this) {
     ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
-}
-
-@Composable
-private fun MemoSortOrder.toDisplayString(): String = when (this) {
-    MemoSortOrder.UPDATED_NEWEST -> stringResource(R.string.settings_sort_updated)
-    MemoSortOrder.CREATED_NEWEST -> stringResource(R.string.settings_sort_created)
 }

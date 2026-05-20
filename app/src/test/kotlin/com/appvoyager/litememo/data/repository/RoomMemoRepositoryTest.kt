@@ -6,6 +6,7 @@ import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,41 @@ class RoomMemoRepositoryTest {
 
         // Act
         val memos = repository.observeMemos().first()
+
+        // Assert
+        assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
+    }
+
+    @Test
+    fun observeMemosBySearchQueryDelegatesEscapedLikePatternToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.observeMemosBySearchQuery(SearchQuery("100%_\\")).first()
+
+        // Assert
+        assertEquals("%100\\%\\_\\\\%", dao.observedSearchPattern)
+    }
+
+    @Test
+    fun observeMemosBySearchQueryReturnsDomainMemosFromDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            memosWithTagRefs = listOf(
+                memoWithTagRefs(
+                    memoId = "memo-1",
+                    tagRefs = listOf(
+                        MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0)
+                    )
+                )
+            )
+        )
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        val memos = repository.observeMemosBySearchQuery(SearchQuery("title")).first()
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
@@ -219,8 +255,16 @@ class RoomMemoRepositoryTest {
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
         var deletedMemoId: String? = null
         var observedRange: Pair<Long, Long>? = null
+        var observedSearchPattern: String? = null
 
         override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
+
+        override fun observeMemosWithTagRefsBySearchPattern(
+            pattern: String
+        ): Flow<List<MemoWithTagRefs>> {
+            observedSearchPattern = pattern
+            return memosWithTagRefs
+        }
 
         override fun observeMemosWithTagRefsCreatedBetween(
             fromMillis: Long,

@@ -7,6 +7,7 @@ import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
@@ -14,8 +15,12 @@ import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import java.time.Instant
 import java.time.ZoneId
@@ -116,6 +121,87 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun updateSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "shopping", title = "Shopping list"),
+                memoFixture(id = "meeting", title = "Meeting note")
+            )
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.isSearchActive && it.searchResults.isNotEmpty() }
+
+        // Assert
+        assertEquals(
+            Triple(true, "shopping", listOf("Shopping list")),
+            Triple(state.isSearchActive, state.searchQuery, state.searchResults.map { it.title })
+        )
+    }
+
+    @Test
+    fun toggleSearchClearsQueryWhenSearchIsClosed() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+
+        // Act
+        viewModel.toggleSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals("", state.searchQuery)
+    }
+
+    @Test
+    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+        advanceUntilIdle()
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val activeState = viewModel.uiState.first { it.isSearchActive }
+        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+
+        // Act
+        viewModel.closeSearch()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isSearchActive }
+
+        // Assert
+        assertEquals(false to "", state.isSearchActive to state.searchQuery)
+    }
+
+    @Test
+    fun setMemoImportantUpdatesMemoImportantState() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1", title = "Pinned"))
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.setMemoImportant("memo-1", true)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.memos.singleOrNull()?.isImportant == true }
+
+        // Assert
+        assertTrue(state.memos.single().isImportant)
+    }
+
+    @Test
     fun uiStateIsEmptyWhenNoMemosExist() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
@@ -148,20 +234,32 @@ class HomeViewModelTest {
         memoRepository: MemoRepository = FakeMemoRepository(memos)
     ): HomeViewModel {
         val tagRepository = FakeTagRepository(tags)
+        val userSettingsRepository = FakeUserSettingsRepository()
         return HomeViewModel(
-            observeMemosUseCase = ObserveMemosUseCase(memoRepository, FakeUserSettingsRepository()),
+            observeMemosUseCase = ObserveMemosUseCase(memoRepository, userSettingsRepository),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             filterMemosUseCase = FilterMemosUseCase(),
             getHomeSummaryUseCase = GetHomeSummaryUseCase(
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
                 zoneId = ZoneId.of("UTC")
-            )
+            ),
+            observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
+            searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
+            setMemoImportantUseCase = SetMemoImportantUseCase(
+                memoRepository,
+                MutableTimeProvider(TimestampMillis(today + 1))
+            ),
+            setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository)
         )
     }
 
     private class FailingMemoRepository(private val throwable: Throwable) : MemoRepository {
 
         override fun observeMemos(): Flow<List<Memo>> = flow {
+            throw throwable
+        }
+
+        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> = flow {
             throw throwable
         }
 

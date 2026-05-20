@@ -20,6 +20,8 @@
     <string name="home_summary_detail">未整理 %1$d件 / 重要 %2$d件</string>
     <string name="filter_all">すべて</string>
     <string name="filter_important">重要</string>
+    <string name="pin_memo">ピン留め</string>
+    <string name="unpin_memo">ピン留め解除</string>
     <string name="empty_home_title">まだメモがありません</string>
     <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
 
@@ -51,6 +53,8 @@
     <string name="save_memo">保存</string>
     <string name="delete_memo">削除</string>
     <string name="navigate_back">戻る</string>
+    <string name="memo_deleted_message">メモを削除しました</string>
+    <string name="undo_label">元に戻す</string>
     <string name="discard_dialog_title">編集内容の破棄</string>
     <string name="discard_dialog_message">編集中の内容は保存されません。破棄しますか？</string>
     <string name="discard_label">破棄</string>

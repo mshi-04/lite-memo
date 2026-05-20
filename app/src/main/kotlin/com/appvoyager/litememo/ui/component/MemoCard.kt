@@ -10,8 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +37,12 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MemoCard(memo: MemoUiModel, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun MemoCard(
+    memo: MemoUiModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onImportantToggle: (() -> Unit)? = null
+) {
     val accentColor = memoAccentColor(memo)
 
     Card(
@@ -58,13 +67,33 @@ fun MemoCard(memo: MemoUiModel, onClick: () -> Unit, modifier: Modifier = Modifi
                     .weight(1f)
                     .padding(start = 18.dp, top = 14.dp, end = 14.dp, bottom = 14.dp)
             ) {
-                Text(
-                    text = memo.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = memo.title,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (onImportantToggle != null) {
+                        IconButton(onClick = onImportantToggle) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = if (memo.isImportant) {
+                                    stringResource(R.string.unpin_memo)
+                                } else {
+                                    stringResource(R.string.pin_memo)
+                                },
+                                tint = if (memo.isImportant) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outline
+                                }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = memo.body,

@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -12,6 +13,7 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.DeleteMemoUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.RestoreMemoUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
@@ -33,16 +35,18 @@ class MemoEditViewModel @Inject constructor(
     private val getMemoUseCase: GetMemoUseCase,
     private val saveMemoUseCase: SaveMemoUseCase,
     private val deleteMemoUseCase: DeleteMemoUseCase,
+    private val restoreMemoUseCase: RestoreMemoUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase
 ) : ViewModel() {
 
     private val memoId: String? = savedStateHandle["memoId"]
     private val createdAtMillis: Long = savedStateHandle["createdAt"] ?: -1L
+    private var deletedMemo: Memo? = null
 
     private val _uiState = MutableStateFlow(MemoEditUiState())
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
-    private val _navigationEvent = Channel<Unit>(Channel.BUFFERED)
+    private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
     init {
@@ -81,6 +85,7 @@ class MemoEditViewModel @Inject constructor(
                             memoId = memo.id.value,
                             title = memo.title.value,
                             body = memo.body.value,
+                            isImportant = memo.isImportant,
                             selectedTagIds = memo.tagIds.map { id -> id.value }.toSet()
                         )
                     }
@@ -111,10 +116,11 @@ class MemoEditViewModel @Inject constructor(
     }
 
     fun save() {
-        val title = _uiState.value.title
-        val body = _uiState.value.body
+        val state = _uiState.value
+        val title = state.title
+        val body = state.body
         if (title.isBlank() && body.isBlank()) {
-            _navigationEvent.trySend(Unit)
+            _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             return
         }
         viewModelScope.launch {
@@ -129,11 +135,12 @@ class MemoEditViewModel @Inject constructor(
                         } else {
                             null
                         },
-                        tagIds = _uiState.value.selectedTagIds.map { TagId(it) }
+                        tagIds = state.selectedTagIds.map { TagId(it) },
+                        isImportant = state.isImportant
                     )
                 )
             }.onSuccess {
-                _navigationEvent.trySend(Unit)
+                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             }.onFailure {
                 _uiState.update { state -> state.copy(hasError = true) }
             }
@@ -143,21 +150,58 @@ class MemoEditViewModel @Inject constructor(
     fun delete() {
         val id = memoId ?: return
         viewModelScope.launch {
+            _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
             runCatching {
+                val memo = requireNotNull(getMemoUseCase(MemoId(id))) {
+                    "Memo not found: $id"
+                }
                 deleteMemoUseCase(MemoId(id))
+                memo
             }.onSuccess {
-                _navigationEvent.trySend(Unit)
+                deletedMemo = it
+                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted)
             }.onFailure {
-                _uiState.update { state -> state.copy(hasError = true) }
+                _uiState.update { state ->
+                    state.copy(isDeletePending = false, hasError = true)
+                }
+            }
+        }
+    }
+
+    fun undoDelete() {
+        val memo = deletedMemo ?: return
+        viewModelScope.launch {
+            runCatching {
+                restoreMemoUseCase(memo)
+            }.onSuccess { restoredMemo ->
+                deletedMemo = null
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        hasError = false,
+                        isDeletePending = false,
+                        memoId = restoredMemo.id.value,
+                        title = restoredMemo.title.value,
+                        body = restoredMemo.body.value,
+                        isImportant = restoredMemo.isImportant,
+                        isModified = false,
+                        selectedTagIds = restoredMemo.tagIds.map { tagId -> tagId.value }.toSet()
+                    )
+                }
+            }.onFailure {
+                _uiState.update { state ->
+                    state.copy(isDeletePending = false, hasError = true)
+                }
             }
         }
     }
 
     fun requestBack() {
+        if (_uiState.value.isDeletePending) return
         if (_uiState.value.isModified) {
             _uiState.update { it.copy(showDiscardDialog = true) }
         } else {
-            _navigationEvent.trySend(Unit)
+            _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
         }
     }
 
@@ -166,6 +210,11 @@ class MemoEditViewModel @Inject constructor(
     }
 
     fun confirmDiscard() {
-        _navigationEvent.trySend(Unit)
+        _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
     }
+}
+
+sealed interface MemoEditNavigationEvent {
+    data object NavigateBack : MemoEditNavigationEvent
+    data object MemoDeleted : MemoEditNavigationEvent
 }
