@@ -4,6 +4,7 @@ import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
@@ -41,7 +42,7 @@ class SearchMemosUseCaseTest {
         useCase("  shopping  ").first()
 
         // Assert
-        assertEquals("shopping", repository.observedQuery)
+        assertEquals(SearchQuery("shopping"), repository.observedQuery)
     }
 
     @Test
@@ -66,13 +67,13 @@ class SearchMemosUseCaseTest {
         private val failOnSearch: Boolean = false
     ) : MemoRepository {
 
-        var observedQuery: String? = null
+        var observedQuery: SearchQuery? = null
 
         override fun observeMemos(): Flow<List<Memo>> = flow {
             fail<Nothing>("observeMemos should not be called.")
         }
 
-        override fun observeMemosBySearchQuery(query: String): Flow<List<Memo>> {
+        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> {
             if (failOnSearch) {
                 fail<Nothing>("observeMemosBySearchQuery should not be called.")
             }

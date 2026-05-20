@@ -5,6 +5,7 @@ import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
@@ -59,17 +60,13 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     override fun observeMemos(): Flow<List<Memo>> = memos
 
-    override fun observeMemosBySearchQuery(query: String): Flow<List<Memo>> = memos.map { list ->
-        val trimmed = query.trim()
-        if (trimmed.isEmpty()) {
-            emptyList()
-        } else {
+    override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+        memos.map { list ->
             list.filter { memo ->
-                memo.title.value.contains(trimmed, ignoreCase = true) ||
-                    memo.body.value.contains(trimmed, ignoreCase = true)
+                memo.title.value.contains(query.value, ignoreCase = true) ||
+                    memo.body.value.contains(query.value, ignoreCase = true)
             }
         }
-    }
 
     override fun observeMemosCreatedBetween(
         from: TimestampMillis,

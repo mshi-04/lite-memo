@@ -6,6 +6,7 @@ import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +51,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        repository.observeMemosBySearchQuery("100%_\\").first()
+        repository.observeMemosBySearchQuery(SearchQuery("100%_\\")).first()
 
         // Assert
         assertEquals("%100\\%\\_\\\\%", dao.observedSearchPattern)
@@ -72,7 +73,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemosBySearchQuery("title").first()
+        val memos = repository.observeMemosBySearchQuery(SearchQuery("title")).first()
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })

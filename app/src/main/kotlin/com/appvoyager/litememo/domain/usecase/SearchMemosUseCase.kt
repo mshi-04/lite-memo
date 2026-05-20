@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.sortedBy
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository
 import javax.inject.Inject
@@ -15,13 +16,10 @@ class SearchMemosUseCase @Inject constructor(
 ) {
 
     operator fun invoke(query: String): Flow<List<Memo>> {
-        val trimmed = query.trim()
-        if (trimmed.isEmpty()) {
-            return flowOf(emptyList())
-        }
+        val searchQuery = SearchQuery.fromOrNull(query) ?: return flowOf(emptyList())
 
         return combine(
-            memoRepository.observeMemosBySearchQuery(trimmed),
+            memoRepository.observeMemosBySearchQuery(searchQuery),
             userSettingsRepository.observeMemoSortOrder()
         ) { memos, sortOrder ->
             memos.sortedBy(sortOrder)

@@ -7,6 +7,7 @@ import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
@@ -258,7 +259,7 @@ class HomeViewModelTest {
             throw throwable
         }
 
-        override fun observeMemosBySearchQuery(query: String): Flow<List<Memo>> = flow {
+        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> = flow {
             throw throwable
         }
 
