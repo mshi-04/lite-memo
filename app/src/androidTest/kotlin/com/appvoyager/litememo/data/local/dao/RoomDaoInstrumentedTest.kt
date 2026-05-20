@@ -69,6 +69,67 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
+    fun observeMemosWithTagRefsBySearchPatternMatchesTitleOrBody() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-title", title = "Trip plan"))
+        memoDao.upsertMemo(memoEntity(id = "memo-body", body = "Trip notes"))
+        memoDao.upsertMemo(memoEntity(id = "memo-other", title = "Shopping"))
+
+        // Act
+        val memos = memoDao.observeMemosWithTagRefsBySearchPattern("%Trip%").first()
+
+        // Assert
+        assertEquals(listOf("memo-title", "memo-body"), memos.map { it.memo.id })
+    }
+
+    @Test
+    fun observeMemosWithTagRefsBySearchPatternMatchesAsciiIgnoringCase() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1", title = "Shopping list"))
+
+        // Act
+        val memos = memoDao.observeMemosWithTagRefsBySearchPattern("%shopping%").first()
+
+        // Assert
+        assertEquals(listOf("memo-1"), memos.map { it.memo.id })
+    }
+
+    @Test
+    fun observeMemosWithTagRefsBySearchPatternTreatsEscapedWildcardsAsLiteral() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-literal", title = "100%_done"))
+        memoDao.upsertMemo(memoEntity(id = "memo-wildcard", title = "100xxdone"))
+
+        // Act
+        val memos = memoDao.observeMemosWithTagRefsBySearchPattern("%100\\%\\_done%").first()
+
+        // Assert
+        assertEquals(listOf("memo-literal"), memos.map { it.memo.id })
+    }
+
+    @Test
+    fun observeMemosWithTagRefsBySearchPatternReturnsRelatedTagRefs() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1", title = "Tagged memo"))
+        tagDao.upsertTag(tagEntity(id = "tag-1"))
+        memoDao.insertTagRefs(
+            listOf(
+                MemoTagRefEntity(
+                    memoId = "memo-1",
+                    tagId = "tag-1",
+                    position = 0
+                )
+            )
+        )
+
+        // Act
+        val memo = memoDao.observeMemosWithTagRefsBySearchPattern("%Tagged%").first().single()
+
+        // Assert
+        assertEquals(listOf("tag-1"), memo.tagRefs.map { it.tagId })
+    }
+
+    @Test
     fun observeMemosWithTagRefsReturnsRelatedTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
@@ -142,10 +203,15 @@ class RoomDaoInstrumentedTest {
         }
     }
 
-    private fun memoEntity(id: String, createdAt: Long = 1_000L) = MemoEntity(
+    private fun memoEntity(
+        id: String,
+        title: String = "Title",
+        body: String = "Body",
+        createdAt: Long = 1_000L
+    ) = MemoEntity(
         id = id,
-        title = "Title",
-        body = "Body",
+        title = title,
+        body = body,
         createdAt = createdAt,
         updatedAt = createdAt,
         isImportant = false

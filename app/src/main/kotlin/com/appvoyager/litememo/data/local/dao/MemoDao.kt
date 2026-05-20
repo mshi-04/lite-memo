@@ -18,6 +18,16 @@ interface MemoDao {
     fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>>
 
     @Transaction
+    @Query(
+        """
+        SELECT * FROM memos
+        WHERE title LIKE :pattern ESCAPE '\'
+            OR body LIKE :pattern ESCAPE '\'
+        """
+    )
+    fun observeMemosWithTagRefsBySearchPattern(pattern: String): Flow<List<MemoWithTagRefs>>
+
+    @Transaction
     @Query("SELECT * FROM memos WHERE createdAt >= :fromMillis AND createdAt < :toMillis")
     fun observeMemosWithTagRefsCreatedBetween(
         fromMillis: Long,
