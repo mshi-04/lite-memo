@@ -25,7 +25,7 @@ class ObserveMemosByCalendarDateUseCase @Inject constructor(
             date.value.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
         )
         return combine(
-            memoRepository.observeMemosCreatedBetween(from, to),
+            memoRepository.observeActiveMemosCreatedBetween(from, to),
             userSettingsRepository.observeMemoSortOrder()
         ) { memos, sortOrder ->
             memos.sortedBy(sortOrder)

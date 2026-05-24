@@ -14,7 +14,7 @@ class ObserveMemosUseCase @Inject constructor(
 ) {
 
     operator fun invoke(): Flow<List<Memo>> = combine(
-        memoRepository.observeMemos(),
+        memoRepository.observeActiveMemos(),
         userSettingsRepository.observeMemoSortOrder()
     ) { memos, sortOrder ->
         memos.sortedBy(sortOrder)

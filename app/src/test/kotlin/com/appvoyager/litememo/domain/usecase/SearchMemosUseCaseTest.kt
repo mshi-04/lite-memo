@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.domain.usecase
 
+import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSortOrder
@@ -62,6 +63,21 @@ class SearchMemosUseCaseTest {
             assertEquals(listOf(newer.id, older.id), memos.map { it.id })
         }
 
+    @Test
+    fun invokeExcludesTrashedMemos() = runTest {
+        // Arrange
+        val active = memoFixture(id = "active", title = "shopping")
+        val trashed = memoFixture(id = "trashed", title = "shopping", deletedAt = 2_000L)
+        val repository = FakeMemoRepository(listOf(active, trashed))
+        val useCase = SearchMemosUseCase(repository, FakeUserSettingsRepository())
+
+        // Act
+        val memos = useCase("shopping").first()
+
+        // Assert
+        assertEquals(listOf(active.id), memos.map { it.id })
+    }
+
     private class SearchOnlyMemoRepository(
         private val results: List<Memo> = emptyList(),
         private val failOnSearch: Boolean = false
@@ -69,27 +85,35 @@ class SearchMemosUseCaseTest {
 
         var observedQuery: SearchQuery? = null
 
-        override fun observeMemos(): Flow<List<Memo>> = flow {
-            fail<Nothing>("observeMemos should not be called.")
+        override fun observeActiveMemos(): Flow<List<Memo>> = flow {
+            fail<Nothing>("observeActiveMemos should not be called.")
         }
 
-        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> {
+        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> {
             if (failOnSearch) {
-                fail<Nothing>("observeMemosBySearchQuery should not be called.")
+                fail<Nothing>("observeActiveMemosBySearchQuery should not be called.")
             }
             observedQuery = query
             return flowOf(results)
         }
 
-        override fun observeMemosCreatedBetween(
+        override fun observeActiveMemosCreatedBetween(
             from: TimestampMillis,
             to: TimestampMillis
         ): Flow<List<Memo>> = flowOf(emptyList())
 
-        override suspend fun getMemo(id: MemoId): Memo? = null
+        override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
+
+        override suspend fun getActiveMemo(id: MemoId): Memo? = null
 
         override suspend fun saveMemo(memo: Memo) = Unit
 
-        override suspend fun deleteMemo(id: MemoId) = Unit
+        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
+
+        override suspend fun restoreMemoFromTrash(id: MemoId) = Unit
+
+        override suspend fun deleteMemoPermanently(id: MemoId) = Unit
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
     }
 }

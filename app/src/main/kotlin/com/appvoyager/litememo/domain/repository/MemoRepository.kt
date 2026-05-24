@@ -8,19 +8,30 @@ import kotlinx.coroutines.flow.Flow
 
 interface MemoRepository {
 
-    fun observeMemos(): Flow<List<Memo>>
+    fun observeActiveMemos(): Flow<List<Memo>>
 
-    fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
+    fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 
     /**
      * 作成日時が [from, to) の半開区間に含まれるメモを監視する。
      */
-    fun observeMemosCreatedBetween(from: TimestampMillis, to: TimestampMillis): Flow<List<Memo>>
+    fun observeActiveMemosCreatedBetween(
+        from: TimestampMillis,
+        to: TimestampMillis
+    ): Flow<List<Memo>>
 
-    suspend fun getMemo(id: MemoId): Memo?
+    fun observeTrashedMemos(): Flow<List<Memo>>
+
+    suspend fun getActiveMemo(id: MemoId): Memo?
 
     suspend fun saveMemo(memo: Memo)
 
-    suspend fun deleteMemo(id: MemoId)
+    suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis)
+
+    suspend fun restoreMemoFromTrash(id: MemoId)
+
+    suspend fun deleteMemoPermanently(id: MemoId)
+
+    suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis)
 
 }
