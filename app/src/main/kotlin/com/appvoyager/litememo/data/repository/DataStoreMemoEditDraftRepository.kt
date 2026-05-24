@@ -10,6 +10,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.appvoyager.litememo.data.model.DraftKeys
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
+import com.appvoyager.litememo.domain.model.value.MemoBody
+import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoEditDraftRepository
@@ -31,14 +33,14 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
         val body = prefs[keys.body] ?: return null
         val tagIds = prefs[keys.tagIds]
             .orEmpty()
-            .split(TAG_ID_SEPARATOR)
+            .split(TAG_ID_SEPARATOR, LEGACY_TAG_ID_SEPARATOR)
             .filter { it.isNotEmpty() }
             .mapNotNull { runCatching { TagId(it) }.getOrNull() }
 
         return MemoEditDraft(
             target = target,
-            title = title,
-            body = body,
+            title = MemoTitle(title),
+            body = MemoBody(body),
             createdAt = prefs[keys.createdAt]?.let {
                 runCatching { TimestampMillis(it) }.getOrNull()
             },
@@ -50,8 +52,8 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
     override suspend fun saveDraft(draft: MemoEditDraft) {
         val keys = keys(draft.target)
         dataStore.edit { prefs ->
-            prefs[keys.title] = draft.title
-            prefs[keys.body] = draft.body
+            prefs[keys.title] = draft.title.value
+            prefs[keys.body] = draft.body.value
             prefs[keys.tagIds] = draft.tagIds.joinToString(TAG_ID_SEPARATOR) { it.value }
             prefs[keys.isFavorite] = draft.isFavorite
             val createdAt = draft.createdAt
@@ -88,5 +90,6 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
     private companion object {
         const val KEY_PREFIX = "memo_edit_draft_"
         const val TAG_ID_SEPARATOR = ","
+        const val LEGACY_TAG_ID_SEPARATOR = "\n"
     }
 }

@@ -10,8 +10,8 @@ class SaveMemoEditDraftUseCase @Inject constructor(
 
     suspend operator fun invoke(draft: MemoEditDraft) {
         val shouldClear =
-            draft.title.isBlank() &&
-                draft.body.isBlank() &&
+            draft.title.value.isBlank() &&
+                draft.body.value.isBlank() &&
                 draft.tagIds.isEmpty() &&
                 !draft.isFavorite
         if (shouldClear) {

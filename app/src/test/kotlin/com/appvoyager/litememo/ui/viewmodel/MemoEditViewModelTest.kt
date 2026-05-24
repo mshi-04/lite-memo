@@ -10,7 +10,9 @@ import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
+import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
@@ -103,7 +105,10 @@ class MemoEditViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals("Draft", draftRepository.savedDrafts.single().title)
+        assertEquals(
+            MemoTitle("Draft"),
+            draftRepository.savedDrafts.single().title
+        )
     }
 
     @Test
@@ -119,7 +124,10 @@ class MemoEditViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals("Draft", draftRepository.savedDrafts.single().title)
+        assertEquals(
+            MemoTitle("Draft"),
+            draftRepository.savedDrafts.single().title
+        )
     }
 
     @Test
@@ -136,6 +144,7 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(listOf(MemoEditDraftTarget.newMemo(null)), draftRepository.clearedTargets)
+        assertEquals(emptyList<MemoEditDraft>(), draftRepository.currentDrafts())
     }
 
     @Test
@@ -158,6 +167,7 @@ class MemoEditViewModelTest {
             listOf(MemoEditDraftTarget.existingMemo(memo.id)),
             draftRepository.clearedTargets
         )
+        assertEquals(emptyList<MemoEditDraft>(), draftRepository.currentDrafts())
     }
 
     @Test
@@ -236,8 +246,8 @@ class MemoEditViewModelTest {
         isFavorite: Boolean = false
     ) = MemoEditDraft(
         target = target,
-        title = title,
-        body = body,
+        title = MemoTitle(title),
+        body = MemoBody(body),
         createdAt = createdAt,
         tagIds = tagIds,
         isFavorite = isFavorite

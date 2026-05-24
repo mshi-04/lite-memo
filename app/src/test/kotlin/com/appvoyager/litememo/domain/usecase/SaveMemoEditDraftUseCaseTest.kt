@@ -3,6 +3,8 @@ package com.appvoyager.litememo.domain.usecase
 import com.appvoyager.litememo.domain.FakeMemoEditDraftRepository
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
+import com.appvoyager.litememo.domain.model.value.MemoBody
+import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import kotlinx.coroutines.test.runTest
@@ -68,8 +70,8 @@ class SaveMemoEditDraftUseCaseTest {
         isFavorite: Boolean = false
     ) = MemoEditDraft(
         target = target,
-        title = title,
-        body = body,
+        title = MemoTitle(title),
+        body = MemoBody(body),
         createdAt = createdAt,
         tagIds = tagIds,
         isFavorite = isFavorite

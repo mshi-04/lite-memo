@@ -3,7 +3,9 @@ package com.appvoyager.litememo.data.repository
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
+import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import java.io.File
@@ -94,8 +96,8 @@ class DataStoreMemoEditDraftRepositoryTest {
         isFavorite: Boolean = false
     ) = MemoEditDraft(
         target = target,
-        title = title,
-        body = body,
+        title = MemoTitle(title),
+        body = MemoBody(body),
         createdAt = createdAt,
         tagIds = tagIds,
         isFavorite = isFavorite
