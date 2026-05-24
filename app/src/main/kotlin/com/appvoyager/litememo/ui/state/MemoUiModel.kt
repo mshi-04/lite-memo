@@ -9,7 +9,7 @@ data class MemoUiModel(
     val body: String,
     val tags: List<TagUiModel>,
     val updatedAtMillis: Long,
-    val isImportant: Boolean
+    val isFavorite: Boolean
 ) {
     companion object {
         fun fromDomain(memos: List<Memo>, tags: List<Tag>): List<MemoUiModel> {
@@ -23,7 +23,7 @@ data class MemoUiModel(
                         tagsById[id]?.let { TagUiModel.fromDomain(it) }
                     },
                     updatedAtMillis = memo.updatedAt.value,
-                    isImportant = memo.isImportant
+                    isFavorite = memo.isFavorite
                 )
             }
         }

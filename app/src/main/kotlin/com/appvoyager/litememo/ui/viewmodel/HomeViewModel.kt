@@ -13,7 +13,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
-import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
@@ -45,13 +45,14 @@ class HomeViewModel @Inject constructor(
     private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
     private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
-    private val setMemoImportantUseCase: SetMemoImportantUseCase,
+    private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
     private val isSearchActive = MutableStateFlow(false)
     private val searchQuery = MutableStateFlow("")
+    private val hasFavoriteUpdateError = MutableStateFlow(false)
     private val retryTrigger = MutableStateFlow(0)
 
     private val searchResults = searchQuery
@@ -68,9 +69,10 @@ class HomeViewModel @Inject constructor(
     private val uiControls = combine(
         selectedFilter,
         isSearchActive,
-        searchQuery
-    ) { filter, searching, query ->
-        UiControls(filter, searching, query)
+        searchQuery,
+        hasFavoriteUpdateError
+    ) { filter, searching, query, favoriteUpdateError ->
+        UiControls(filter, searching, query, favoriteUpdateError)
     }
 
     val uiState: StateFlow<HomeUiState> = retryTrigger.flatMapLatest {
@@ -88,6 +90,7 @@ class HomeViewModel @Inject constructor(
 
             HomeUiState(
                 isLoading = false,
+                hasError = controls.favoriteUpdateError,
                 selectedFilter = effectiveFilter,
                 memoSortOrder = sortOrder,
                 isSearchActive = controls.searching,
@@ -98,7 +101,7 @@ class HomeViewModel @Inject constructor(
                     totalCount = summary.totalCount,
                     todayCount = summary.todayCount,
                     unorganizedCount = summary.unorganizedCount,
-                    importantCount = summary.importantCount
+                    favoriteCount = summary.favoriteCount
                 ),
                 memos = MemoUiModel.fromDomain(filteredMemos, tags),
                 searchResults = MemoUiModel.fromDomain(searchHits ?: emptyList(), tags)
@@ -152,25 +155,28 @@ class HomeViewModel @Inject constructor(
         searchQuery.value = ""
     }
 
-    fun setMemoImportant(memoId: String, isImportant: Boolean) {
+    fun setMemoFavorite(memoId: String, isFavorite: Boolean) {
         viewModelScope.launch {
             try {
-                setMemoImportantUseCase(MemoId(memoId), isImportant)
+                setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
+                hasFavoriteUpdateError.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
+                hasFavoriteUpdateError.value = true
             }
         }
     }
 
     fun retry() {
+        hasFavoriteUpdateError.value = false
         retryTrigger.update { it + 1 }
     }
 
     private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (type) {
         HomeFilterUiState.Type.All -> MemoFilter.All
         HomeFilterUiState.Type.Unorganized -> MemoFilter.Unorganized
-        HomeFilterUiState.Type.Important -> MemoFilter.Important
+        HomeFilterUiState.Type.Favorite -> MemoFilter.Favorite
         HomeFilterUiState.Type.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
     }
 
@@ -184,7 +190,8 @@ class HomeViewModel @Inject constructor(
     private data class UiControls(
         val filter: HomeFilterUiState,
         val searching: Boolean,
-        val query: String
+        val query: String,
+        val favoriteUpdateError: Boolean
     )
 
 }

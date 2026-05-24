@@ -6,7 +6,7 @@ data class MemoEditUiState(
     val memoId: String? = null,
     val title: String = "",
     val body: String = "",
-    val isImportant: Boolean = false,
+    val isFavorite: Boolean = false,
     val isModified: Boolean = false,
     val isDeletePending: Boolean = false,
     val showDiscardDialog: Boolean = false,

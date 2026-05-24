@@ -33,7 +33,7 @@ class SaveMemoUseCase @Inject constructor(
             createdAt = existingMemo?.createdAt ?: command.createdAt ?: now,
             updatedAt = now,
             tagIds = tagIds,
-            isImportant = command.isImportant
+            isFavorite = command.isFavorite
         )
 
         memoRepository.saveMemo(memo)

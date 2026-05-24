@@ -75,7 +75,7 @@ fun HomeScreen(
     onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onImportantToggle: (String, Boolean) -> Unit,
+    onFavoriteToggle: (String, Boolean) -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
@@ -101,7 +101,7 @@ fun HomeScreen(
                 onSortOrderSelected = onSortOrderSelected,
                 onSearchToggle = onSearchToggle,
                 onSearchQueryChanged = onSearchQueryChanged,
-                onImportantToggle = onImportantToggle,
+                onFavoriteToggle = onFavoriteToggle,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -116,7 +116,7 @@ private fun HomeContent(
     onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onImportantToggle: (String, Boolean) -> Unit,
+    onFavoriteToggle: (String, Boolean) -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -163,8 +163,8 @@ private fun HomeContent(
                     MemoCard(
                         memo = memo,
                         onClick = { onMemoClick(memo.id) },
-                        onImportantToggle = {
-                            onImportantToggle(memo.id, !memo.isImportant)
+                        onFavoriteToggle = {
+                            onFavoriteToggle(memo.id, !memo.isFavorite)
                         }
                     )
                 }
@@ -208,8 +208,8 @@ private fun HomeContent(
                     MemoCard(
                         memo = memo,
                         onClick = { onMemoClick(memo.id) },
-                        onImportantToggle = {
-                            onImportantToggle(memo.id, !memo.isImportant)
+                        onFavoriteToggle = {
+                            onFavoriteToggle(memo.id, !memo.isFavorite)
                         }
                     )
                 }
@@ -316,7 +316,7 @@ private fun SummaryCard(summary: HomeSummaryUiState) {
                     text = stringResource(
                         R.string.home_summary_detail,
                         summary.unorganizedCount,
-                        summary.importantCount
+                        summary.favoriteCount
                     ),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium
@@ -378,9 +378,9 @@ private fun HomeFilterAndSortRow(
                 onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
             )
             FilterButton(
-                label = stringResource(R.string.filter_important),
-                selected = selectedFilter == HomeFilterUiState.Important,
-                onClick = { onFilterSelected(HomeFilterUiState.Important) }
+                label = stringResource(R.string.filter_favorite),
+                selected = selectedFilter == HomeFilterUiState.Favorite,
+                onClick = { onFilterSelected(HomeFilterUiState.Favorite) }
             )
             tags.forEach { tag ->
                 val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
@@ -480,7 +480,7 @@ private fun HomeScreenPreview() {
             onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
-            onImportantToggle = { _, _ -> },
+            onFavoriteToggle = { _, _ -> },
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -501,7 +501,7 @@ private fun HomeScreenDarkPreview() {
             onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
-            onImportantToggle = { _, _ -> },
+            onFavoriteToggle = { _, _ -> },
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -519,7 +519,7 @@ private fun previewHomeState() = HomeUiState(
         totalCount = 4,
         todayCount = 2,
         unorganizedCount = 2,
-        importantCount = 1
+        favoriteCount = 1
     ),
     memos = listOf(
         MemoUiModel(
@@ -528,7 +528,7 @@ private fun previewHomeState() = HomeUiState(
             body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
             tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
             updatedAtMillis = System.currentTimeMillis(),
-            isImportant = false
+            isFavorite = false
         ),
         MemoUiModel(
             id = "memo-2",
@@ -536,7 +536,7 @@ private fun previewHomeState() = HomeUiState(
             body = "次回までに画面構成と保存方式を確認する。",
             tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
             updatedAtMillis = System.currentTimeMillis(),
-            isImportant = true
+            isFavorite = true
         )
     )
 )

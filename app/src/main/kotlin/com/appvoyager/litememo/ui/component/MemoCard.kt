@@ -47,7 +47,7 @@ fun MemoCard(
     memo: MemoUiModel,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onImportantToggle: (() -> Unit)? = null
+    onFavoriteToggle: (() -> Unit)? = null
 ) {
     val accentColor = memoAccentColor(memo)
 
@@ -82,16 +82,16 @@ fun MemoCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (onImportantToggle != null) {
-                        IconButton(onClick = onImportantToggle) {
+                    if (onFavoriteToggle != null) {
+                        IconButton(onClick = onFavoriteToggle) {
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = if (memo.isImportant) {
-                                    stringResource(R.string.unpin_memo)
+                                contentDescription = if (memo.isFavorite) {
+                                    stringResource(R.string.remove_favorite_memo)
                                 } else {
-                                    stringResource(R.string.pin_memo)
+                                    stringResource(R.string.add_favorite_memo)
                                 },
-                                tint = if (memo.isImportant) {
+                                tint = if (memo.isFavorite) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.outline
@@ -165,7 +165,7 @@ private fun MemoTag(tag: TagUiModel?) {
 
 @Composable
 private fun memoAccentColor(memo: MemoUiModel): Color {
-    if (memo.isImportant) return MaterialTheme.colorScheme.error
+    if (memo.isFavorite) return MaterialTheme.colorScheme.error
     return memo.tags.firstOrNull()?.colorArgb?.let { Color(it.toInt()) }
         ?: MaterialTheme.colorScheme.primary
 }

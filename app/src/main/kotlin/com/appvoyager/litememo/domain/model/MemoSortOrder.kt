@@ -7,13 +7,13 @@ enum class MemoSortOrder {
 
 fun List<Memo>.sortedBy(order: MemoSortOrder): List<Memo> = when (order) {
     MemoSortOrder.UPDATED_NEWEST -> sortedWith(
-        compareByDescending<Memo> { it.isImportant }
+        compareByDescending<Memo> { it.isFavorite }
             .thenByDescending { it.updatedAt.value }
             .thenByDescending { it.createdAt.value }
     )
 
     MemoSortOrder.CREATED_NEWEST -> sortedWith(
-        compareByDescending<Memo> { it.isImportant }
+        compareByDescending<Memo> { it.isFavorite }
             .thenByDescending { it.createdAt.value }
             .thenByDescending { it.updatedAt.value }
     )

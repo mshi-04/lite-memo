@@ -27,8 +27,8 @@ fun HomeRoute(
         onSortOrderSelected = { order -> viewModel.selectSortOrder(order) },
         onSearchToggle = { viewModel.toggleSearch() },
         onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
-        onImportantToggle = { memoId, isImportant ->
-            viewModel.setMemoImportant(memoId, isImportant)
+        onFavoriteToggle = { memoId, isFavorite ->
+            viewModel.setMemoFavorite(memoId, isFavorite)
         },
         onMemoClick = onMemoClick,
         onCreateMemoClick = onCreateMemoClick,

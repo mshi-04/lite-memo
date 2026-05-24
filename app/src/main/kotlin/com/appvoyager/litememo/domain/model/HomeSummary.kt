@@ -4,5 +4,5 @@ data class HomeSummary(
     val totalCount: Int,
     val todayCount: Int,
     val unorganizedCount: Int,
-    val importantCount: Int
+    val favoriteCount: Int
 )

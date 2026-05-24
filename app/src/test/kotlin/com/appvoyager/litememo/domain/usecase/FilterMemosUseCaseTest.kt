@@ -35,16 +35,16 @@ class FilterMemosUseCaseTest {
     }
 
     @Test
-    fun invokeReturnsImportantMemosWhenFilterIsImportant() {
+    fun invokeReturnsFavoriteMemosWhenFilterIsFavorite() {
         // Arrange
         val normal = memoFixture(id = "normal")
-        val important = memoFixture(id = "important", isImportant = true)
+        val favorite = memoFixture(id = "favorite", isFavorite = true)
 
         // Act
-        val memos = FilterMemosUseCase()(listOf(normal, important), MemoFilter.Important)
+        val memos = FilterMemosUseCase()(listOf(normal, favorite), MemoFilter.Favorite)
 
         // Assert
-        assertEquals(listOf(important.id), memos.map { it.id })
+        assertEquals(listOf(favorite.id), memos.map { it.id })
     }
 
     @Test

@@ -6,20 +6,20 @@ import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 
-class SetMemoImportantUseCase @Inject constructor(
+class SetMemoFavoriteUseCase @Inject constructor(
     private val memoRepository: MemoRepository,
     private val currentTimeProvider: CurrentTimeProvider
 ) {
 
-    suspend operator fun invoke(id: MemoId, isImportant: Boolean): Memo {
+    suspend operator fun invoke(id: MemoId, isFavorite: Boolean): Memo {
         val memo = requireNotNull(memoRepository.getMemo(id)) {
             "Memo not found: ${id.value}"
         }
-        if (memo.isImportant == isImportant) return memo
+        if (memo.isFavorite == isFavorite) return memo
 
         val updatedMemo = memo.copy(
             updatedAt = currentTimeProvider.now(),
-            isImportant = isImportant
+            isFavorite = isFavorite
         )
 
         memoRepository.saveMemo(updatedMemo)

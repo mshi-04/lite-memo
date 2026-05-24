@@ -12,5 +12,5 @@ data class SaveMemoCommand(
     val body: MemoBody,
     val createdAt: TimestampMillis? = null,
     val tagIds: List<TagId> = emptyList(),
-    val isImportant: Boolean = false
+    val isFavorite: Boolean = false
 )
