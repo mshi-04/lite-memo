@@ -74,12 +74,20 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals("Saved title", state.title)
+        assertEquals("Saved body", state.body)
+        assertEquals(setOf("tag-1"), state.selectedTagIds)
+        assertEquals(true, state.isFavorite)
     }
 
     @Test
     fun uiStateRestoresStoredDraft() = runTest(dispatcher) {
         // Arrange
-        val draft = memoEditDraft(title = "Stored title")
+        val draft = memoEditDraft(
+            title = "Stored title",
+            body = "Stored body",
+            tagIds = listOf(TagId("tag-1")),
+            isFavorite = true
+        )
         val viewModel = memoEditViewModel(
             draftRepository = FakeMemoEditDraftRepository(listOf(draft))
         )
@@ -90,6 +98,9 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals("Stored title", state.title)
+        assertEquals("Stored body", state.body)
+        assertEquals(setOf("tag-1"), state.selectedTagIds)
+        assertEquals(true, state.isFavorite)
     }
 
     @Test
@@ -133,7 +144,9 @@ class MemoEditViewModelTest {
     @Test
     fun saveClearsDraftWhenMemoIsSaved() = runTest(dispatcher) {
         // Arrange
-        val draftRepository = FakeMemoEditDraftRepository()
+        val target = MemoEditDraftTarget.newMemo(null)
+        val seededDraft = memoEditDraft(target = target, title = "Seeded")
+        val draftRepository = FakeMemoEditDraftRepository(listOf(seededDraft))
         val viewModel = memoEditViewModel(draftRepository = draftRepository)
         advanceUntilIdle()
 
@@ -143,7 +156,7 @@ class MemoEditViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(listOf(MemoEditDraftTarget.newMemo(null)), draftRepository.clearedTargets)
+        assertEquals(listOf(target), draftRepository.clearedTargets)
         assertEquals(emptyList<MemoEditDraft>(), draftRepository.currentDrafts())
     }
 
@@ -151,7 +164,9 @@ class MemoEditViewModelTest {
     fun deleteClearsDraftWhenMemoIsDeleted() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1")
-        val draftRepository = FakeMemoEditDraftRepository()
+        val target = MemoEditDraftTarget.existingMemo(memo.id)
+        val seededDraft = memoEditDraft(target = target, title = "Seeded")
+        val draftRepository = FakeMemoEditDraftRepository(listOf(seededDraft))
         val viewModel = memoEditViewModel(
             memo = memo,
             draftRepository = draftRepository
@@ -163,10 +178,7 @@ class MemoEditViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(
-            listOf(MemoEditDraftTarget.existingMemo(memo.id)),
-            draftRepository.clearedTargets
-        )
+        assertEquals(listOf(target), draftRepository.clearedTargets)
         assertEquals(emptyList<MemoEditDraft>(), draftRepository.currentDrafts())
     }
 
