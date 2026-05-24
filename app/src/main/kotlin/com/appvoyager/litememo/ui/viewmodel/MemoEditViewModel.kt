@@ -158,6 +158,8 @@ class MemoEditViewModel @Inject constructor(
                 autosaveJob?.cancel()
                 try {
                     clearDraft()
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (_: Throwable) {
                     // エラーは draftErrorEvent で通知済み
                 }
