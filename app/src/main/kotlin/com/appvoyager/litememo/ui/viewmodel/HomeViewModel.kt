@@ -52,6 +52,7 @@ class HomeViewModel @Inject constructor(
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
     private val isSearchActive = MutableStateFlow(false)
     private val searchQuery = MutableStateFlow("")
+    private val hasFavoriteUpdateError = MutableStateFlow(false)
     private val retryTrigger = MutableStateFlow(0)
 
     private val searchResults = searchQuery
@@ -68,9 +69,10 @@ class HomeViewModel @Inject constructor(
     private val uiControls = combine(
         selectedFilter,
         isSearchActive,
-        searchQuery
-    ) { filter, searching, query ->
-        UiControls(filter, searching, query)
+        searchQuery,
+        hasFavoriteUpdateError
+    ) { filter, searching, query, favoriteUpdateError ->
+        UiControls(filter, searching, query, favoriteUpdateError)
     }
 
     val uiState: StateFlow<HomeUiState> = retryTrigger.flatMapLatest {
@@ -88,6 +90,7 @@ class HomeViewModel @Inject constructor(
 
             HomeUiState(
                 isLoading = false,
+                hasError = controls.favoriteUpdateError,
                 selectedFilter = effectiveFilter,
                 memoSortOrder = sortOrder,
                 isSearchActive = controls.searching,
@@ -156,14 +159,17 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
+                hasFavoriteUpdateError.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
+                hasFavoriteUpdateError.value = true
             }
         }
     }
 
     fun retry() {
+        hasFavoriteUpdateError.value = false
         retryTrigger.update { it + 1 }
     }
 
@@ -184,7 +190,8 @@ class HomeViewModel @Inject constructor(
     private data class UiControls(
         val filter: HomeFilterUiState,
         val searching: Boolean,
-        val query: String
+        val query: String,
+        val favoriteUpdateError: Boolean
     )
 
 }

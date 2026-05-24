@@ -29,6 +29,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -248,6 +249,24 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun setMemoFavoriteShowsErrorWhenFavoriteUpdateFails() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+        val viewModel = homeViewModel(
+            memoRepository = FavoriteUpdateFailingMemoRepository(memo)
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.setMemoFavorite("memo-1", true)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.hasError }
+
+        // Assert
+        assertTrue(state.hasError)
+    }
+
+    @Test
     fun uiStateIsEmptyWhenNoMemosExist() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
@@ -317,6 +336,26 @@ class HomeViewModelTest {
         override suspend fun getMemo(id: MemoId): Memo? = null
 
         override suspend fun saveMemo(memo: Memo) = Unit
+
+        override suspend fun deleteMemo(id: MemoId) = Unit
+    }
+
+    private class FavoriteUpdateFailingMemoRepository(private val memo: Memo) : MemoRepository {
+
+        override fun observeMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
+
+        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+            flowOf(emptyList())
+
+        override fun observeMemosCreatedBetween(
+            from: TimestampMillis,
+            to: TimestampMillis
+        ): Flow<List<Memo>> = flowOf(emptyList())
+
+        override suspend fun getMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
+
+        override suspend fun saveMemo(memo: Memo): Unit =
+            throw IllegalStateException("Failed to update favorite.")
 
         override suspend fun deleteMemo(id: MemoId) = Unit
     }
