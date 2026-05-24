@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.usecase.RestoreMemoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -19,9 +20,11 @@ class LiteMemoAppViewModel @Inject constructor(private val restoreMemoUseCase: R
 
     fun restoreMemo(memo: Memo) {
         viewModelScope.launch {
-            runCatching {
+            try {
                 restoreMemoUseCase(memo)
-            }.onFailure {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
                 _restoreMemoErrorEvent.trySend(Unit)
             }
         }
