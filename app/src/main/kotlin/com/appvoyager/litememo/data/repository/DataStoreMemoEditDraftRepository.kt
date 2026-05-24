@@ -33,13 +33,15 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
             .orEmpty()
             .split(TAG_ID_SEPARATOR)
             .filter { it.isNotEmpty() }
-            .map { TagId(it) }
+            .mapNotNull { runCatching { TagId(it) }.getOrNull() }
 
         return MemoEditDraft(
             target = target,
             title = title,
             body = body,
-            createdAt = prefs[keys.createdAt]?.let { TimestampMillis(it) },
+            createdAt = prefs[keys.createdAt]?.let {
+                runCatching { TimestampMillis(it) }.getOrNull()
+            },
             tagIds = tagIds,
             isFavorite = prefs[keys.isFavorite] ?: false
         )
