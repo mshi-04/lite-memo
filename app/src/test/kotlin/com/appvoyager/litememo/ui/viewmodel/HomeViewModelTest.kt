@@ -101,6 +101,24 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun uiStateReflectsObservedTags() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            tags = listOf(
+                tagFixture(id = "tag-1", name = "仕事"),
+                tagFixture(id = "tag-2", name = "生活")
+            )
+        )
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(listOf("仕事", "生活"), state.tags.map { it.name })
+    }
+
+    @Test
     fun selectFilterShowsOnlyImportantMemosWhenFilterIsImportant() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(
@@ -118,6 +136,34 @@ class HomeViewModelTest {
 
         // Assert
         assertEquals(listOf("Important"), state.memos.map { it.title })
+    }
+
+    @Test
+    fun selectFilterShowsOnlyTaggedMemosWhenFilterIsByTag() = runTest(dispatcher) {
+        // Arrange
+        val workTagId = TagId("work")
+        val lifeTagId = TagId("life")
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "work-memo", title = "Work", tagIds = listOf(workTagId)),
+                memoFixture(id = "life-memo", title = "Life", tagIds = listOf(lifeTagId))
+            ),
+            tags = listOf(
+                tagFixture(id = workTagId.value, name = "仕事"),
+                tagFixture(id = lifeTagId.value, name = "生活")
+            )
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.selectFilter(HomeFilterUiState.byTag(workTagId))
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selectedFilter == HomeFilterUiState.byTag(workTagId)
+        }
+
+        // Assert
+        assertEquals(listOf("Work"), state.memos.map { it.title })
     }
 
     @Test
