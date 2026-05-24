@@ -73,9 +73,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeActiveMemosBySearchQuery(
-            SearchQuery("title")
-        ).first()
+        val memos = repository.observeActiveMemosBySearchQuery(SearchQuery("title")).first()
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
@@ -217,11 +215,76 @@ class RoomMemoRepositoryTest {
         )
     }
 
+    @Test
+    fun moveMemoToTrashDelegatesMemoIdAndDeletedAtValuesToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.moveMemoToTrash(MemoId("memo-1"), TimestampMillis(2_000L))
+
+        // Assert
+        assertEquals("memo-1" to 2_000L, dao.movedToTrash)
+    }
+
+    @Test
+    fun restoreMemoFromTrashDelegatesMemoIdValueToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.restoreMemoFromTrash(MemoId("memo-1"))
+
+        // Assert
+        assertEquals("memo-1", dao.restoredMemoId)
+    }
+
+    @Test
+    fun deleteMemoPermanentlyDelegatesMemoIdValueToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.deleteMemoPermanently(MemoId("memo-1"))
+
+        // Assert
+        assertEquals("memo-1", dao.permanentlyDeletedMemoId)
+    }
+
+    @Test
+    fun deleteMemoPermanentlyThrowsWhenDaoDoesNotDeleteMemo() {
+        // Arrange
+        val dao = FakeMemoDao(deletedPermanentlyCount = 0)
+        val repository = RoomMemoRepository(dao)
+
+        // Act & Assert
+        assertThrows(IllegalStateException::class.java) {
+            runTest { repository.deleteMemoPermanently(MemoId("memo-1")) }
+        }
+    }
+
+    @Test
+    fun deleteTrashedMemosDeletedAtOrBeforeDelegatesCutoffValueToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        repository.deleteTrashedMemosDeletedAtOrBefore(TimestampMillis(2_000L))
+
+        // Assert
+        assertEquals(2_000L, dao.purgeCutoff)
+    }
+
     private fun memoWithTagRefs(
         memoId: String,
         createdAt: Long = 1000L,
         updatedAt: Long = 1000L,
-        tagRefs: List<MemoTagRefEntity> = emptyList()
+        tagRefs: List<MemoTagRefEntity> = emptyList(),
+        deletedAt: Long? = null
     ) = MemoWithTagRefs(
         memo = MemoEntity(
             id = memoId,
@@ -229,37 +292,43 @@ class RoomMemoRepositoryTest {
             body = "Body",
             createdAt = createdAt,
             updatedAt = updatedAt,
-            isFavorite = false
+            isFavorite = false,
+            deletedAt = deletedAt
         ),
         tagRefs = tagRefs
     )
 
     private class FakeMemoDao(
         memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),
-        private val failOnObserveMemosBetween: Boolean = false
+        private val failOnObserveMemosBetween: Boolean = false,
+        private val deletedPermanentlyCount: Int = 1
     ) : MemoDao {
 
         private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
+        var movedToTrash: Pair<String, Long>? = null
+        var restoredMemoId: String? = null
+        var permanentlyDeletedMemoId: String? = null
+        var purgeCutoff: Long? = null
         var observedRange: Pair<Long, Long>? = null
         var observedSearchPattern: String? = null
 
-        override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
+        override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
 
-        override fun observeMemosWithTagRefsBySearchPattern(
+        override fun observeActiveMemosWithTagRefsBySearchPattern(
             pattern: String
         ): Flow<List<MemoWithTagRefs>> {
             observedSearchPattern = pattern
             return memosWithTagRefs
         }
 
-        override fun observeMemosWithTagRefsCreatedBetween(
+        override fun observeActiveMemosWithTagRefsCreatedBetween(
             fromMillis: Long,
             toMillis: Long
         ): Flow<List<MemoWithTagRefs>> {
             if (failOnObserveMemosBetween) {
-                fail<Nothing>("observeMemosWithTagRefsCreatedBetween should not be called.")
+                fail<Nothing>("observeActiveMemosWithTagRefsCreatedBetween should not be called.")
             }
             observedRange = fromMillis to toMillis
             return memosWithTagRefs.map { list ->
@@ -267,8 +336,11 @@ class RoomMemoRepositoryTest {
             }
         }
 
-        override suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs? =
+        override suspend fun getActiveMemoWithTagRefs(id: String): MemoWithTagRefs? =
             memosWithTagRefs.value.firstOrNull { it.memo.id == id }
+
+        override fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
+            memosWithTagRefs
 
         override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
             savedMemo = memo
@@ -287,8 +359,23 @@ class RoomMemoRepositoryTest {
             savedTagRefs = emptyList()
         }
 
-        override suspend fun deleteMemo(id: String) {
-            // no-op
+        override suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int {
+            movedToTrash = id to deletedAt
+            return 1
+        }
+
+        override suspend fun restoreMemoFromTrash(id: String): Int {
+            restoredMemoId = id
+            return 1
+        }
+
+        override suspend fun deleteMemoPermanently(id: String): Int {
+            permanentlyDeletedMemoId = id
+            return deletedPermanentlyCount
+        }
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) {
+            purgeCutoff = cutoff
         }
     }
 

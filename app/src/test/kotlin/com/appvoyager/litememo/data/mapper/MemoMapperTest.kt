@@ -25,7 +25,8 @@ class MemoMapperTest {
             body = "Body",
             createdAt = 1000L,
             updatedAt = 2000L,
-            isFavorite = true
+            isFavorite = true,
+            deletedAt = 3000L
         )
 
         // Act
@@ -39,7 +40,8 @@ class MemoMapperTest {
                 body = "Body",
                 createdAt = 1000L,
                 updatedAt = 2000L,
-                isFavorite = true
+                isFavorite = true,
+                deletedAt = 3000L
             ),
             entity
         )
@@ -76,7 +78,8 @@ class MemoMapperTest {
                 body = "Body",
                 createdAt = 1000L,
                 updatedAt = 1000L,
-                isFavorite = false
+                isFavorite = false,
+                deletedAt = null
             ),
             tagRefs = listOf(
                 MemoTagRefEntity(memoId = "memo-1", tagId = "tag-2", position = 1),
@@ -100,7 +103,8 @@ class MemoMapperTest {
             body = "Body",
             createdAt = 1000L,
             updatedAt = 2000L,
-            isFavorite = true
+            isFavorite = true,
+            deletedAt = 3000L
         )
 
         // Act
@@ -115,7 +119,8 @@ class MemoMapperTest {
                 createdAt = TimestampMillis(1000L),
                 updatedAt = TimestampMillis(2000L),
                 tagIds = emptyList(),
-                isFavorite = true
+                isFavorite = true,
+                deletedAt = TimestampMillis(3000L)
             ),
             memo
         )
@@ -130,7 +135,8 @@ class MemoMapperTest {
             body = "Body",
             createdAt = 1000L,
             updatedAt = 2000L,
-            isFavorite = false
+            isFavorite = false,
+            deletedAt = null
         )
         val tagRefs = listOf(
             MemoTagRefEntity(memoId = "memo-2", tagId = "tag-1", position = 0)
@@ -151,7 +157,8 @@ class MemoMapperTest {
             body = "Body",
             createdAt = -1L,
             updatedAt = 2000L,
-            isFavorite = false
+            isFavorite = false,
+            deletedAt = null
         )
 
         // Act & Assert

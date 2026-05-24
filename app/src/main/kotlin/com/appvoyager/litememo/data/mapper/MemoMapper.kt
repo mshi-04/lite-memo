@@ -16,7 +16,8 @@ fun Memo.toEntity() = MemoEntity(
     body = body.value,
     createdAt = createdAt.value,
     updatedAt = updatedAt.value,
-    isFavorite = isFavorite
+    isFavorite = isFavorite,
+    deletedAt = deletedAt?.value
 )
 
 fun Memo.toTagRefs() = tagIds.mapIndexed { index, tagId ->
@@ -39,7 +40,8 @@ fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>): Memo {
         createdAt = TimestampMillis(createdAt),
         updatedAt = TimestampMillis(updatedAt),
         tagIds = tagRefs.sortedBy { it.position }.map { TagId(it.tagId) },
-        isFavorite = isFavorite
+        isFavorite = isFavorite,
+        deletedAt = deletedAt?.let { TimestampMillis(it) }
     )
 }
 

@@ -14,29 +14,43 @@ import kotlinx.coroutines.flow.Flow
 interface MemoDao {
 
     @Transaction
-    @Query("SELECT * FROM memos")
-    fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>>
+    @Query("SELECT * FROM memos WHERE deletedAt IS NULL")
+    fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>>
 
     @Transaction
     @Query(
         """
         SELECT * FROM memos
-        WHERE title LIKE :pattern ESCAPE '\'
-            OR body LIKE :pattern ESCAPE '\'
+        WHERE deletedAt IS NULL
+            AND (
+                title LIKE :pattern ESCAPE '\'
+                OR body LIKE :pattern ESCAPE '\'
+            )
         """
     )
-    fun observeMemosWithTagRefsBySearchPattern(pattern: String): Flow<List<MemoWithTagRefs>>
+    fun observeActiveMemosWithTagRefsBySearchPattern(pattern: String): Flow<List<MemoWithTagRefs>>
 
     @Transaction
-    @Query("SELECT * FROM memos WHERE createdAt >= :fromMillis AND createdAt < :toMillis")
-    fun observeMemosWithTagRefsCreatedBetween(
+    @Query(
+        """
+        SELECT * FROM memos
+        WHERE deletedAt IS NULL
+            AND createdAt >= :fromMillis
+            AND createdAt < :toMillis
+        """
+    )
+    fun observeActiveMemosWithTagRefsCreatedBetween(
         fromMillis: Long,
         toMillis: Long
     ): Flow<List<MemoWithTagRefs>>
 
     @Transaction
-    @Query("SELECT * FROM memos WHERE id = :id")
-    suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs?
+    @Query("SELECT * FROM memos WHERE id = :id AND deletedAt IS NULL")
+    suspend fun getActiveMemoWithTagRefs(id: String): MemoWithTagRefs?
+
+    @Transaction
+    @Query("SELECT * FROM memos WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
+    fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>>
 
     @Upsert
     suspend fun upsertMemo(memo: MemoEntity)
@@ -47,8 +61,17 @@ interface MemoDao {
     @Query("DELETE FROM memo_tag_refs WHERE memoId = :memoId")
     suspend fun deleteTagRefsForMemo(memoId: String)
 
-    @Query("DELETE FROM memos WHERE id = :id")
-    suspend fun deleteMemo(id: String)
+    @Query("UPDATE memos SET deletedAt = :deletedAt WHERE id = :id AND deletedAt IS NULL")
+    suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int
+
+    @Query("UPDATE memos SET deletedAt = NULL WHERE id = :id AND deletedAt IS NOT NULL")
+    suspend fun restoreMemoFromTrash(id: String): Int
+
+    @Query("DELETE FROM memos WHERE id = :id AND deletedAt IS NOT NULL")
+    suspend fun deleteMemoPermanently(id: String): Int
+
+    @Query("DELETE FROM memos WHERE deletedAt IS NOT NULL AND deletedAt <= :cutoff")
+    suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long)
 
     @Transaction
     suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {

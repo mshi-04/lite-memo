@@ -8,7 +8,8 @@ import androidx.room.PrimaryKey
     tableName = "memos",
     indices = [
         Index(value = ["createdAt"]),
-        Index(value = ["updatedAt"])
+        Index(value = ["updatedAt"]),
+        Index(value = ["deletedAt"])
     ]
 )
 data class MemoEntity(
@@ -17,5 +18,6 @@ data class MemoEntity(
     val body: String,
     val createdAt: Long,
     val updatedAt: Long,
-    val isFavorite: Boolean
+    val isFavorite: Boolean,
+    val deletedAt: Long?
 )

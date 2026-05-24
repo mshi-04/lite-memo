@@ -75,25 +75,30 @@ class MemoDaoTest {
         body = "Body",
         createdAt = 1000L,
         updatedAt = 1000L,
-        isFavorite = false
+        isFavorite = false,
+        deletedAt = null
     )
 
     private class RecordingMemoDao(private val failOnWrite: Boolean = false) : MemoDao {
 
         val calls = mutableListOf<String>()
 
-        override fun observeMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
+        override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
+            flowOf(emptyList())
 
-        override fun observeMemosWithTagRefsBySearchPattern(
+        override fun observeActiveMemosWithTagRefsBySearchPattern(
             pattern: String
         ): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
 
-        override fun observeMemosWithTagRefsCreatedBetween(
+        override fun observeActiveMemosWithTagRefsCreatedBetween(
             fromMillis: Long,
             toMillis: Long
         ): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
 
-        override suspend fun getMemoWithTagRefs(id: String): MemoWithTagRefs? = null
+        override suspend fun getActiveMemoWithTagRefs(id: String): MemoWithTagRefs? = null
+
+        override fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
+            flowOf(emptyList())
 
         override suspend fun upsertMemo(memo: MemoEntity) {
             if (failOnWrite) {
@@ -117,12 +122,19 @@ class MemoDaoTest {
             calls += "deleteTagRefsForMemo:$memoId"
         }
 
-        override suspend fun deleteMemo(id: String) {
+        override suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int {
             if (failOnWrite) {
-                fail<Nothing>("deleteMemo should not be called.")
+                fail<Nothing>("moveMemoToTrash should not be called.")
             }
-            calls += "deleteMemo:$id"
+            calls += "moveMemoToTrash:$id:$deletedAt"
+            return 1
         }
+
+        override suspend fun restoreMemoFromTrash(id: String): Int = 1
+
+        override suspend fun deleteMemoPermanently(id: String): Int = 1
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) = Unit
     }
 
 }
