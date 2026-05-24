@@ -13,7 +13,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
-import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
@@ -45,7 +45,7 @@ class HomeViewModel @Inject constructor(
     private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
     private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
-    private val setMemoImportantUseCase: SetMemoImportantUseCase,
+    private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
@@ -98,7 +98,7 @@ class HomeViewModel @Inject constructor(
                     totalCount = summary.totalCount,
                     todayCount = summary.todayCount,
                     unorganizedCount = summary.unorganizedCount,
-                    importantCount = summary.importantCount
+                    favoriteCount = summary.favoriteCount
                 ),
                 memos = MemoUiModel.fromDomain(filteredMemos, tags),
                 searchResults = MemoUiModel.fromDomain(searchHits ?: emptyList(), tags)
@@ -152,10 +152,10 @@ class HomeViewModel @Inject constructor(
         searchQuery.value = ""
     }
 
-    fun setMemoImportant(memoId: String, isImportant: Boolean) {
+    fun setMemoFavorite(memoId: String, isFavorite: Boolean) {
         viewModelScope.launch {
             try {
-                setMemoImportantUseCase(MemoId(memoId), isImportant)
+                setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -170,7 +170,7 @@ class HomeViewModel @Inject constructor(
     private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (type) {
         HomeFilterUiState.Type.All -> MemoFilter.All
         HomeFilterUiState.Type.Unorganized -> MemoFilter.Unorganized
-        HomeFilterUiState.Type.Important -> MemoFilter.Important
+        HomeFilterUiState.Type.Favorite -> MemoFilter.Favorite
         HomeFilterUiState.Type.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
     }
 

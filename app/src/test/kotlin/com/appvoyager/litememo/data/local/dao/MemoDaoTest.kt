@@ -75,7 +75,7 @@ class MemoDaoTest {
         body = "Body",
         createdAt = 1000L,
         updatedAt = 1000L,
-        isImportant = false
+        isFavorite = false
     )
 
     private class RecordingMemoDao(private val failOnWrite: Boolean = false) : MemoDao {

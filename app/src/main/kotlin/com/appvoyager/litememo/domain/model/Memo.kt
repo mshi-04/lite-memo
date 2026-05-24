@@ -13,7 +13,7 @@ data class Memo(
     val createdAt: TimestampMillis,
     val updatedAt: TimestampMillis,
     val tagIds: List<TagId> = emptyList(),
-    val isImportant: Boolean = false
+    val isFavorite: Boolean = false
 ) {
 
     init {

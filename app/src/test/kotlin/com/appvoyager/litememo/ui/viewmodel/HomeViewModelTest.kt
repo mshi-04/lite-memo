@@ -19,7 +19,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
-import com.appvoyager.litememo.domain.usecase.SetMemoImportantUseCase
+import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import java.time.Instant
@@ -88,7 +88,7 @@ class HomeViewModelTest {
         val viewModel = homeViewModel(
             memos = listOf(
                 memoFixture(id = "normal", updatedAt = today),
-                memoFixture(id = "important", updatedAt = today, isImportant = true)
+                memoFixture(id = "Favorite", updatedAt = today, isFavorite = true)
             )
         )
 
@@ -119,23 +119,23 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun selectFilterShowsOnlyImportantMemosWhenFilterIsImportant() = runTest(dispatcher) {
+    fun selectFilterShowsOnlyFavoriteMemosWhenFilterIsFavorite() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(
             memos = listOf(
                 memoFixture(id = "normal", title = "Normal"),
-                memoFixture(id = "important", title = "Important", isImportant = true)
+                memoFixture(id = "Favorite", title = "Favorite", isFavorite = true)
             )
         )
         advanceUntilIdle()
 
         // Act
-        viewModel.selectFilter(HomeFilterUiState.Important)
+        viewModel.selectFilter(HomeFilterUiState.Favorite)
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.selectedFilter == HomeFilterUiState.Important }
+        val state = viewModel.uiState.first { it.selectedFilter == HomeFilterUiState.Favorite }
 
         // Assert
-        assertEquals(listOf("Important"), state.memos.map { it.title })
+        assertEquals(listOf("Favorite"), state.memos.map { it.title })
     }
 
     @Test
@@ -231,7 +231,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun setMemoImportantUpdatesMemoImportantState() = runTest(dispatcher) {
+    fun setMemoFavoriteUpdatesMemoFavoriteState() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(
             memos = listOf(memoFixture(id = "memo-1", title = "Pinned"))
@@ -239,12 +239,12 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.setMemoImportant("memo-1", true)
+        viewModel.setMemoFavorite("memo-1", true)
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.memos.singleOrNull()?.isImportant == true }
+        val state = viewModel.uiState.first { it.memos.singleOrNull()?.isFavorite == true }
 
         // Assert
-        assertTrue(state.memos.single().isImportant)
+        assertTrue(state.memos.single().isFavorite)
     }
 
     @Test
@@ -291,7 +291,7 @@ class HomeViewModelTest {
             ),
             observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
             searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
-            setMemoImportantUseCase = SetMemoImportantUseCase(
+            setMemoFavoriteUseCase = SetMemoFavoriteUseCase(
                 memoRepository,
                 MutableTimeProvider(TimestampMillis(today + 1))
             ),

@@ -27,7 +27,7 @@ fun memoFixture(
     createdAt: Long = 1000L,
     updatedAt: Long = createdAt,
     tagIds: List<TagId> = emptyList(),
-    isImportant: Boolean = false
+    isFavorite: Boolean = false
 ) = Memo(
     id = MemoId(id),
     title = MemoTitle(title),
@@ -35,7 +35,7 @@ fun memoFixture(
     createdAt = TimestampMillis(createdAt),
     updatedAt = TimestampMillis(updatedAt),
     tagIds = tagIds,
-    isImportant = isImportant
+    isFavorite = isFavorite
 )
 
 fun tagFixture(

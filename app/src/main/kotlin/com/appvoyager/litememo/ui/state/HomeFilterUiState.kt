@@ -16,14 +16,14 @@ data class HomeFilterUiState(val type: Type, val tagId: TagId? = null) {
     enum class Type {
         All,
         Unorganized,
-        Important,
+        Favorite,
         ByTag
     }
 
     companion object {
         val All = HomeFilterUiState(Type.All)
         val Unorganized = HomeFilterUiState(Type.Unorganized)
-        val Important = HomeFilterUiState(Type.Important)
+        val Favorite = HomeFilterUiState(Type.Favorite)
 
         fun byTag(tagId: TagId) = HomeFilterUiState(Type.ByTag, tagId)
     }

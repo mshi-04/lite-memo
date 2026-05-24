@@ -25,7 +25,7 @@ class MemoMapperTest {
             body = "Body",
             createdAt = 1000L,
             updatedAt = 2000L,
-            isImportant = true
+            isFavorite = true
         )
 
         // Act
@@ -39,7 +39,7 @@ class MemoMapperTest {
                 body = "Body",
                 createdAt = 1000L,
                 updatedAt = 2000L,
-                isImportant = true
+                isFavorite = true
             ),
             entity
         )
@@ -76,7 +76,7 @@ class MemoMapperTest {
                 body = "Body",
                 createdAt = 1000L,
                 updatedAt = 1000L,
-                isImportant = false
+                isFavorite = false
             ),
             tagRefs = listOf(
                 MemoTagRefEntity(memoId = "memo-1", tagId = "tag-2", position = 1),
@@ -100,7 +100,7 @@ class MemoMapperTest {
             body = "Body",
             createdAt = 1000L,
             updatedAt = 2000L,
-            isImportant = true
+            isFavorite = true
         )
 
         // Act
@@ -115,7 +115,7 @@ class MemoMapperTest {
                 createdAt = TimestampMillis(1000L),
                 updatedAt = TimestampMillis(2000L),
                 tagIds = emptyList(),
-                isImportant = true
+                isFavorite = true
             ),
             memo
         )
@@ -130,7 +130,7 @@ class MemoMapperTest {
             body = "Body",
             createdAt = 1000L,
             updatedAt = 2000L,
-            isImportant = false
+            isFavorite = false
         )
         val tagRefs = listOf(
             MemoTagRefEntity(memoId = "memo-2", tagId = "tag-1", position = 0)
@@ -151,7 +151,7 @@ class MemoMapperTest {
             body = "Body",
             createdAt = -1L,
             updatedAt = 2000L,
-            isImportant = false
+            isFavorite = false
         )
 
         // Act & Assert

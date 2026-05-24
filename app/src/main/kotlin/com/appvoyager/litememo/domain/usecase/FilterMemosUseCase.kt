@@ -9,7 +9,7 @@ class FilterMemosUseCase @Inject constructor() {
     operator fun invoke(memos: List<Memo>, filter: MemoFilter): List<Memo> = when (filter) {
         MemoFilter.All -> memos
         MemoFilter.Unorganized -> memos.filter { it.tagIds.isEmpty() }
-        MemoFilter.Important -> memos.filter { it.isImportant }
+        MemoFilter.Favorite -> memos.filter { it.isFavorite }
         is MemoFilter.ByTag -> memos.filter { filter.tagId in it.tagIds }
     }
 

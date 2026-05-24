@@ -240,7 +240,7 @@ class RoomMemoRepositoryTest {
             body = "Body",
             createdAt = createdAt,
             updatedAt = updatedAt,
-            isImportant = false
+            isFavorite = false
         ),
         tagRefs = tagRefs
     )

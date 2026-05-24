@@ -82,7 +82,7 @@ class MemoEditViewModel @Inject constructor(
                             memoId = memo.id.value,
                             title = memo.title.value,
                             body = memo.body.value,
-                            isImportant = memo.isImportant,
+                            isFavorite = memo.isFavorite,
                             selectedTagIds = memo.tagIds.map { id -> id.value }.toSet()
                         )
                     }
@@ -133,7 +133,7 @@ class MemoEditViewModel @Inject constructor(
                             null
                         },
                         tagIds = state.selectedTagIds.map { TagId(it) },
-                        isImportant = state.isImportant
+                        isFavorite = state.isFavorite
                     )
                 )
             }.onSuccess {

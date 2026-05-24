@@ -531,7 +531,7 @@ private fun previewCalendarState(): CalendarUiState {
                 body = "完了したタスクと来週の優先度を整理する。",
                 tags = listOf(TagUiModel("tag-work", "仕事", 0xFF6750A4)),
                 updatedAtMillis = System.currentTimeMillis(),
-                isImportant = false
+                isFavorite = false
             ),
             MemoUiModel(
                 id = "memo-2",
@@ -539,7 +539,7 @@ private fun previewCalendarState(): CalendarUiState {
                 body = "冷蔵庫の野菜を使い切る。買い足しは卵。",
                 tags = listOf(TagUiModel("tag-life", "生活", 0xFF006D3B)),
                 updatedAtMillis = System.currentTimeMillis(),
-                isImportant = false
+                isFavorite = false
             )
         )
     )

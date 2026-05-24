@@ -17,5 +17,5 @@ data class MemoEntity(
     val body: String,
     val createdAt: Long,
     val updatedAt: Long,
-    val isImportant: Boolean
+    val isFavorite: Boolean
 )
