@@ -6,6 +6,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.ui.viewmodel.MemoEditNavigationEvent
@@ -15,6 +17,7 @@ import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (Memo) -> Unit,
+    onDraftError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MemoEditViewModel = hiltViewModel()
 ) {
@@ -29,7 +32,17 @@ fun MemoEditRoute(
         }
     }
 
-    BackHandler(enabled = !uiState.showDiscardDialog && !uiState.isDeletePending) {
+    LaunchedEffect(viewModel) {
+        viewModel.draftErrorEvent.collect {
+            onDraftError()
+        }
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        viewModel.flushDraft()
+    }
+
+    BackHandler(enabled = !uiState.isDeletePending) {
         viewModel.requestBack()
     }
 
@@ -41,8 +54,6 @@ fun MemoEditRoute(
         onSave = { viewModel.save() },
         onDelete = { viewModel.delete() },
         onBackRequest = { viewModel.requestBack() },
-        onDismissDiscard = { viewModel.dismissDiscardDialog() },
-        onConfirmDiscard = { viewModel.confirmDiscard() },
         onRetry = { viewModel.reload() },
         modifier = modifier
     )
