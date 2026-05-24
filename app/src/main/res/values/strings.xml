@@ -55,7 +55,7 @@
     <string name="navigate_back">戻る</string>
     <string name="memo_deleted_message">メモを削除しました</string>
     <string name="memo_restore_failed_message">メモを復元できませんでした</string>
-    <string name="memo_edit_draft_error_message">下書きを保存できませんでした</string>
+    <string name="memo_edit_draft_error_message">下書きの操作に失敗しました</string>
     <string name="undo_label">元に戻す</string>
     <string name="cancel_label">キャンセル</string>
 

@@ -69,7 +69,7 @@ class MemoEditViewModel @Inject constructor(
     val draftErrorEvent = _draftErrorEvent.receiveAsFlow()
 
     private var autosaveJob: Job? = null
-    private var shouldPersistDraft = true
+    private var shouldPersistDraft = false
 
     init {
         loadInitialState()
@@ -117,7 +117,7 @@ class MemoEditViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, hasError = true) }
                     return@launch
                 }
-                _uiState.update { memo.toUiState() }
+                _uiState.update { current -> memo.toUiState().copy(availableTags = current.availableTags) }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -266,13 +266,14 @@ class MemoEditViewModel @Inject constructor(
             clearMemoEditDraftUseCase(draftTarget)
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
             _draftErrorEvent.trySend(Unit)
+            throw e
         }
     }
 
     private fun applyDraft(draft: MemoEditDraft) {
-        _uiState.value = draft.toUiState()
+        _uiState.update { current -> draft.toUiState().copy(availableTags = current.availableTags) }
     }
 
     private fun savedStateDraft(): MemoEditDraft? {
