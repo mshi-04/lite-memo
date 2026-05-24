@@ -12,6 +12,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,9 +52,19 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
     val coroutineScope = rememberCoroutineScope()
     val memoDeletedMessage = stringResource(R.string.memo_deleted_message)
     val undoLabel = stringResource(R.string.undo_label)
+    val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
         currentDestination?.hierarchy?.any { it.route == dest.route } == true
+    }
+
+    LaunchedEffect(viewModel, snackbarHostState, restoreMemoErrorMessage) {
+        viewModel.restoreMemoErrorEvent.collect {
+            snackbarHostState.showSnackbar(
+                message = restoreMemoErrorMessage,
+                withDismissAction = true
+            )
+        }
     }
 
     Scaffold(

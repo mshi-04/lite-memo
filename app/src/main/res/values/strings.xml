@@ -54,6 +54,7 @@
     <string name="delete_memo">削除</string>
     <string name="navigate_back">戻る</string>
     <string name="memo_deleted_message">メモを削除しました</string>
+    <string name="memo_restore_failed_message">メモを復元できませんでした</string>
     <string name="undo_label">元に戻す</string>
     <string name="discard_dialog_title">編集内容の破棄</string>
     <string name="discard_dialog_message">編集中の内容は保存されません。破棄しますか？</string>
