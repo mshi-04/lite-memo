@@ -117,7 +117,9 @@ class MemoEditViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, hasError = true) }
                     return@launch
                 }
-                _uiState.update { current -> memo.toUiState().copy(availableTags = current.availableTags) }
+                _uiState.update { current ->
+                    memo.toUiState().copy(availableTags = current.availableTags)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -274,7 +276,9 @@ class MemoEditViewModel @Inject constructor(
     }
 
     private fun applyDraft(draft: MemoEditDraft) {
-        _uiState.update { current -> draft.toUiState().copy(availableTags = current.availableTags) }
+        _uiState.update { current ->
+            draft.toUiState().copy(availableTags = current.availableTags)
+        }
     }
 
     private fun savedStateDraft(): MemoEditDraft? {
