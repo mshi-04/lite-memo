@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.data.repository
+package com.appvoyager.litememo.data.model
 
 import androidx.datastore.preferences.core.Preferences
 
