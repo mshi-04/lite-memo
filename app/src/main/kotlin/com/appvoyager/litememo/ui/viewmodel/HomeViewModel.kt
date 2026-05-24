@@ -7,7 +7,6 @@ import com.appvoyager.litememo.domain.model.MemoFilter
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
@@ -172,12 +171,12 @@ class HomeViewModel @Inject constructor(
         HomeFilterUiState.Type.All -> MemoFilter.All
         HomeFilterUiState.Type.Unorganized -> MemoFilter.Unorganized
         HomeFilterUiState.Type.Important -> MemoFilter.Important
-        HomeFilterUiState.Type.ByTag -> MemoFilter.ByTag(TagId(requireNotNull(tagId)))
+        HomeFilterUiState.Type.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
     }
 
     private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState =
         if (type == HomeFilterUiState.Type.ByTag) {
-            if (tags.any { tag -> tag.id.value == tagId }) this else HomeFilterUiState.All
+            if (tags.any { tag -> tag.id == tagId }) this else HomeFilterUiState.All
         } else {
             this
         }

@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
@@ -382,7 +383,7 @@ private fun HomeFilterAndSortRow(
                 onClick = { onFilterSelected(HomeFilterUiState.Important) }
             )
             tags.forEach { tag ->
-                val tagFilter = HomeFilterUiState.byTag(tag.id)
+                val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
                 FilterButton(
                     label = tag.name,
                     selected = selectedFilter == tagFilter,

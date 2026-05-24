@@ -1,9 +1,11 @@
 package com.appvoyager.litememo.ui.state
 
-data class HomeFilterUiState(val type: Type, val tagId: String? = null) {
+import com.appvoyager.litememo.domain.model.value.TagId
+
+data class HomeFilterUiState(val type: Type, val tagId: TagId? = null) {
 
     init {
-        require(type != Type.ByTag || !tagId.isNullOrBlank()) {
+        require(type != Type.ByTag || tagId != null) {
             "ByTag filter requires a tagId."
         }
         require(type == Type.ByTag || tagId == null) {
@@ -23,6 +25,6 @@ data class HomeFilterUiState(val type: Type, val tagId: String? = null) {
         val Unorganized = HomeFilterUiState(Type.Unorganized)
         val Important = HomeFilterUiState(Type.Important)
 
-        fun byTag(tagId: String) = HomeFilterUiState(Type.ByTag, tagId)
+        fun byTag(tagId: TagId) = HomeFilterUiState(Type.ByTag, tagId)
     }
 }

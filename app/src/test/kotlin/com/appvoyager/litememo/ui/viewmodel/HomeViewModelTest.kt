@@ -156,10 +156,10 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.selectFilter(HomeFilterUiState.byTag(workTagId.value))
+        viewModel.selectFilter(HomeFilterUiState.byTag(workTagId))
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.selectedFilter == HomeFilterUiState.byTag(workTagId.value)
+            it.selectedFilter == HomeFilterUiState.byTag(workTagId)
         }
 
         // Assert
