@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -46,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +64,7 @@ import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
+import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @Composable
@@ -185,6 +189,7 @@ private fun HomeContent(
             item {
                 HomeFilterAndSortRow(
                     selectedFilter = uiState.selectedFilter,
+                    tags = uiState.tags,
                     onFilterSelected = onFilterSelected,
                     currentSortOrder = uiState.memoSortOrder,
                     onSortOrderSelected = onSortOrderSelected
@@ -348,35 +353,54 @@ private fun TodayCountBox(todayCount: Int) {
 @Composable
 private fun HomeFilterAndSortRow(
     selectedFilter: HomeFilterUiState,
+    tags: List<TagUiModel>,
     onFilterSelected: (HomeFilterUiState) -> Unit,
     currentSortOrder: MemoSortOrder,
     onSortOrderSelected: (MemoSortOrder) -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterButton(
-            label = stringResource(R.string.filter_all),
-            selected = selectedFilter == HomeFilterUiState.All,
-            onClick = { onFilterSelected(HomeFilterUiState.All) }
-        )
-        FilterButton(
-            label = stringResource(R.string.unorganized_label),
-            selected = selectedFilter == HomeFilterUiState.Unorganized,
-            onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
-        )
-        FilterButton(
-            label = stringResource(R.string.filter_important),
-            selected = selectedFilter == HomeFilterUiState.Important,
-            onClick = { onFilterSelected(HomeFilterUiState.Important) }
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        SortOrderDropdown(
-            currentOrder = currentSortOrder,
-            onSelected = onSortOrderSelected
-        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            FilterButton(
+                label = stringResource(R.string.filter_all),
+                selected = selectedFilter == HomeFilterUiState.All,
+                onClick = { onFilterSelected(HomeFilterUiState.All) }
+            )
+            FilterButton(
+                label = stringResource(R.string.unorganized_label),
+                selected = selectedFilter == HomeFilterUiState.Unorganized,
+                onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
+            )
+            FilterButton(
+                label = stringResource(R.string.filter_important),
+                selected = selectedFilter == HomeFilterUiState.Important,
+                onClick = { onFilterSelected(HomeFilterUiState.Important) }
+            )
+            tags.forEach { tag ->
+                val tagFilter = HomeFilterUiState.byTag(tag.id)
+                FilterButton(
+                    label = tag.name,
+                    selected = selectedFilter == tagFilter,
+                    onClick = { onFilterSelected(tagFilter) },
+                    colorArgb = tag.colorArgb
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SortOrderDropdown(
+                currentOrder = currentSortOrder,
+                onSelected = onSortOrderSelected
+            )
+        }
     }
 }
 
@@ -414,11 +438,26 @@ private fun SortOrderDropdown(currentOrder: MemoSortOrder, onSelected: (MemoSort
 }
 
 @Composable
-private fun FilterButton(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun FilterButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    colorArgb: Long? = null
+) {
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(text = label) }
+        label = { Text(text = label) },
+        leadingIcon = colorArgb?.let {
+            {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(Color(it.toInt()))
+                )
+            }
+        }
     )
 }
 
@@ -471,6 +510,10 @@ private fun HomeScreenDarkPreview() {
 
 private fun previewHomeState() = HomeUiState(
     isLoading = false,
+    tags = listOf(
+        TagUiModel("tag-life", "生活", 0xFF6750A4),
+        TagUiModel("tag-work", "仕事", 0xFFB3261E)
+    ),
     summary = HomeSummaryUiState(
         totalCount = 4,
         todayCount = 2,
@@ -482,8 +525,7 @@ private fun previewHomeState() = HomeUiState(
             id = "memo-1",
             title = "買い物リスト",
             body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
-            tagName = "生活",
-            tagColorArgb = 0xFF6750A4,
+            tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
             updatedAtMillis = System.currentTimeMillis(),
             isImportant = false
         ),
@@ -491,8 +533,7 @@ private fun previewHomeState() = HomeUiState(
             id = "memo-2",
             title = "会議メモ",
             body = "次回までに画面構成と保存方式を確認する。",
-            tagName = "仕事",
-            tagColorArgb = 0xFFB3261E,
+            tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
             updatedAtMillis = System.currentTimeMillis(),
             isImportant = true
         )

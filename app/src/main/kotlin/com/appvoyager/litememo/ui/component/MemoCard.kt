@@ -2,13 +2,18 @@ package com.appvoyager.litememo.ui.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
@@ -31,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.MemoUiModel
+import com.appvoyager.litememo.ui.state.TagUiModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -104,8 +110,19 @@ fun MemoCard(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    MemoTag(label = memo.tagName)
-                    Spacer(modifier = Modifier.weight(1f))
+                    FlowRow(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (memo.tags.isEmpty()) {
+                            MemoTag(tag = null)
+                        } else {
+                            memo.tags.forEach { tag ->
+                                MemoTag(tag = tag)
+                            }
+                        }
+                    }
                     Text(
                         text = updatedAtLabel(memo.updatedAtMillis),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -118,27 +135,39 @@ fun MemoCard(
 }
 
 @Composable
-private fun MemoTag(label: String?) {
+private fun MemoTag(tag: TagUiModel?) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 14.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = label ?: stringResource(R.string.unorganized_label),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (tag != null) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(Color(tag.colorArgb.toInt()))
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(
+                text = tag?.name ?: stringResource(R.string.unorganized_label),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
 @Composable
 private fun memoAccentColor(memo: MemoUiModel): Color {
     if (memo.isImportant) return MaterialTheme.colorScheme.error
-    return memo.tagColorArgb?.let { Color(it.toInt()) } ?: MaterialTheme.colorScheme.primary
+    return memo.tags.firstOrNull()?.colorArgb?.let { Color(it.toInt()) }
+        ?: MaterialTheme.colorScheme.primary
 }
 
 @Composable

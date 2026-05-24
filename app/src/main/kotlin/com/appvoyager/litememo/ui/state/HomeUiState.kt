@@ -10,6 +10,7 @@ data class HomeUiState(
     val isSearchActive: Boolean = false,
     val searchQuery: String = "",
     val hasSearchError: Boolean = false,
+    val tags: List<TagUiModel> = emptyList(),
     val summary: HomeSummaryUiState = HomeSummaryUiState(),
     val memos: List<MemoUiModel> = emptyList(),
     val searchResults: List<MemoUiModel> = emptyList()

@@ -61,4 +61,18 @@ class FilterMemosUseCaseTest {
         assertEquals(listOf(matched.id), memos.map { it.id })
     }
 
+    @Test
+    fun invokeReturnsMemosWhenSecondTagMatchesByTagFilter() {
+        // Arrange
+        val tagId = TagId("tag-2")
+        val matched = memoFixture(id = "matched", tagIds = listOf(TagId("tag-1"), tagId))
+        val unmatched = memoFixture(id = "unmatched", tagIds = listOf(TagId("tag-1")))
+
+        // Act
+        val memos = FilterMemosUseCase()(listOf(matched, unmatched), MemoFilter.ByTag(tagId))
+
+        // Assert
+        assertEquals(listOf(matched.id), memos.map { it.id })
+    }
+
 }

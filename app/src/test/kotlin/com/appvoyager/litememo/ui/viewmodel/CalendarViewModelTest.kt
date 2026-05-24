@@ -5,8 +5,11 @@ import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
+import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
@@ -155,10 +158,36 @@ class CalendarViewModelTest {
         )
     }
 
+    @Test
+    fun uiStateReflectsMemoTagsForSelectedDate() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = calendarViewModel(
+            memoRepository = FakeMemoRepository(
+                listOf(
+                    memoFixture(
+                        id = "memo-1",
+                        createdAt = epochMillis("2026-05-15T10:00:00Z"),
+                        tagIds = listOf(tagId)
+                    )
+                )
+            ),
+            tags = listOf(tagFixture(id = tagId.value, name = "仕事"))
+        )
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(listOf("仕事"), state.memos.single().tags.map { it.name })
+    }
+
     private fun calendarViewModel(
-        memoRepository: FakeMemoRepository = FakeMemoRepository()
+        memoRepository: FakeMemoRepository = FakeMemoRepository(),
+        tags: List<Tag> = emptyList()
     ): CalendarViewModel {
-        val tagRepository = FakeTagRepository()
+        val tagRepository = FakeTagRepository(tags)
         val userSettingsRepository = FakeUserSettingsRepository()
         return CalendarViewModel(
             observeCalendarMonthSummaryUseCase = ObserveCalendarMonthSummaryUseCase(

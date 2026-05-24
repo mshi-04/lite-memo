@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoFilter
 import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
@@ -18,6 +20,7 @@ import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
+import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -47,7 +50,7 @@ class HomeViewModel @Inject constructor(
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase
 ) : ViewModel() {
 
-    private val selectedFilter = MutableStateFlow(HomeFilterUiState.All)
+    private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
     private val isSearchActive = MutableStateFlow(false)
     private val searchQuery = MutableStateFlow("")
     private val retryTrigger = MutableStateFlow(0)
@@ -80,15 +83,18 @@ class HomeViewModel @Inject constructor(
             searchResults
         ) { memos, tags, sortOrder, controls, searchHits ->
             val summary = getHomeSummaryUseCase(memos)
-            val filteredMemos = filterMemosUseCase(memos, controls.filter.toDomainFilter())
+            val tagUiModels = tags.map { TagUiModel.fromDomain(it) }
+            val effectiveFilter = controls.filter.effectiveFilter(tags)
+            val filteredMemos = filterMemosUseCase(memos, effectiveFilter.toDomainFilter())
 
             HomeUiState(
                 isLoading = false,
-                selectedFilter = controls.filter,
+                selectedFilter = effectiveFilter,
                 memoSortOrder = sortOrder,
                 isSearchActive = controls.searching,
                 searchQuery = controls.query,
                 hasSearchError = searchHits == null,
+                tags = tagUiModels,
                 summary = HomeSummaryUiState(
                     totalCount = summary.totalCount,
                     todayCount = summary.todayCount,
@@ -162,11 +168,19 @@ class HomeViewModel @Inject constructor(
         retryTrigger.update { it + 1 }
     }
 
-    private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (this) {
-        HomeFilterUiState.All -> MemoFilter.All
-        HomeFilterUiState.Unorganized -> MemoFilter.Unorganized
-        HomeFilterUiState.Important -> MemoFilter.Important
+    private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (type) {
+        HomeFilterUiState.Type.All -> MemoFilter.All
+        HomeFilterUiState.Type.Unorganized -> MemoFilter.Unorganized
+        HomeFilterUiState.Type.Important -> MemoFilter.Important
+        HomeFilterUiState.Type.ByTag -> MemoFilter.ByTag(TagId(requireNotNull(tagId)))
     }
+
+    private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState =
+        if (type == HomeFilterUiState.Type.ByTag) {
+            if (tags.any { tag -> tag.id.value == tagId }) this else HomeFilterUiState.All
+        } else {
+            this
+        }
 
     private data class UiControls(
         val filter: HomeFilterUiState,

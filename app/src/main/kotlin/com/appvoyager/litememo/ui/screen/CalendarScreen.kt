@@ -70,6 +70,7 @@ import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
+import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import java.time.LocalDate
 import java.time.YearMonth
@@ -528,8 +529,7 @@ private fun previewCalendarState(): CalendarUiState {
                 id = "memo-1",
                 title = "週次レビュー",
                 body = "完了したタスクと来週の優先度を整理する。",
-                tagName = "仕事",
-                tagColorArgb = 0xFF6750A4,
+                tags = listOf(TagUiModel("tag-work", "仕事", 0xFF6750A4)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isImportant = false
             ),
@@ -537,8 +537,7 @@ private fun previewCalendarState(): CalendarUiState {
                 id = "memo-2",
                 title = "献立メモ",
                 body = "冷蔵庫の野菜を使い切る。買い足しは卵。",
-                tagName = "生活",
-                tagColorArgb = 0xFF006D3B,
+                tags = listOf(TagUiModel("tag-life", "生活", 0xFF006D3B)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isImportant = false
             )
