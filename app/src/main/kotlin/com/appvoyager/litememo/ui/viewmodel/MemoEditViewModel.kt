@@ -149,10 +149,12 @@ class MemoEditViewModel @Inject constructor(
         val state = _uiState.value
         val title = state.title
         val body = state.body
-        if (title.isBlank() && body.isBlank()) {
+        if (title.isBlank() && body.isBlank() &&
+            state.selectedTagIds.isEmpty() && !state.isFavorite
+        ) {
             viewModelScope.launch {
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraftQuietly()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
@@ -172,7 +174,7 @@ class MemoEditViewModel @Inject constructor(
                     )
                 )
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraftQuietly()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
@@ -194,7 +196,7 @@ class MemoEditViewModel @Inject constructor(
                 }
                 deleteMemoUseCase(MemoId(id))
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraftQuietly()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memo))
@@ -261,14 +263,13 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    private suspend fun clearDraft() {
+    private suspend fun clearDraftQuietly() {
         try {
             clearMemoEditDraftUseCase(draftTarget)
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             _draftErrorEvent.trySend(Unit)
-            throw e
         }
     }
 
@@ -279,12 +280,14 @@ class MemoEditViewModel @Inject constructor(
     private fun savedStateDraft(): MemoEditDraft? {
         val title = savedStateHandle.get<String>(DRAFT_TITLE_KEY) ?: return null
         val body = savedStateHandle.get<String>(DRAFT_BODY_KEY).orEmpty()
-        if (title.isBlank() && body.isBlank()) return null
         val tagIds = savedStateHandle
             .get<ArrayList<String>>(DRAFT_TAG_IDS_KEY)
             .orEmpty()
             .map { TagId(it) }
+        val isFavorite = savedStateHandle.get<Boolean>(DRAFT_IS_FAVORITE_KEY) ?: false
         val savedCreatedAt = savedStateHandle.get<Long>(DRAFT_CREATED_AT_KEY)
+
+        if (title.isBlank() && body.isBlank() && tagIds.isEmpty() && !isFavorite) return null
 
         return MemoEditDraft(
             target = draftTarget,
@@ -292,13 +295,15 @@ class MemoEditViewModel @Inject constructor(
             body = body,
             createdAt = savedCreatedAt?.let { TimestampMillis(it) },
             tagIds = tagIds,
-            isFavorite = savedStateHandle.get<Boolean>(DRAFT_IS_FAVORITE_KEY) ?: false
+            isFavorite = isFavorite
         )
     }
 
     private fun persistSavedState(state: MemoEditUiState) {
         val draft = state.toDraft()
-        if (draft.title.isBlank() && draft.body.isBlank()) {
+        if (draft.title.isBlank() && draft.body.isBlank() &&
+            draft.tagIds.isEmpty() && !draft.isFavorite
+        ) {
             clearSavedState()
             return
         }

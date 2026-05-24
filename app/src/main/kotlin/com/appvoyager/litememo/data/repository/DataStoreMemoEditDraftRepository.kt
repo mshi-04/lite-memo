@@ -82,16 +82,16 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
         )
     }
 
-    private data class DraftKeys(
-        val title: Preferences.Key<String>,
-        val body: Preferences.Key<String>,
-        val tagIds: Preferences.Key<String>,
-        val isFavorite: Preferences.Key<Boolean>,
-        val createdAt: Preferences.Key<Long>
-    )
-
     private companion object {
         const val KEY_PREFIX = "memo_edit_draft_"
-        const val TAG_ID_SEPARATOR = "\n"
+        const val TAG_ID_SEPARATOR = ","
     }
 }
+
+internal data class DraftKeys(
+    val title: Preferences.Key<String>,
+    val body: Preferences.Key<String>,
+    val tagIds: Preferences.Key<String>,
+    val isFavorite: Preferences.Key<Boolean>,
+    val createdAt: Preferences.Key<Long>
+)
