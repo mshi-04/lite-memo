@@ -53,6 +53,7 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
     val memoDeletedMessage = stringResource(R.string.memo_deleted_message)
     val undoLabel = stringResource(R.string.undo_label)
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
+    val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
         currentDestination?.hierarchy?.any { it.route == dest.route } == true
@@ -161,6 +162,14 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
             ) {
                 MemoEditRoute(
                     onNavigateBack = { navController.popBackStack() },
+                    onDraftError = {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = draftErrorMessage,
+                                withDismissAction = true
+                            )
+                        }
+                    },
                     onMemoDeleted = { memo ->
                         navController.popBackStack()
                         coroutineScope.launch {
