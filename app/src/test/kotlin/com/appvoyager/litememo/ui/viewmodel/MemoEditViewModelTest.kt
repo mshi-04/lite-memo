@@ -11,7 +11,6 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.DeleteMemoUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
-import com.appvoyager.litememo.domain.usecase.RestoreMemoUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,9 +21,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -45,23 +43,21 @@ class MemoEditViewModelTest {
     }
 
     @Test
-    fun requestBackDoesNotNavigateWhenDeleteIsPending() = runTest(dispatcher) {
+    fun deleteEmitsMemoDeletedEventWithDeletedMemo() = runTest(dispatcher) {
         // Arrange
+        val memo = memoFixture(id = "memo-1")
         val viewModel = memoEditViewModel(
-            memo = memoFixture(id = "memo-1")
+            memo = memo
         )
         advanceUntilIdle()
-        viewModel.delete()
-        advanceUntilIdle()
-        viewModel.navigationEvent.first()
 
         // Act
-        viewModel.requestBack()
+        viewModel.delete()
         advanceUntilIdle()
-        val event = withTimeoutOrNull(10) { viewModel.navigationEvent.first() }
+        val event = viewModel.navigationEvent.first()
 
         // Assert
-        assertNull(event)
+        assertEquals(MemoEditNavigationEvent.MemoDeleted(memo), event)
     }
 
     private fun memoEditViewModel(memo: Memo): MemoEditViewModel {
@@ -82,7 +78,6 @@ class MemoEditViewModelTest {
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
             ),
             deleteMemoUseCase = DeleteMemoUseCase(memoRepository),
-            restoreMemoUseCase = RestoreMemoUseCase(memoRepository),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository)
         )
     }
