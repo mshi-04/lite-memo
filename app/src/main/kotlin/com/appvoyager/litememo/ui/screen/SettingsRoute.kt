@@ -17,6 +17,7 @@ private const val PRIVACY_POLICY_URL = "https://example.com/privacy-policy"
 fun SettingsRoute(
     onOpenSourceLicenseClick: () -> Unit = {},
     onTagManageClick: () -> Unit = {},
+    onTrashClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -32,6 +33,7 @@ fun SettingsRoute(
         onExpandSortOrder = { viewModel.expandSortOrder() },
         onCollapseSortOrder = { viewModel.collapseSortOrder() },
         onTagManageClick = onTagManageClick,
+        onTrashClick = onTrashClick,
         onPrivacyPolicyClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
             context.startActivity(intent)

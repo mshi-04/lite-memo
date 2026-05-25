@@ -61,6 +61,7 @@
 
     <!-- Tag Manage -->
     <string name="settings_tag_manage">タグ管理</string>
+    <string name="settings_trash">ゴミ箱</string>
     <string name="tag_manage_title">タグ管理</string>
     <string name="tag_create">タグを作成</string>
     <string name="tag_edit">タグを編集</string>
@@ -77,6 +78,18 @@
     <string name="tag_delete_error_title">削除に失敗しました</string>
     <string name="tag_delete_error_body">タグの削除中にエラーが発生しました。もう一度お試しください。</string>
     <string name="tag_selection_label">タグ</string>
+
+    <!-- Trash -->
+    <string name="trash_title">ゴミ箱</string>
+    <string name="trash_empty_title">ゴミ箱は空です</string>
+    <string name="trash_empty_body">削除したメモはここに30日間保存されます。</string>
+    <string name="trash_restore_label">復元</string>
+    <string name="trash_deleted_at_label">削除: %1$s</string>
+    <string name="trash_permanent_delete_label">完全削除</string>
+    <string name="trash_permanent_delete_title">完全削除</string>
+    <string name="trash_permanent_delete_message">「%1$s」を完全に削除しますか？この操作は元に戻せません。</string>
+    <string name="trash_action_error_title">操作に失敗しました</string>
+    <string name="trash_action_error_body">ゴミ箱の操作中にエラーが発生しました。もう一度お試しください。</string>
 
     <!-- Search -->
     <string name="search_hint">タイトルや本文で検索</string>
