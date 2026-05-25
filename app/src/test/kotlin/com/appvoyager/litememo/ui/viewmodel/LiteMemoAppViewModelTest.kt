@@ -1,12 +1,13 @@
 package com.appvoyager.litememo.ui.viewmodel
 
-import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
-import com.appvoyager.litememo.domain.usecase.RestoreMemoUseCase
+import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
+import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,12 +46,19 @@ class LiteMemoAppViewModelTest {
     @Test
     fun restoreMemoEmitsErrorEventWhenRestoreFails() = runTest(dispatcher) {
         // Arrange
+        val repository = ThrowingRestoreMemoRepository(
+            IllegalStateException("Restore failed.")
+        )
         val viewModel = LiteMemoAppViewModel(
-            RestoreMemoUseCase(ThrowingSaveMemoRepository(IllegalStateException("Save failed.")))
+            restoreMemoFromTrashUseCase = RestoreMemoFromTrashUseCase(repository),
+            purgeExpiredTrashedMemosUseCase = PurgeExpiredTrashedMemosUseCase(
+                memoRepository = repository,
+                currentTimeProvider = FixedTimeProvider()
+            )
         )
 
         // Act
-        viewModel.restoreMemo(memoFixture())
+        viewModel.restoreMemo(MemoId("memo-1"))
         advanceUntilIdle()
         val event = viewModel.restoreMemoErrorEvent.first()
 
@@ -61,12 +69,19 @@ class LiteMemoAppViewModelTest {
     @Test
     fun restoreMemoDoesNotEmitErrorEventWhenRestoreIsCancelled() = runTest(dispatcher) {
         // Arrange
+        val repository = ThrowingRestoreMemoRepository(
+            CancellationException("Cancelled.")
+        )
         val viewModel = LiteMemoAppViewModel(
-            RestoreMemoUseCase(ThrowingSaveMemoRepository(CancellationException("Cancelled.")))
+            restoreMemoFromTrashUseCase = RestoreMemoFromTrashUseCase(repository),
+            purgeExpiredTrashedMemosUseCase = PurgeExpiredTrashedMemosUseCase(
+                memoRepository = repository,
+                currentTimeProvider = FixedTimeProvider()
+            )
         )
 
         // Act
-        viewModel.restoreMemo(memoFixture())
+        viewModel.restoreMemo(MemoId("memo-1"))
         advanceUntilIdle()
         val event = withTimeoutOrNull(100L) {
             viewModel.restoreMemoErrorEvent.first()
@@ -76,22 +91,44 @@ class LiteMemoAppViewModelTest {
         assertNull(event)
     }
 
-    private class ThrowingSaveMemoRepository(private val throwable: Throwable) : MemoRepository {
+    private class ThrowingRestoreMemoRepository(
+        private val throwable: Throwable
+    ) : MemoRepository {
 
-        override fun observeMemos(): Flow<List<Memo>> = flowOf(emptyList())
+        override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
-        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
-            flowOf(emptyList())
+        override fun observeActiveMemosBySearchQuery(
+            query: SearchQuery
+        ): Flow<List<Memo>> = flowOf(emptyList())
 
-        override fun observeMemosCreatedBetween(
+        override fun observeActiveMemosCreatedBetween(
             from: TimestampMillis,
             to: TimestampMillis
         ): Flow<List<Memo>> = flowOf(emptyList())
 
-        override suspend fun getMemo(id: MemoId): Memo? = null
+        override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
+
+        override suspend fun getActiveMemo(id: MemoId): Memo? = null
 
         override suspend fun saveMemo(memo: Memo): Unit = throw throwable
 
-        override suspend fun deleteMemo(id: MemoId) = Unit
+        override suspend fun moveMemoToTrash(
+            id: MemoId,
+            deletedAt: TimestampMillis
+        ) = Unit
+
+        override suspend fun restoreMemoFromTrash(id: MemoId): Unit =
+            throw throwable
+
+        override suspend fun deleteMemoPermanently(id: MemoId) = Unit
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(
+            cutoff: TimestampMillis
+        ) = Unit
+    }
+
+    private class FixedTimeProvider : CurrentTimeProvider {
+        override fun now(): TimestampMillis =
+            TimestampMillis(30L * 24L * 60L * 60L * 1_000L)
     }
 }

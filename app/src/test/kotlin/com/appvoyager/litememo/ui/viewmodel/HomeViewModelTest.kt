@@ -320,43 +320,59 @@ class HomeViewModelTest {
 
     private class FailingMemoRepository(private val throwable: Throwable) : MemoRepository {
 
-        override fun observeMemos(): Flow<List<Memo>> = flow {
+        override fun observeActiveMemos(): Flow<List<Memo>> = flow {
             throw throwable
         }
 
-        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> = flow {
+        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> = flow {
             throw throwable
         }
 
-        override fun observeMemosCreatedBetween(
+        override fun observeActiveMemosCreatedBetween(
             from: TimestampMillis,
             to: TimestampMillis
         ): Flow<List<Memo>> = flow { throw throwable }
 
-        override suspend fun getMemo(id: MemoId): Memo? = null
+        override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
+
+        override suspend fun getActiveMemo(id: MemoId): Memo? = null
 
         override suspend fun saveMemo(memo: Memo) = Unit
 
-        override suspend fun deleteMemo(id: MemoId) = Unit
+        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
+
+        override suspend fun restoreMemoFromTrash(id: MemoId) = Unit
+
+        override suspend fun deleteMemoPermanently(id: MemoId) = Unit
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
     }
 
     private class FavoriteUpdateFailingMemoRepository(private val memo: Memo) : MemoRepository {
 
-        override fun observeMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
+        override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
 
-        override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             flowOf(emptyList())
 
-        override fun observeMemosCreatedBetween(
+        override fun observeActiveMemosCreatedBetween(
             from: TimestampMillis,
             to: TimestampMillis
         ): Flow<List<Memo>> = flowOf(emptyList())
 
-        override suspend fun getMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
+        override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
+
+        override suspend fun getActiveMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
 
         override suspend fun saveMemo(memo: Memo): Unit =
             throw IllegalStateException("Failed to update favorite.")
 
-        override suspend fun deleteMemo(id: MemoId) = Unit
+        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
+
+        override suspend fun restoreMemoFromTrash(id: MemoId) = Unit
+
+        override suspend fun deleteMemoPermanently(id: MemoId) = Unit
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
     }
 }

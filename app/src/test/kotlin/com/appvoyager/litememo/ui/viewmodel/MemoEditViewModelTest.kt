@@ -17,9 +17,9 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ClearMemoEditDraftUseCase
-import com.appvoyager.litememo.domain.usecase.DeleteMemoUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
+import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
@@ -213,7 +213,7 @@ class MemoEditViewModelTest {
         val event = viewModel.navigationEvent.first()
 
         // Assert
-        assertEquals(MemoEditNavigationEvent.MemoDeleted(memo), event)
+        assertEquals(MemoEditNavigationEvent.MemoDeleted(memo.id), event)
     }
 
     private fun memoEditViewModel(
@@ -241,7 +241,10 @@ class MemoEditViewModelTest {
                 memoIdProvider = QueueMemoIdProvider(listOf(MemoId("generated-id"))),
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
             ),
-            deleteMemoUseCase = DeleteMemoUseCase(memoRepository),
+            moveMemoToTrashUseCase = MoveMemoToTrashUseCase(
+                memoRepository = memoRepository,
+                currentTimeProvider = MutableTimeProvider(TimestampMillis(2_000L))
+            ),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             getMemoEditDraftUseCase = GetMemoEditDraftUseCase(draftRepository),
             saveMemoEditDraftUseCase = SaveMemoEditDraftUseCase(draftRepository),

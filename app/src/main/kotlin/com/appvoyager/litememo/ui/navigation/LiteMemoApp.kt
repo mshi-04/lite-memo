@@ -170,7 +170,7 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
                             )
                         }
                     },
-                    onMemoDeleted = { memo ->
+                    onMemoDeleted = { memoId ->
                         navController.popBackStack()
                         coroutineScope.launch {
                             val result = snackbarHostState.showSnackbar(
@@ -180,7 +180,7 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
                                 duration = SnackbarDuration.Long
                             )
                             if (result == SnackbarResult.ActionPerformed) {
-                                viewModel.restoreMemo(memo)
+                                viewModel.restoreMemo(memoId)
                             }
                         }
                     }
