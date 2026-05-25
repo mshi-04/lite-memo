@@ -11,8 +11,8 @@ class PurgeExpiredTrashedMemosUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke() {
-        val cutoff = TimestampMillis(currentTimeProvider.now().value - RETENTION_MILLIS)
-        memoRepository.deleteTrashedMemosDeletedAtOrBefore(cutoff)
+        val cutoffMillis = (currentTimeProvider.now().value - RETENTION_MILLIS).coerceAtLeast(0L)
+        memoRepository.deleteTrashedMemosDeletedAtOrBefore(TimestampMillis(cutoffMillis))
     }
 
     private companion object {

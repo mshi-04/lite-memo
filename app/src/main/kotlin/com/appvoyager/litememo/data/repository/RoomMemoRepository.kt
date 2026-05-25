@@ -53,19 +53,19 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
     }
 
     override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
-        TODO("Implemented in feature/trash-data")
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
     }
 
     override suspend fun restoreMemoFromTrash(id: MemoId) {
-        TODO("Implemented in feature/trash-data")
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
     }
 
     override suspend fun deleteMemoPermanently(id: MemoId) {
-        TODO("Implemented in feature/trash-data")
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
     }
 
     override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
-        TODO("Implemented in feature/trash-data")
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {

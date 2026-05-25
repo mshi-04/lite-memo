@@ -60,6 +60,22 @@ class PurgeExpiredTrashedMemosUseCaseTest {
         assertEquals(listOf(memo), repository.currentMemos())
     }
 
+    @Test
+    fun invokeClampsNegativeCutoffToZero() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository()
+        val useCase = PurgeExpiredTrashedMemosUseCase(
+            memoRepository = repository,
+            currentTimeProvider = MutableTimeProvider(TimestampMillis(1_000L))
+        )
+
+        // Act
+        useCase()
+
+        // Assert
+        assertEquals(listOf(TimestampMillis(0L)), repository.purgeCutoffs)
+    }
+
     private companion object {
         const val THIRTY_DAYS = 30L * 24L * 60L * 60L * 1_000L
     }
