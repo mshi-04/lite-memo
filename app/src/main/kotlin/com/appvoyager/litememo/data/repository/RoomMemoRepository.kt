@@ -11,18 +11,17 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : MemoRepository {
 
     override fun observeActiveMemos(): Flow<List<Memo>> =
-        memoDao.observeMemosWithTagRefs().map { memos ->
+        memoDao.observeActiveMemosWithTagRefs().map { memos ->
             memos.map { memo -> memo.toDomain() }
         }
 
     override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
-        memoDao.observeMemosWithTagRefsBySearchPattern(
+        memoDao.observeActiveMemosWithTagRefsBySearchPattern(
             query.value.toEscapedLikePattern()
         ).map { memos ->
             memos.map { memo -> memo.toDomain() }
@@ -33,15 +32,20 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         to: TimestampMillis
     ): Flow<List<Memo>> {
         require(from.value < to.value) { "from must be earlier than to." }
-        return memoDao.observeMemosWithTagRefsCreatedBetween(from.value, to.value).map { memos ->
-            memos.map { memo -> memo.toDomain() }
-        }
+        return memoDao
+            .observeActiveMemosWithTagRefsCreatedBetween(from.value, to.value)
+            .map { memos ->
+                memos.map { memo -> memo.toDomain() }
+            }
     }
 
-    override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
+    override fun observeTrashedMemos(): Flow<List<Memo>> =
+        memoDao.observeTrashedMemosWithTagRefs().map { memos ->
+            memos.map { memo -> memo.toDomain() }
+        }
 
     override suspend fun getActiveMemo(id: MemoId): Memo? {
-        val memo = memoDao.getMemoWithTagRefs(id.value) ?: return null
+        val memo = memoDao.getActiveMemoWithTagRefs(id.value) ?: return null
         return memo.toDomain()
     }
 
@@ -53,19 +57,22 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
     }
 
     override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
-        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+        val affected = memoDao.moveMemoToTrash(id.value, deletedAt.value)
+        check(affected > 0) { "Memo not found or already trashed: ${id.value}" }
     }
 
     override suspend fun restoreMemoFromTrash(id: MemoId) {
-        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+        val affected = memoDao.restoreMemoFromTrash(id.value)
+        check(affected > 0) { "Memo not found or not in trash: ${id.value}" }
     }
 
     override suspend fun deleteMemoPermanently(id: MemoId) {
-        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+        val affected = memoDao.deleteMemoPermanently(id.value)
+        check(affected > 0) { "Memo not found or not in trash: ${id.value}" }
     }
 
     override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
-        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+        memoDao.deleteTrashedMemosDeletedAtOrBefore(cutoff.value)
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {

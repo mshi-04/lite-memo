@@ -46,7 +46,8 @@ class LiteMemoMigrationInstrumentedTest {
                 body = "Body",
                 createdAt = 1_000L,
                 updatedAt = 2_000L,
-                isImportant = 1,
+                isFavorite = 1,
+                deletedAt = null,
                 tagId = "tag-1",
                 position = 0
             ),
@@ -56,8 +57,11 @@ class LiteMemoMigrationInstrumentedTest {
 
     private fun SupportSQLiteDatabase.insertMemo() {
         execSQL(
-            "INSERT INTO memos (id, title, body, createdAt, updatedAt, isImportant) VALUES (?, ?, ?, ?, ?, ?)",
-            arrayOf<Any>("memo-1", "Title", "Body", 1_000L, 2_000L, 1)
+            """
+            INSERT INTO memos (id, title, body, createdAt, updatedAt, isFavorite, deletedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            arrayOf<Any?>("memo-1", "Title", "Body", 1_000L, 2_000L, 1, null)
         )
     }
 
@@ -77,7 +81,8 @@ class LiteMemoMigrationInstrumentedTest {
 
     private fun SupportSQLiteDatabase.readMemoWithTagRef(): StoredMemoWithTagRef = query(
         """
-        SELECT memos.title, memos.body, memos.createdAt, memos.updatedAt, memos.isImportant,
+        SELECT memos.title, memos.body, memos.createdAt, memos.updatedAt,
+            memos.isFavorite, memos.deletedAt,
             memo_tag_refs.tagId, memo_tag_refs.position
         FROM memos
         INNER JOIN memo_tag_refs ON memo_tag_refs.memoId = memos.id
@@ -91,7 +96,12 @@ class LiteMemoMigrationInstrumentedTest {
             body = cursor.getString(cursor.getColumnIndexOrThrow("body")),
             createdAt = cursor.getLong(cursor.getColumnIndexOrThrow("createdAt")),
             updatedAt = cursor.getLong(cursor.getColumnIndexOrThrow("updatedAt")),
-            isImportant = cursor.getInt(cursor.getColumnIndexOrThrow("isImportant")),
+            isFavorite = cursor.getInt(cursor.getColumnIndexOrThrow("isFavorite")),
+            deletedAt = if (cursor.isNull(cursor.getColumnIndexOrThrow("deletedAt"))) {
+                null
+            } else {
+                cursor.getLong(cursor.getColumnIndexOrThrow("deletedAt"))
+            },
             tagId = cursor.getString(cursor.getColumnIndexOrThrow("tagId")),
             position = cursor.getInt(cursor.getColumnIndexOrThrow("position"))
         )
@@ -102,7 +112,8 @@ class LiteMemoMigrationInstrumentedTest {
         val body: String,
         val createdAt: Long,
         val updatedAt: Long,
-        val isImportant: Int,
+        val isFavorite: Int,
+        val deletedAt: Long?,
         val tagId: String,
         val position: Int
     )
