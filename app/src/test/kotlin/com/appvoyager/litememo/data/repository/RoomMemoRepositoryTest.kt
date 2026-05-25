@@ -366,7 +366,7 @@ class RoomMemoRepositoryTest {
             memosWithTagRefs.map { list ->
                 list
                     .filter { it.memo.deletedAt != null }
-                    .sortedByDescending { it.memo.deletedAt ?: Long.MIN_VALUE }
+                    .sortedByDescending { it.memo.deletedAt }
             }
 
         override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
