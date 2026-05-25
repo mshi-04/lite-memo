@@ -92,7 +92,7 @@ class RoomMemoRepositoryTest {
         ).first()
 
         // Assert
-        assertEquals(1_000L to 2_000L, dao.observedRange)
+        assertEquals(ObservedRange(fromMillis = 1_000L, toMillis = 2_000L), dao.observedRange)
     }
 
     @Test
@@ -216,6 +216,25 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun observeTrashedMemosReturnsOnlyTrashedMemosOrderedByDeletedAtDescending() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            memosWithTagRefs = listOf(
+                memoWithTagRefs(memoId = "memo-active"),
+                memoWithTagRefs(memoId = "memo-old", deletedAt = 1_000L),
+                memoWithTagRefs(memoId = "memo-new", deletedAt = 2_000L)
+            )
+        )
+        val repository = RoomMemoRepository(dao)
+
+        // Act
+        val memos = repository.observeTrashedMemos().first()
+
+        // Assert
+        assertEquals(listOf(MemoId("memo-new"), MemoId("memo-old")), memos.map { it.id })
+    }
+
+    @Test
     fun moveMemoToTrashDelegatesMemoIdAndDeletedAtValuesToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
@@ -225,7 +244,7 @@ class RoomMemoRepositoryTest {
         repository.moveMemoToTrash(MemoId("memo-1"), TimestampMillis(2_000L))
 
         // Assert
-        assertEquals("memo-1" to 2_000L, dao.movedToTrash)
+        assertEquals(MovedToTrashRecord(memoId = "memo-1", deletedAt = 2_000L), dao.movedToTrash)
     }
 
     @Test
@@ -298,6 +317,10 @@ class RoomMemoRepositoryTest {
         tagRefs = tagRefs
     )
 
+    private data class MovedToTrashRecord(val memoId: String, val deletedAt: Long)
+
+    private data class ObservedRange(val fromMillis: Long, val toMillis: Long)
+
     private class FakeMemoDao(
         memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),
         private val failOnObserveMemosBetween: Boolean = false,
@@ -307,11 +330,11 @@ class RoomMemoRepositoryTest {
         private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
-        var movedToTrash: Pair<String, Long>? = null
+        var movedToTrash: MovedToTrashRecord? = null
         var restoredMemoId: String? = null
         var permanentlyDeletedMemoId: String? = null
         var purgeCutoff: Long? = null
-        var observedRange: Pair<Long, Long>? = null
+        var observedRange: ObservedRange? = null
         var observedSearchPattern: String? = null
 
         override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
@@ -330,7 +353,7 @@ class RoomMemoRepositoryTest {
             if (failOnObserveMemosBetween) {
                 fail<Nothing>("observeActiveMemosWithTagRefsCreatedBetween should not be called.")
             }
-            observedRange = fromMillis to toMillis
+            observedRange = ObservedRange(fromMillis = fromMillis, toMillis = toMillis)
             return memosWithTagRefs.map { list ->
                 list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
             }
@@ -340,7 +363,11 @@ class RoomMemoRepositoryTest {
             memosWithTagRefs.value.firstOrNull { it.memo.id == id }
 
         override fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
-            memosWithTagRefs
+            memosWithTagRefs.map { list ->
+                list
+                    .filter { it.memo.deletedAt != null }
+                    .sortedByDescending { it.memo.deletedAt ?: Long.MIN_VALUE }
+            }
 
         override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
             savedMemo = memo
@@ -360,7 +387,7 @@ class RoomMemoRepositoryTest {
         }
 
         override suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int {
-            movedToTrash = id to deletedAt
+            movedToTrash = MovedToTrashRecord(memoId = id, deletedAt = deletedAt)
             return 1
         }
 
