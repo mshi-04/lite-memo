@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
+import com.appvoyager.litememo.domain.TrashMoveRecord
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
@@ -26,7 +27,11 @@ class MoveMemoToTrashUseCaseTest {
         useCase(memo.id)
 
         // Assert
-        assertEquals(listOf(memo.id to TimestampMillis(2_000L)), repository.movedToTrash)
+        val expected = TrashMoveRecord(
+            memoId = memo.id,
+            deletedAt = TimestampMillis(2_000L)
+        )
+        assertEquals(listOf(expected), repository.movedToTrash)
     }
 
     @Test
@@ -43,7 +48,11 @@ class MoveMemoToTrashUseCaseTest {
         useCase(memo.id)
 
         // Assert
-        assertEquals(listOf(memo.id to TimestampMillis(2_000L)), repository.movedToTrash)
+        val expected = TrashMoveRecord(
+            memoId = memo.id,
+            deletedAt = TimestampMillis(2_000L)
+        )
+        assertEquals(listOf(expected), repository.movedToTrash)
     }
 
     @Test

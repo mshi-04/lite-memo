@@ -57,11 +57,13 @@ fun tagFixture(
 
 fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
 
+data class TrashMoveRecord(val memoId: MemoId, val deletedAt: TimestampMillis)
+
 class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepository {
 
     private val memos = MutableStateFlow(initialMemos)
     val savedMemos = mutableListOf<Memo>()
-    val movedToTrash = mutableListOf<Pair<MemoId, TimestampMillis>>()
+    val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
     val purgeCutoffs = mutableListOf<TimestampMillis>()
@@ -105,7 +107,7 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     }
 
     override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
-        movedToTrash += id to deletedAt
+        movedToTrash += TrashMoveRecord(memoId = id, deletedAt = deletedAt)
         memos.value = memos.value.map { memo ->
             if (memo.id == id && memo.deletedAt == null) memo.copy(deletedAt = deletedAt) else memo
         }
