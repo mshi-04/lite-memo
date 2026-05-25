@@ -16,4 +16,8 @@ interface TagRepository {
 
     suspend fun deleteTag(id: TagId)
 
+    suspend fun getAllTags(): List<Tag>
+
+    suspend fun saveAllTags(tags: List<Tag>)
+
 }

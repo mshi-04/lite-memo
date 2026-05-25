@@ -117,6 +117,10 @@ class LiteMemoAppViewModelTest {
         override suspend fun deleteMemoPermanently(id: MemoId) = Unit
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
+
+        override suspend fun getAllActiveMemos(): List<Memo> = emptyList()
+
+        override suspend fun saveAllMemos(memos: List<Memo>) = Unit
     }
 
     private class FixedTimeProvider : CurrentTimeProvider {

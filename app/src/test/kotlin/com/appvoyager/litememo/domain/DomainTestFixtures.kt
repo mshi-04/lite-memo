@@ -136,6 +136,13 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         }
     }
 
+    override suspend fun getAllActiveMemos(): List<Memo> =
+        memos.value.filter { it.deletedAt == null }
+
+    override suspend fun saveAllMemos(memos: List<Memo>) {
+        memos.forEach { saveMemo(it) }
+    }
+
     fun currentMemos(): List<Memo> = memos.value
 
 }
@@ -184,6 +191,12 @@ class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
     override suspend fun deleteTag(id: TagId) {
         deletedIds += id
         tags.value = tags.value.filterNot { it.id == id }
+    }
+
+    override suspend fun getAllTags(): List<Tag> = tags.value
+
+    override suspend fun saveAllTags(tags: List<Tag>) {
+        tags.forEach { saveTag(it) }
     }
 
     fun currentTags(): List<Tag> = tags.value
