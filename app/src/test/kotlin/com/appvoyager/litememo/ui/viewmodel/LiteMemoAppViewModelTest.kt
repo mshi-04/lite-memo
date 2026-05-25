@@ -91,15 +91,13 @@ class LiteMemoAppViewModelTest {
         assertNull(event)
     }
 
-    private class ThrowingRestoreMemoRepository(
-        private val throwable: Throwable
-    ) : MemoRepository {
+    private class ThrowingRestoreMemoRepository(private val throwable: Throwable) :
+        MemoRepository {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
-        override fun observeActiveMemosBySearchQuery(
-            query: SearchQuery
-        ): Flow<List<Memo>> = flowOf(emptyList())
+        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+            flowOf(emptyList())
 
         override fun observeActiveMemosCreatedBetween(
             from: TimestampMillis,
@@ -112,23 +110,16 @@ class LiteMemoAppViewModelTest {
 
         override suspend fun saveMemo(memo: Memo): Unit = throw throwable
 
-        override suspend fun moveMemoToTrash(
-            id: MemoId,
-            deletedAt: TimestampMillis
-        ) = Unit
+        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
 
-        override suspend fun restoreMemoFromTrash(id: MemoId): Unit =
-            throw throwable
+        override suspend fun restoreMemoFromTrash(id: MemoId): Unit = throw throwable
 
         override suspend fun deleteMemoPermanently(id: MemoId) = Unit
 
-        override suspend fun deleteTrashedMemosDeletedAtOrBefore(
-            cutoff: TimestampMillis
-        ) = Unit
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
     }
 
     private class FixedTimeProvider : CurrentTimeProvider {
-        override fun now(): TimestampMillis =
-            TimestampMillis(30L * 24L * 60L * 60L * 1_000L)
+        override fun now(): TimestampMillis = TimestampMillis(30L * 24L * 60L * 60L * 1_000L)
     }
 }
