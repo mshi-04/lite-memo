@@ -1,5 +1,8 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
+
 data class TrashUiState(
     val isLoading: Boolean = true,
     val hasError: Boolean = false,
@@ -9,9 +12,9 @@ data class TrashUiState(
 )
 
 data class TrashedMemoUiModel(
-    val id: String,
+    val id: MemoId,
     val title: String,
     val body: String,
     val tags: List<TagUiModel>,
-    val deletedAtMillis: Long
+    val deletedAt: TimestampMillis
 )

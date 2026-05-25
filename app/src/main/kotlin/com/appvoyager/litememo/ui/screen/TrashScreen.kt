@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
@@ -55,7 +57,7 @@ import java.util.Locale
 fun TrashScreen(
     uiState: TrashUiState,
     onBackClick: () -> Unit,
-    onRestoreClick: (String) -> Unit,
+    onRestoreClick: (MemoId) -> Unit,
     onPermanentDeleteRequest: (TrashedMemoUiModel) -> Unit,
     onConfirmPermanentDelete: () -> Unit,
     onDismissPermanentDelete: () -> Unit,
@@ -202,7 +204,7 @@ private fun TrashedMemoCard(
                 Text(
                     text = stringResource(
                         R.string.trash_deleted_at_label,
-                        deletedAtLabel(memo.deletedAtMillis)
+                        deletedAtLabel(memo.deletedAt)
                     ),
                     modifier = Modifier.weight(1f),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -224,13 +226,13 @@ private fun TrashedMemoCard(
 }
 
 @Composable
-private fun deletedAtLabel(deletedAtMillis: Long): String {
+private fun deletedAtLabel(deletedAt: TimestampMillis): String {
     val zoneId = remember { ZoneId.systemDefault() }
     val formatter = remember { DateTimeFormatter.ofPattern("yyyy/M/d H:mm", Locale.getDefault()) }
-    val deletedAt = remember(deletedAtMillis, zoneId) {
-        Instant.ofEpochMilli(deletedAtMillis).atZone(zoneId)
+    val deletedAtDateTime = remember(deletedAt, zoneId) {
+        Instant.ofEpochMilli(deletedAt.value).atZone(zoneId)
     }
-    return formatter.format(deletedAt)
+    return formatter.format(deletedAtDateTime)
 }
 
 @Preview(showBackground = true, name = "メモ一覧")
@@ -242,11 +244,11 @@ private fun TrashScreenPreview() {
                 isLoading = false,
                 memos = listOf(
                     TrashedMemoUiModel(
-                        id = "memo-1",
+                        id = MemoId("memo-1"),
                         title = "買い物メモ",
                         body = "牛乳、卵、コーヒー",
                         tags = listOf(TagUiModel("tag-1", "生活", 0xFF6750A4)),
-                        deletedAtMillis = 1_000L
+                        deletedAt = TimestampMillis(1_000L)
                     )
                 )
             ),

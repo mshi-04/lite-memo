@@ -4,6 +4,7 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.DeleteMemoPermanentlyUseCase
@@ -64,7 +65,7 @@ class TrashViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.restoreMemo("memo-1")
+        viewModel.restoreMemo(MemoId("memo-1"))
         advanceUntilIdle()
 
         // Assert
@@ -87,6 +88,19 @@ class TrashViewModelTest {
 
         // Assert
         assertEquals(listOf(memo.id), repository.permanentlyDeletedIds)
+    }
+
+    @Test
+    fun initTriggersExpiredTrashPurge() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeMemoRepository(listOf(memoFixture(deletedAt = 2_000L)))
+
+        // Act
+        trashViewModel(memoRepository = repository)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(listOf(TimestampMillis(0L)), repository.purgeCutoffs)
     }
 
     private fun trashViewModel(

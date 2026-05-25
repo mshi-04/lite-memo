@@ -44,6 +44,7 @@ class TrashViewModel @Inject constructor(
 
     private val retryTrigger = MutableStateFlow(0)
     private val hasActionError = MutableStateFlow(false)
+    private val hasPurgeError = MutableStateFlow(false)
     private val permanentDeleteDialog = MutableStateFlow<TrashedMemoUiModel?>(null)
 
     private val observedData = retryTrigger.flatMapLatest {
@@ -62,9 +63,10 @@ class TrashViewModel @Inject constructor(
     val uiState: StateFlow<TrashUiState> = combine(
         observedData,
         hasActionError,
+        hasPurgeError,
         permanentDeleteDialog
-    ) { observed, actionError, dialog ->
-        val hasError = observed.memos == null || observed.tags == null
+    ) { observed, actionError, purgeError, dialog ->
+        val hasError = observed.memos == null || observed.tags == null || purgeError
         TrashUiState(
             isLoading = false,
             hasError = hasError,
@@ -85,10 +87,10 @@ class TrashViewModel @Inject constructor(
         initialValue = TrashUiState()
     )
 
-    fun restoreMemo(id: String) {
+    fun restoreMemo(id: MemoId) {
         viewModelScope.launch {
             try {
-                restoreMemoFromTrashUseCase(MemoId(id))
+                restoreMemoFromTrashUseCase(id)
                 hasActionError.value = false
             } catch (e: CancellationException) {
                 throw e
@@ -110,7 +112,7 @@ class TrashViewModel @Inject constructor(
         val memo = permanentDeleteDialog.value ?: return
         viewModelScope.launch {
             try {
-                deleteMemoPermanentlyUseCase(MemoId(memo.id))
+                deleteMemoPermanentlyUseCase(memo.id)
                 permanentDeleteDialog.value = null
                 hasActionError.value = false
             } catch (e: CancellationException) {
@@ -128,6 +130,8 @@ class TrashViewModel @Inject constructor(
 
     fun retry() {
         hasActionError.value = false
+        hasPurgeError.value = false
+        purgeExpiredTrashedMemos()
         retryTrigger.update { it + 1 }
     }
 
@@ -138,6 +142,7 @@ class TrashViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
+                hasPurgeError.value = true
             }
         }
     }
@@ -147,13 +152,13 @@ class TrashViewModel @Inject constructor(
         return memos.mapNotNull { memo ->
             val deletedAt = memo.deletedAt ?: return@mapNotNull null
             TrashedMemoUiModel(
-                id = memo.id.value,
+                id = memo.id,
                 title = memo.title.value,
                 body = memo.body.value,
                 tags = memo.tagIds.mapNotNull { id ->
                     tagsById[id]?.let { TagUiModel.fromDomain(it) }
                 },
-                deletedAtMillis = deletedAt.value
+                deletedAt = deletedAt
             )
         }
     }
