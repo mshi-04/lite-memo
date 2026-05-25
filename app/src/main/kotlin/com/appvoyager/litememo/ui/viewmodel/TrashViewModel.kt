@@ -10,6 +10,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
+import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.state.TrashUiState
 import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,7 +55,7 @@ class TrashViewModel @Inject constructor(
                 .map<List<Tag>, List<Tag>?> { it }
                 .catch { emit(null) }
         ) { memos, tags ->
-            ObservedData(memos = memos, tags = tags)
+            ObservedTrashData(memos = memos, tags = tags)
         }
     }
 
@@ -69,7 +70,7 @@ class TrashViewModel @Inject constructor(
             hasError = hasError,
             hasActionError = actionError,
             memos = if (!hasError) {
-                TrashedMemoUiModel.fromDomain(
+                toUiModels(
                     memos = requireNotNull(observed.memos),
                     tags = requireNotNull(observed.tags)
                 )
@@ -141,5 +142,21 @@ class TrashViewModel @Inject constructor(
         }
     }
 
-    private data class ObservedData(val memos: List<Memo>?, val tags: List<Tag>?)
+    private fun toUiModels(memos: List<Memo>, tags: List<Tag>): List<TrashedMemoUiModel> {
+        val tagsById = tags.associateBy { it.id }
+        return memos.mapNotNull { memo ->
+            val deletedAt = memo.deletedAt ?: return@mapNotNull null
+            TrashedMemoUiModel(
+                id = memo.id.value,
+                title = memo.title.value,
+                body = memo.body.value,
+                tags = memo.tagIds.mapNotNull { id ->
+                    tagsById[id]?.let { TagUiModel.fromDomain(it) }
+                },
+                deletedAtMillis = deletedAt.value
+            )
+        }
+    }
+
+    private data class ObservedTrashData(val memos: List<Memo>?, val tags: List<Tag>?)
 }

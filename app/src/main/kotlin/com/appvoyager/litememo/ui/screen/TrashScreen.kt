@@ -1,9 +1,7 @@
 package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -12,11 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,8 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.component.ErrorContent
+import com.appvoyager.litememo.ui.component.TagChip
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.state.TagUiModel
@@ -54,6 +48,7 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -198,7 +193,7 @@ private fun TrashedMemoCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     memo.tags.forEach { tag ->
-                        TrashTag(tag = tag)
+                        TagChip(tag = tag)
                     }
                 }
             }
@@ -229,44 +224,16 @@ private fun TrashedMemoCard(
 }
 
 @Composable
-private fun TrashTag(tag: TagUiModel?) {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (tag != null) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(Color(tag.colorArgb.toInt()))
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-        }
-        Text(
-            text = tag?.name ?: stringResource(R.string.unorganized_label),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
 private fun deletedAtLabel(deletedAtMillis: Long): String {
     val zoneId = remember { ZoneId.systemDefault() }
-    val formatter = remember { DateTimeFormatter.ofPattern("yyyy/M/d H:mm") }
+    val formatter = remember { DateTimeFormatter.ofPattern("yyyy/M/d H:mm", Locale.getDefault()) }
     val deletedAt = remember(deletedAtMillis, zoneId) {
         Instant.ofEpochMilli(deletedAtMillis).atZone(zoneId)
     }
     return formatter.format(deletedAt)
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "メモ一覧")
 @Composable
 private fun TrashScreenPreview() {
     LiteMemoTheme {
@@ -283,6 +250,57 @@ private fun TrashScreenPreview() {
                     )
                 )
             ),
+            onBackClick = {},
+            onRestoreClick = {},
+            onPermanentDeleteRequest = {},
+            onConfirmPermanentDelete = {},
+            onDismissPermanentDelete = {},
+            onDismissActionError = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "空状態")
+@Composable
+private fun TrashScreenEmptyPreview() {
+    LiteMemoTheme {
+        TrashScreen(
+            uiState = TrashUiState(isLoading = false),
+            onBackClick = {},
+            onRestoreClick = {},
+            onPermanentDeleteRequest = {},
+            onConfirmPermanentDelete = {},
+            onDismissPermanentDelete = {},
+            onDismissActionError = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "読み込み中")
+@Composable
+private fun TrashScreenLoadingPreview() {
+    LiteMemoTheme {
+        TrashScreen(
+            uiState = TrashUiState(isLoading = true),
+            onBackClick = {},
+            onRestoreClick = {},
+            onPermanentDeleteRequest = {},
+            onConfirmPermanentDelete = {},
+            onDismissPermanentDelete = {},
+            onDismissActionError = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "エラー")
+@Composable
+private fun TrashScreenErrorPreview() {
+    LiteMemoTheme {
+        TrashScreen(
+            uiState = TrashUiState(isLoading = false, hasError = true),
             onBackClick = {},
             onRestoreClick = {},
             onPermanentDeleteRequest = {},
