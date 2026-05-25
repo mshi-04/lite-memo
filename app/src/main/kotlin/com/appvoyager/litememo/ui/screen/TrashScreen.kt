@@ -38,9 +38,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.component.ErrorContent
-import com.appvoyager.litememo.ui.component.TagChip
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.component.TagChip
 import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.state.TrashUiState
 import com.appvoyager.litememo.ui.state.TrashedMemoUiModel

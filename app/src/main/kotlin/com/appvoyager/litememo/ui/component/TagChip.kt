@@ -23,10 +23,7 @@ import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.TagUiModel
 
 @Composable
-fun TagChip(
-    tag: TagUiModel?,
-    modifier: Modifier = Modifier
-) {
+fun TagChip(tag: TagUiModel?, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
