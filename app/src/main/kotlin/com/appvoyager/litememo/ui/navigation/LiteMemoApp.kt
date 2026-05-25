@@ -33,11 +33,13 @@ import com.appvoyager.litememo.ui.screen.MemoEditRoute
 import com.appvoyager.litememo.ui.screen.OssLicensesRoute
 import com.appvoyager.litememo.ui.screen.SettingsRoute
 import com.appvoyager.litememo.ui.screen.TagManageRoute
+import com.appvoyager.litememo.ui.screen.TrashRoute
 import com.appvoyager.litememo.ui.viewmodel.LiteMemoAppViewModel
 import kotlinx.coroutines.launch
 
 private const val OSS_LICENSES_ROUTE = "oss_licenses"
 private const val TAG_MANAGE_ROUTE = "tag_manage"
+private const val TRASH_ROUTE = "trash"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
 private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
@@ -133,7 +135,15 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
                     },
                     onTagManageClick = {
                         navController.navigate(TAG_MANAGE_ROUTE)
+                    },
+                    onTrashClick = {
+                        navController.navigate(TRASH_ROUTE)
                     }
+                )
+            }
+            composable(TRASH_ROUTE) {
+                TrashRoute(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable(TAG_MANAGE_ROUTE) {
