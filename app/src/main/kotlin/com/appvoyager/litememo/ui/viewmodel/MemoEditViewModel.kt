@@ -13,9 +13,9 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.ClearMemoEditDraftUseCase
-import com.appvoyager.litememo.domain.usecase.DeleteMemoUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
+import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
@@ -41,7 +41,7 @@ class MemoEditViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getMemoUseCase: GetMemoUseCase,
     private val saveMemoUseCase: SaveMemoUseCase,
-    private val deleteMemoUseCase: DeleteMemoUseCase,
+    private val moveMemoToTrashUseCase: MoveMemoToTrashUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val getMemoEditDraftUseCase: GetMemoEditDraftUseCase,
     private val saveMemoEditDraftUseCase: SaveMemoEditDraftUseCase,
@@ -199,15 +199,12 @@ class MemoEditViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
             try {
-                val memo = requireNotNull(getMemoUseCase(MemoId(id))) {
-                    "Memo not found: $id"
-                }
-                deleteMemoUseCase(MemoId(id))
+                val memoId = moveMemoToTrashUseCase(MemoId(id))
                 autosaveJob?.cancel()
                 clearDraft()
                 clearSavedState()
                 shouldPersistDraft = false
-                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memo))
+                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memoId))
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -374,5 +371,5 @@ class MemoEditViewModel @Inject constructor(
 
 sealed interface MemoEditNavigationEvent {
     data object NavigateBack : MemoEditNavigationEvent
-    data class MemoDeleted(val memo: Memo) : MemoEditNavigationEvent
+    data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent
 }

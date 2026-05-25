@@ -26,6 +26,20 @@ class ObserveMemosUseCaseTest {
     }
 
     @Test
+    fun invokeExcludesTrashedMemos() = runTest {
+        // Arrange
+        val active = memoFixture(id = "active")
+        val trashed = memoFixture(id = "trashed", deletedAt = 2_000L)
+        val repository = FakeMemoRepository(listOf(active, trashed))
+
+        // Act
+        val memos = ObserveMemosUseCase(repository, FakeUserSettingsRepository())().first()
+
+        // Assert
+        assertEquals(listOf(active.id), memos.map { it.id })
+    }
+
+    @Test
     fun invokeReturnsFavoriteMemosBeforeNormalMemos() = runTest {
         // Arrange
         val normal = memoFixture(id = "normal", updatedAt = 2000L)

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 class RoomMemoRepositoryTest {
 
     @Test
-    fun observeMemosReturnsDomainMemosFromDao() = runTest {
+    fun observeActiveMemosReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(
@@ -38,27 +38,27 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemos().first()
+        val memos = repository.observeActiveMemos().first()
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
     }
 
     @Test
-    fun observeMemosBySearchQueryDelegatesEscapedLikePatternToDao() = runTest {
+    fun observeActiveMemosBySearchQueryDelegatesEscapedLikePatternToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
         // Act
-        repository.observeMemosBySearchQuery(SearchQuery("100%_\\")).first()
+        repository.observeActiveMemosBySearchQuery(SearchQuery("100%_\\")).first()
 
         // Assert
         assertEquals("%100\\%\\_\\\\%", dao.observedSearchPattern)
     }
 
     @Test
-    fun observeMemosBySearchQueryReturnsDomainMemosFromDao() = runTest {
+    fun observeActiveMemosBySearchQueryReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(
@@ -73,20 +73,22 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemosBySearchQuery(SearchQuery("title")).first()
+        val memos = repository.observeActiveMemosBySearchQuery(
+            SearchQuery("title")
+        ).first()
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
     }
 
     @Test
-    fun observeMemosCreatedBetweenDelegatesTimestampValuesToDao() = runTest {
+    fun observeActiveMemosCreatedBetweenDelegatesTimestampValuesToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = RoomMemoRepository(dao)
 
         // Act
-        repository.observeMemosCreatedBetween(
+        repository.observeActiveMemosCreatedBetween(
             from = TimestampMillis(1_000L),
             to = TimestampMillis(2_000L)
         ).first()
@@ -96,7 +98,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosCreatedBetweenReturnsDomainMemosFromDao() = runTest {
+    fun observeActiveMemosCreatedBetweenReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(memoWithTagRefs(memoId = "memo-1"))
@@ -104,7 +106,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemosCreatedBetween(
+        val memos = repository.observeActiveMemosCreatedBetween(
             from = TimestampMillis(500L),
             to = TimestampMillis(2_000L)
         ).first()
@@ -114,7 +116,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
+    fun observeActiveMemosCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithTagRefs = listOf(
@@ -127,7 +129,7 @@ class RoomMemoRepositoryTest {
         val repository = RoomMemoRepository(dao)
 
         // Act
-        val memos = repository.observeMemosCreatedBetween(
+        val memos = repository.observeActiveMemosCreatedBetween(
             from = TimestampMillis(1_000L),
             to = TimestampMillis(2_000L)
         ).first()
@@ -137,14 +139,14 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosCreatedBetweenWithEqualRangeThrowsBeforeCallingDao() {
+    fun observeActiveMemosCreatedBetweenWithEqualRangeThrowsBeforeCallingDao() {
         // Arrange
         val dao = FakeMemoDao(failOnObserveMemosBetween = true)
         val repository = RoomMemoRepository(dao)
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            repository.observeMemosCreatedBetween(
+            repository.observeActiveMemosCreatedBetween(
                 from = TimestampMillis(1_000L),
                 to = TimestampMillis(1_000L)
             )
@@ -152,14 +154,14 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeMemosCreatedBetweenWithDescendingRangeThrowsBeforeCallingDao() {
+    fun observeActiveMemosCreatedBetweenWithDescendingRangeThrowsBeforeCallingDao() {
         // Arrange
         val dao = FakeMemoDao(failOnObserveMemosBetween = true)
         val repository = RoomMemoRepository(dao)
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            repository.observeMemosCreatedBetween(
+            repository.observeActiveMemosCreatedBetween(
                 from = TimestampMillis(2_000L),
                 to = TimestampMillis(1_000L)
             )
@@ -167,12 +169,12 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun getMemoReturnsNullWhenDaoReturnsNull() = runTest {
+    fun getActiveMemoReturnsNullWhenDaoReturnsNull() = runTest {
         // Arrange
         val repository = RoomMemoRepository(FakeMemoDao())
 
         // Act
-        val memo = repository.getMemo(MemoId("missing"))
+        val memo = repository.getActiveMemo(MemoId("missing"))
 
         // Assert
         assertNull(memo)
@@ -215,19 +217,6 @@ class RoomMemoRepositoryTest {
         )
     }
 
-    @Test
-    fun deleteMemoDelegatesMemoIdValueToDao() = runTest {
-        // Arrange
-        val dao = FakeMemoDao()
-        val repository = RoomMemoRepository(dao)
-
-        // Act
-        repository.deleteMemo(MemoId("memo-1"))
-
-        // Assert
-        assertEquals("memo-1", dao.deletedMemoId)
-    }
-
     private fun memoWithTagRefs(
         memoId: String,
         createdAt: Long = 1000L,
@@ -253,7 +242,6 @@ class RoomMemoRepositoryTest {
         private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
-        var deletedMemoId: String? = null
         var observedRange: Pair<Long, Long>? = null
         var observedSearchPattern: String? = null
 
@@ -300,7 +288,7 @@ class RoomMemoRepositoryTest {
         }
 
         override suspend fun deleteMemo(id: String) {
-            deletedMemoId = id
+            // no-op
         }
     }
 

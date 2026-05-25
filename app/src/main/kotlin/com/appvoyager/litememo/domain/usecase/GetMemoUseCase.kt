@@ -7,6 +7,6 @@ import javax.inject.Inject
 
 class GetMemoUseCase @Inject constructor(private val memoRepository: MemoRepository) {
 
-    suspend operator fun invoke(id: MemoId): Memo? = memoRepository.getMemo(id)
+    suspend operator fun invoke(id: MemoId): Memo? = memoRepository.getActiveMemo(id)
 
 }

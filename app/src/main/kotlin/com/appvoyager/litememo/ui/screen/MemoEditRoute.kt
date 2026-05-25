@@ -9,14 +9,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.viewmodel.MemoEditNavigationEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
-    onMemoDeleted: (Memo) -> Unit,
+    onMemoDeleted: (MemoId) -> Unit,
     onDraftError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MemoEditViewModel = hiltViewModel()
@@ -27,7 +27,7 @@ fun MemoEditRoute(
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 MemoEditNavigationEvent.NavigateBack -> onNavigateBack()
-                is MemoEditNavigationEvent.MemoDeleted -> onMemoDeleted(event.memo)
+                is MemoEditNavigationEvent.MemoDeleted -> onMemoDeleted(event.memoId)
             }
         }
     }

@@ -22,7 +22,7 @@ class SaveMemoUseCase @Inject constructor(
         }
         val now = currentTimeProvider.now()
         val existingMemo = command.id?.let { id ->
-            requireNotNull(memoRepository.getMemo(id)) { "Memo not found: ${id.value}" }
+            requireNotNull(memoRepository.getActiveMemo(id)) { "Memo not found: ${id.value}" }
         }
         val tagIds = command.tagIds.distinct()
         validateTagIds(tagIds)

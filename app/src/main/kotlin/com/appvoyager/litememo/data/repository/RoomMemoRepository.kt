@@ -11,22 +11,24 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : MemoRepository {
 
-    override fun observeMemos(): Flow<List<Memo>> = memoDao.observeMemosWithTagRefs().map { memos ->
-        memos.map { memo -> memo.toDomain() }
-    }
+    override fun observeActiveMemos(): Flow<List<Memo>> =
+        memoDao.observeMemosWithTagRefs().map { memos ->
+            memos.map { memo -> memo.toDomain() }
+        }
 
-    override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+    override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
         memoDao.observeMemosWithTagRefsBySearchPattern(
             query.value.toEscapedLikePattern()
         ).map { memos ->
             memos.map { memo -> memo.toDomain() }
         }
 
-    override fun observeMemosCreatedBetween(
+    override fun observeActiveMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis
     ): Flow<List<Memo>> {
@@ -36,7 +38,9 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         }
     }
 
-    override suspend fun getMemo(id: MemoId): Memo? {
+    override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
+
+    override suspend fun getActiveMemo(id: MemoId): Memo? {
         val memo = memoDao.getMemoWithTagRefs(id.value) ?: return null
         return memo.toDomain()
     }
@@ -48,8 +52,20 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         )
     }
 
-    override suspend fun deleteMemo(id: MemoId) {
-        memoDao.deleteMemo(id.value)
+    override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+    }
+
+    override suspend fun restoreMemoFromTrash(id: MemoId) {
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+    }
+
+    override suspend fun deleteMemoPermanently(id: MemoId) {
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
+    }
+
+    override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
+        // no-op: DAO の deletedAt 対応は feature/trash-data で実装
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {

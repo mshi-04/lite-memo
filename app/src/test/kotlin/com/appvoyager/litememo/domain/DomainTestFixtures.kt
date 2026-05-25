@@ -30,7 +30,8 @@ fun memoFixture(
     createdAt: Long = 1000L,
     updatedAt: Long = createdAt,
     tagIds: List<TagId> = emptyList(),
-    isFavorite: Boolean = false
+    isFavorite: Boolean = false,
+    deletedAt: Long? = null
 ) = Memo(
     id = MemoId(id),
     title = MemoTitle(title),
@@ -38,7 +39,8 @@ fun memoFixture(
     createdAt = TimestampMillis(createdAt),
     updatedAt = TimestampMillis(updatedAt),
     tagIds = tagIds,
-    isFavorite = isFavorite
+    isFavorite = isFavorite,
+    deletedAt = deletedAt?.let { TimestampMillis(it) }
 )
 
 fun tagFixture(
@@ -55,44 +57,83 @@ fun tagFixture(
 
 fun epochMillis(value: String): Long = Instant.parse(value).toEpochMilli()
 
+data class TrashMoveRecord(val memoId: MemoId, val deletedAt: TimestampMillis)
+
 class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepository {
 
     private val memos = MutableStateFlow(initialMemos)
     val savedMemos = mutableListOf<Memo>()
-    val deletedIds = mutableListOf<MemoId>()
+    val movedToTrash = mutableListOf<TrashMoveRecord>()
+    val restoredIds = mutableListOf<MemoId>()
+    val permanentlyDeletedIds = mutableListOf<MemoId>()
+    val purgeCutoffs = mutableListOf<TimestampMillis>()
 
-    override fun observeMemos(): Flow<List<Memo>> = memos
+    override fun observeActiveMemos(): Flow<List<Memo>> =
+        memos.map { list -> list.filter { it.deletedAt == null } }
 
-    override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+    override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
         memos.map { list ->
             list.filter { memo ->
-                memo.title.value.contains(query.value, ignoreCase = true) ||
+                val matchesQuery = memo.title.value.contains(query.value, ignoreCase = true) ||
                     memo.body.value.contains(query.value, ignoreCase = true)
+                memo.deletedAt == null && matchesQuery
             }
         }
 
-    override fun observeMemosCreatedBetween(
+    override fun observeActiveMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis
     ): Flow<List<Memo>> {
         require(from.value < to.value) { "from must be earlier than to." }
         return memos.map { list ->
             list.filter { memo ->
-                memo.createdAt.value >= from.value && memo.createdAt.value < to.value
+                memo.deletedAt == null &&
+                    memo.createdAt.value >= from.value &&
+                    memo.createdAt.value < to.value
             }
         }
     }
 
-    override suspend fun getMemo(id: MemoId): Memo? = memos.value.firstOrNull { it.id == id }
+    override fun observeTrashedMemos(): Flow<List<Memo>> = memos.map { list ->
+        list.filter { it.deletedAt != null }.sortedByDescending { it.deletedAt?.value }
+    }
+
+    override suspend fun getActiveMemo(id: MemoId): Memo? =
+        memos.value.firstOrNull { it.id == id && it.deletedAt == null }
 
     override suspend fun saveMemo(memo: Memo) {
         savedMemos += memo
         memos.value = memos.value.filterNot { it.id == memo.id } + memo
     }
 
-    override suspend fun deleteMemo(id: MemoId) {
-        deletedIds += id
-        memos.value = memos.value.filterNot { it.id == id }
+    override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
+        movedToTrash += TrashMoveRecord(memoId = id, deletedAt = deletedAt)
+        memos.value = memos.value.map { memo ->
+            if (memo.id == id && memo.deletedAt == null) memo.copy(deletedAt = deletedAt) else memo
+        }
+    }
+
+    override suspend fun restoreMemoFromTrash(id: MemoId) {
+        restoredIds += id
+        memos.value = memos.value.map { memo ->
+            if (memo.id == id && memo.deletedAt != null) memo.copy(deletedAt = null) else memo
+        }
+    }
+
+    override suspend fun deleteMemoPermanently(id: MemoId) {
+        val memo = requireNotNull(memos.value.firstOrNull { it.id == id && it.deletedAt != null }) {
+            "Memo not found or not in trash: ${id.value}"
+        }
+        permanentlyDeletedIds += id
+        memos.value = memos.value.filterNot { it.id == memo.id }
+    }
+
+    override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
+        purgeCutoffs += cutoff
+        memos.value = memos.value.filterNot { memo ->
+            val deletedAt = memo.deletedAt ?: return@filterNot false
+            deletedAt.value <= cutoff.value
+        }
     }
 
     fun currentMemos(): List<Memo> = memos.value

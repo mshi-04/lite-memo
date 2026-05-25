@@ -40,6 +40,29 @@ class ObserveMemosByCalendarDateUseCaseTest {
     }
 
     @Test
+    fun invokeExcludesTrashedMemos() = runTest {
+        // Arrange
+        val selectedDate = CalendarDate(LocalDate.of(2026, 5, 11))
+        val active = memoFixture(id = "active", createdAt = epochMillis("2026-05-11T08:00:00Z"))
+        val trashed = memoFixture(
+            id = "trashed",
+            createdAt = epochMillis("2026-05-11T09:00:00Z"),
+            deletedAt = epochMillis("2026-05-12T00:00:00Z")
+        )
+        val repository = FakeMemoRepository(listOf(active, trashed))
+
+        // Act
+        val memos = ObserveMemosByCalendarDateUseCase(
+            repository,
+            FakeUserSettingsRepository(),
+            zoneId
+        )(selectedDate).first()
+
+        // Assert
+        assertEquals(listOf("active"), memos.map { memo -> memo.id.value })
+    }
+
+    @Test
     fun invokeSortsMemosByUpdatedAtDescending() = runTest {
         // Arrange
         val selectedDate = CalendarDate(LocalDate.of(2026, 5, 11))

@@ -19,7 +19,7 @@ class SearchMemosUseCase @Inject constructor(
         val searchQuery = SearchQuery.fromOrNull(query) ?: return flowOf(emptyList())
 
         return combine(
-            memoRepository.observeMemosBySearchQuery(searchQuery),
+            memoRepository.observeActiveMemosBySearchQuery(searchQuery),
             userSettingsRepository.observeMemoSortOrder()
         ) { memos, sortOrder ->
             memos.sortedBy(sortOrder)
