@@ -337,13 +337,14 @@ class RoomMemoRepositoryTest {
         var observedRange: ObservedRange? = null
         var observedSearchPattern: String? = null
 
-        override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> = memosWithTagRefs
+        override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
+            memosWithTagRefs.map { list -> list.filter { it.memo.deletedAt == null } }
 
         override fun observeActiveMemosWithTagRefsBySearchPattern(
             pattern: String
         ): Flow<List<MemoWithTagRefs>> {
             observedSearchPattern = pattern
-            return memosWithTagRefs
+            return memosWithTagRefs.map { list -> list.filter { it.memo.deletedAt == null } }
         }
 
         override fun observeActiveMemosWithTagRefsCreatedBetween(
@@ -355,12 +356,16 @@ class RoomMemoRepositoryTest {
             }
             observedRange = ObservedRange(fromMillis = fromMillis, toMillis = toMillis)
             return memosWithTagRefs.map { list ->
-                list.filter { it.memo.createdAt >= fromMillis && it.memo.createdAt < toMillis }
+                list.filter {
+                    it.memo.deletedAt == null &&
+                        it.memo.createdAt >= fromMillis &&
+                        it.memo.createdAt < toMillis
+                }
             }
         }
 
         override suspend fun getActiveMemoWithTagRefs(id: String): MemoWithTagRefs? =
-            memosWithTagRefs.value.firstOrNull { it.memo.id == id }
+            memosWithTagRefs.value.firstOrNull { it.memo.id == id && it.memo.deletedAt == null }
 
         override fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
             memosWithTagRefs.map { list ->
