@@ -150,7 +150,9 @@ class MemoDaoTest {
                 calls += "deleteTagRefsForMemo:${memo.id}"
                 val refs = tagRefsByMemoId[memo.id].orEmpty()
                 if (refs.isNotEmpty()) {
-                    val joined = refs.joinToString(",") { "${it.memoId}:${it.tagId}:${it.position}" }
+                    val joined = refs.joinToString(",") {
+                        "${it.memoId}:${it.tagId}:${it.position}"
+                    }
                     calls += "insertTagRefs:$joined"
                 }
             }
