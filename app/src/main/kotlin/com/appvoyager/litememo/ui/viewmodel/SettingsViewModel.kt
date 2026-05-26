@@ -3,12 +3,10 @@ package com.appvoyager.litememo.ui.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appvoyager.litememo.data.export.ExportFileReader
-import com.appvoyager.litememo.data.export.ExportFileWriter
-import com.appvoyager.litememo.data.mapper.toDomain
-import com.appvoyager.litememo.data.mapper.toDto
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
+import com.appvoyager.litememo.domain.model.value.ExportFileReference
+import com.appvoyager.litememo.domain.repository.ExportFileRepository
 import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
@@ -37,9 +35,8 @@ class SettingsViewModel @Inject constructor(
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
     private val exportMemosUseCase: ExportMemosUseCase,
     private val importMemosUseCase: ImportMemosUseCase,
-    private val exportFileWriter: ExportFileWriter,
-    private val exportFileReader: ExportFileReader,
-    @Named("appVersion") private val appVersion: String
+    private val exportFileRepository: ExportFileRepository,
+    @param:Named("appVersion") private val appVersion: String
 ) : ViewModel() {
 
     private val showThemeDialog = MutableStateFlow(false)
@@ -62,14 +59,8 @@ class SettingsViewModel @Inject constructor(
             isExporting,
             isImporting,
             showImportConfirmDialog
-        ) { values ->
-            UiFlags(
-                showThemeDialog = values[0] as Boolean,
-                sortOrderExpanded = values[1] as Boolean,
-                isExporting = values[2] as Boolean,
-                isImporting = values[3] as Boolean,
-                showImportConfirmDialog = values[4] as Boolean
-            )
+        ) { dialog, expanded, exporting, importing, importDialog ->
+            UiFlags(dialog, expanded, exporting, importing, importDialog)
         }
     ) { themeMode, sortOrder, flags ->
         SettingsUiState(
@@ -117,7 +108,7 @@ class SettingsViewModel @Inject constructor(
             isExporting.value = true
             try {
                 val exportData = exportMemosUseCase()
-                exportFileWriter.write(uri, exportData.toDto())
+                exportFileRepository.write(ExportFileReference(uri.toString()), exportData)
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ExportSuccess)
             } catch (e: CancellationException) {
                 throw e
@@ -141,8 +132,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isImporting.value = true
             try {
-                val dto = exportFileReader.read(uri)
-                val exportData = dto.toDomain()
+                val exportData = exportFileRepository.read(ExportFileReference(uri.toString()))
                 importMemosUseCase(exportData)
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ImportSuccess)
             } catch (e: CancellationException) {
