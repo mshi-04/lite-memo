@@ -321,6 +321,8 @@ class RoomMemoRepositoryTest {
 
     private data class ObservedRange(val fromMillis: Long, val toMillis: Long)
 
+    private data class SavedMemoBatch(val memo: MemoEntity, val tagRefs: List<MemoTagRefEntity>)
+
     private class FakeMemoDao(
         memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),
         private val failOnObserveMemosBetween: Boolean = false,
@@ -330,7 +332,7 @@ class RoomMemoRepositoryTest {
         private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
-        val savedMemoBatches = mutableListOf<Pair<MemoEntity, List<MemoTagRefEntity>>>()
+        val savedMemoBatches = mutableListOf<SavedMemoBatch>()
         var movedToTrash: MovedToTrashRecord? = null
         var restoredMemoId: String? = null
         var permanentlyDeletedMemoId: String? = null
@@ -378,7 +380,7 @@ class RoomMemoRepositoryTest {
         override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
             savedMemo = memo
             savedTagRefs = tagRefs
-            savedMemoBatches += memo to tagRefs
+            savedMemoBatches += SavedMemoBatch(memo, tagRefs)
         }
 
         override suspend fun upsertMemo(memo: MemoEntity) {
