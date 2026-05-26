@@ -75,9 +75,8 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         memoDao.deleteTrashedMemosDeletedAtOrBefore(cutoff.value)
     }
 
-    override suspend fun getAllActiveMemos(): List<Memo> = memoDao.observeActiveMemosWithTagRefs()
-        .map { memos -> memos.map { it.toDomain() } }
-        .let { TODO("Implement in feature/export-import-data branch") }
+    override suspend fun getAllActiveMemos(): List<Memo> =
+        TODO("Implement in feature/export-import-data branch")
 
     override suspend fun saveAllMemos(memos: List<Memo>) {
         TODO("Implement in feature/export-import-data branch")
