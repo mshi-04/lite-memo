@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.ui.viewmodel.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 import java.time.LocalDateTime
@@ -42,13 +43,13 @@ fun SettingsRoute(
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        uri?.let { viewModel.exportMemos(it) }
+        uri?.let { viewModel.exportMemos(it.toExportFileReference()) }
     }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
-        uri?.let { viewModel.onImportFileSelected(it) }
+        uri?.let { viewModel.onImportFileSelected(it.toExportFileReference()) }
     }
 
     val exportSuccessMessage = stringResource(R.string.settings_export_success)
@@ -93,3 +94,5 @@ fun SettingsRoute(
         modifier = modifier
     )
 }
+
+private fun Uri.toExportFileReference(): ExportFileReference = ExportFileReference(toString())

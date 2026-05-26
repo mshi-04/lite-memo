@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.ui.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.MemoSortOrder
@@ -45,7 +44,7 @@ class SettingsViewModel @Inject constructor(
     private val isImporting = MutableStateFlow(false)
     private val showImportConfirmDialog = MutableStateFlow(false)
 
-    private var pendingImportUri: Uri? = null
+    private var pendingImportReference: ExportFileReference? = null
 
     private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
     internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
@@ -103,12 +102,13 @@ class SettingsViewModel @Inject constructor(
         sortOrderExpanded.value = false
     }
 
-    fun exportMemos(uri: Uri) {
+    fun exportMemos(reference: ExportFileReference) {
+        if (isExporting.value || isImporting.value) return
         viewModelScope.launch {
             isExporting.value = true
             try {
                 val exportData = exportMemosUseCase()
-                exportFileRepository.write(ExportFileReference(uri.toString()), exportData)
+                exportFileRepository.write(reference, exportData)
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ExportSuccess)
             } catch (e: CancellationException) {
                 throw e
@@ -120,19 +120,21 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onImportFileSelected(uri: Uri) {
-        pendingImportUri = uri
+    fun onImportFileSelected(reference: ExportFileReference) {
+        if (isExporting.value || isImporting.value) return
+        pendingImportReference = reference
         showImportConfirmDialog.value = true
     }
 
     fun confirmImport() {
-        val uri = pendingImportUri ?: return
+        if (isImporting.value || isExporting.value) return
+        val reference = pendingImportReference ?: return
         showImportConfirmDialog.value = false
-        pendingImportUri = null
+        pendingImportReference = null
         viewModelScope.launch {
             isImporting.value = true
             try {
-                val exportData = exportFileRepository.read(ExportFileReference(uri.toString()))
+                val exportData = exportFileRepository.read(reference)
                 importMemosUseCase(exportData)
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ImportSuccess)
             } catch (e: CancellationException) {
@@ -147,7 +149,7 @@ class SettingsViewModel @Inject constructor(
 
     fun dismissImportConfirmDialog() {
         showImportConfirmDialog.value = false
-        pendingImportUri = null
+        pendingImportReference = null
     }
 }
 
