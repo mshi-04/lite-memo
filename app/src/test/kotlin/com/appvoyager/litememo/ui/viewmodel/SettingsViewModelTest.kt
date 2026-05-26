@@ -50,19 +50,22 @@ class SettingsViewModelTest {
         // Arrange
         val exportFileRepository = BlockingExportFileRepository()
         val viewModel = settingsViewModel(exportFileRepository)
-        viewModel.onImportFileSelected(ExportFileReference("content://import"))
-        viewModel.confirmImport()
-        runCurrent()
+        try {
+            viewModel.onImportFileSelected(ExportFileReference("content://import"))
+            viewModel.confirmImport()
+            runCurrent()
 
-        // Act
-        viewModel.exportMemos(ExportFileReference("content://export"))
-        runCurrent()
+            // Act
+            viewModel.exportMemos(ExportFileReference("content://export"))
+            runCurrent()
 
-        // Assert
-        assertEquals(emptyList<ExportFileReference>(), exportFileRepository.writtenReferences)
-
-        exportFileRepository.completeRead()
-        advanceUntilIdle()
+            // Assert
+            assertEquals(emptyList<ExportFileReference>(), exportFileRepository.writtenReferences)
+        } finally {
+            exportFileRepository.completeRead()
+            exportFileRepository.completeWrite()
+            advanceUntilIdle()
+        }
     }
 
     @Test
@@ -70,19 +73,22 @@ class SettingsViewModelTest {
         // Arrange
         val exportFileRepository = BlockingExportFileRepository()
         val viewModel = settingsViewModel(exportFileRepository)
-        viewModel.onImportFileSelected(ExportFileReference("content://import"))
-        viewModel.exportMemos(ExportFileReference("content://export"))
-        runCurrent()
+        try {
+            viewModel.onImportFileSelected(ExportFileReference("content://import"))
+            viewModel.exportMemos(ExportFileReference("content://export"))
+            runCurrent()
 
-        // Act
-        viewModel.confirmImport()
-        runCurrent()
+            // Act
+            viewModel.confirmImport()
+            runCurrent()
 
-        // Assert
-        assertEquals(emptyList<ExportFileReference>(), exportFileRepository.readReferences)
-
-        exportFileRepository.completeWrite()
-        advanceUntilIdle()
+            // Assert
+            assertEquals(emptyList<ExportFileReference>(), exportFileRepository.readReferences)
+        } finally {
+            exportFileRepository.completeRead()
+            exportFileRepository.completeWrite()
+            advanceUntilIdle()
+        }
     }
 
     private fun settingsViewModel(exportFileRepository: ExportFileRepository): SettingsViewModel {

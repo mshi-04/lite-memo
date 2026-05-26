@@ -137,7 +137,7 @@ fun SettingsScreen(
                 SettingsClickableRow(
                     label = stringResource(R.string.settings_export),
                     onClick = onExportClick,
-                    enabled = !uiState.isExporting,
+                    enabled = !uiState.isExporting && !uiState.isImporting,
                     trailingIcon = {
                         if (uiState.isExporting) {
                             CircularProgressIndicator(
@@ -161,7 +161,7 @@ fun SettingsScreen(
                 SettingsClickableRow(
                     label = stringResource(R.string.settings_import),
                     onClick = onImportClick,
-                    enabled = !uiState.isImporting,
+                    enabled = !uiState.isExporting && !uiState.isImporting,
                     trailingIcon = {
                         if (uiState.isImporting) {
                             CircularProgressIndicator(
