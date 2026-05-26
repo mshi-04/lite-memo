@@ -33,4 +33,11 @@ class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRep
         tagDao.deleteTag(id.value)
     }
 
+    override suspend fun getAllTags(): List<Tag> =
+        TODO("Implement in feature/export-import-data branch")
+
+    override suspend fun saveAllTags(tags: List<Tag>) {
+        TODO("Implement in feature/export-import-data branch")
+    }
+
 }

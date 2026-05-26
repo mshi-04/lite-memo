@@ -75,6 +75,13 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         memoDao.deleteTrashedMemosDeletedAtOrBefore(cutoff.value)
     }
 
+    override suspend fun getAllActiveMemos(): List<Memo> =
+        TODO("Implement in feature/export-import-data branch")
+
+    override suspend fun saveAllMemos(memos: List<Memo>) {
+        TODO("Implement in feature/export-import-data branch")
+    }
+
     private fun String.toEscapedLikePattern(): String = buildString {
         append(LIKE_MULTI_CHARACTER_WILDCARD)
         this@toEscapedLikePattern.forEach { char ->
