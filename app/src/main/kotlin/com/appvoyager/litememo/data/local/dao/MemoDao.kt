@@ -74,6 +74,21 @@ interface MemoDao {
     suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long)
 
     @Transaction
+    @Query("SELECT * FROM memos WHERE deletedAt IS NULL")
+    suspend fun getAllActiveMemosWithTagRefs(): List<MemoWithTagRefs>
+
+    @Transaction
+    suspend fun upsertAllMemosWithTags(
+        memos: List<MemoEntity>,
+        tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>
+    ) {
+        memos.forEach { memo ->
+            val refs = tagRefsByMemoId[memo.id] ?: emptyList()
+            upsertMemoWithTags(memo, refs)
+        }
+    }
+
+    @Transaction
     suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
         require(tagRefs.all { it.memoId == memo.id }) {
             "All tagRefs must reference memoId=${memo.id}."

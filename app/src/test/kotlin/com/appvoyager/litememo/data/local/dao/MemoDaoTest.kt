@@ -135,6 +135,28 @@ class MemoDaoTest {
         override suspend fun deleteMemoPermanently(id: String): Int = 1
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) = Unit
+
+        override suspend fun getAllActiveMemosWithTagRefs(): List<MemoWithTagRefs> = emptyList()
+
+        override suspend fun upsertAllMemosWithTags(
+            memos: List<MemoEntity>,
+            tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>
+        ) {
+            if (failOnWrite) {
+                fail<Nothing>("upsertAllMemosWithTags should not be called.")
+            }
+            memos.forEach { memo ->
+                calls += "upsertMemo:${memo.id}"
+                calls += "deleteTagRefsForMemo:${memo.id}"
+                val refs = tagRefsByMemoId[memo.id].orEmpty()
+                if (refs.isNotEmpty()) {
+                    val joined = refs.joinToString(",") {
+                        "${it.memoId}:${it.tagId}:${it.position}"
+                    }
+                    calls += "insertTagRefs:$joined"
+                }
+            }
+        }
     }
 
 }
