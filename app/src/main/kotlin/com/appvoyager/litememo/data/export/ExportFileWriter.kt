@@ -8,6 +8,7 @@ import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -18,10 +19,14 @@ class ExportFileWriter @Inject constructor(
 
     suspend fun write(uri: Uri, data: LiteMemoExportDto) {
         withContext(Dispatchers.IO) {
-            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                val jsonString = json.encodeToString(data)
-                outputStream.write(jsonString.toByteArray(Charsets.UTF_8))
-            } ?: throw IOException("Failed to open output stream for URI: $uri")
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val jsonString = json.encodeToString(data)
+                    outputStream.write(jsonString.toByteArray(Charsets.UTF_8))
+                } ?: throw IOException("Failed to open output stream for URI: $uri")
+            } catch (e: SerializationException) {
+                throw IOException("Failed to encode data to JSON for URI: $uri", e)
+            }
         }
     }
 

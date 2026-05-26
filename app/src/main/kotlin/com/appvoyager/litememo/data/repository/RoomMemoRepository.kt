@@ -79,6 +79,10 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         memoDao.getAllActiveMemosWithTagRefs().map { it.toDomain() }
 
     override suspend fun saveAllMemos(memos: List<Memo>) {
+        val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
+            .filterValues { it > 1 }.keys
+        require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
+
         val entities = memos.map { it.toEntity() }
         val tagRefsByMemoId = memos.associate { memo ->
             memo.id.value to memo.toTagRefs()

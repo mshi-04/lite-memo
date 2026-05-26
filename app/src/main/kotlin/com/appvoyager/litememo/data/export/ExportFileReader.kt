@@ -8,6 +8,7 @@ import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 class ExportFileReader @Inject constructor(
@@ -19,7 +20,11 @@ class ExportFileReader @Inject constructor(
         val jsonString = context.contentResolver.openInputStream(uri)?.use { inputStream ->
             inputStream.bufferedReader(Charsets.UTF_8).readText()
         } ?: throw IOException("Failed to open input stream for URI: $uri")
-        json.decodeFromString<LiteMemoExportDto>(jsonString)
+        try {
+            json.decodeFromString<LiteMemoExportDto>(jsonString)
+        } catch (e: SerializationException) {
+            throw IOException("Failed to decode JSON from URI: $uri", e)
+        }
     }
 
 }

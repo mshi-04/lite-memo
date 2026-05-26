@@ -330,6 +330,7 @@ class RoomMemoRepositoryTest {
         private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
+        val savedMemoBatches = mutableListOf<Pair<MemoEntity, List<MemoTagRefEntity>>>()
         var movedToTrash: MovedToTrashRecord? = null
         var restoredMemoId: String? = null
         var permanentlyDeletedMemoId: String? = null
@@ -377,6 +378,7 @@ class RoomMemoRepositoryTest {
         override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
             savedMemo = memo
             savedTagRefs = tagRefs
+            savedMemoBatches += memo to tagRefs
         }
 
         override suspend fun upsertMemo(memo: MemoEntity) {
