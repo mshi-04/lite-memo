@@ -24,4 +24,10 @@ interface TagDao {
     @Query("DELETE FROM tags WHERE id = :id")
     suspend fun deleteTag(id: String)
 
+    @Query("SELECT * FROM tags")
+    suspend fun getAllTags(): List<TagEntity>
+
+    @Upsert
+    suspend fun upsertAllTags(tags: List<TagEntity>)
+
 }

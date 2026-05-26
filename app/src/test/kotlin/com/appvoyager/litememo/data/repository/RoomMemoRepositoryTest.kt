@@ -409,6 +409,19 @@ class RoomMemoRepositoryTest {
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) {
             purgeCutoff = cutoff
         }
+
+        override suspend fun getAllActiveMemosWithTagRefs(): List<MemoWithTagRefs> =
+            memosWithTagRefs.value.filter { it.memo.deletedAt == null }
+
+        override suspend fun upsertAllMemosWithTags(
+            memos: List<MemoEntity>,
+            tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>
+        ) {
+            memos.forEach { memo ->
+                val refs = tagRefsByMemoId[memo.id] ?: emptyList()
+                upsertMemoWithTags(memo, refs)
+            }
+        }
     }
 
 }

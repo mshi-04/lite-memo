@@ -76,10 +76,14 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
     }
 
     override suspend fun getAllActiveMemos(): List<Memo> =
-        TODO("Implement in feature/export-import-data branch")
+        memoDao.getAllActiveMemosWithTagRefs().map { it.toDomain() }
 
     override suspend fun saveAllMemos(memos: List<Memo>) {
-        TODO("Implement in feature/export-import-data branch")
+        val entities = memos.map { it.toEntity() }
+        val tagRefsByMemoId = memos.associate { memo ->
+            memo.id.value to memo.toTagRefs()
+        }
+        memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {

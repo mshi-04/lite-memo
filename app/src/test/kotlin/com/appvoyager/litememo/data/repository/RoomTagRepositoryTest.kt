@@ -141,6 +141,12 @@ class RoomTagRepositoryTest {
         override suspend fun deleteTag(id: String) {
             deletedTagId = id
         }
+
+        override suspend fun getAllTags(): List<TagEntity> = tags.value
+
+        override suspend fun upsertAllTags(tags: List<TagEntity>) {
+            tags.forEach { savedTag = it }
+        }
     }
 
 }

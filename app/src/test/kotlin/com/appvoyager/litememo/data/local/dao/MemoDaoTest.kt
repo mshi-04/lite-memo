@@ -135,6 +135,13 @@ class MemoDaoTest {
         override suspend fun deleteMemoPermanently(id: String): Int = 1
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) = Unit
+
+        override suspend fun getAllActiveMemosWithTagRefs(): List<MemoWithTagRefs> = emptyList()
+
+        override suspend fun upsertAllMemosWithTags(
+            memos: List<MemoEntity>,
+            tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>
+        ) = Unit
     }
 
 }
