@@ -3,9 +3,4 @@ package com.appvoyager.litememo.data.model.export
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TagExportDto(
-    val id: String,
-    val name: String,
-    val colorArgb: Long,
-    val createdAt: Long
-)
+data class TagExportDto(val id: String, val name: String, val colorArgb: Long, val createdAt: Long)
