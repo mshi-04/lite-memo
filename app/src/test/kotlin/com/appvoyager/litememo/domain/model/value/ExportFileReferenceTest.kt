@@ -24,10 +24,26 @@ class ExportFileReferenceTest {
     }
 
     @Test
+    fun constructorThrowsWhenInputIsEmpty() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            ExportFileReference("")
+        }
+    }
+
+    @Test
     fun constructorThrowsWhenInputIsNotUri() {
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
             ExportFileReference("not a uri")
+        }
+    }
+
+    @Test
+    fun constructorThrowsWhenInputIsRelativeUri() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            ExportFileReference("export.json")
         }
     }
 }
