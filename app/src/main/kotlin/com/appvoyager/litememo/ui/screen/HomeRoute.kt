@@ -30,6 +30,18 @@ fun HomeRoute(
         onFavoriteToggle = { memoId, isFavorite ->
             viewModel.setMemoFavorite(memoId, isFavorite)
         },
+        onMemoLongClick = { memoId -> viewModel.startSelection(memoId) },
+        onMemoSelectionToggle = { memoId -> viewModel.toggleMemoSelection(memoId) },
+        onClearSelection = { viewModel.clearSelection() },
+        onMoveSelectedMemosToTrash = { viewModel.moveSelectedMemosToTrash() },
+        onSetSelectedMemosFavorite = { isFavorite ->
+            viewModel.setSelectedMemosFavorite(isFavorite)
+        },
+        onRequestAddTagToSelectedMemos = { viewModel.requestAddTagToSelectedMemos() },
+        onRequestRemoveTagFromSelectedMemos = { viewModel.requestRemoveTagFromSelectedMemos() },
+        onApplySelectedTag = { tagId -> viewModel.applySelectedTag(tagId) },
+        onDismissBulkTagDialog = { viewModel.dismissBulkTagDialog() },
+        onDismissActionError = { viewModel.dismissActionError() },
         onMemoClick = onMemoClick,
         onCreateMemoClick = onCreateMemoClick,
         onRetry = { viewModel.retry() },

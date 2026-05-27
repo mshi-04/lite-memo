@@ -22,6 +22,19 @@
     <string name="filter_favorite">お気に入り</string>
     <string name="add_favorite_memo">お気に入りに追加</string>
     <string name="remove_favorite_memo">お気に入りから削除</string>
+    <string name="selected_memo">選択済みメモ</string>
+    <string name="selected_memo_count">%1$d件選択中</string>
+    <string name="clear_selection">選択を解除</string>
+    <string name="move_selected_memos_to_trash">選択したメモをゴミ箱へ移動</string>
+    <string name="add_selected_memos_to_favorite">選択したメモをお気に入りに追加</string>
+    <string name="remove_selected_memos_from_favorite">選択したメモをお気に入りから削除</string>
+    <string name="add_tag_to_selected_memos">タグを付ける</string>
+    <string name="remove_tag_from_selected_memos">タグを外す</string>
+    <string name="home_bulk_add_tag_title">タグを付ける</string>
+    <string name="home_bulk_remove_tag_title">タグを外す</string>
+    <string name="home_bulk_tag_empty_body">利用できるタグがありません。</string>
+    <string name="home_bulk_action_error_title">操作に失敗しました</string>
+    <string name="home_bulk_action_error_body">メモの操作中にエラーが発生しました。もう一度お試しください。</string>
     <string name="empty_home_title">まだメモがありません</string>
     <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
 

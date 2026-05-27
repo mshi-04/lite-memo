@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +23,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -61,6 +65,7 @@ import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.toDisplayString
+import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
@@ -76,6 +81,16 @@ fun HomeScreen(
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onFavoriteToggle: (String, Boolean) -> Unit,
+    onMemoLongClick: (String) -> Unit,
+    onMemoSelectionToggle: (String) -> Unit,
+    onClearSelection: () -> Unit,
+    onMoveSelectedMemosToTrash: () -> Unit,
+    onSetSelectedMemosFavorite: (Boolean) -> Unit,
+    onRequestAddTagToSelectedMemos: () -> Unit,
+    onRequestRemoveTagFromSelectedMemos: () -> Unit,
+    onApplySelectedTag: (String) -> Unit,
+    onDismissBulkTagDialog: () -> Unit,
+    onDismissActionError: () -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
@@ -85,8 +100,13 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateMemoClick) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_memo))
+            if (!uiState.selection.isActive) {
+                FloatingActionButton(onClick = onCreateMemoClick) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.create_memo)
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -102,10 +122,36 @@ fun HomeScreen(
                 onSearchToggle = onSearchToggle,
                 onSearchQueryChanged = onSearchQueryChanged,
                 onFavoriteToggle = onFavoriteToggle,
+                onMemoLongClick = onMemoLongClick,
+                onMemoSelectionToggle = onMemoSelectionToggle,
+                onClearSelection = onClearSelection,
+                onMoveSelectedMemosToTrash = onMoveSelectedMemosToTrash,
+                onSetSelectedMemosFavorite = onSetSelectedMemosFavorite,
+                onRequestAddTagToSelectedMemos = onRequestAddTagToSelectedMemos,
+                onRequestRemoveTagFromSelectedMemos = onRequestRemoveTagFromSelectedMemos,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
             )
         }
+    }
+
+    HomeBulkTagDialog(
+        uiState = uiState,
+        onApplySelectedTag = onApplySelectedTag,
+        onDismiss = onDismissBulkTagDialog
+    )
+
+    if (uiState.hasActionError) {
+        AlertDialog(
+            onDismissRequest = onDismissActionError,
+            title = { Text(text = stringResource(R.string.home_bulk_action_error_title)) },
+            text = { Text(text = stringResource(R.string.home_bulk_action_error_body)) },
+            confirmButton = {
+                TextButton(onClick = onDismissActionError) {
+                    Text(text = stringResource(R.string.settings_dialog_ok))
+                }
+            }
+        )
     }
 }
 
@@ -117,6 +163,13 @@ private fun HomeContent(
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onFavoriteToggle: (String, Boolean) -> Unit,
+    onMemoLongClick: (String) -> Unit,
+    onMemoSelectionToggle: (String) -> Unit,
+    onClearSelection: () -> Unit,
+    onMoveSelectedMemosToTrash: () -> Unit,
+    onSetSelectedMemosFavorite: (Boolean) -> Unit,
+    onRequestAddTagToSelectedMemos: () -> Unit,
+    onRequestRemoveTagFromSelectedMemos: () -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -126,12 +179,24 @@ private fun HomeContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            HomeTopBar(
-                isSearchActive = uiState.isSearchActive,
-                searchQuery = uiState.searchQuery,
-                onSearchToggle = onSearchToggle,
-                onSearchQueryChanged = onSearchQueryChanged
-            )
+            if (uiState.selection.isActive) {
+                HomeSelectionToolbar(
+                    selectedCount = uiState.selection.selectedCount,
+                    onClearSelection = onClearSelection,
+                    onMoveToTrash = onMoveSelectedMemosToTrash,
+                    onAddFavorite = { onSetSelectedMemosFavorite(true) },
+                    onRemoveFavorite = { onSetSelectedMemosFavorite(false) },
+                    onAddTag = onRequestAddTagToSelectedMemos,
+                    onRemoveTag = onRequestRemoveTagFromSelectedMemos
+                )
+            } else {
+                HomeTopBar(
+                    isSearchActive = uiState.isSearchActive,
+                    searchQuery = uiState.searchQuery,
+                    onSearchToggle = onSearchToggle,
+                    onSearchQueryChanged = onSearchQueryChanged
+                )
+            }
         }
         if (uiState.isSearchActive) {
             when {
@@ -160,12 +225,25 @@ private fun HomeContent(
                     items = uiState.searchResults,
                     key = { memo -> memo.id }
                 ) { memo ->
+                    val isSelectionActive = uiState.selection.isActive
                     MemoCard(
                         memo = memo,
-                        onClick = { onMemoClick(memo.id) },
-                        onFavoriteToggle = {
-                            onFavoriteToggle(memo.id, !memo.isFavorite)
-                        }
+                        onClick = {
+                            if (isSelectionActive) {
+                                onMemoSelectionToggle(memo.id)
+                            } else {
+                                onMemoClick(memo.id)
+                            }
+                        },
+                        onFavoriteToggle = if (isSelectionActive) {
+                            null
+                        } else {
+                            {
+                                onFavoriteToggle(memo.id, !memo.isFavorite)
+                            }
+                        },
+                        onLongClick = { onMemoLongClick(memo.id) },
+                        selected = uiState.selection.contains(memo.id)
                     )
                 }
             }
@@ -205,12 +283,25 @@ private fun HomeContent(
                     items = uiState.memos,
                     key = { memo -> memo.id }
                 ) { memo ->
+                    val isSelectionActive = uiState.selection.isActive
                     MemoCard(
                         memo = memo,
-                        onClick = { onMemoClick(memo.id) },
-                        onFavoriteToggle = {
-                            onFavoriteToggle(memo.id, !memo.isFavorite)
-                        }
+                        onClick = {
+                            if (isSelectionActive) {
+                                onMemoSelectionToggle(memo.id)
+                            } else {
+                                onMemoClick(memo.id)
+                            }
+                        },
+                        onFavoriteToggle = if (isSelectionActive) {
+                            null
+                        } else {
+                            {
+                                onFavoriteToggle(memo.id, !memo.isFavorite)
+                            }
+                        },
+                        onLongClick = { onMemoLongClick(memo.id) },
+                        selected = uiState.selection.contains(memo.id)
                     )
                 }
             }
@@ -288,6 +379,134 @@ private fun HomeTopBar(
             }
         }
     }
+}
+
+@Composable
+private fun HomeSelectionToolbar(
+    selectedCount: Int,
+    onClearSelection: () -> Unit,
+    onMoveToTrash: () -> Unit,
+    onAddFavorite: () -> Unit,
+    onRemoveFavorite: () -> Unit,
+    onAddTag: () -> Unit,
+    onRemoveTag: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onClearSelection) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.clear_selection)
+                )
+            }
+            Text(
+                text = stringResource(R.string.selected_memo_count, selectedCount),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = onMoveToTrash) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.move_selected_memos_to_trash),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+            IconButton(onClick = onAddFavorite) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = stringResource(R.string.add_selected_memos_to_favorite)
+                )
+            }
+            IconButton(onClick = onRemoveFavorite) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = stringResource(
+                        R.string.remove_selected_memos_from_favorite
+                    ),
+                    tint = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            TextButton(onClick = onAddTag) {
+                Text(text = stringResource(R.string.add_tag_to_selected_memos))
+            }
+            TextButton(onClick = onRemoveTag) {
+                Text(text = stringResource(R.string.remove_tag_from_selected_memos))
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeBulkTagDialog(
+    uiState: HomeUiState,
+    onApplySelectedTag: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val operation = uiState.bulkTagDialog.operation ?: return
+    val titleResId = when (operation) {
+        HomeBulkTagDialogUiState.Operation.AddTag -> R.string.home_bulk_add_tag_title
+        HomeBulkTagDialogUiState.Operation.RemoveTag -> R.string.home_bulk_remove_tag_title
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(titleResId)) },
+        text = {
+            if (uiState.tags.isEmpty()) {
+                Text(text = stringResource(R.string.home_bulk_tag_empty_body))
+            } else {
+                LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                    items(
+                        items = uiState.tags,
+                        key = { tag -> tag.id }
+                    ) { tag ->
+                        TextButton(
+                            onClick = { onApplySelectedTag(tag.id) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(tag.colorArgb.toInt()))
+                                )
+                                Text(
+                                    text = tag.name,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 8.dp),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel_label))
+            }
+        }
+    )
 }
 
 @Composable
@@ -481,6 +700,16 @@ private fun HomeScreenPreview() {
             onSearchToggle = {},
             onSearchQueryChanged = {},
             onFavoriteToggle = { _, _ -> },
+            onMemoLongClick = {},
+            onMemoSelectionToggle = {},
+            onClearSelection = {},
+            onMoveSelectedMemosToTrash = {},
+            onSetSelectedMemosFavorite = {},
+            onRequestAddTagToSelectedMemos = {},
+            onRequestRemoveTagFromSelectedMemos = {},
+            onApplySelectedTag = {},
+            onDismissBulkTagDialog = {},
+            onDismissActionError = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -502,6 +731,16 @@ private fun HomeScreenDarkPreview() {
             onSearchToggle = {},
             onSearchQueryChanged = {},
             onFavoriteToggle = { _, _ -> },
+            onMemoLongClick = {},
+            onMemoSelectionToggle = {},
+            onClearSelection = {},
+            onMoveSelectedMemosToTrash = {},
+            onSetSelectedMemosFavorite = {},
+            onRequestAddTagToSelectedMemos = {},
+            onRequestRemoveTagFromSelectedMemos = {},
+            onApplySelectedTag = {},
+            onDismissBulkTagDialog = {},
+            onDismissActionError = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
