@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.state
 
-data class HomeSelectionUiState(val selectedMemoIds: List<String> = emptyList()) {
+data class HomeSelectionUiState(val selectedMemoIds: Set<String> = emptySet()) {
     val isActive: Boolean
         get() = selectedMemoIds.isNotEmpty()
 

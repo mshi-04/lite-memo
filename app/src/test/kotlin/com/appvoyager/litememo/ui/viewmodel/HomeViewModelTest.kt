@@ -255,7 +255,7 @@ class HomeViewModelTest {
         // Arrange
         val memo = memoFixture(id = "memo-1")
         val viewModel = homeViewModel(
-            memoRepository = FavoriteUpdateFailingMemoRepository(memo)
+            memoRepository = SaveFailingMemoRepository(memo)
         )
         advanceUntilIdle()
 
@@ -278,11 +278,11 @@ class HomeViewModelTest {
         viewModel.startSelection("memo-1")
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.selection.selectedMemoIds == listOf("memo-1")
+            it.selection.selectedMemoIds == setOf("memo-1")
         }
 
         // Assert
-        assertEquals(listOf("memo-1"), state.selection.selectedMemoIds)
+        assertEquals(setOf("memo-1"), state.selection.selectedMemoIds)
     }
 
     @Test
@@ -299,7 +299,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.first { !it.selection.isActive }
 
         // Assert
-        assertEquals(emptyList<String>(), state.selection.selectedMemoIds)
+        assertEquals(emptySet<String>(), state.selection.selectedMemoIds)
     }
 
     @Test
@@ -324,7 +324,7 @@ class HomeViewModelTest {
         // Arrange
         val memo = memoFixture(id = "memo-1")
         val viewModel = homeViewModel(
-            memoRepository = FavoriteUpdateFailingMemoRepository(memo)
+            memoRepository = SaveFailingMemoRepository(memo)
         )
         advanceUntilIdle()
         viewModel.startSelection("memo-1")
@@ -336,7 +336,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.first { it.hasActionError }
 
         // Assert
-        val expected = true to listOf("memo-1")
+        val expected = true to setOf("memo-1")
         val actual = state.hasActionError to state.selection.selectedMemoIds
         assertEquals(expected, actual)
     }
@@ -497,7 +497,7 @@ class HomeViewModelTest {
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
     }
 
-    private class FavoriteUpdateFailingMemoRepository(private val memo: Memo) : MemoRepository {
+    private class SaveFailingMemoRepository(private val memo: Memo) : MemoRepository {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
 
@@ -514,7 +514,7 @@ class HomeViewModelTest {
         override suspend fun getActiveMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
 
         override suspend fun saveMemo(memo: Memo): Unit =
-            throw IllegalStateException("Failed to update favorite.")
+            throw IllegalStateException("Failed to save memo.")
 
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
 
@@ -526,6 +526,7 @@ class HomeViewModelTest {
 
         override suspend fun getAllActiveMemos(): List<Memo> = emptyList()
 
-        override suspend fun saveAllMemos(memos: List<Memo>) = Unit
+        override suspend fun saveAllMemos(memos: List<Memo>): Unit =
+            throw IllegalStateException("Failed to save memos.")
     }
 }

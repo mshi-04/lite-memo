@@ -200,13 +200,13 @@ class HomeViewModel @Inject constructor(
     fun startSelection(memoId: String) {
         hasActionError.value = false
         bulkTagDialog.value = HomeBulkTagDialogUiState()
-        selection.value = HomeSelectionUiState(selectedMemoIds = listOf(memoId))
+        selection.value = HomeSelectionUiState(selectedMemoIds = setOf(memoId))
     }
 
     fun toggleMemoSelection(memoId: String) {
         val current = selection.value.selectedMemoIds
         val next = if (memoId in current) {
-            current.filterNot { it == memoId }
+            current - memoId
         } else {
             current + memoId
         }

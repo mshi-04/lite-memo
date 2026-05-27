@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -225,25 +226,14 @@ private fun HomeContent(
                     items = uiState.searchResults,
                     key = { memo -> memo.id }
                 ) { memo ->
-                    val isSelectionActive = uiState.selection.isActive
-                    MemoCard(
+                    SelectableMemoCard(
                         memo = memo,
-                        onClick = {
-                            if (isSelectionActive) {
-                                onMemoSelectionToggle(memo.id)
-                            } else {
-                                onMemoClick(memo.id)
-                            }
-                        },
-                        onFavoriteToggle = if (isSelectionActive) {
-                            null
-                        } else {
-                            {
-                                onFavoriteToggle(memo.id, !memo.isFavorite)
-                            }
-                        },
-                        onLongClick = { onMemoLongClick(memo.id) },
-                        selected = uiState.selection.contains(memo.id)
+                        isSelectionActive = uiState.selection.isActive,
+                        selected = uiState.selection.contains(memo.id),
+                        onMemoClick = onMemoClick,
+                        onMemoSelectionToggle = onMemoSelectionToggle,
+                        onFavoriteToggle = onFavoriteToggle,
+                        onMemoLongClick = onMemoLongClick
                     )
                 }
             }
@@ -283,30 +273,48 @@ private fun HomeContent(
                     items = uiState.memos,
                     key = { memo -> memo.id }
                 ) { memo ->
-                    val isSelectionActive = uiState.selection.isActive
-                    MemoCard(
+                    SelectableMemoCard(
                         memo = memo,
-                        onClick = {
-                            if (isSelectionActive) {
-                                onMemoSelectionToggle(memo.id)
-                            } else {
-                                onMemoClick(memo.id)
-                            }
-                        },
-                        onFavoriteToggle = if (isSelectionActive) {
-                            null
-                        } else {
-                            {
-                                onFavoriteToggle(memo.id, !memo.isFavorite)
-                            }
-                        },
-                        onLongClick = { onMemoLongClick(memo.id) },
-                        selected = uiState.selection.contains(memo.id)
+                        isSelectionActive = uiState.selection.isActive,
+                        selected = uiState.selection.contains(memo.id),
+                        onMemoClick = onMemoClick,
+                        onMemoSelectionToggle = onMemoSelectionToggle,
+                        onFavoriteToggle = onFavoriteToggle,
+                        onMemoLongClick = onMemoLongClick
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SelectableMemoCard(
+    memo: MemoUiModel,
+    isSelectionActive: Boolean,
+    selected: Boolean,
+    onMemoClick: (String) -> Unit,
+    onMemoSelectionToggle: (String) -> Unit,
+    onFavoriteToggle: (String, Boolean) -> Unit,
+    onMemoLongClick: (String) -> Unit
+) {
+    MemoCard(
+        memo = memo,
+        onClick = {
+            if (isSelectionActive) {
+                onMemoSelectionToggle(memo.id)
+            } else {
+                onMemoClick(memo.id)
+            }
+        },
+        onFavoriteToggle = if (isSelectionActive) {
+            null
+        } else {
+            { onFavoriteToggle(memo.id, !memo.isFavorite) }
+        },
+        onLongClick = { onMemoLongClick(memo.id) },
+        selected = selected
+    )
 }
 
 @Composable
@@ -428,7 +436,7 @@ private fun HomeSelectionToolbar(
             }
             IconButton(onClick = onRemoveFavorite) {
                 Icon(
-                    imageVector = Icons.Default.Star,
+                    imageVector = Icons.Outlined.Star,
                     contentDescription = stringResource(
                         R.string.remove_selected_memos_from_favorite
                     ),
@@ -501,7 +509,8 @@ private fun HomeBulkTagDialog(
                 }
             }
         },
-        confirmButton = {
+        confirmButton = {},
+        dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(R.string.cancel_label))
             }
