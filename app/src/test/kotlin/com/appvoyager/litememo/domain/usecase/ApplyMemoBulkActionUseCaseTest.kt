@@ -8,13 +8,10 @@ import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -175,14 +172,14 @@ class ApplyMemoBulkActionUseCaseTest {
     @Test
     fun invokeStopsSavingAfterFirstWriteFailure() = runTest {
         // Arrange
-        val repository = WriteFailingMemoRepository(
-            memos = listOf(
+        val delegate = FakeMemoRepository(
+            listOf(
                 memoFixture(id = "memo-1"),
                 memoFixture(id = "memo-2"),
                 memoFixture(id = "memo-3")
-            ),
-            saveFailureId = MemoId("memo-2")
+            )
         )
+        val repository = WriteFailingMemoRepository(delegate, saveFailureId = MemoId("memo-2"))
         val useCase = applyMemoBulkActionUseCase(memoRepository = repository)
 
         // Act
@@ -196,20 +193,20 @@ class ApplyMemoBulkActionUseCaseTest {
         }
 
         // Assert
-        assertEquals(listOf(MemoId("memo-1")), repository.savedMemos.map { it.id })
+        assertEquals(listOf(MemoId("memo-1")), delegate.savedMemos.map { it.id })
     }
 
     @Test
     fun invokeStopsMovingAfterFirstWriteFailure() = runTest {
         // Arrange
-        val repository = WriteFailingMemoRepository(
-            memos = listOf(
+        val delegate = FakeMemoRepository(
+            listOf(
                 memoFixture(id = "memo-1"),
                 memoFixture(id = "memo-2"),
                 memoFixture(id = "memo-3")
-            ),
-            moveFailureId = MemoId("memo-2")
+            )
         )
+        val repository = WriteFailingMemoRepository(delegate, moveFailureId = MemoId("memo-2"))
         val useCase = applyMemoBulkActionUseCase(memoRepository = repository)
 
         // Act
@@ -223,7 +220,7 @@ class ApplyMemoBulkActionUseCaseTest {
         }
 
         // Assert
-        assertEquals(listOf(MemoId("memo-1")), repository.movedMemoIds)
+        assertEquals(listOf(MemoId("memo-1")), delegate.movedToTrash.map { it.memoId })
     }
 
     private fun applyMemoBulkActionUseCase(
@@ -237,54 +234,23 @@ class ApplyMemoBulkActionUseCaseTest {
     )
 
     private class WriteFailingMemoRepository(
-        memos: List<Memo>,
+        private val delegate: FakeMemoRepository,
         private val saveFailureId: MemoId? = null,
         private val moveFailureId: MemoId? = null
-    ) : MemoRepository {
-
-        private val memosById = memos.associateBy { it.id }.toMutableMap()
-        val savedMemos = mutableListOf<Memo>()
-        val movedMemoIds = mutableListOf<MemoId>()
-
-        override fun observeActiveMemos(): Flow<List<Memo>> =
-            flowOf(memosById.values.filter { it.deletedAt == null })
-
-        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
-            flowOf(emptyList())
-
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = flowOf(emptyList())
-
-        override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
-
-        override suspend fun getActiveMemo(id: MemoId): Memo? = memosById[id]
+    ) : MemoRepository by delegate {
 
         override suspend fun saveMemo(memo: Memo) {
-            if (memo.id == saveFailureId) {
-                throw IllegalStateException("Failed to save memo.")
-            }
-            savedMemos += memo
-            memosById[memo.id] = memo
+            if (memo.id == saveFailureId) throw IllegalStateException("Failed to save memo.")
+            delegate.saveMemo(memo)
+        }
+
+        override suspend fun saveAllMemos(memos: List<Memo>) {
+            memos.forEach { saveMemo(it) }
         }
 
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
-            if (id == moveFailureId) {
-                throw IllegalStateException("Failed to move memo.")
-            }
-            movedMemoIds += id
+            if (id == moveFailureId) throw IllegalStateException("Failed to move memo.")
+            delegate.moveMemoToTrash(id, deletedAt)
         }
-
-        override suspend fun restoreMemoFromTrash(id: MemoId) = Unit
-
-        override suspend fun deleteMemoPermanently(id: MemoId) = Unit
-
-        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
-
-        override suspend fun getAllActiveMemos(): List<Memo> =
-            memosById.values.filter { it.deletedAt == null }
-
-        override suspend fun saveAllMemos(memos: List<Memo>) = Unit
     }
 }

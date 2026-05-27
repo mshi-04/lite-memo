@@ -3,7 +3,6 @@ package com.appvoyager.litememo.domain.usecase
 import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
-import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
@@ -69,43 +68,25 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
 
     private suspend fun setFavorite(memos: List<Memo>, isFavorite: Boolean) {
         val now = currentTimeProvider.now()
-        memos.forEach { memo ->
-            if (memo.isFavorite != isFavorite) {
-                memoRepository.saveMemo(
-                    memo.copy(
-                        updatedAt = now,
-                        isFavorite = isFavorite
-                    )
-                )
-            }
-        }
+        val updated = memos
+            .filter { it.isFavorite != isFavorite }
+            .map { it.copy(updatedAt = now, isFavorite = isFavorite) }
+        memoRepository.saveAllMemos(updated)
     }
 
     private suspend fun addTag(memos: List<Memo>, tagId: TagId) {
         val now = currentTimeProvider.now()
-        memos.forEach { memo ->
-            if (tagId !in memo.tagIds) {
-                memoRepository.saveMemo(
-                    memo.copy(
-                        updatedAt = now,
-                        tagIds = memo.tagIds + tagId
-                    )
-                )
-            }
-        }
+        val updated = memos
+            .filter { tagId !in it.tagIds }
+            .map { it.copy(updatedAt = now, tagIds = it.tagIds + tagId) }
+        memoRepository.saveAllMemos(updated)
     }
 
     private suspend fun removeTag(memos: List<Memo>, tagId: TagId) {
         val now = currentTimeProvider.now()
-        memos.forEach { memo ->
-            if (tagId in memo.tagIds) {
-                memoRepository.saveMemo(
-                    memo.copy(
-                        updatedAt = now,
-                        tagIds = memo.tagIds.filterNot { it == tagId }
-                    )
-                )
-            }
-        }
+        val updated = memos
+            .filter { tagId in it.tagIds }
+            .map { memo -> memo.copy(updatedAt = now, tagIds = memo.tagIds.filterNot { it == tagId }) }
+        memoRepository.saveAllMemos(updated)
     }
 }
