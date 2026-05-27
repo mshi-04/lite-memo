@@ -275,14 +275,14 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.selection.selectedMemoIds == setOf("memo-1")
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"))
         }
 
         // Assert
-        assertEquals(setOf("memo-1"), state.selection.selectedMemoIds)
+        assertEquals(setOf(MemoId("memo-1")), state.selection.selectedMemoIds)
     }
 
     @Test
@@ -290,16 +290,16 @@ class HomeViewModelTest {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
         advanceUntilIdle()
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         viewModel.uiState.first { it.selection.isActive }
 
         // Act
-        viewModel.toggleMemoSelection("memo-1")
+        viewModel.toggleMemoSelection(MemoId("memo-1"))
         advanceUntilIdle()
         val state = viewModel.uiState.first { !it.selection.isActive }
 
         // Assert
-        assertEquals(emptySet<String>(), state.selection.selectedMemoIds)
+        assertEquals(emptySet<MemoId>(), state.selection.selectedMemoIds)
     }
 
     @Test
@@ -307,7 +307,7 @@ class HomeViewModelTest {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
         advanceUntilIdle()
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         viewModel.uiState.first { it.selection.isActive }
 
         // Act
@@ -327,7 +327,7 @@ class HomeViewModelTest {
             memoRepository = SaveFailingMemoRepository(memo)
         )
         advanceUntilIdle()
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         viewModel.uiState.first { it.selection.isActive }
 
         // Act
@@ -336,7 +336,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.first { it.hasActionError }
 
         // Assert
-        val expected = true to setOf("memo-1")
+        val expected = true to setOf(MemoId("memo-1"))
         val actual = state.hasActionError to state.selection.selectedMemoIds
         assertEquals(expected, actual)
     }
@@ -346,7 +346,7 @@ class HomeViewModelTest {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
         advanceUntilIdle()
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         viewModel.uiState.first { it.selection.isActive }
 
         // Act
@@ -365,7 +365,7 @@ class HomeViewModelTest {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
         advanceUntilIdle()
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         viewModel.requestAddTagToSelectedMemos()
         viewModel.uiState.first {
             it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
@@ -391,14 +391,14 @@ class HomeViewModelTest {
             tags = listOf(tagFixture(id = tagId.value))
         )
         advanceUntilIdle()
-        viewModel.startSelection("memo-1")
+        viewModel.startSelection(MemoId("memo-1"))
         viewModel.requestAddTagToSelectedMemos()
         viewModel.uiState.first {
             it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
         }
 
         // Act
-        viewModel.applySelectedTag(tagId.value)
+        viewModel.applySelectedTag(tagId)
         advanceUntilIdle()
         val state = viewModel.uiState.first { !it.selection.isActive }
 

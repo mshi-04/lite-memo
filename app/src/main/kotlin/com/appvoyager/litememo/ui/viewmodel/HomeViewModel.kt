@@ -197,13 +197,13 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun startSelection(memoId: String) {
+    fun startSelection(memoId: MemoId) {
         hasActionError.value = false
         bulkTagDialog.value = HomeBulkTagDialogUiState()
         selection.value = HomeSelectionUiState(selectedMemoIds = setOf(memoId))
     }
 
-    fun toggleMemoSelection(memoId: String) {
+    fun toggleMemoSelection(memoId: MemoId) {
         val current = selection.value.selectedMemoIds
         val next = if (memoId in current) {
             current - memoId
@@ -241,11 +241,11 @@ class HomeViewModel @Inject constructor(
         bulkTagDialog.value = HomeBulkTagDialogUiState()
     }
 
-    fun applySelectedTag(tagId: String) {
+    fun applySelectedTag(tagId: TagId) {
         val operation = bulkTagDialog.value.operation ?: return
         val action = when (operation) {
-            HomeBulkTagDialogUiState.Operation.AddTag -> MemoBulkAction.addTag(TagId(tagId))
-            HomeBulkTagDialogUiState.Operation.RemoveTag -> MemoBulkAction.removeTag(TagId(tagId))
+            HomeBulkTagDialogUiState.Operation.AddTag -> MemoBulkAction.addTag(tagId)
+            HomeBulkTagDialogUiState.Operation.RemoveTag -> MemoBulkAction.removeTag(tagId)
         }
         applySelectedMemoAction(action)
     }
@@ -266,7 +266,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun applySelectedMemoAction(action: MemoBulkAction) {
-        val memoIds = selection.value.selectedMemoIds.map { MemoId(it) }
+        val memoIds = selection.value.selectedMemoIds.toList()
         if (memoIds.isEmpty()) return
 
         viewModelScope.launch {

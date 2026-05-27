@@ -1,11 +1,13 @@
 package com.appvoyager.litememo.ui.state
 
-data class HomeSelectionUiState(val selectedMemoIds: Set<String> = emptySet()) {
+import com.appvoyager.litememo.domain.model.value.MemoId
+
+data class HomeSelectionUiState(val selectedMemoIds: Set<MemoId> = emptySet()) {
     val isActive: Boolean
         get() = selectedMemoIds.isNotEmpty()
 
     val selectedCount: Int
         get() = selectedMemoIds.size
 
-    fun contains(memoId: String): Boolean = memoId in selectedMemoIds
+    fun contains(memoId: MemoId): Boolean = memoId in selectedMemoIds
 }

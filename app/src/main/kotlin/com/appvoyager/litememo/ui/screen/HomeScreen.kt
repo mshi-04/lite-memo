@@ -60,6 +60,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
@@ -89,7 +90,7 @@ fun HomeScreen(
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
     onRequestAddTagToSelectedMemos: () -> Unit,
     onRequestRemoveTagFromSelectedMemos: () -> Unit,
-    onApplySelectedTag: (String) -> Unit,
+    onApplySelectedTag: (TagId) -> Unit,
     onDismissBulkTagDialog: () -> Unit,
     onDismissActionError: () -> Unit,
     onMemoClick: (String) -> Unit,
@@ -229,7 +230,7 @@ private fun HomeContent(
                     SelectableMemoCard(
                         memo = memo,
                         isSelectionActive = uiState.selection.isActive,
-                        selected = uiState.selection.contains(memo.id),
+                        selected = uiState.selection.contains(MemoId(memo.id)),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
                         onFavoriteToggle = onFavoriteToggle,
@@ -276,7 +277,7 @@ private fun HomeContent(
                     SelectableMemoCard(
                         memo = memo,
                         isSelectionActive = uiState.selection.isActive,
-                        selected = uiState.selection.contains(memo.id),
+                        selected = uiState.selection.contains(MemoId(memo.id)),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
                         onFavoriteToggle = onFavoriteToggle,
@@ -461,7 +462,7 @@ private fun HomeSelectionToolbar(
 @Composable
 private fun HomeBulkTagDialog(
     uiState: HomeUiState,
-    onApplySelectedTag: (String) -> Unit,
+    onApplySelectedTag: (TagId) -> Unit,
     onDismiss: () -> Unit
 ) {
     val operation = uiState.bulkTagDialog.operation ?: return
@@ -483,7 +484,7 @@ private fun HomeBulkTagDialog(
                         key = { tag -> tag.id }
                     ) { tag ->
                         TextButton(
-                            onClick = { onApplySelectedTag(tag.id) },
+                            onClick = { onApplySelectedTag(TagId(tag.id)) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
