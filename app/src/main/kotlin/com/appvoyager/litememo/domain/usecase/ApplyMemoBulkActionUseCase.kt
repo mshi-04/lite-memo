@@ -89,7 +89,7 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
             .map { memo ->
                 memo.copy(
                     updatedAt = now,
-                    tagIds = memo.tagIds.filterNot { it == tagId },
+                    tagIds = memo.tagIds.filterNot { it == tagId }
                 )
             }
         memoRepository.saveAllMemos(updated)
