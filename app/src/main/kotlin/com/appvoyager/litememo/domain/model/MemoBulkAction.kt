@@ -2,46 +2,23 @@ package com.appvoyager.litememo.domain.model
 
 import com.appvoyager.litememo.domain.model.value.TagId
 
-data class MemoBulkAction(
-    val type: Type,
-    val isFavorite: Boolean? = null,
-    val tagId: TagId? = null
-) {
-    init {
-        require(type != Type.SetFavorite || isFavorite != null) {
-            "SetFavorite action requires isFavorite."
-        }
-        require(type == Type.SetFavorite || isFavorite == null) {
-            "Only SetFavorite action can have isFavorite."
-        }
-        require((type == Type.AddTag || type == Type.RemoveTag) == (tagId != null)) {
-            "Tag actions require tagId."
-        }
-    }
+sealed class MemoBulkAction {
 
-    enum class Type {
-        MoveToTrash,
-        SetFavorite,
-        AddTag,
-        RemoveTag
-    }
+    data object MoveToTrash : MemoBulkAction()
+
+    data class SetFavorite(val isFavorite: Boolean) : MemoBulkAction()
+
+    data class AddTag(val tagId: TagId) : MemoBulkAction()
+
+    data class RemoveTag(val tagId: TagId) : MemoBulkAction()
 
     companion object {
-        fun moveToTrash() = MemoBulkAction(type = Type.MoveToTrash)
+        fun moveToTrash(): MemoBulkAction = MoveToTrash
 
-        fun setFavorite(isFavorite: Boolean) = MemoBulkAction(
-            type = Type.SetFavorite,
-            isFavorite = isFavorite
-        )
+        fun setFavorite(isFavorite: Boolean): MemoBulkAction = SetFavorite(isFavorite)
 
-        fun addTag(tagId: TagId) = MemoBulkAction(
-            type = Type.AddTag,
-            tagId = tagId
-        )
+        fun addTag(tagId: TagId): MemoBulkAction = AddTag(tagId)
 
-        fun removeTag(tagId: TagId) = MemoBulkAction(
-            type = Type.RemoveTag,
-            tagId = tagId
-        )
+        fun removeTag(tagId: TagId): MemoBulkAction = RemoveTag(tagId)
     }
 }

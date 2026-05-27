@@ -25,7 +25,7 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
                 "Memo not found: ${id.value}"
             }
         }
-        val tagId = command.action.tagId
+        val tagId = command.action.tagIdOrNull()
         if (tagId != null) {
             requireNotNull(tagRepository.getTag(tagId)) {
                 "Tag not found: ${tagId.value}"
@@ -36,24 +36,33 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
     }
 
     private suspend fun applyAction(memos: List<Memo>, action: MemoBulkAction) {
-        when (action.type) {
-            MemoBulkAction.Type.MoveToTrash -> moveToTrash(memos)
+        when (action) {
+            MemoBulkAction.MoveToTrash -> moveToTrash(memos)
 
-            MemoBulkAction.Type.SetFavorite -> setFavorite(
+            is MemoBulkAction.SetFavorite -> setFavorite(
                 memos = memos,
-                isFavorite = requireNotNull(action.isFavorite)
+                isFavorite = action.isFavorite
             )
 
-            MemoBulkAction.Type.AddTag -> addTag(
+            is MemoBulkAction.AddTag -> addTag(
                 memos = memos,
-                tagId = requireNotNull(action.tagId)
+                tagId = action.tagId
             )
 
-            MemoBulkAction.Type.RemoveTag -> removeTag(
+            is MemoBulkAction.RemoveTag -> removeTag(
                 memos = memos,
-                tagId = requireNotNull(action.tagId)
+                tagId = action.tagId
             )
         }
+    }
+
+    private fun MemoBulkAction.tagIdOrNull(): TagId? = when (this) {
+        is MemoBulkAction.AddTag -> tagId
+
+        is MemoBulkAction.RemoveTag -> tagId
+
+        MemoBulkAction.MoveToTrash,
+        is MemoBulkAction.SetFavorite -> null
     }
 
     private suspend fun moveToTrash(memos: List<Memo>) {
