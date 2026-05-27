@@ -1,6 +1,8 @@
 package com.appvoyager.litememo.ui.component
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -9,9 +11,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,21 +42,37 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MemoCard(
     memo: MemoUiModel,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onFavoriteToggle: (() -> Unit)? = null
+    onFavoriteToggle: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    selected: Boolean = false
 ) {
     val accentColor = memoAccentColor(memo)
+    val containerColor = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val border = if (selected) {
+        BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+    } else {
+        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    }
 
     Card(
-        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        modifier = modifier
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = border,
+        modifier = modifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick,
+            role = Role.Button
+        )
     ) {
         Row(
             modifier = Modifier
@@ -76,10 +98,21 @@ fun MemoCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (onFavoriteToggle != null) {
+                    if (selected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = stringResource(R.string.selected_memo),
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    } else if (onFavoriteToggle != null) {
                         IconButton(onClick = onFavoriteToggle) {
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = if (memo.isFavorite) {
+                                    Icons.Default.Star
+                                } else {
+                                    Icons.Outlined.Star
+                                },
                                 contentDescription = if (memo.isFavorite) {
                                     stringResource(R.string.remove_favorite_memo)
                                 } else {

@@ -13,6 +13,7 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
+import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
@@ -21,6 +22,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
+import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import java.time.Instant
 import java.time.ZoneId
@@ -235,7 +237,7 @@ class HomeViewModelTest {
     fun setMemoFavoriteUpdatesMemoFavoriteState() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(
-            memos = listOf(memoFixture(id = "memo-1", title = "Pinned"))
+            memos = listOf(memoFixture(id = "memo-1", title = "Favorite"))
         )
         advanceUntilIdle()
 
@@ -253,17 +255,155 @@ class HomeViewModelTest {
         // Arrange
         val memo = memoFixture(id = "memo-1")
         val viewModel = homeViewModel(
-            memoRepository = FavoriteUpdateFailingMemoRepository(memo)
+            memoRepository = SaveFailingMemoRepository(memo)
         )
         advanceUntilIdle()
 
         // Act
         viewModel.setMemoFavorite("memo-1", true)
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.hasError }
+        val state = viewModel.uiState.first { it.hasActionError }
 
         // Assert
-        assertTrue(state.hasError)
+        assertTrue(state.hasActionError)
+    }
+
+    @Test
+    fun startSelectionSelectsMemoWhenMemoIsLongPressed() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+        advanceUntilIdle()
+
+        // Act
+        viewModel.startSelection(MemoId("memo-1"))
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"))
+        }
+
+        // Assert
+        assertEquals(setOf(MemoId("memo-1")), state.selection.selectedMemoIds)
+    }
+
+    @Test
+    fun toggleMemoSelectionClearsSelectionWhenLastSelectedMemoIsToggled() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.uiState.first { it.selection.isActive }
+
+        // Act
+        viewModel.toggleMemoSelection(MemoId("memo-1"))
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.selection.isActive }
+
+        // Assert
+        assertEquals(emptySet<MemoId>(), state.selection.selectedMemoIds)
+    }
+
+    @Test
+    fun moveSelectedMemosToTrashClearsSelectionWhenBulkActionSucceeds() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.uiState.first { it.selection.isActive }
+
+        // Act
+        viewModel.moveSelectedMemosToTrash()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.selection.isActive && it.memos.isEmpty() }
+
+        // Assert
+        assertEquals(false, state.selection.isActive)
+    }
+
+    @Test
+    fun setSelectedMemosFavoriteKeepsSelectionWhenBulkActionFails() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+        val viewModel = homeViewModel(
+            memoRepository = SaveFailingMemoRepository(memo)
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.uiState.first { it.selection.isActive }
+
+        // Act
+        viewModel.setSelectedMemosFavorite(true)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.hasActionError }
+
+        // Assert
+        val expected = true to setOf(MemoId("memo-1"))
+        val actual = state.hasActionError to state.selection.selectedMemoIds
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun requestAddTagToSelectedMemosShowsTagDialog() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.uiState.first { it.selection.isActive }
+
+        // Act
+        viewModel.requestAddTagToSelectedMemos()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
+        }
+
+        // Assert
+        assertEquals(HomeBulkTagDialogUiState.Operation.AddTag, state.bulkTagDialog.operation)
+    }
+
+    @Test
+    fun dismissBulkTagDialogClearsDialog() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.requestAddTagToSelectedMemos()
+        viewModel.uiState.first {
+            it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
+        }
+
+        // Act
+        viewModel.dismissBulkTagDialog()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selection.isActive && it.bulkTagDialog.operation == null
+        }
+
+        // Assert
+        assertEquals(null, state.bulkTagDialog.operation)
+    }
+
+    @Test
+    fun applySelectedTagClearsSelectionWhenBulkActionSucceeds() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1")),
+            tags = listOf(tagFixture(id = tagId.value))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.requestAddTagToSelectedMemos()
+        viewModel.uiState.first {
+            it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
+        }
+
+        // Act
+        viewModel.applySelectedTag(tagId)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.selection.isActive }
+
+        // Assert
+        assertEquals(false to null, state.selection.isActive to state.bulkTagDialog.operation)
     }
 
     @Test
@@ -314,7 +454,12 @@ class HomeViewModelTest {
                 memoRepository,
                 MutableTimeProvider(TimestampMillis(today + 1))
             ),
-            setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository)
+            setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
+            applyMemoBulkActionUseCase = ApplyMemoBulkActionUseCase(
+                memoRepository = memoRepository,
+                tagRepository = tagRepository,
+                currentTimeProvider = MutableTimeProvider(TimestampMillis(today + 1))
+            )
         )
     }
 
@@ -352,7 +497,7 @@ class HomeViewModelTest {
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
     }
 
-    private class FavoriteUpdateFailingMemoRepository(private val memo: Memo) : MemoRepository {
+    private class SaveFailingMemoRepository(private val memo: Memo) : MemoRepository {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
 
@@ -369,7 +514,7 @@ class HomeViewModelTest {
         override suspend fun getActiveMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
 
         override suspend fun saveMemo(memo: Memo): Unit =
-            throw IllegalStateException("Failed to update favorite.")
+            throw IllegalStateException("Failed to save memo.")
 
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
 
@@ -381,6 +526,7 @@ class HomeViewModelTest {
 
         override suspend fun getAllActiveMemos(): List<Memo> = emptyList()
 
-        override suspend fun saveAllMemos(memos: List<Memo>) = Unit
+        override suspend fun saveAllMemos(memos: List<Memo>): Unit =
+            throw IllegalStateException("Failed to save memos.")
     }
 }
