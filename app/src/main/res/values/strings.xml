@@ -110,6 +110,16 @@
     <string name="settings_sort_order">メモの並び替え</string>
     <string name="settings_sort_updated">更新日順</string>
     <string name="settings_sort_created">作成日順</string>
+    <string name="settings_section_data">データ管理</string>
+    <string name="settings_export">エクスポート</string>
+    <string name="settings_import">インポート</string>
+    <string name="settings_export_success">エクスポートが完了しました</string>
+    <string name="settings_export_error">エクスポートに失敗しました</string>
+    <string name="settings_import_success">取り込みが完了しました</string>
+    <string name="settings_import_error">ファイルの読み込みに失敗しました</string>
+    <string name="settings_import_confirm_title">データの取り込み</string>
+    <string name="settings_import_confirm_message">ファイルからデータを取り込みます。同じIDのメモやタグは上書きされます。続けますか？</string>
+    <string name="settings_import_confirm_ok">取り込む</string>
     <string name="settings_section_app_info">アプリ情報</string>
     <string name="settings_version">バージョン</string>
     <string name="settings_privacy_policy">プライバシーポリシー</string>

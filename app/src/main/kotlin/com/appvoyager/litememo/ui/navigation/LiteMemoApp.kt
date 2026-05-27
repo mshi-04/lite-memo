@@ -130,6 +130,7 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
             }
             composable(LiteMemoDestination.Settings.route) {
                 SettingsRoute(
+                    snackbarHostState = snackbarHostState,
                     onOpenSourceLicenseClick = {
                         navController.navigate(OSS_LICENSES_ROUTE)
                     },
