@@ -86,7 +86,12 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         val now = currentTimeProvider.now()
         val updated = memos
             .filter { tagId in it.tagIds }
-            .map { memo -> memo.copy(updatedAt = now, tagIds = memo.tagIds.filterNot { it == tagId }) }
+            .map { memo ->
+                memo.copy(
+                    updatedAt = now,
+                    tagIds = memo.tagIds.filterNot { it == tagId },
+                )
+            }
         memoRepository.saveAllMemos(updated)
     }
 }
