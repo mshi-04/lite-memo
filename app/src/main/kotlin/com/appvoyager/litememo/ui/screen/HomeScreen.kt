@@ -472,6 +472,9 @@ private fun HomeSelectionToolbar(
 @Composable
 private fun SelectionMoreMenu(enabled: Boolean, onShareClick: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(enabled) {
+        if (!enabled) expanded = false
+    }
     Box {
         IconButton(
             onClick = { expanded = true },
