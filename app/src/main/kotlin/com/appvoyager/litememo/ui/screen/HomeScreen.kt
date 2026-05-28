@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -93,6 +94,7 @@ fun HomeScreen(
     onApplySelectedTag: (TagId) -> Unit,
     onDismissBulkTagDialog: () -> Unit,
     onDismissActionError: () -> Unit,
+    onShareSelectedMemo: () -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
@@ -131,6 +133,7 @@ fun HomeScreen(
                 onSetSelectedMemosFavorite = onSetSelectedMemosFavorite,
                 onRequestAddTagToSelectedMemos = onRequestAddTagToSelectedMemos,
                 onRequestRemoveTagFromSelectedMemos = onRequestRemoveTagFromSelectedMemos,
+                onShareSelectedMemo = onShareSelectedMemo,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -172,6 +175,7 @@ private fun HomeContent(
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
     onRequestAddTagToSelectedMemos: () -> Unit,
     onRequestRemoveTagFromSelectedMemos: () -> Unit,
+    onShareSelectedMemo: () -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -189,7 +193,8 @@ private fun HomeContent(
                     onAddFavorite = { onSetSelectedMemosFavorite(true) },
                     onRemoveFavorite = { onSetSelectedMemosFavorite(false) },
                     onAddTag = onRequestAddTagToSelectedMemos,
-                    onRemoveTag = onRequestRemoveTagFromSelectedMemos
+                    onRemoveTag = onRequestRemoveTagFromSelectedMemos,
+                    onShareSelectedMemo = onShareSelectedMemo
                 )
             } else {
                 HomeTopBar(
@@ -398,7 +403,8 @@ private fun HomeSelectionToolbar(
     onAddFavorite: () -> Unit,
     onRemoveFavorite: () -> Unit,
     onAddTag: () -> Unit,
-    onRemoveTag: () -> Unit
+    onRemoveTag: () -> Unit,
+    onShareSelectedMemo: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -444,6 +450,10 @@ private fun HomeSelectionToolbar(
                     tint = MaterialTheme.colorScheme.outline
                 )
             }
+            SelectionMoreMenu(
+                enabled = selectedCount == 1,
+                onShareClick = onShareSelectedMemo
+            )
         }
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -455,6 +465,37 @@ private fun HomeSelectionToolbar(
             TextButton(onClick = onRemoveTag) {
                 Text(text = stringResource(R.string.remove_tag_from_selected_memos))
             }
+        }
+    }
+}
+
+@Composable
+private fun SelectionMoreMenu(enabled: Boolean, onShareClick: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(enabled) {
+        if (!enabled) expanded = false
+    }
+    Box {
+        IconButton(
+            onClick = { expanded = true },
+            enabled = enabled
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(R.string.more_options)
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.share_memo)) },
+                onClick = {
+                    expanded = false
+                    onShareClick()
+                }
+            )
         }
     }
 }
@@ -720,6 +761,7 @@ private fun HomeScreenPreview() {
             onApplySelectedTag = {},
             onDismissBulkTagDialog = {},
             onDismissActionError = {},
+            onShareSelectedMemo = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}
@@ -751,6 +793,7 @@ private fun HomeScreenDarkPreview() {
             onApplySelectedTag = {},
             onDismissBulkTagDialog = {},
             onDismissActionError = {},
+            onShareSelectedMemo = {},
             onMemoClick = {},
             onCreateMemoClick = {},
             onRetry = {}

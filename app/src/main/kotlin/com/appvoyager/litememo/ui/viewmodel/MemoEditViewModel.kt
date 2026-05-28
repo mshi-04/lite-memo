@@ -13,6 +13,7 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.usecase.ClearMemoEditDraftUseCase
+import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
@@ -45,7 +46,8 @@ class MemoEditViewModel @Inject constructor(
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val getMemoEditDraftUseCase: GetMemoEditDraftUseCase,
     private val saveMemoEditDraftUseCase: SaveMemoEditDraftUseCase,
-    private val clearMemoEditDraftUseCase: ClearMemoEditDraftUseCase
+    private val clearMemoEditDraftUseCase: ClearMemoEditDraftUseCase,
+    private val formatMemoTextUseCase: FormatMemoTextUseCase
 ) : ViewModel() {
 
     private val memoId: String? = savedStateHandle["memoId"]
@@ -126,6 +128,11 @@ class MemoEditViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, hasError = true) }
             }
         }
+    }
+
+    fun formatMemoText(): String? {
+        val state = _uiState.value
+        return formatMemoTextUseCase(state.title, state.body)
     }
 
     fun updateTitle(title: String) {

@@ -71,6 +71,9 @@
     <string name="memo_edit_draft_error_message">下書きの操作に失敗しました</string>
     <string name="undo_label">元に戻す</string>
     <string name="cancel_label">キャンセル</string>
+    <string name="share_memo">共有</string>
+    <string name="share_memo_error">共有できませんでした</string>
+    <string name="share_chooser_title">共有</string>
 
     <!-- Tag Manage -->
     <string name="settings_tag_manage">タグ管理</string>

@@ -12,6 +12,7 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
+import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
@@ -53,7 +54,8 @@ class HomeViewModel @Inject constructor(
     private val searchMemosUseCase: SearchMemosUseCase,
     private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
-    private val applyMemoBulkActionUseCase: ApplyMemoBulkActionUseCase
+    private val applyMemoBulkActionUseCase: ApplyMemoBulkActionUseCase,
+    private val formatMemoTextUseCase: FormatMemoTextUseCase
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
@@ -248,6 +250,14 @@ class HomeViewModel @Inject constructor(
             HomeBulkTagDialogUiState.Operation.RemoveTag -> MemoBulkAction.removeTag(tagId)
         }
         applySelectedMemoAction(action)
+    }
+
+    fun formatMemoText(title: String, body: String): String? = formatMemoTextUseCase(title, body)
+
+    fun getSelectedMemoForShare(): MemoUiModel? {
+        val state = uiState.value
+        val selectedId = state.selection.selectedMemoIds.singleOrNull() ?: return null
+        return (state.memos + state.searchResults).find { it.id == selectedId.value }
     }
 
     fun dismissActionError() {

@@ -15,6 +15,7 @@ import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
+import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
@@ -407,6 +408,110 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun formatMemoTextJoinsTitleAndBodyWhenBothPresent() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+
+        // Act
+        val formatted = viewModel.formatMemoText(" タイトル ", " 本文 ")
+
+        // Assert
+        assertEquals("タイトル\n\n本文", formatted)
+    }
+
+    @Test
+    fun formatMemoTextReturnsTitleOnlyWhenBodyIsBlank() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+
+        // Act
+        val formatted = viewModel.formatMemoText("タイトル", "   ")
+
+        // Assert
+        assertEquals("タイトル", formatted)
+    }
+
+    @Test
+    fun formatMemoTextReturnsBodyOnlyWhenTitleIsBlank() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+
+        // Act
+        val formatted = viewModel.formatMemoText("   ", "本文")
+
+        // Assert
+        assertEquals("本文", formatted)
+    }
+
+    @Test
+    fun formatMemoTextReturnsNullWhenTitleAndBodyAreBlank() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel()
+
+        // Act
+        val formatted = viewModel.formatMemoText("   ", "")
+
+        // Assert
+        assertEquals(null, formatted)
+    }
+
+    @Test
+    fun getSelectedMemoForShareReturnsMemoWhenSingleMemoIsSelected() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1", title = "共有対象"))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.uiState.first { it.selection.selectedMemoIds == setOf(MemoId("memo-1")) }
+
+        // Act
+        val selected = viewModel.getSelectedMemoForShare()
+
+        // Assert
+        assertEquals("memo-1" to "共有対象", selected?.id to selected?.title)
+    }
+
+    @Test
+    fun getSelectedMemoForShareReturnsNullWhenMultipleMemosAreSelected() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1"),
+                memoFixture(id = "memo-2")
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+        viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
+
+        // Act
+        val selected = viewModel.getSelectedMemoForShare()
+
+        // Assert
+        assertEquals(null, selected)
+    }
+
+    @Test
+    fun getSelectedMemoForShareReturnsNullWhenNoMemoIsSelected() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1"))
+        )
+        advanceUntilIdle()
+        viewModel.uiState.first { !it.isLoading }
+
+        // Act
+        val selected = viewModel.getSelectedMemoForShare()
+
+        // Assert
+        assertEquals(null, selected)
+    }
+
+    @Test
     fun uiStateIsEmptyWhenNoMemosExist() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
@@ -459,7 +564,8 @@ class HomeViewModelTest {
                 memoRepository = memoRepository,
                 tagRepository = tagRepository,
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(today + 1))
-            )
+            ),
+            formatMemoTextUseCase = FormatMemoTextUseCase()
         )
     }
 
