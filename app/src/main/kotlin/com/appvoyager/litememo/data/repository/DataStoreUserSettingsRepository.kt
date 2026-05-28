@@ -2,6 +2,7 @@ package com.appvoyager.litememo.data.repository
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -34,6 +35,10 @@ class DataStoreUserSettingsRepository @Inject constructor(
             ?: MemoSortOrder.UPDATED_NEWEST
     }
 
+    override fun observeAppLockEnabled(): Flow<Boolean> = preferencesFlow.map { prefs ->
+        prefs[APP_LOCK_ENABLED_KEY] ?: false
+    }
+
     override suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { prefs -> prefs[THEME_MODE_KEY] = mode.name }
     }
@@ -42,8 +47,13 @@ class DataStoreUserSettingsRepository @Inject constructor(
         dataStore.edit { prefs -> prefs[MEMO_SORT_ORDER_KEY] = order.name }
     }
 
+    override suspend fun setAppLockEnabled(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[APP_LOCK_ENABLED_KEY] = enabled }
+    }
+
     private companion object {
         val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         val MEMO_SORT_ORDER_KEY = stringPreferencesKey("memo_sort_order")
+        val APP_LOCK_ENABLED_KEY = booleanPreferencesKey("app_lock_enabled")
     }
 }
