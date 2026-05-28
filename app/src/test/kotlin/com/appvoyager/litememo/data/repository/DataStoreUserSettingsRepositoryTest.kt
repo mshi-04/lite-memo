@@ -17,7 +17,7 @@ class DataStoreUserSettingsRepositoryTest {
     @Test
     fun observeAppLockEnabledReturnsDefaultValue() = runTest {
         // Arrange
-        val repository = repository(this)
+        val repository = repository(backgroundScope)
 
         // Act
         val result = repository.observeAppLockEnabled().first()
@@ -29,7 +29,7 @@ class DataStoreUserSettingsRepositoryTest {
     @Test
     fun observeAppLockEnabledReturnsSavedValue() = runTest {
         // Arrange
-        val repository = repository(this)
+        val repository = repository(backgroundScope)
 
         // Act
         repository.setAppLockEnabled(true)
