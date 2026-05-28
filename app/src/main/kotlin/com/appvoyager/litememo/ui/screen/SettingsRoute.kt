@@ -15,6 +15,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 import java.time.LocalDateTime
@@ -31,6 +32,7 @@ private fun defaultExportFileName(): String {
 @Composable
 fun SettingsRoute(
     snackbarHostState: SnackbarHostState,
+    onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit = {},
     onOpenSourceLicenseClick: () -> Unit = {},
     onTagManageClick: () -> Unit = {},
     onTrashClick: () -> Unit = {},
@@ -56,14 +58,32 @@ fun SettingsRoute(
     val exportErrorMessage = stringResource(R.string.settings_export_error)
     val importSuccessMessage = stringResource(R.string.settings_import_success)
     val importErrorMessage = stringResource(R.string.settings_import_error)
+    val appLockAuthenticationCanceledMessage =
+        stringResource(R.string.settings_app_lock_auth_canceled)
+    val appLockNoDeviceCredentialMessage =
+        stringResource(R.string.settings_app_lock_no_device_credential)
+    val appLockUnavailableMessage = stringResource(R.string.settings_app_lock_unavailable)
 
     LaunchedEffect(viewModel) {
         viewModel.snackbarEvent.collect { event ->
             val message = when (event) {
                 SettingsSnackbarEvent.ExportSuccess -> exportSuccessMessage
+
                 SettingsSnackbarEvent.ExportError -> exportErrorMessage
+
                 SettingsSnackbarEvent.ImportSuccess -> importSuccessMessage
+
                 SettingsSnackbarEvent.ImportError -> importErrorMessage
+
+                SettingsSnackbarEvent.AppLockAuthenticationCanceled -> {
+                    appLockAuthenticationCanceledMessage
+                }
+
+                SettingsSnackbarEvent.AppLockNoDeviceCredential -> {
+                    appLockNoDeviceCredentialMessage
+                }
+
+                SettingsSnackbarEvent.AppLockUnavailable -> appLockUnavailableMessage
             }
             snackbarHostState.showSnackbar(
                 message = message,
@@ -76,6 +96,15 @@ fun SettingsRoute(
         uiState = uiState,
         onThemeModeSelected = { viewModel.setThemeMode(it) },
         onMemoSortOrderSelected = { viewModel.setMemoSortOrder(it) },
+        onAppLockEnabledChange = { enabled ->
+            if (enabled) {
+                onRequestAppLockAuthentication { result ->
+                    viewModel.onAppLockEnableAuthenticationResult(result)
+                }
+            } else {
+                viewModel.setAppLockEnabled(false)
+            }
+        },
         onShowThemeDialog = { viewModel.showThemeDialog() },
         onDismissThemeDialog = { viewModel.dismissThemeDialog() },
         onExpandSortOrder = { viewModel.expandSortOrder() },

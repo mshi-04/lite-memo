@@ -12,6 +12,18 @@
     <string name="more_options">その他</string>
     <string name="unknown_error">メモを読み込めませんでした。</string>
     <string name="retry_label">再試行</string>
+    <string name="app_lock_title">LiteMemo はロック中です</string>
+    <string name="app_lock_body">メモを見るには端末認証でロックを解除してください。</string>
+    <string name="app_lock_loading">設定を確認しています。</string>
+    <string name="app_lock_authenticating">端末認証を待っています。</string>
+    <string name="app_lock_unlock">ロック解除</string>
+    <string name="app_lock_prompt_title">LiteMemo のロック解除</string>
+    <string name="app_lock_prompt_subtitle">メモを見るには端末認証を行ってください。</string>
+    <string name="app_lock_use_device_credential">画面ロックを使う</string>
+    <string name="app_lock_auth_failed">認証に失敗しました。もう一度お試しください。</string>
+    <string name="app_lock_auth_canceled">認証がキャンセルされました。</string>
+    <string name="app_lock_no_device_credential">端末の画面ロックを設定してから、もう一度お試しください。</string>
+    <string name="app_lock_auth_unavailable">現在、端末認証を利用できません。</string>
 
     <!-- Home -->
     <string name="welcome_back">おかえりなさい</string>
@@ -126,6 +138,11 @@
     <string name="settings_sort_order">メモの並び替え</string>
     <string name="settings_sort_updated">更新日順</string>
     <string name="settings_sort_created">作成日順</string>
+    <string name="settings_section_privacy">プライバシー</string>
+    <string name="settings_app_lock">アプリロック</string>
+    <string name="settings_app_lock_auth_canceled">認証が完了しなかったため、アプリロックを有効にできませんでした。</string>
+    <string name="settings_app_lock_no_device_credential">端末の画面ロックを設定してから有効にしてください。</string>
+    <string name="settings_app_lock_unavailable">現在、端末認証を利用できません。</string>
     <string name="settings_section_data">データ管理</string>
     <string name="settings_export">エクスポート</string>
     <string name="settings_import">インポート</string>

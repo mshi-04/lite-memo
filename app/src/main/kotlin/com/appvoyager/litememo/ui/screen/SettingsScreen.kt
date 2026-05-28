@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,6 +47,7 @@ fun SettingsScreen(
     uiState: SettingsUiState,
     onThemeModeSelected: (ThemeMode) -> Unit,
     onMemoSortOrderSelected: (MemoSortOrder) -> Unit,
+    onAppLockEnabledChange: (Boolean) -> Unit,
     onShowThemeDialog: () -> Unit,
     onDismissThemeDialog: () -> Unit,
     onExpandSortOrder: () -> Unit,
@@ -122,6 +124,20 @@ fun SettingsScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                SectionHeader(text = stringResource(R.string.settings_section_privacy))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.settings_app_lock),
+                    checked = uiState.appLockEnabled,
+                    onCheckedChange = onAppLockEnabledChange
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -341,6 +357,28 @@ private fun VersionRow(version: String) {
             text = version,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun SettingsSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
         )
     }
 }

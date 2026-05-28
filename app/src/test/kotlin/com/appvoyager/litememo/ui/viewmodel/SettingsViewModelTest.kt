@@ -10,13 +10,17 @@ import com.appvoyager.litememo.domain.repository.ExportFileRepository
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
+import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -91,15 +95,42 @@ class SettingsViewModelTest {
         }
     }
 
-    private fun settingsViewModel(exportFileRepository: ExportFileRepository): SettingsViewModel {
+    @Test
+    fun appLockAuthenticationSuccessEnablesAppLock() = runTest(dispatcher) {
+        // Arrange
+        val userSettingsRepository = FakeUserSettingsRepository()
+        val viewModel = settingsViewModel(
+            exportFileRepository = BlockingExportFileRepository(),
+            userSettingsRepository = userSettingsRepository
+        )
+
+        // Act
+        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(true, userSettingsRepository.observeAppLockEnabled().first())
+    }
+
+    private fun settingsViewModel(exportFileRepository: ExportFileRepository): SettingsViewModel =
+        settingsViewModel(
+            exportFileRepository = exportFileRepository,
+            userSettingsRepository = FakeUserSettingsRepository()
+        )
+
+    private fun settingsViewModel(
+        exportFileRepository: ExportFileRepository,
+        userSettingsRepository: FakeUserSettingsRepository
+    ): SettingsViewModel {
         val memoRepository = FakeMemoRepository()
         val tagRepository = FakeTagRepository()
-        val userSettingsRepository = FakeUserSettingsRepository()
         return SettingsViewModel(
             observeThemeModeUseCase = ObserveThemeModeUseCase(userSettingsRepository),
             setThemeModeUseCase = SetThemeModeUseCase(userSettingsRepository),
             observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
             setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
+            observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(userSettingsRepository),
+            setAppLockEnabledUseCase = SetAppLockEnabledUseCase(userSettingsRepository),
             exportMemosUseCase = ExportMemosUseCase(
                 memoRepository = memoRepository,
                 tagRepository = tagRepository,
