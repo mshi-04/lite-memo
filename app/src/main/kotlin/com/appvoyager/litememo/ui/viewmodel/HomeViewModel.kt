@@ -252,8 +252,7 @@ class HomeViewModel @Inject constructor(
         applySelectedMemoAction(action)
     }
 
-    fun formatMemoText(title: String, body: String): String? =
-        formatMemoTextUseCase(title, body)
+    fun formatMemoText(title: String, body: String): String? = formatMemoTextUseCase(title, body)
 
     fun getSelectedMemoForShare(): MemoUiModel? {
         val state = uiState.value

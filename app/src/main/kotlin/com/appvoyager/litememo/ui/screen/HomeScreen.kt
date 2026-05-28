@@ -470,10 +470,7 @@ private fun HomeSelectionToolbar(
 }
 
 @Composable
-private fun SelectionMoreMenu(
-    enabled: Boolean,
-    onShareClick: () -> Unit
-) {
+private fun SelectionMoreMenu(enabled: Boolean, onShareClick: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(
