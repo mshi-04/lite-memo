@@ -68,21 +68,13 @@ fun SettingsRoute(
         viewModel.snackbarEvent.collect { event ->
             val message = when (event) {
                 SettingsSnackbarEvent.ExportSuccess -> exportSuccessMessage
-
                 SettingsSnackbarEvent.ExportError -> exportErrorMessage
-
                 SettingsSnackbarEvent.ImportSuccess -> importSuccessMessage
-
                 SettingsSnackbarEvent.ImportError -> importErrorMessage
-
-                SettingsSnackbarEvent.AppLockAuthenticationCanceled -> {
+                SettingsSnackbarEvent.AppLockAuthenticationCanceled ->
                     appLockAuthenticationCanceledMessage
-                }
-
-                SettingsSnackbarEvent.AppLockNoDeviceCredential -> {
+                SettingsSnackbarEvent.AppLockNoDeviceCredential ->
                     appLockNoDeviceCredentialMessage
-                }
-
                 SettingsSnackbarEvent.AppLockUnavailable -> appLockUnavailableMessage
             }
             snackbarHostState.showSnackbar(

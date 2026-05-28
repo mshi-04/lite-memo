@@ -112,6 +112,89 @@ class SettingsViewModelTest {
         assertEquals(true, userSettingsRepository.observeAppLockEnabled().first())
     }
 
+    @Test
+    fun appLockNoDeviceCredentialEmitsSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+        // Arrange
+        val userSettingsRepository = FakeUserSettingsRepository()
+        val viewModel = settingsViewModel(
+            exportFileRepository = BlockingExportFileRepository(),
+            userSettingsRepository = userSettingsRepository
+        )
+
+        // Act
+        viewModel.onAppLockEnableAuthenticationResult(
+            AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(
+            SettingsSnackbarEvent.AppLockNoDeviceCredential,
+            viewModel.snackbarEvent.first()
+        )
+        assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
+    }
+
+    @Test
+    fun appLockUnavailableEmitsSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+        // Arrange
+        val userSettingsRepository = FakeUserSettingsRepository()
+        val viewModel = settingsViewModel(
+            exportFileRepository = BlockingExportFileRepository(),
+            userSettingsRepository = userSettingsRepository
+        )
+
+        // Act
+        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.UNAVAILABLE)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(SettingsSnackbarEvent.AppLockUnavailable, viewModel.snackbarEvent.first())
+        assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
+    }
+
+    @Test
+    fun appLockFailedEmitsCanceledSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+        // Arrange
+        val userSettingsRepository = FakeUserSettingsRepository()
+        val viewModel = settingsViewModel(
+            exportFileRepository = BlockingExportFileRepository(),
+            userSettingsRepository = userSettingsRepository
+        )
+
+        // Act
+        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.FAILED)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(
+            SettingsSnackbarEvent.AppLockAuthenticationCanceled,
+            viewModel.snackbarEvent.first()
+        )
+        assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
+    }
+
+    @Test
+    fun appLockCanceledEmitsCanceledSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+        // Arrange
+        val userSettingsRepository = FakeUserSettingsRepository()
+        val viewModel = settingsViewModel(
+            exportFileRepository = BlockingExportFileRepository(),
+            userSettingsRepository = userSettingsRepository
+        )
+
+        // Act
+        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.CANCELED)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(
+            SettingsSnackbarEvent.AppLockAuthenticationCanceled,
+            viewModel.snackbarEvent.first()
+        )
+        assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
+    }
+
     private fun settingsViewModel(exportFileRepository: ExportFileRepository): SettingsViewModel =
         settingsViewModel(
             exportFileRepository = exportFileRepository,
