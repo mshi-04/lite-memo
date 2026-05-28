@@ -54,7 +54,10 @@ private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.
 private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"
 
 @Composable
-fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
+fun LiteMemoApp(
+    onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    viewModel: LiteMemoAppViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val backStackEntry by navController.currentBackStackEntryAsState()
