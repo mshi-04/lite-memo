@@ -15,6 +15,7 @@ import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
+import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
@@ -459,7 +460,8 @@ class HomeViewModelTest {
                 memoRepository = memoRepository,
                 tagRepository = tagRepository,
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(today + 1))
-            )
+            ),
+            formatMemoTextUseCase = FormatMemoTextUseCase()
         )
     }
 

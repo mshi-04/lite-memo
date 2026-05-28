@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -18,10 +19,12 @@ fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (MemoId) -> Unit,
     onDraftError: () -> Unit,
+    onShareError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MemoEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(viewModel) {
         viewModel.navigationEvent.collect { event ->
@@ -55,6 +58,14 @@ fun MemoEditRoute(
         onDelete = { viewModel.delete() },
         onBackRequest = { viewModel.requestBack() },
         onRetry = { viewModel.reload() },
+        onShareMemo = {
+            val text = viewModel.formatMemoText() ?: return@MemoEditScreen
+            context.launchShareMemo(
+                text = text,
+                subject = uiState.title.trim().ifEmpty { null },
+                onError = onShareError
+            )
+        },
         modifier = modifier
     )
 }

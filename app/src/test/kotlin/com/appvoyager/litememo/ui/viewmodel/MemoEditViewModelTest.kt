@@ -17,6 +17,7 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ClearMemoEditDraftUseCase
+import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
@@ -248,7 +249,8 @@ class MemoEditViewModelTest {
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             getMemoEditDraftUseCase = GetMemoEditDraftUseCase(draftRepository),
             saveMemoEditDraftUseCase = SaveMemoEditDraftUseCase(draftRepository),
-            clearMemoEditDraftUseCase = ClearMemoEditDraftUseCase(draftRepository)
+            clearMemoEditDraftUseCase = ClearMemoEditDraftUseCase(draftRepository),
+            formatMemoTextUseCase = FormatMemoTextUseCase()
         )
     }
 
