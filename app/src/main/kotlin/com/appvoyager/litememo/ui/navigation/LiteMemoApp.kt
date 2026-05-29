@@ -1,10 +1,6 @@
 package com.appvoyager.litememo.ui.navigation
 
-import android.app.Activity
-import android.app.KeyguardManager
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -18,12 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -59,7 +52,6 @@ fun LiteMemoApp(
     viewModel: LiteMemoAppViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
-    val context = LocalContext.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val snackbarHostState = remember { SnackbarHostState() }
@@ -69,24 +61,6 @@ fun LiteMemoApp(
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
     val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
-    val appLockPromptTitle = stringResource(R.string.app_lock_prompt_title)
-    val appLockPromptSubtitle = stringResource(R.string.app_lock_prompt_subtitle)
-
-    var appLockAuthenticationCallback by remember {
-        mutableStateOf<((AppLockAuthenticationResult) -> Unit)?>(null)
-    }
-    val appLockAuthenticationLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val callback = appLockAuthenticationCallback ?: return@rememberLauncherForActivityResult
-        appLockAuthenticationCallback = null
-        val authenticationResult = if (result.resultCode == Activity.RESULT_OK) {
-            AppLockAuthenticationResult.SUCCEEDED
-        } else {
-            AppLockAuthenticationResult.CANCELED
-        }
-        callback(authenticationResult)
-    }
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
         currentDestination?.hierarchy?.any { it.route == dest.route } == true
@@ -170,32 +144,7 @@ fun LiteMemoApp(
             composable(LiteMemoDestination.Settings.route) {
                 SettingsRoute(
                     snackbarHostState = snackbarHostState,
-                    onRequestAppLockAuthentication = { callback ->
-                        if (appLockAuthenticationCallback != null) {
-                            callback(AppLockAuthenticationResult.CANCELED)
-                        } else {
-                            val keyguardManager = context.getSystemService(
-                                KeyguardManager::class.java
-                            )
-                            if (keyguardManager == null) {
-                                callback(AppLockAuthenticationResult.UNAVAILABLE)
-                            } else if (!keyguardManager.isDeviceSecure) {
-                                callback(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
-                            } else {
-                                @Suppress("DEPRECATION")
-                                val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                                    appLockPromptTitle,
-                                    appLockPromptSubtitle
-                                )
-                                if (intent == null) {
-                                    callback(AppLockAuthenticationResult.UNAVAILABLE)
-                                } else {
-                                    appLockAuthenticationCallback = callback
-                                    appLockAuthenticationLauncher.launch(intent)
-                                }
-                            }
-                        }
-                    },
+                    onRequestAppLockAuthentication = onRequestAppLockAuthentication,
                     onOpenSourceLicenseClick = {
                         navController.navigate(OSS_LICENSES_ROUTE)
                     },

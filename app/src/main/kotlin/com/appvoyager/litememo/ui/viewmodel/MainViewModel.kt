@@ -33,6 +33,9 @@ class MainViewModel @Inject constructor(
     private val _authenticationRequestEvent = Channel<Unit>(Channel.BUFFERED)
     val authenticationRequestEvent = _authenticationRequestEvent.receiveAsFlow()
 
+    private val _secureScreenEnabled = MutableStateFlow(false)
+    val secureScreenEnabled: StateFlow<Boolean> = _secureScreenEnabled
+
     private var appLockEnabled: Boolean? = null
 
     init {
@@ -40,7 +43,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun onAppStarted() {
-        if (appLockEnabled == true && _appLockUiState.value.status == AppLockStatus.LOCKED) {
+        if (appLockEnabled != true) return
+        val status = _appLockUiState.value.status
+        if (status == AppLockStatus.LOCKED || status == AppLockStatus.UNAVAILABLE) {
             requestUnlock()
         }
     }
@@ -95,6 +100,7 @@ class MainViewModel @Inject constructor(
             observeAppLockEnabledUseCase().collect { enabled ->
                 val previous = appLockEnabled
                 appLockEnabled = enabled
+                _secureScreenEnabled.value = enabled
 
                 when {
                     !enabled -> {

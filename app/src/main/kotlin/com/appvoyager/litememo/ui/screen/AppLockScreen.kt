@@ -30,6 +30,7 @@ import com.appvoyager.litememo.ui.state.AppLockUiState
 fun AppLockScreen(
     uiState: AppLockUiState,
     onUnlockClick: () -> Unit,
+    onOpenSecuritySettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -64,13 +65,22 @@ fun AppLockScreen(
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(24.dp))
-            if (uiState.status == AppLockStatus.LOADING ||
-                uiState.status == AppLockStatus.AUTHENTICATING
-            ) {
-                CircularProgressIndicator()
-            } else {
-                Button(onClick = onUnlockClick) {
-                    Text(text = stringResource(R.string.app_lock_unlock))
+            when {
+                uiState.status == AppLockStatus.LOADING ||
+                    uiState.status == AppLockStatus.AUTHENTICATING -> {
+                    CircularProgressIndicator()
+                }
+
+                uiState.message == AppLockMessage.NO_DEVICE_CREDENTIAL -> {
+                    Button(onClick = onOpenSecuritySettings) {
+                        Text(text = stringResource(R.string.app_lock_open_settings))
+                    }
+                }
+
+                else -> {
+                    Button(onClick = onUnlockClick) {
+                        Text(text = stringResource(R.string.app_lock_unlock))
+                    }
                 }
             }
         }

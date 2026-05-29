@@ -17,6 +17,7 @@
     <string name="app_lock_loading">設定を確認しています。</string>
     <string name="app_lock_authenticating">端末認証を待っています。</string>
     <string name="app_lock_unlock">ロック解除</string>
+    <string name="app_lock_open_settings">画面ロックを設定</string>
     <string name="app_lock_prompt_title">LiteMemo のロック解除</string>
     <string name="app_lock_prompt_subtitle">メモを見るには端末認証を行ってください。</string>
     <string name="app_lock_use_device_credential">画面ロックを使う</string>

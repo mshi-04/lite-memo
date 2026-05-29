@@ -76,6 +76,37 @@ class MainViewModelTest {
     }
 
     @Test
+    fun appStartRetriesAuthenticationWhenUnavailable() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        repository.setAppLockEnabled(true)
+        val viewModel = mainViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onAuthenticationResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
+        assertEquals(AppLockStatus.UNAVAILABLE, viewModel.appLockUiState.value.status)
+
+        // Act
+        viewModel.onAppStarted()
+
+        // Assert
+        assertEquals(AppLockStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
+    }
+
+    @Test
+    fun secureScreenReflectsAppLockEnabled() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        repository.setAppLockEnabled(true)
+        val viewModel = mainViewModel(repository)
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(true, viewModel.secureScreenEnabled.value)
+    }
+
+    @Test
     fun appStopLocksAppWhenAppLockIsEnabled() = runTest(dispatcher) {
         // Arrange
         val repository = FakeUserSettingsRepository()

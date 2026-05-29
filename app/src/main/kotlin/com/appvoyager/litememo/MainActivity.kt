@@ -1,6 +1,9 @@
 package com.appvoyager.litememo
 
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -31,6 +34,7 @@ class MainActivity : FragmentActivity() {
         appLockAuthenticator = AppLockAuthenticator(this)
         enableEdgeToEdge()
         observeAuthenticationRequests()
+        observeSecureScreen()
         setContent {
             val themeMode by mainViewModel.themeMode
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
@@ -50,7 +54,8 @@ class MainActivity : FragmentActivity() {
                 } else {
                     AppLockScreen(
                         uiState = appLockUiState,
-                        onUnlockClick = { mainViewModel.requestUnlock() }
+                        onUnlockClick = { mainViewModel.requestUnlock() },
+                        onOpenSecuritySettings = { openSecuritySettings() }
                     )
                 }
             }
@@ -77,5 +82,27 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    private fun observeSecureScreen() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.secureScreenEnabled.collect { enabled ->
+                    if (enabled) {
+                        window.setFlags(
+                            WindowManager.LayoutParams.FLAG_SECURE,
+                            WindowManager.LayoutParams.FLAG_SECURE
+                        )
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun openSecuritySettings() {
+        runCatching { startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS)) }
+            .onFailure { startActivity(Intent(Settings.ACTION_SETTINGS)) }
     }
 }
