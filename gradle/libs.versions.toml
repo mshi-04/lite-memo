@@ -10,6 +10,7 @@ room = "2.8.4"
 
 # AndroidX
 activityCompose = "1.13.0"
+biometric = "1.1.0"
 coreKtx = "1.18.0"
 datastore = "1.2.1"
 espressoCore = "3.7.0"
@@ -32,6 +33,7 @@ junitPlatform = "6.0.3"
 [libraries]
 # AndroidX
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
