@@ -7,6 +7,7 @@ import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.AppLockStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -61,6 +62,20 @@ class MainViewModelTest {
     }
 
     @Test
+    fun appLockEnabledEmitsAuthenticationRequestEvent() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        repository.setAppLockEnabled(true)
+        val viewModel = mainViewModel(repository)
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(Unit, viewModel.authenticationRequestEvent.first())
+    }
+
+    @Test
     fun authenticationSuccessUnlocksApp() = runTest(dispatcher) {
         // Arrange
         val repository = FakeUserSettingsRepository()
@@ -83,13 +98,42 @@ class MainViewModelTest {
         val viewModel = mainViewModel(repository)
         advanceUntilIdle()
         viewModel.onAuthenticationResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
-        assertEquals(AppLockStatus.UNAVAILABLE, viewModel.appLockUiState.value.status)
 
         // Act
         viewModel.onAppStarted()
 
         // Assert
         assertEquals(AppLockStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
+    }
+
+    @Test
+    fun authenticationFailureLocksApp() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        repository.setAppLockEnabled(true)
+        val viewModel = mainViewModel(repository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.onAuthenticationResult(AppLockAuthenticationResult.FAILED)
+
+        // Assert
+        assertEquals(AppLockStatus.LOCKED, viewModel.appLockUiState.value.status)
+    }
+
+    @Test
+    fun authenticationCanceledLocksApp() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        repository.setAppLockEnabled(true)
+        val viewModel = mainViewModel(repository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.onAuthenticationResult(AppLockAuthenticationResult.CANCELED)
+
+        // Assert
+        assertEquals(AppLockStatus.LOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -120,6 +164,19 @@ class MainViewModelTest {
 
         // Assert
         assertEquals(AppLockStatus.LOCKED, viewModel.appLockUiState.value.status)
+    }
+
+    @Test
+    fun appStopKeepsAppUnlockedWhenAppLockIsDisabled() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+        advanceUntilIdle()
+
+        // Act
+        viewModel.onAppStopped()
+
+        // Assert
+        assertEquals(AppLockStatus.UNLOCKED, viewModel.appLockUiState.value.status)
     }
 
     private fun mainViewModel(repository: FakeUserSettingsRepository) = MainViewModel(
