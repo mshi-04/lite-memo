@@ -220,8 +220,7 @@ class SettingsViewModelTest {
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(1_000L))
             ),
             importMemosUseCase = ImportMemosUseCase(
-                memoRepository = memoRepository,
-                tagRepository = tagRepository
+                memoRepository = memoRepository
             ),
             exportFileRepository = exportFileRepository,
             appVersion = "1.0.0"

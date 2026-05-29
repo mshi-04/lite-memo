@@ -63,6 +63,7 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     private val memos = MutableStateFlow(initialMemos)
     val savedMemos = mutableListOf<Memo>()
+    val importedTags = mutableListOf<Tag>()
     val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
@@ -140,6 +141,11 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         memos.value.filter { it.deletedAt == null }
 
     override suspend fun saveAllMemos(memos: List<Memo>) {
+        memos.forEach { saveMemo(it) }
+    }
+
+    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
+        importedTags += tags
         memos.forEach { saveMemo(it) }
     }
 
