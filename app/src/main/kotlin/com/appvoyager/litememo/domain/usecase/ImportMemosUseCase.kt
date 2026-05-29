@@ -4,9 +4,7 @@ import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
 
-class ImportMemosUseCase @Inject constructor(
-    private val memoRepository: MemoRepository
-) {
+class ImportMemosUseCase @Inject constructor(private val memoRepository: MemoRepository) {
 
     suspend operator fun invoke(data: ExportData) {
         require(data.version == ExportMemosUseCase.CURRENT_VERSION) {
