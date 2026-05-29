@@ -168,22 +168,28 @@ fun LiteMemoApp(viewModel: LiteMemoAppViewModel = hiltViewModel()) {
                 SettingsRoute(
                     snackbarHostState = snackbarHostState,
                     onRequestAppLockAuthentication = { callback ->
-                        val keyguardManager = context.getSystemService(KeyguardManager::class.java)
-                        if (keyguardManager == null) {
-                            callback(AppLockAuthenticationResult.UNAVAILABLE)
-                        } else if (!keyguardManager.isDeviceSecure) {
-                            callback(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
+                        if (appLockAuthenticationCallback != null) {
+                            callback(AppLockAuthenticationResult.CANCELED)
                         } else {
-                            @Suppress("DEPRECATION")
-                            val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                                appLockPromptTitle,
-                                appLockPromptSubtitle
+                            val keyguardManager = context.getSystemService(
+                                KeyguardManager::class.java
                             )
-                            if (intent == null) {
+                            if (keyguardManager == null) {
                                 callback(AppLockAuthenticationResult.UNAVAILABLE)
+                            } else if (!keyguardManager.isDeviceSecure) {
+                                callback(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
                             } else {
-                                appLockAuthenticationCallback = callback
-                                appLockAuthenticationLauncher.launch(intent)
+                                @Suppress("DEPRECATION")
+                                val intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                                    appLockPromptTitle,
+                                    appLockPromptSubtitle
+                                )
+                                if (intent == null) {
+                                    callback(AppLockAuthenticationResult.UNAVAILABLE)
+                                } else {
+                                    appLockAuthenticationCallback = callback
+                                    appLockAuthenticationLauncher.launch(intent)
+                                }
                             }
                         }
                     },
