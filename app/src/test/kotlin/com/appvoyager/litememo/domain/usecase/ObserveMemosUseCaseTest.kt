@@ -26,25 +26,39 @@ class ObserveMemosUseCaseTest {
     }
 
     @Test
-    fun invokeReturnsImportantMemosBeforeNormalMemos() = runTest {
+    fun invokeExcludesTrashedMemos() = runTest {
         // Arrange
-        val normal = memoFixture(id = "normal", updatedAt = 2000L)
-        val important = memoFixture(id = "important", updatedAt = 1000L, isImportant = true)
-        val repository = FakeMemoRepository(listOf(normal, important))
+        val active = memoFixture(id = "active")
+        val trashed = memoFixture(id = "trashed", deletedAt = 2_000L)
+        val repository = FakeMemoRepository(listOf(active, trashed))
 
         // Act
         val memos = ObserveMemosUseCase(repository, FakeUserSettingsRepository())().first()
 
         // Assert
-        assertEquals(listOf(important.id, normal.id), memos.map { it.id })
+        assertEquals(listOf(active.id), memos.map { it.id })
     }
 
     @Test
-    fun invokeReturnsImportantMemosBeforeNormalMemosWhenSortedByCreatedAt() = runTest {
+    fun invokeReturnsFavoriteMemosBeforeNormalMemos() = runTest {
+        // Arrange
+        val normal = memoFixture(id = "normal", updatedAt = 2000L)
+        val favorite = memoFixture(id = "favorite", updatedAt = 1000L, isFavorite = true)
+        val repository = FakeMemoRepository(listOf(normal, favorite))
+
+        // Act
+        val memos = ObserveMemosUseCase(repository, FakeUserSettingsRepository())().first()
+
+        // Assert
+        assertEquals(listOf(favorite.id, normal.id), memos.map { it.id })
+    }
+
+    @Test
+    fun invokeReturnsFavoriteMemosBeforeNormalMemosWhenSortedByCreatedAt() = runTest {
         // Arrange
         val normal = memoFixture(id = "normal", createdAt = 2000L)
-        val important = memoFixture(id = "important", createdAt = 1000L, isImportant = true)
-        val repository = FakeMemoRepository(listOf(normal, important))
+        val favorite = memoFixture(id = "favorite", createdAt = 1000L, isFavorite = true)
+        val repository = FakeMemoRepository(listOf(normal, favorite))
         val settingsRepository = FakeUserSettingsRepository()
         settingsRepository.setMemoSortOrder(MemoSortOrder.CREATED_NEWEST)
 
@@ -52,7 +66,7 @@ class ObserveMemosUseCaseTest {
         val memos = ObserveMemosUseCase(repository, settingsRepository)().first()
 
         // Assert
-        assertEquals(listOf(important.id, normal.id), memos.map { it.id })
+        assertEquals(listOf(favorite.id, normal.id), memos.map { it.id })
     }
 
 }

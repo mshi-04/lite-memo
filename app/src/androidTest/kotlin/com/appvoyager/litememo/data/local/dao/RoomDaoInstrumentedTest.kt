@@ -52,14 +52,14 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun observeMemosWithTagRefsCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
+    fun observeActiveMemosWithTagRefsCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-before", createdAt = 999L))
         memoDao.upsertMemo(memoEntity(id = "memo-start", createdAt = 1_000L))
         memoDao.upsertMemo(memoEntity(id = "memo-end", createdAt = 2_000L))
 
         // Act
-        val memos = memoDao.observeMemosWithTagRefsCreatedBetween(
+        val memos = memoDao.observeActiveMemosWithTagRefsCreatedBetween(
             fromMillis = 1_000L,
             toMillis = 2_000L
         ).first()
@@ -69,46 +69,46 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
-    fun observeMemosWithTagRefsBySearchPatternMatchesTitleOrBody() = runTest {
+    fun observeActiveMemosWithTagRefsBySearchPatternMatchesTitleOrBody() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-title", title = "Trip plan"))
         memoDao.upsertMemo(memoEntity(id = "memo-body", body = "Trip notes"))
         memoDao.upsertMemo(memoEntity(id = "memo-other", title = "Shopping"))
 
         // Act
-        val memos = memoDao.observeMemosWithTagRefsBySearchPattern("%Trip%").first()
+        val memos = memoDao.observeActiveMemosWithTagRefsBySearchPattern("%Trip%").first()
 
         // Assert
         assertEquals(listOf("memo-title", "memo-body"), memos.map { it.memo.id })
     }
 
     @Test
-    fun observeMemosWithTagRefsBySearchPatternMatchesAsciiIgnoringCase() = runTest {
+    fun observeActiveMemosWithTagRefsBySearchPatternMatchesAsciiIgnoringCase() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1", title = "Shopping list"))
 
         // Act
-        val memos = memoDao.observeMemosWithTagRefsBySearchPattern("%shopping%").first()
+        val memos = memoDao.observeActiveMemosWithTagRefsBySearchPattern("%shopping%").first()
 
         // Assert
         assertEquals(listOf("memo-1"), memos.map { it.memo.id })
     }
 
     @Test
-    fun observeMemosWithTagRefsBySearchPatternTreatsEscapedWildcardsAsLiteral() = runTest {
+    fun observeActiveMemosWithTagRefsBySearchPatternTreatsEscapedWildcardsAsLiteral() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-literal", title = "100%_done"))
         memoDao.upsertMemo(memoEntity(id = "memo-wildcard", title = "100xxdone"))
 
         // Act
-        val memos = memoDao.observeMemosWithTagRefsBySearchPattern("%100\\%\\_done%").first()
+        val memos = memoDao.observeActiveMemosWithTagRefsBySearchPattern("%100\\%\\_done%").first()
 
         // Assert
         assertEquals(listOf("memo-literal"), memos.map { it.memo.id })
     }
 
     @Test
-    fun observeMemosWithTagRefsBySearchPatternReturnsRelatedTagRefs() = runTest {
+    fun observeActiveMemosWithTagRefsBySearchPatternReturnsRelatedTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1", title = "Tagged memo"))
         tagDao.upsertTag(tagEntity(id = "tag-1"))
@@ -123,14 +123,14 @@ class RoomDaoInstrumentedTest {
         )
 
         // Act
-        val memo = memoDao.observeMemosWithTagRefsBySearchPattern("%Tagged%").first().single()
+        val memo = memoDao.observeActiveMemosWithTagRefsBySearchPattern("%Tagged%").first().single()
 
         // Assert
         assertEquals(listOf("tag-1"), memo.tagRefs.map { it.tagId })
     }
 
     @Test
-    fun observeMemosWithTagRefsReturnsRelatedTagRefs() = runTest {
+    fun observeActiveMemosWithTagRefsReturnsRelatedTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
         tagDao.upsertTag(tagEntity(id = "tag-1"))
@@ -145,7 +145,7 @@ class RoomDaoInstrumentedTest {
         )
 
         // Act
-        val memo = memoDao.observeMemosWithTagRefs().first().single()
+        val memo = memoDao.observeActiveMemosWithTagRefs().first().single()
 
         // Assert
         assertEquals(listOf("tag-1"), memo.tagRefs.map { it.tagId })
@@ -172,7 +172,7 @@ class RoomDaoInstrumentedTest {
         // Assert
         assertEquals(
             emptyList<MemoTagRefEntity>(),
-            memoDao.observeMemosWithTagRefs().first().single().tagRefs
+            memoDao.observeActiveMemosWithTagRefs().first().single().tagRefs
         )
     }
 
@@ -203,18 +203,99 @@ class RoomDaoInstrumentedTest {
         }
     }
 
+    @Test
+    fun observeActiveMemosWithTagRefsExcludesTrashedMemos() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-active"))
+        memoDao.upsertMemo(memoEntity(id = "memo-trashed", deletedAt = 2_000L))
+
+        // Act
+        val memos = memoDao.observeActiveMemosWithTagRefs().first()
+
+        // Assert
+        assertEquals(listOf("memo-active"), memos.map { it.memo.id })
+    }
+
+    @Test
+    fun observeTrashedMemosWithTagRefsReturnsNewestDeletedFirst() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-old", deletedAt = 2_000L))
+        memoDao.upsertMemo(memoEntity(id = "memo-active"))
+        memoDao.upsertMemo(memoEntity(id = "memo-new", deletedAt = 3_000L))
+
+        // Act
+        val memos = memoDao.observeTrashedMemosWithTagRefs().first()
+
+        // Assert
+        assertEquals(listOf("memo-new", "memo-old"), memos.map { it.memo.id })
+    }
+
+    @Test
+    fun restoreMemoFromTrashMovesMemoBackToActiveMemos() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1", deletedAt = 2_000L))
+
+        // Act
+        memoDao.restoreMemoFromTrash("memo-1")
+        val memos = memoDao.observeActiveMemosWithTagRefs().first()
+
+        // Assert
+        assertEquals(listOf("memo-1"), memos.map { it.memo.id })
+    }
+
+    @Test
+    fun deleteMemoPermanentlyDoesNotDeleteActiveMemo() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1"))
+
+        // Act
+        val deletedCount = memoDao.deleteMemoPermanently("memo-1")
+
+        // Assert
+        assertEquals(0, deletedCount)
+    }
+
+    @Test
+    fun deleteMemoPermanentlyDeletesTrashedMemo() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1", deletedAt = 2_000L))
+
+        // Act
+        memoDao.deleteMemoPermanently("memo-1")
+        val memos = memoDao.observeTrashedMemosWithTagRefs().first()
+
+        // Assert
+        assertEquals(0, memos.size)
+    }
+
+    @Test
+    fun deleteTrashedMemosDeletedAtOrBeforeUsesInclusiveCutoff() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-old", deletedAt = 1_000L))
+        memoDao.upsertMemo(memoEntity(id = "memo-new", deletedAt = 1_001L))
+
+        // Act
+        memoDao.deleteTrashedMemosDeletedAtOrBefore(1_000L)
+        val memos = memoDao.observeTrashedMemosWithTagRefs().first()
+
+        // Assert
+        assertEquals(listOf("memo-new"), memos.map { it.memo.id })
+    }
+
     private fun memoEntity(
         id: String,
         title: String = "Title",
         body: String = "Body",
-        createdAt: Long = 1_000L
+        createdAt: Long = 1_000L,
+        deletedAt: Long? = null
     ) = MemoEntity(
         id = id,
         title = title,
         body = body,
         createdAt = createdAt,
         updatedAt = createdAt,
-        isImportant = false
+        isFavorite = false,
+        deletedAt = deletedAt
     )
 
     private fun tagEntity(id: String, createdAt: Long = 1_000L) = TagEntity(

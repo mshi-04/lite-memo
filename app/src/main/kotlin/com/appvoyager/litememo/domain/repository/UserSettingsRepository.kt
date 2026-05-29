@@ -10,7 +10,11 @@ interface UserSettingsRepository {
 
     fun observeMemoSortOrder(): Flow<MemoSortOrder>
 
+    fun observeAppLockEnabled(): Flow<Boolean>
+
     suspend fun setThemeMode(mode: ThemeMode)
 
     suspend fun setMemoSortOrder(order: MemoSortOrder)
+
+    suspend fun setAppLockEnabled(enabled: Boolean)
 }

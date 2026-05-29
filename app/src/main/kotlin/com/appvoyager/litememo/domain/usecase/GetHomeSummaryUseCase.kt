@@ -23,7 +23,7 @@ class GetHomeSummaryUseCase @Inject constructor(
                     it.updatedAt.toLocalDate() == today
             },
             unorganizedCount = memos.count { it.tagIds.isEmpty() },
-            importantCount = memos.count { it.isImportant }
+            favoriteCount = memos.count { it.isFavorite }
         )
     }
 

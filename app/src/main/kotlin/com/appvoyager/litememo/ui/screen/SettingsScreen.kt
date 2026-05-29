@@ -11,16 +11,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,11 +49,17 @@ fun SettingsScreen(
     uiState: SettingsUiState,
     onThemeModeSelected: (ThemeMode) -> Unit,
     onMemoSortOrderSelected: (MemoSortOrder) -> Unit,
+    onAppLockEnabledChange: (Boolean) -> Unit,
     onShowThemeDialog: () -> Unit,
     onDismissThemeDialog: () -> Unit,
     onExpandSortOrder: () -> Unit,
     onCollapseSortOrder: () -> Unit,
     onTagManageClick: () -> Unit,
+    onTrashClick: () -> Unit,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
+    onConfirmImport: () -> Unit,
+    onDismissImportConfirmDialog: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onOpenSourceLicenseClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -101,6 +111,91 @@ fun SettingsScreen(
                         )
                     }
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            item {
+                SettingsClickableRow(
+                    label = stringResource(R.string.settings_trash),
+                    onClick = onTrashClick,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                SectionHeader(text = stringResource(R.string.settings_section_privacy))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.settings_app_lock),
+                    checked = uiState.appLockEnabled,
+                    onCheckedChange = onAppLockEnabledChange
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                SectionHeader(
+                    text = stringResource(R.string.settings_section_data)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                SettingsClickableRow(
+                    label = stringResource(R.string.settings_export),
+                    onClick = onExportClick,
+                    enabled = !uiState.isExporting && !uiState.isImporting,
+                    trailingIcon = {
+                        if (uiState.isExporting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            item {
+                SettingsClickableRow(
+                    label = stringResource(R.string.settings_import),
+                    onClick = onImportClick,
+                    enabled = !uiState.isExporting && !uiState.isImporting,
+                    trailingIcon = {
+                        if (uiState.isImporting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
@@ -145,6 +240,13 @@ fun SettingsScreen(
                 )
             }
         }
+    }
+
+    if (uiState.showImportConfirmDialog) {
+        ImportConfirmDialog(
+            onConfirm = onConfirmImport,
+            onDismiss = onDismissImportConfirmDialog
+        )
     }
 
     if (uiState.showThemeDialog) {
@@ -262,15 +364,15 @@ private fun VersionRow(version: String) {
 }
 
 @Composable
-private fun SettingsClickableRow(
-    label: String,
-    onClick: () -> Unit,
-    trailingIcon: @Composable () -> Unit
-) {
+private fun SettingsSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange
+            )
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -280,8 +382,62 @@ private fun SettingsClickableRow(
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.weight(1f))
+        Switch(
+            checked = checked,
+            onCheckedChange = null
+        )
+    }
+}
+
+@Composable
+private fun SettingsClickableRow(
+    label: String,
+    onClick: () -> Unit,
+    trailingIcon: @Composable () -> Unit,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+        Spacer(modifier = Modifier.weight(1f))
         trailingIcon()
     }
+}
+
+@Composable
+private fun ImportConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.settings_import_confirm_title))
+        },
+        text = {
+            Text(text = stringResource(R.string.settings_import_confirm_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.settings_import_confirm_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel_label))
+            }
+        }
+    )
 }
 
 @Composable

@@ -12,16 +12,42 @@
     <string name="more_options">その他</string>
     <string name="unknown_error">メモを読み込めませんでした。</string>
     <string name="retry_label">再試行</string>
+    <string name="app_lock_title">LiteMemo はロック中です</string>
+    <string name="app_lock_body">メモを見るには端末認証でロックを解除してください。</string>
+    <string name="app_lock_loading">設定を確認しています。</string>
+    <string name="app_lock_authenticating">端末認証を待っています。</string>
+    <string name="app_lock_unlock">ロック解除</string>
+    <string name="app_lock_open_settings">画面ロックを設定</string>
+    <string name="app_lock_prompt_title">LiteMemo のロック解除</string>
+    <string name="app_lock_prompt_subtitle">メモを見るには端末認証を行ってください。</string>
+    <string name="app_lock_use_device_credential">画面ロックを使う</string>
+    <string name="app_lock_auth_failed">認証に失敗しました。もう一度お試しください。</string>
+    <string name="app_lock_auth_canceled">認証がキャンセルされました。</string>
+    <string name="app_lock_no_device_credential">端末の画面ロックを設定してから、もう一度お試しください。</string>
+    <string name="app_lock_auth_unavailable">現在、端末認証を利用できません。</string>
 
     <!-- Home -->
     <string name="welcome_back">おかえりなさい</string>
     <string name="recent_memos">最近のメモ</string>
     <string name="memo_count">%1$d件のメモ</string>
-    <string name="home_summary_detail">未整理 %1$d件 / 重要 %2$d件</string>
+    <string name="home_summary_detail">未整理 %1$d件 / お気に入り %2$d件</string>
     <string name="filter_all">すべて</string>
-    <string name="filter_important">重要</string>
-    <string name="pin_memo">ピン留め</string>
-    <string name="unpin_memo">ピン留め解除</string>
+    <string name="filter_favorite">お気に入り</string>
+    <string name="add_favorite_memo">お気に入りに追加</string>
+    <string name="remove_favorite_memo">お気に入りから削除</string>
+    <string name="selected_memo">選択済みメモ</string>
+    <string name="selected_memo_count">%1$d件選択中</string>
+    <string name="clear_selection">選択を解除</string>
+    <string name="move_selected_memos_to_trash">選択したメモをゴミ箱へ移動</string>
+    <string name="add_selected_memos_to_favorite">選択したメモをお気に入りに追加</string>
+    <string name="remove_selected_memos_from_favorite">選択したメモをお気に入りから削除</string>
+    <string name="add_tag_to_selected_memos">タグを付ける</string>
+    <string name="remove_tag_from_selected_memos">タグを外す</string>
+    <string name="home_bulk_add_tag_title">タグを付ける</string>
+    <string name="home_bulk_remove_tag_title">タグを外す</string>
+    <string name="home_bulk_tag_empty_body">利用できるタグがありません。</string>
+    <string name="home_bulk_action_error_title">操作に失敗しました</string>
+    <string name="home_bulk_action_error_body">メモの操作中にエラーが発生しました。もう一度お試しください。</string>
     <string name="empty_home_title">まだメモがありません</string>
     <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
 
@@ -54,14 +80,17 @@
     <string name="delete_memo">削除</string>
     <string name="navigate_back">戻る</string>
     <string name="memo_deleted_message">メモを削除しました</string>
+    <string name="memo_restore_failed_message">メモを復元できませんでした</string>
+    <string name="memo_edit_draft_error_message">下書きの操作に失敗しました</string>
     <string name="undo_label">元に戻す</string>
-    <string name="discard_dialog_title">編集内容の破棄</string>
-    <string name="discard_dialog_message">編集中の内容は保存されません。破棄しますか？</string>
-    <string name="discard_label">破棄</string>
     <string name="cancel_label">キャンセル</string>
+    <string name="share_memo">共有</string>
+    <string name="share_memo_error">共有できませんでした</string>
+    <string name="share_chooser_title">共有</string>
 
     <!-- Tag Manage -->
     <string name="settings_tag_manage">タグ管理</string>
+    <string name="settings_trash">ゴミ箱</string>
     <string name="tag_manage_title">タグ管理</string>
     <string name="tag_create">タグを作成</string>
     <string name="tag_edit">タグを編集</string>
@@ -78,6 +107,18 @@
     <string name="tag_delete_error_title">削除に失敗しました</string>
     <string name="tag_delete_error_body">タグの削除中にエラーが発生しました。もう一度お試しください。</string>
     <string name="tag_selection_label">タグ</string>
+
+    <!-- Trash -->
+    <string name="trash_title">ゴミ箱</string>
+    <string name="trash_empty_title">ゴミ箱は空です</string>
+    <string name="trash_empty_body">削除したメモはここに30日間保存されます。</string>
+    <string name="trash_restore_label">復元</string>
+    <string name="trash_deleted_at_label">削除: %1$s</string>
+    <string name="trash_permanent_delete_label">完全削除</string>
+    <string name="trash_permanent_delete_title">完全削除</string>
+    <string name="trash_permanent_delete_message">「%1$s」を完全に削除しますか？この操作は元に戻せません。</string>
+    <string name="trash_action_error_title">操作に失敗しました</string>
+    <string name="trash_action_error_body">ゴミ箱の操作中にエラーが発生しました。もう一度お試しください。</string>
 
     <!-- Search -->
     <string name="search_hint">タイトルや本文で検索</string>
@@ -98,6 +139,21 @@
     <string name="settings_sort_order">メモの並び替え</string>
     <string name="settings_sort_updated">更新日順</string>
     <string name="settings_sort_created">作成日順</string>
+    <string name="settings_section_privacy">プライバシー</string>
+    <string name="settings_app_lock">アプリロック</string>
+    <string name="settings_app_lock_auth_canceled">認証が完了しなかったため、アプリロックを有効にできませんでした。</string>
+    <string name="settings_app_lock_no_device_credential">端末の画面ロックを設定してから有効にしてください。</string>
+    <string name="settings_app_lock_unavailable">現在、端末認証を利用できません。</string>
+    <string name="settings_section_data">データ管理</string>
+    <string name="settings_export">エクスポート</string>
+    <string name="settings_import">インポート</string>
+    <string name="settings_export_success">エクスポートが完了しました</string>
+    <string name="settings_export_error">エクスポートに失敗しました</string>
+    <string name="settings_import_success">取り込みが完了しました</string>
+    <string name="settings_import_error">ファイルの読み込みに失敗しました</string>
+    <string name="settings_import_confirm_title">データの取り込み</string>
+    <string name="settings_import_confirm_message">ファイルからデータを取り込みます。同じIDのメモやタグは上書きされます。続けますか？</string>
+    <string name="settings_import_confirm_ok">取り込む</string>
     <string name="settings_section_app_info">アプリ情報</string>
     <string name="settings_version">バージョン</string>
     <string name="settings_privacy_policy">プライバシーポリシー</string>

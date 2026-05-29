@@ -15,29 +15,37 @@ import kotlinx.coroutines.flow.map
 
 class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : MemoRepository {
 
-    override fun observeMemos(): Flow<List<Memo>> = memoDao.observeMemosWithTagRefs().map { memos ->
-        memos.map { memo -> memo.toDomain() }
-    }
+    override fun observeActiveMemos(): Flow<List<Memo>> =
+        memoDao.observeActiveMemosWithTagRefs().map { memos ->
+            memos.map { memo -> memo.toDomain() }
+        }
 
-    override fun observeMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
-        memoDao.observeMemosWithTagRefsBySearchPattern(
+    override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+        memoDao.observeActiveMemosWithTagRefsBySearchPattern(
             query.value.toEscapedLikePattern()
         ).map { memos ->
             memos.map { memo -> memo.toDomain() }
         }
 
-    override fun observeMemosCreatedBetween(
+    override fun observeActiveMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis
     ): Flow<List<Memo>> {
         require(from.value < to.value) { "from must be earlier than to." }
-        return memoDao.observeMemosWithTagRefsCreatedBetween(from.value, to.value).map { memos ->
-            memos.map { memo -> memo.toDomain() }
-        }
+        return memoDao
+            .observeActiveMemosWithTagRefsCreatedBetween(from.value, to.value)
+            .map { memos ->
+                memos.map { memo -> memo.toDomain() }
+            }
     }
 
-    override suspend fun getMemo(id: MemoId): Memo? {
-        val memo = memoDao.getMemoWithTagRefs(id.value) ?: return null
+    override fun observeTrashedMemos(): Flow<List<Memo>> =
+        memoDao.observeTrashedMemosWithTagRefs().map { memos ->
+            memos.map { memo -> memo.toDomain() }
+        }
+
+    override suspend fun getActiveMemo(id: MemoId): Memo? {
+        val memo = memoDao.getActiveMemoWithTagRefs(id.value) ?: return null
         return memo.toDomain()
     }
 
@@ -48,8 +56,38 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         )
     }
 
-    override suspend fun deleteMemo(id: MemoId) {
-        memoDao.deleteMemo(id.value)
+    override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
+        val affected = memoDao.moveMemoToTrash(id.value, deletedAt.value)
+        check(affected > 0) { "Memo not found or already trashed: ${id.value}" }
+    }
+
+    override suspend fun restoreMemoFromTrash(id: MemoId) {
+        val affected = memoDao.restoreMemoFromTrash(id.value)
+        check(affected > 0) { "Memo not found or not in trash: ${id.value}" }
+    }
+
+    override suspend fun deleteMemoPermanently(id: MemoId) {
+        val affected = memoDao.deleteMemoPermanently(id.value)
+        check(affected > 0) { "Memo not found or not in trash: ${id.value}" }
+    }
+
+    override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
+        memoDao.deleteTrashedMemosDeletedAtOrBefore(cutoff.value)
+    }
+
+    override suspend fun getAllActiveMemos(): List<Memo> =
+        memoDao.getAllActiveMemosWithTagRefs().map { it.toDomain() }
+
+    override suspend fun saveAllMemos(memos: List<Memo>) {
+        val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
+            .filterValues { it > 1 }.keys
+        require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
+
+        val entities = memos.map { it.toEntity() }
+        val tagRefsByMemoId = memos.associate { memo ->
+            memo.id.value to memo.toTagRefs()
+        }
+        memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {

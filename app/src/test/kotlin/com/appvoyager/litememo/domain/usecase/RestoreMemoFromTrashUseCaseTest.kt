@@ -2,23 +2,23 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class DeleteMemoUseCaseTest {
+class RestoreMemoFromTrashUseCaseTest {
 
     @Test
-    fun invokeDeletesMemoById() = runBlocking {
+    fun invokeRestoresMemoFromTrashById() = runTest {
         // Arrange
-        val memo = memoFixture(id = "memo-1")
+        val memo = memoFixture(deletedAt = 2_000L)
         val repository = FakeMemoRepository(listOf(memo))
+        val useCase = RestoreMemoFromTrashUseCase(repository)
 
         // Act
-        DeleteMemoUseCase(repository)(memo.id)
+        useCase(memo.id)
 
         // Assert
-        assertEquals(listOf(memo.id), repository.deletedIds)
+        assertEquals(listOf(memo.id), repository.restoredIds)
     }
-
 }

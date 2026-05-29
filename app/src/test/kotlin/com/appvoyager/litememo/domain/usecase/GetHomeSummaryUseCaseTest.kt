@@ -66,7 +66,7 @@ class GetHomeSummaryUseCaseTest {
     }
 
     @Test
-    fun invokeCountsOnlyImportantMemosAsImportant() {
+    fun invokeCountsOnlyFavoriteMemosAsFavorite() {
         // Arrange
         val useCase = summaryUseCase()
 
@@ -75,12 +75,12 @@ class GetHomeSummaryUseCaseTest {
             useCase(
                 listOf(
                     memoFixture(id = "normal"),
-                    memoFixture(id = "important", isImportant = true)
+                    memoFixture(id = "Favorite", isFavorite = true)
                 )
             )
 
         // Assert
-        assertEquals(1, summary.importantCount)
+        assertEquals(1, summary.favoriteCount)
     }
 
     private fun summaryUseCase() = GetHomeSummaryUseCase(

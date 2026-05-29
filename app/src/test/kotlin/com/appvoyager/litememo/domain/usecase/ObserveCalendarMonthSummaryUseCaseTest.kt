@@ -59,6 +59,28 @@ class ObserveCalendarMonthSummaryUseCaseTest {
     }
 
     @Test
+    fun invokeExcludesTrashedMemosFromCounts() = runTest {
+        // Arrange
+        val month = CalendarMonth(YearMonth.of(2026, 5))
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(id = "active", createdAt = epochMillis("2026-05-11T08:00:00Z")),
+                memoFixture(
+                    id = "trashed",
+                    createdAt = epochMillis("2026-05-11T20:00:00Z"),
+                    deletedAt = epochMillis("2026-05-12T00:00:00Z")
+                )
+            )
+        )
+
+        // Act
+        val summary = ObserveCalendarMonthSummaryUseCase(repository, zoneId)(month).first()
+
+        // Assert
+        assertEquals(1, summary.memoCountOn(LocalDate.of(2026, 5, 11)))
+    }
+
+    @Test
     fun invokeExcludesMemoWhenOnlyUpdatedAtMatchesDate() = runTest {
         // Arrange
         val month = CalendarMonth(YearMonth.of(2026, 5))

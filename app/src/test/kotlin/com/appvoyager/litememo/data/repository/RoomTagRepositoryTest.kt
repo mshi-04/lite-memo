@@ -123,6 +123,7 @@ class RoomTagRepositoryTest {
         private val tags = MutableStateFlow(tags)
         var getTagsByIdsCallCount = 0
         var savedTag: TagEntity? = null
+        var savedTags: List<TagEntity> = emptyList()
         var deletedTagId: String? = null
 
         override fun observeTags(): Flow<List<TagEntity>> = tags
@@ -140,6 +141,13 @@ class RoomTagRepositoryTest {
 
         override suspend fun deleteTag(id: String) {
             deletedTagId = id
+        }
+
+        override suspend fun getAllTags(): List<TagEntity> = tags.value
+
+        override suspend fun upsertAllTags(tags: List<TagEntity>) {
+            savedTags = tags
+            savedTag = tags.lastOrNull()
         }
     }
 

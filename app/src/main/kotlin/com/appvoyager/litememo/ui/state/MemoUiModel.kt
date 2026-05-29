@@ -7,24 +7,23 @@ data class MemoUiModel(
     val id: String,
     val title: String,
     val body: String,
-    val tagName: String?,
-    val tagColorArgb: Long?,
+    val tags: List<TagUiModel>,
     val updatedAtMillis: Long,
-    val isImportant: Boolean
+    val isFavorite: Boolean
 ) {
     companion object {
         fun fromDomain(memos: List<Memo>, tags: List<Tag>): List<MemoUiModel> {
             val tagsById = tags.associateBy { it.id }
             return memos.map { memo ->
-                val tag = memo.tagIds.firstNotNullOfOrNull { id -> tagsById[id] }
                 MemoUiModel(
                     id = memo.id.value,
                     title = memo.title.value,
                     body = memo.body.value,
-                    tagName = tag?.name?.value,
-                    tagColorArgb = tag?.color?.argb,
+                    tags = memo.tagIds.mapNotNull { id ->
+                        tagsById[id]?.let { TagUiModel.fromDomain(it) }
+                    },
                     updatedAtMillis = memo.updatedAt.value,
-                    isImportant = memo.isImportant
+                    isFavorite = memo.isFavorite
                 )
             }
         }

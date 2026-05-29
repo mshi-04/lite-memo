@@ -1,0 +1,64 @@
+package com.appvoyager.litememo.data.mapper
+
+import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
+import com.appvoyager.litememo.data.model.export.MemoExportDto
+import com.appvoyager.litememo.data.model.export.TagExportDto
+import com.appvoyager.litememo.domain.model.ExportData
+import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.MemoBody
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoTitle
+import com.appvoyager.litememo.domain.model.value.TagColor
+import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
+
+fun ExportData.toDto() = LiteMemoExportDto(
+    version = version,
+    exportedAt = exportedAt.value,
+    tags = tags.map { it.toExportDto() },
+    memos = memos.map { it.toExportDto() }
+)
+
+fun LiteMemoExportDto.toDomain() = ExportData(
+    version = version,
+    exportedAt = TimestampMillis(exportedAt),
+    tags = tags.map { it.toDomain() },
+    memos = memos.map { it.toDomain() }
+)
+
+fun Memo.toExportDto() = MemoExportDto(
+    id = id.value,
+    title = title.value,
+    body = body.value,
+    createdAt = createdAt.value,
+    updatedAt = updatedAt.value,
+    isFavorite = isFavorite,
+    tagIds = tagIds.map { it.value }
+)
+
+fun MemoExportDto.toDomain() = Memo(
+    id = MemoId(id),
+    title = MemoTitle(title),
+    body = MemoBody(body),
+    createdAt = TimestampMillis(createdAt),
+    updatedAt = TimestampMillis(updatedAt),
+    isFavorite = isFavorite,
+    tagIds = tagIds.map { TagId(it) },
+    deletedAt = null
+)
+
+fun Tag.toExportDto() = TagExportDto(
+    id = id.value,
+    name = name.value,
+    colorArgb = color.argb,
+    createdAt = createdAt.value
+)
+
+fun TagExportDto.toDomain() = Tag(
+    id = TagId(id),
+    name = TagName(name),
+    color = TagColor(colorArgb),
+    createdAt = TimestampMillis(createdAt)
+)

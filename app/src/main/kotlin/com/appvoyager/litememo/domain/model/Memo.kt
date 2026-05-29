@@ -13,12 +13,16 @@ data class Memo(
     val createdAt: TimestampMillis,
     val updatedAt: TimestampMillis,
     val tagIds: List<TagId> = emptyList(),
-    val isImportant: Boolean = false
+    val isFavorite: Boolean = false,
+    val deletedAt: TimestampMillis? = null
 ) {
 
     init {
         require(updatedAt.value >= createdAt.value) {
             "Memo updatedAt must be greater than or equal to createdAt."
+        }
+        require(deletedAt == null || deletedAt.value >= createdAt.value) {
+            "Memo deletedAt must be greater than or equal to createdAt."
         }
     }
 

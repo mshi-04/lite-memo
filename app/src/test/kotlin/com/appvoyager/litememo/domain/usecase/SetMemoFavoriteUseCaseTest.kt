@@ -10,14 +10,14 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class SetMemoImportantUseCaseTest {
+class SetMemoFavoriteUseCaseTest {
 
     @Test
-    fun invokeSavesMemoWithUpdatedImportantState() = runTest {
+    fun invokeSavesMemoWithUpdatedFavoriteState() = runTest {
         // Arrange
-        val memo = memoFixture(id = "memo-1", isImportant = false)
+        val memo = memoFixture(id = "memo-1", isFavorite = false)
         val repository = FakeMemoRepository(listOf(memo))
-        val useCase = SetMemoImportantUseCase(
+        val useCase = SetMemoFavoriteUseCase(
             memoRepository = repository,
             currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
         )
@@ -26,15 +26,15 @@ class SetMemoImportantUseCaseTest {
         useCase(MemoId("memo-1"), true)
 
         // Assert
-        assertEquals(true, repository.currentMemos().single().isImportant)
+        assertEquals(true, repository.currentMemos().single().isFavorite)
     }
 
     @Test
-    fun invokeUpdatesUpdatedAtWhenImportantStateChanges() = runTest {
+    fun invokeUpdatesUpdatedAtWhenFavoriteStateChanges() = runTest {
         // Arrange
         val memo = memoFixture(id = "memo-1", updatedAt = 1000L)
         val repository = FakeMemoRepository(listOf(memo))
-        val useCase = SetMemoImportantUseCase(
+        val useCase = SetMemoFavoriteUseCase(
             memoRepository = repository,
             currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
         )
@@ -47,11 +47,11 @@ class SetMemoImportantUseCaseTest {
     }
 
     @Test
-    fun invokeKeepsUpdatedAtWhenImportantStateDoesNotChange() = runTest {
+    fun invokeKeepsUpdatedAtWhenFavoriteStateDoesNotChange() = runTest {
         // Arrange
-        val memo = memoFixture(id = "memo-1", updatedAt = 1000L, isImportant = true)
+        val memo = memoFixture(id = "memo-1", updatedAt = 1000L, isFavorite = true)
         val repository = FakeMemoRepository(listOf(memo))
-        val useCase = SetMemoImportantUseCase(
+        val useCase = SetMemoFavoriteUseCase(
             memoRepository = repository,
             currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
         )
@@ -66,7 +66,7 @@ class SetMemoImportantUseCaseTest {
     @Test
     fun invokeThrowsWhenMemoDoesNotExist() = runTest {
         // Arrange
-        val useCase = SetMemoImportantUseCase(
+        val useCase = SetMemoFavoriteUseCase(
             memoRepository = FakeMemoRepository(),
             currentTimeProvider = MutableTimeProvider()
         )
