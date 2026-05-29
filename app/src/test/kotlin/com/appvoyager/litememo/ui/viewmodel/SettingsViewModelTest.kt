@@ -154,7 +154,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun appLockFailedEmitsCanceledSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+    fun appLockFailedEmitsFailedSnackbarAndKeepsDisabled() = runTest(dispatcher) {
         // Arrange
         val userSettingsRepository = FakeUserSettingsRepository()
         val viewModel = settingsViewModel(
@@ -168,7 +168,7 @@ class SettingsViewModelTest {
 
         // Assert
         assertEquals(
-            SettingsSnackbarEvent.AppLockAuthenticationCanceled,
+            SettingsSnackbarEvent.AppLockAuthenticationFailed,
             viewModel.snackbarEvent.first()
         )
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())

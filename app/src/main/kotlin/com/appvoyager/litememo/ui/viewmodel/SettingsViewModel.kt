@@ -109,7 +109,10 @@ class SettingsViewModel @Inject constructor(
                 _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockUnavailable)
             }
 
-            AppLockAuthenticationResult.FAILED,
+            AppLockAuthenticationResult.FAILED -> {
+                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockAuthenticationFailed)
+            }
+
             AppLockAuthenticationResult.CANCELED -> {
                 _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockAuthenticationCanceled)
             }
@@ -188,6 +191,7 @@ internal sealed interface SettingsSnackbarEvent {
     data object ExportError : SettingsSnackbarEvent
     data object ImportSuccess : SettingsSnackbarEvent
     data object ImportError : SettingsSnackbarEvent
+    data object AppLockAuthenticationFailed : SettingsSnackbarEvent
     data object AppLockAuthenticationCanceled : SettingsSnackbarEvent
     data object AppLockNoDeviceCredential : SettingsSnackbarEvent
     data object AppLockUnavailable : SettingsSnackbarEvent

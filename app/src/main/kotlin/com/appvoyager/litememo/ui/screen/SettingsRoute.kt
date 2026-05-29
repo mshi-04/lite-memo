@@ -32,7 +32,7 @@ private fun defaultExportFileName(): String {
 @Composable
 fun SettingsRoute(
     snackbarHostState: SnackbarHostState,
-    onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit = {},
+    onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
     onOpenSourceLicenseClick: () -> Unit = {},
     onTagManageClick: () -> Unit = {},
     onTrashClick: () -> Unit = {},
@@ -58,6 +58,7 @@ fun SettingsRoute(
     val exportErrorMessage = stringResource(R.string.settings_export_error)
     val importSuccessMessage = stringResource(R.string.settings_import_success)
     val importErrorMessage = stringResource(R.string.settings_import_error)
+    val appLockAuthenticationFailedMessage = stringResource(R.string.app_lock_auth_failed)
     val appLockAuthenticationCanceledMessage =
         stringResource(R.string.settings_app_lock_auth_canceled)
     val appLockNoDeviceCredentialMessage =
@@ -74,6 +75,9 @@ fun SettingsRoute(
                 SettingsSnackbarEvent.ImportSuccess -> importSuccessMessage
 
                 SettingsSnackbarEvent.ImportError -> importErrorMessage
+
+                SettingsSnackbarEvent.AppLockAuthenticationFailed ->
+                    appLockAuthenticationFailedMessage
 
                 SettingsSnackbarEvent.AppLockAuthenticationCanceled ->
                     appLockAuthenticationCanceledMessage
