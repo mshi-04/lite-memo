@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -22,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +49,7 @@ fun SettingsScreen(
     uiState: SettingsUiState,
     onThemeModeSelected: (ThemeMode) -> Unit,
     onMemoSortOrderSelected: (MemoSortOrder) -> Unit,
+    onAppLockEnabledChange: (Boolean) -> Unit,
     onShowThemeDialog: () -> Unit,
     onDismissThemeDialog: () -> Unit,
     onExpandSortOrder: () -> Unit,
@@ -122,6 +126,20 @@ fun SettingsScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                SectionHeader(text = stringResource(R.string.settings_section_privacy))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.settings_app_lock),
+                    checked = uiState.appLockEnabled,
+                    onCheckedChange = onAppLockEnabledChange
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -341,6 +359,32 @@ private fun VersionRow(version: String) {
             text = version,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun SettingsSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange
+            )
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Switch(
+            checked = checked,
+            onCheckedChange = null
         )
     }
 }

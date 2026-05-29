@@ -8,10 +8,13 @@ import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.domain.repository.ExportFileRepository
 import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
+import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -32,6 +35,8 @@ class SettingsViewModel @Inject constructor(
     private val setThemeModeUseCase: SetThemeModeUseCase,
     private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
+    private val observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
+    private val setAppLockEnabledUseCase: SetAppLockEnabledUseCase,
     private val exportMemosUseCase: ExportMemosUseCase,
     private val importMemosUseCase: ImportMemosUseCase,
     private val exportFileRepository: ExportFileRepository,
@@ -52,6 +57,7 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         observeThemeModeUseCase(),
         observeMemoSortOrderUseCase(),
+        observeAppLockEnabledUseCase(),
         combine(
             showThemeDialog,
             sortOrderExpanded,
@@ -61,10 +67,11 @@ class SettingsViewModel @Inject constructor(
         ) { dialog, expanded, exporting, importing, importDialog ->
             UiFlags(dialog, expanded, exporting, importing, importDialog)
         }
-    ) { themeMode, sortOrder, flags ->
+    ) { themeMode, sortOrder, appLockEnabled, flags ->
         SettingsUiState(
             themeMode = themeMode,
             memoSortOrder = sortOrder,
+            appLockEnabled = appLockEnabled,
             appVersion = appVersion,
             showThemeDialog = flags.showThemeDialog,
             sortOrderExpanded = flags.sortOrderExpanded,
@@ -84,6 +91,32 @@ class SettingsViewModel @Inject constructor(
 
     fun setMemoSortOrder(order: MemoSortOrder) {
         viewModelScope.launch { runCatching { setMemoSortOrderUseCase(order) } }
+    }
+
+    fun setAppLockEnabled(enabled: Boolean) {
+        viewModelScope.launch { runCatching { setAppLockEnabledUseCase(enabled) } }
+    }
+
+    fun onAppLockEnableAuthenticationResult(result: AppLockAuthenticationResult) {
+        when (result) {
+            AppLockAuthenticationResult.SUCCEEDED -> setAppLockEnabled(true)
+
+            AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL -> {
+                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockNoDeviceCredential)
+            }
+
+            AppLockAuthenticationResult.UNAVAILABLE -> {
+                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockUnavailable)
+            }
+
+            AppLockAuthenticationResult.FAILED -> {
+                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockAuthenticationFailed)
+            }
+
+            AppLockAuthenticationResult.CANCELED -> {
+                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockAuthenticationCanceled)
+            }
+        }
     }
 
     fun showThemeDialog() {
@@ -158,6 +191,10 @@ internal sealed interface SettingsSnackbarEvent {
     data object ExportError : SettingsSnackbarEvent
     data object ImportSuccess : SettingsSnackbarEvent
     data object ImportError : SettingsSnackbarEvent
+    data object AppLockAuthenticationFailed : SettingsSnackbarEvent
+    data object AppLockAuthenticationCanceled : SettingsSnackbarEvent
+    data object AppLockNoDeviceCredential : SettingsSnackbarEvent
+    data object AppLockUnavailable : SettingsSnackbarEvent
 }
 
 private data class UiFlags(
