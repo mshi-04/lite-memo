@@ -112,11 +112,8 @@ class ImportMemosUseCaseTest {
         assertEquals("New", memoRepo.currentMemos().first { it.id.value == "m1" }.title.value)
     }
 
-    private fun importMemosUseCase(
-        memoRepository: FakeMemoRepository = FakeMemoRepository()
-    ) = ImportMemosUseCase(
-        memoRepository = memoRepository
-    )
+    private fun importMemosUseCase(memoRepository: FakeMemoRepository = FakeMemoRepository()) =
+        ImportMemosUseCase(memoRepository = memoRepository)
 
     private fun exportData(tags: List<Tag> = emptyList(), memos: List<Memo> = emptyList()) =
         ExportData(
