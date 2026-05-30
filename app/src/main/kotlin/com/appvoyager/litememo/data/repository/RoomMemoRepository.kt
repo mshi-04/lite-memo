@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.data.repository
 
+import androidx.annotation.VisibleForTesting
 import androidx.room.withTransaction
 import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
@@ -97,6 +98,13 @@ class RoomMemoRepository @Inject constructor(
     }
 
     override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
+        database.withTransaction {
+            executeImport(tags, memos)
+        }
+    }
+
+    @VisibleForTesting
+    internal suspend fun executeImport(tags: List<Tag>, memos: List<Memo>) {
         val tagEntities = tags.map { it.toEntity() }
 
         val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
@@ -108,10 +116,8 @@ class RoomMemoRepository @Inject constructor(
             memo.id.value to memo.toTagRefs()
         }
 
-        database.withTransaction {
-            database.tagDao().upsertAllTags(tagEntities)
-            memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
-        }
+        database.tagDao().upsertAllTags(tagEntities)
+        memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {
