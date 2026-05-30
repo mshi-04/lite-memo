@@ -9,7 +9,6 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -18,7 +17,7 @@ import org.junit.jupiter.api.Test
 class SaveTagUseCaseTest {
 
     @Test
-    fun invokeCreatesTagWithGeneratedId() = runBlocking {
+    fun invokeCreatesTagWithGeneratedId() = runTest {
         // Arrange
         val useCase =
             saveTagUseCase(tagIdProvider = QueueTagIdProvider(listOf(TagId("generated-tag"))))
@@ -31,7 +30,7 @@ class SaveTagUseCaseTest {
     }
 
     @Test
-    fun invokeCreatesTagWithCurrentTime() = runBlocking {
+    fun invokeCreatesTagWithCurrentTime() = runTest {
         // Arrange
         val useCase = saveTagUseCase(timeProvider = MutableTimeProvider(TimestampMillis(2000L)))
 
@@ -43,7 +42,7 @@ class SaveTagUseCaseTest {
     }
 
     @Test
-    fun invokePreservesCreatedAtWhenUpdatingExistingTag() = runBlocking {
+    fun invokePreservesCreatedAtWhenUpdatingExistingTag() = runTest {
         // Arrange
         val existing = tagFixture(id = "tag-1", createdAt = 1000L)
         val useCase = saveTagUseCase(
