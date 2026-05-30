@@ -90,3 +90,42 @@ jobs:
           else
             bundle exec fastlane android unit_test
           fi
+
+  android-test:
+    name: Android Test
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0.2"
+          bundler-cache: true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Run Android Test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: aosp_atd
+          arch: x86_64
+          disable-animations: true
+          script: bundle exec fastlane android android_test

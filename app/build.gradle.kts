@@ -50,10 +50,6 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
     buildFeatures {
         buildConfig = true
         compose = true
@@ -63,6 +59,10 @@ android {
             it.useJUnitPlatform()
         }
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 ktlint {
