@@ -23,4 +23,13 @@ class MemoBodyTest {
         assertEquals(" ", body.value)
     }
 
+    @Test
+    fun constructorReturnsEmptyStringWhenValueIsEmpty() {
+        // Act
+        val body = MemoBody("")
+
+        // Assert
+        assertEquals("", body.value)
+    }
+
 }
