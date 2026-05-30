@@ -12,7 +12,6 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -21,7 +20,7 @@ import org.junit.jupiter.api.Test
 class SaveMemoUseCaseTest {
 
     @Test
-    fun invokeCreatesMemoWithGeneratedId() = runBlocking {
+    fun invokeCreatesMemoWithGeneratedId() = runTest {
         // Arrange
         val useCase =
             saveMemoUseCase(memoIdProvider = QueueMemoIdProvider(listOf(MemoId("generated-id"))))
@@ -34,7 +33,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeCreatesMemoWithMatchingCreatedAtAndUpdatedAt() = runBlocking {
+    fun invokeCreatesMemoWithMatchingCreatedAtAndUpdatedAt() = runTest {
         // Arrange
         val useCase = saveMemoUseCase(timeProvider = MutableTimeProvider(TimestampMillis(2000L)))
 
@@ -46,7 +45,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokePreservesCreatedAtWhenUpdatingExistingMemo() = runBlocking {
+    fun invokePreservesCreatedAtWhenUpdatingExistingMemo() = runTest {
         // Arrange
         val existing = memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 1500L)
         val useCase = saveMemoUseCase(
@@ -69,7 +68,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeUpdatesUpdatedAtWhenUpdatingExistingMemo() = runBlocking {
+    fun invokeUpdatesUpdatedAtWhenUpdatingExistingMemo() = runTest {
         // Arrange
         val existing = memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 1500L)
         val useCase = saveMemoUseCase(
@@ -98,7 +97,7 @@ class SaveMemoUseCaseTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
+            runTest {
                 useCase(
                     SaveMemoCommand(
                         id = MemoId("missing-id"),
@@ -140,7 +139,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeReturnsMemoWithUniqueTagIdsWhenDuplicateTagIdsAreProvided() = runBlocking {
+    fun invokeReturnsMemoWithUniqueTagIdsWhenDuplicateTagIdsAreProvided() = runTest {
         // Arrange
         val tagId = TagId("tag-1")
         val useCase =
@@ -168,7 +167,7 @@ class SaveMemoUseCaseTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
+            runTest {
                 useCase(
                     SaveMemoCommand(
                         title = MemoTitle("Title"),
@@ -239,22 +238,20 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeDoesNotSaveMemoWhenTagIdDoesNotExist() {
+    fun invokeDoesNotSaveMemoWhenTagIdDoesNotExist() = runTest {
         // Arrange
         val repository = FakeMemoRepository()
         val useCase = saveMemoUseCase(memoRepository = repository)
 
         // Act
         try {
-            runBlocking {
-                useCase(
-                    SaveMemoCommand(
-                        title = MemoTitle("Title"),
-                        body = MemoBody("Body"),
-                        tagIds = listOf(TagId("missing"))
-                    )
+            useCase(
+                SaveMemoCommand(
+                    title = MemoTitle("Title"),
+                    body = MemoBody("Body"),
+                    tagIds = listOf(TagId("missing"))
                 )
-            }
+            )
         } catch (_: IllegalArgumentException) {
         }
 

@@ -6,7 +6,6 @@ import com.appvoyager.litememo.domain.TrashMoveRecord
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -67,7 +66,7 @@ class MoveMemoToTrashUseCaseTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { useCase(MemoId("memo-1")) }
+            runTest { useCase(MemoId("memo-1")) }
         }
     }
 }
