@@ -29,6 +29,3 @@
 -keepclasseswithmembers class ** {
     kotlinx.serialization.KSerializer serializer(...);
 }
-
-# Compose
--dontwarn androidx.compose.**

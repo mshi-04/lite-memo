@@ -81,8 +81,11 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Run Unit Test
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          REF: ${{ github.ref }}
         run: |
-          if [ "${{ github.base_ref }}" = "develop" ] || [ "${{ github.base_ref }}" = "main" ] || [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "$BASE_REF" = "develop" ] || [ "$BASE_REF" = "main" ] || [ "$REF" = "refs/heads/main" ]; then
             bundle exec fastlane android unit_test release:true
           else
             bundle exec fastlane android unit_test
