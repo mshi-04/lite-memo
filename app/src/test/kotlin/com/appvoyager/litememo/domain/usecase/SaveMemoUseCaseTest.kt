@@ -238,6 +238,25 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
+    fun invokeSetUpdatedAtToCreatedAtWhenCreatedAtIsFuture() = runTest {
+        // Arrange
+        val useCase = saveMemoUseCase(timeProvider = MutableTimeProvider(TimestampMillis(1000L)))
+
+        // Act
+        val memo = useCase(
+            SaveMemoCommand(
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                createdAt = TimestampMillis(5000L)
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), memo.createdAt)
+        assertEquals(TimestampMillis(5000L), memo.updatedAt)
+    }
+
+    @Test
     fun invokeDoesNotSaveMemoWhenTagIdDoesNotExist() = runTest {
         // Arrange
         val repository = FakeMemoRepository()
