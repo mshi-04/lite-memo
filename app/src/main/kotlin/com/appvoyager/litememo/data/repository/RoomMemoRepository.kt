@@ -1,10 +1,14 @@
 package com.appvoyager.litememo.data.repository
 
+import androidx.annotation.VisibleForTesting
+import androidx.room.withTransaction
+import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
 import com.appvoyager.litememo.data.mapper.toDomain
 import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toTagRefs
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
@@ -13,7 +17,10 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : MemoRepository {
+class RoomMemoRepository @Inject constructor(
+    private val memoDao: MemoDao,
+    private val database: LiteMemoDatabase
+) : MemoRepository {
 
     override fun observeActiveMemos(): Flow<List<Memo>> =
         memoDao.observeActiveMemosWithTagRefs().map { memos ->
@@ -87,6 +94,29 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         val tagRefsByMemoId = memos.associate { memo ->
             memo.id.value to memo.toTagRefs()
         }
+        memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
+    }
+
+    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
+        database.withTransaction {
+            executeImport(tags, memos)
+        }
+    }
+
+    @VisibleForTesting
+    internal suspend fun executeImport(tags: List<Tag>, memos: List<Memo>) {
+        val tagEntities = tags.map { it.toEntity() }
+
+        val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
+            .filterValues { it > 1 }.keys
+        require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
+
+        val entities = memos.map { it.toEntity() }
+        val tagRefsByMemoId = memos.associate { memo ->
+            memo.id.value to memo.toTagRefs()
+        }
+
+        database.tagDao().upsertAllTags(tagEntities)
         memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
     }
 
