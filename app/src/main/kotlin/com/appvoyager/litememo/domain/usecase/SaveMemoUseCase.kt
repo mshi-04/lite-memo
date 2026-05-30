@@ -17,6 +17,7 @@ class SaveMemoUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(command: SaveMemoCommand): Memo {
+        // タグやお気に入りだけではメモを保存しない。本文またはタイトルが必須。
         require(command.title.value.isNotBlank() || command.body.value.isNotBlank()) {
             "Memo title or body must not be blank."
         }

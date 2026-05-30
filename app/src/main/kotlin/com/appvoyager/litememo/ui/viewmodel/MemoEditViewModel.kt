@@ -158,9 +158,7 @@ class MemoEditViewModel @Inject constructor(
         val state = _uiState.value
         val title = state.title
         val body = state.body
-        if (title.isBlank() && body.isBlank() &&
-            state.selectedTagIds.isEmpty() && !state.isFavorite
-        ) {
+        if (title.isBlank() && body.isBlank()) {
             viewModelScope.launch {
                 autosaveJob?.cancel()
                 try {

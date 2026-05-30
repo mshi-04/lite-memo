@@ -259,6 +259,45 @@ class SaveMemoUseCaseTest {
         assertEquals(emptyList<Any>(), repository.savedMemos)
     }
 
+    @Test
+    fun invokeThrowsWhenOnlyTagIdsAreProvided() {
+        // Arrange
+        val useCase =
+            saveMemoUseCase(tagRepository = FakeTagRepository(listOf(tagFixture(id = "tag-1"))))
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                useCase(
+                    SaveMemoCommand(
+                        title = MemoTitle(""),
+                        body = MemoBody(""),
+                        tagIds = listOf(TagId("tag-1"))
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun invokeThrowsWhenOnlyIsFavoriteIsTrue() {
+        // Arrange
+        val useCase = saveMemoUseCase()
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                useCase(
+                    SaveMemoCommand(
+                        title = MemoTitle(""),
+                        body = MemoBody(""),
+                        isFavorite = true
+                    )
+                )
+            }
+        }
+    }
+
     private fun saveMemoUseCase(
         memoRepository: FakeMemoRepository = FakeMemoRepository(),
         tagRepository: FakeTagRepository = FakeTagRepository(),
