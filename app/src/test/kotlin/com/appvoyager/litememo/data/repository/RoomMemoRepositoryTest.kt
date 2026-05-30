@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -347,7 +346,7 @@ class RoomMemoRepositoryTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
+            runTest {
                 repository.executeImport(
                     tags = emptyList(),
                     memos = listOf(memoFixture(id = "m1"), memoFixture(id = "m1"))
