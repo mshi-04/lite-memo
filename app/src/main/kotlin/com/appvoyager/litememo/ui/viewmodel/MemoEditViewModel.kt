@@ -158,9 +158,7 @@ class MemoEditViewModel @Inject constructor(
         val state = _uiState.value
         val title = state.title
         val body = state.body
-        if (title.isBlank() && body.isBlank() &&
-            state.selectedTagIds.isEmpty() && !state.isFavorite
-        ) {
+        if (title.isBlank() && body.isBlank()) {
             viewModelScope.launch {
                 autosaveJob?.cancel()
                 try {
@@ -169,6 +167,8 @@ class MemoEditViewModel @Inject constructor(
                     throw e
                 } catch (_: Throwable) {
                     // エラーは draftErrorEvent で通知済み
+                    _uiState.update { state -> state.copy(hasError = true) }
+                    return@launch
                 }
                 clearSavedState()
                 shouldPersistDraft = false

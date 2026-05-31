@@ -2,7 +2,6 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -33,7 +32,7 @@ class DeleteMemoPermanentlyUseCaseTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { useCase(memo.id) }
+            runTest { useCase(memo.id) }
         }
     }
 }

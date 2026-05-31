@@ -34,8 +34,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -197,6 +199,23 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(listOf(MemoEditDraftTarget.newMemo(null)), draftRepository.clearedTargets)
+    }
+
+    @Test
+    fun saveDoesNotNavigateBackWhenBlankDraftClearFails() = runTest(dispatcher) {
+        // Arrange
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(draftRepository = draftRepository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.updateTitle(" ")
+        viewModel.save()
+        advanceUntilIdle()
+        val event = withTimeoutOrNull(1) { viewModel.navigationEvent.first() }
+
+        // Assert
+        assertNull(event)
     }
 
     @Test
