@@ -1,6 +1,11 @@
 package com.appvoyager.litememo.data.repository
 
+import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
 import com.appvoyager.litememo.domain.model.value.MemoBody
@@ -9,21 +14,55 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import java.io.File
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class DataStoreMemoEditDraftRepositoryTest {
 
-    @TempDir
-    lateinit var tempDir: File
+    private lateinit var dataStoreScope: CoroutineScope
+    private lateinit var dataStoreFile: File
+    private lateinit var dataStore: DataStore<Preferences>
+    private lateinit var repository: DataStoreMemoEditDraftRepository
+
+    @Before
+    fun setUp() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        dataStoreFile = File(
+            context.cacheDir,
+            "draft_${UUID.randomUUID()}.preferences_pb"
+        )
+
+        dataStoreScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        dataStore = PreferenceDataStoreFactory.create(
+            scope = dataStoreScope,
+            produceFile = { dataStoreFile }
+        )
+
+        repository = DataStoreMemoEditDraftRepository(dataStore)
+    }
+
+    @After
+    fun tearDown() {
+        dataStoreScope.cancel()
+        if (dataStoreFile.exists()) {
+            dataStoreFile.delete()
+        }
+    }
 
     @Test
     fun getDraftReturnsSavedDraft() = runTest {
-        // Arrange
-        val repository = repository(this)
         val draft = memoEditDraft(
             title = "Title",
             body = "Body",
@@ -32,31 +71,23 @@ class DataStoreMemoEditDraftRepositoryTest {
             isFavorite = true
         )
 
-        // Act
         repository.saveDraft(draft)
 
-        // Assert
         assertEquals(draft, repository.getDraft(draft.target))
     }
 
     @Test
     fun clearDraftRemovesSavedDraft() = runTest {
-        // Arrange
-        val repository = repository(this)
         val draft = memoEditDraft(title = "Title")
         repository.saveDraft(draft)
 
-        // Act
         repository.clearDraft(draft.target)
 
-        // Assert
         assertEquals(null, repository.getDraft(draft.target))
     }
 
     @Test
     fun getDraftKeepsTargetsSeparated() = runTest {
-        // Arrange
-        val repository = repository(this)
         val newDraft = memoEditDraft(
             target = MemoEditDraftTarget.newMemo(null),
             title = "New"
@@ -66,11 +97,9 @@ class DataStoreMemoEditDraftRepositoryTest {
             title = "Existing"
         )
 
-        // Act
         repository.saveDraft(newDraft)
         repository.saveDraft(existingDraft)
 
-        // Assert
         assertEquals(
             listOf(newDraft, existingDraft),
             listOf(
@@ -78,13 +107,6 @@ class DataStoreMemoEditDraftRepositoryTest {
                 repository.getDraft(existingDraft.target)
             )
         )
-    }
-
-    private fun repository(scope: CoroutineScope): DataStoreMemoEditDraftRepository {
-        val dataStore = PreferenceDataStoreFactory.create(scope = scope) {
-            File(tempDir, "draft.preferences_pb")
-        }
-        return DataStoreMemoEditDraftRepository(dataStore)
     }
 
     private fun memoEditDraft(

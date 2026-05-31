@@ -26,4 +26,12 @@ platform :android do
     ktlint
     unit_test
   end
+
+  desc "Run Android UI/Instrumentation tests"
+  lane :android_test do
+    gradle(
+      tasks: ["app:connectedDevDebugAndroidTest"],
+      flags: "--no-daemon"
+    )
+  end
 end
