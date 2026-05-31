@@ -36,6 +36,12 @@
 - 非同期処理は Coroutines を使い、UI スレッドをブロックしない
 - 構造化データは Room、軽量な設定値は DataStore に分ける
 
+## UI Event / Error
+
+- 画面上に状態として残る失敗は UI state の boolean や sealed state で表す
+- Snackbar、画面遷移、認証要求など一回限りの通知は Channel event で表す
+- 一回限り event の Channel は、古い通知を溜め込まないように原則 `Channel.CONFLATED` を使う
+
 ## Test
 
 - Unit Test の方針は `docs/unit-test.md` を確認する
