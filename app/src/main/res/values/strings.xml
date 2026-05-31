@@ -12,6 +12,7 @@
     <string name="more_options">その他</string>
     <string name="unknown_error">メモを読み込めませんでした。</string>
     <string name="retry_label">再試行</string>
+    <string name="ok_label">OK</string>
     <string name="app_lock_title">LiteMemo はロック中です</string>
     <string name="app_lock_body">メモを見るには端末認証でロックを解除してください。</string>
     <string name="app_lock_loading">設定を確認しています。</string>

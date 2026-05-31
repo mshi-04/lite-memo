@@ -1,0 +1,163 @@
+<resources>
+    <!-- Common -->
+    <string name="app_name">LiteMemo</string>
+    <string name="home_tab">Home</string>
+    <string name="calendar_tab">Calendar</string>
+    <string name="settings_tab">Settings</string>
+    <string name="today_label">Today</string>
+    <string name="yesterday_label">Yesterday</string>
+    <string name="unorganized_label">Unorganized</string>
+    <string name="create_memo">Create memo</string>
+    <string name="search">Search</string>
+    <string name="more_options">More options</string>
+    <string name="unknown_error">Could not load memos.</string>
+    <string name="retry_label">Retry</string>
+    <string name="ok_label">OK</string>
+    <string name="app_lock_title">LiteMemo is locked</string>
+    <string name="app_lock_body">Unlock with device authentication to view your memos.</string>
+    <string name="app_lock_loading">Checking settings.</string>
+    <string name="app_lock_authenticating">Waiting for device authentication.</string>
+    <string name="app_lock_unlock">Unlock</string>
+    <string name="app_lock_open_settings">Set screen lock</string>
+    <string name="app_lock_prompt_title">Unlock LiteMemo</string>
+    <string name="app_lock_prompt_subtitle">Use device authentication to view your memos.</string>
+    <string name="app_lock_use_device_credential">Use screen lock</string>
+    <string name="app_lock_auth_failed">Authentication failed. Please try again.</string>
+    <string name="app_lock_auth_canceled">Authentication was canceled.</string>
+    <string name="app_lock_no_device_credential">Set a device screen lock, then try again.</string>
+    <string name="app_lock_auth_unavailable">Device authentication is currently unavailable.</string>
+
+    <!-- Home -->
+    <string name="welcome_back">Welcome back</string>
+    <string name="recent_memos">Recent memos</string>
+    <string name="memo_count">%1$d memos</string>
+    <string name="home_summary_detail">Unorganized %1$d / Favorites %2$d</string>
+    <string name="filter_all">All</string>
+    <string name="filter_favorite">Favorites</string>
+    <string name="add_favorite_memo">Add to favorites</string>
+    <string name="remove_favorite_memo">Remove from favorites</string>
+    <string name="selected_memo">Selected memo</string>
+    <string name="selected_memo_count">%1$d selected</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="move_selected_memos_to_trash">Move selected memos to trash</string>
+    <string name="add_selected_memos_to_favorite">Add selected memos to favorites</string>
+    <string name="remove_selected_memos_from_favorite">Remove selected memos from favorites</string>
+    <string name="add_tag_to_selected_memos">Add tag</string>
+    <string name="remove_tag_from_selected_memos">Remove tag</string>
+    <string name="home_bulk_add_tag_title">Add tag</string>
+    <string name="home_bulk_remove_tag_title">Remove tag</string>
+    <string name="home_bulk_tag_empty_body">No tags are available.</string>
+    <string name="home_bulk_action_error_title">Action failed</string>
+    <string name="home_bulk_action_error_body">An error occurred while updating memos. Please try again.</string>
+    <string name="empty_home_title">No memos yet</string>
+    <string name="empty_home_body">New memos will appear here.</string>
+
+    <!-- Calendar -->
+    <string name="calendar_placeholder_title">Calendar is coming soon</string>
+    <string name="calendar_placeholder_body">Viewing memos by date will be added later.</string>
+    <string name="calendar_title">Calendar</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="toggle_calendar">Expand or collapse calendar</string>
+    <string name="select_month">Select month</string>
+    <string name="empty_calendar_title">No memos for this day</string>
+    <string name="empty_calendar_body">Choose another date to view memos created on that day.</string>
+    <string name="month_title_format">MMMM yyyy</string>
+    <string name="selected_date_title_format">Memos for MMMM d</string>
+    <string-array name="week_day_labels">
+        <item>Sun</item>
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+    </string-array>
+
+    <!-- Memo Edit -->
+    <string name="memo_edit_title_hint">Title</string>
+    <string name="memo_edit_body_hint">Memo</string>
+    <string name="save_memo">Save</string>
+    <string name="delete_memo">Delete</string>
+    <string name="navigate_back">Back</string>
+    <string name="memo_deleted_message">Memo deleted</string>
+    <string name="memo_restore_failed_message">Could not restore memo</string>
+    <string name="memo_edit_draft_error_message">Draft operation failed</string>
+    <string name="undo_label">Undo</string>
+    <string name="cancel_label">Cancel</string>
+    <string name="share_memo">Share</string>
+    <string name="share_memo_error">Could not share memo</string>
+    <string name="share_chooser_title">Share</string>
+
+    <!-- Tag Manage -->
+    <string name="settings_tag_manage">Manage tags</string>
+    <string name="settings_trash">Trash</string>
+    <string name="tag_manage_title">Manage tags</string>
+    <string name="tag_create">Create tag</string>
+    <string name="tag_edit">Edit tag</string>
+    <string name="tag_delete_confirm_title">Delete tag</string>
+    <string name="tag_delete_confirm_message">Delete \"%1$s\"? This tag will be removed from memos that use it.</string>
+    <string name="tag_name_hint">Tag name</string>
+    <string name="tag_color_label">Color</string>
+    <string name="tag_color_option_content_description">Tag color #%1$s</string>
+    <string name="tag_empty_title">No tags</string>
+    <string name="tag_empty_body">New tags will appear here.</string>
+    <string name="save_label">Save</string>
+    <string name="delete_label">Delete</string>
+    <string name="tag_save_error">Save failed. Please try again.</string>
+    <string name="tag_delete_error_title">Delete failed</string>
+    <string name="tag_delete_error_body">An error occurred while deleting the tag. Please try again.</string>
+    <string name="tag_selection_label">Tags</string>
+
+    <!-- Trash -->
+    <string name="trash_title">Trash</string>
+    <string name="trash_empty_title">Trash is empty</string>
+    <string name="trash_empty_body">Deleted memos are kept here for 30 days.</string>
+    <string name="trash_restore_label">Restore</string>
+    <string name="trash_deleted_at_label">Deleted: %1$s</string>
+    <string name="trash_permanent_delete_label">Delete permanently</string>
+    <string name="trash_permanent_delete_title">Delete permanently</string>
+    <string name="trash_permanent_delete_message">Permanently delete \"%1$s\"? This action cannot be undone.</string>
+    <string name="trash_action_error_title">Action failed</string>
+    <string name="trash_action_error_body">An error occurred while updating trash. Please try again.</string>
+
+    <!-- Search -->
+    <string name="search_hint">Search titles and bodies</string>
+    <string name="search_hint_body">Enter a keyword to search memos.</string>
+    <string name="clear_search">Clear search</string>
+    <string name="close_search">Close search</string>
+    <string name="no_search_results_title">No search results</string>
+    <string name="no_search_results_body">Try another keyword.</string>
+    <string name="search_error_title">Search failed</string>
+    <string name="search_error_body">Please wait a moment and try again.</string>
+
+    <!-- Settings -->
+    <string name="settings_section_display">Display</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_sort_order">Memo sort order</string>
+    <string name="settings_sort_updated">Last updated</string>
+    <string name="settings_sort_created">Created date</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_auth_canceled">App lock could not be enabled because authentication was not completed.</string>
+    <string name="settings_app_lock_no_device_credential">Set a device screen lock before enabling this.</string>
+    <string name="settings_app_lock_unavailable">Device authentication is currently unavailable.</string>
+    <string name="settings_section_data">Data management</string>
+    <string name="settings_export">Export</string>
+    <string name="settings_import">Import</string>
+    <string name="settings_export_success">Export completed</string>
+    <string name="settings_export_error">Export failed</string>
+    <string name="settings_import_success">Import completed</string>
+    <string name="settings_import_error">Could not read the file</string>
+    <string name="settings_import_confirm_title">Import data</string>
+    <string name="settings_import_confirm_message">Import data from the file. Memos and tags with the same IDs will be overwritten. Continue?</string>
+    <string name="settings_import_confirm_ok">Import</string>
+    <string name="settings_section_app_info">App information</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_open_source_licenses">Open source licenses</string>
+    <string name="settings_dialog_ok">OK</string>
+</resources>
