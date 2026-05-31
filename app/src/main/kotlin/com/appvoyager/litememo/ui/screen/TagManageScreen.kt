@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -311,11 +312,12 @@ private fun TagEditDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             if (isSelected) {
+                                val selectedColor = Color(colorArgb.toInt())
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp),
-                                    tint = Color.White
+                                    tint = checkmarkTintFor(selectedColor)
                                 )
                             }
                         }
@@ -335,6 +337,13 @@ private fun TagEditDialog(
         }
     )
 }
+
+private fun checkmarkTintFor(backgroundColor: Color): Color =
+    if (backgroundColor.luminance() > 0.5f) {
+        Color(0xDE000000)
+    } else {
+        Color(0xFFFFFFFF)
+    }
 
 @Preview(showBackground = true)
 @Composable
