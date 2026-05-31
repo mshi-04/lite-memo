@@ -153,8 +153,10 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
 }
 
-class FakeMemoEditDraftRepository(initialDrafts: List<MemoEditDraft> = emptyList()) :
-    MemoEditDraftRepository {
+class FakeMemoEditDraftRepository(
+    initialDrafts: List<MemoEditDraft> = emptyList(),
+    private val clearDraftError: Throwable? = null
+) : MemoEditDraftRepository {
 
     private val drafts = initialDrafts.associateBy { it.target }.toMutableMap()
     val savedDrafts = mutableListOf<MemoEditDraft>()
@@ -168,6 +170,7 @@ class FakeMemoEditDraftRepository(initialDrafts: List<MemoEditDraft> = emptyList
     }
 
     override suspend fun clearDraft(target: MemoEditDraftTarget) {
+        clearDraftError?.let { throw it }
         clearedTargets += target
         drafts.remove(target)
     }

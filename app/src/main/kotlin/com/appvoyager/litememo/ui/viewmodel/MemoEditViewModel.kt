@@ -167,6 +167,8 @@ class MemoEditViewModel @Inject constructor(
                     throw e
                 } catch (_: Throwable) {
                     // エラーは draftErrorEvent で通知済み
+                    _uiState.update { state -> state.copy(hasError = true) }
+                    return@launch
                 }
                 clearSavedState()
                 shouldPersistDraft = false
