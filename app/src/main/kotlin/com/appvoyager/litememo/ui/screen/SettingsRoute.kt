@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.screen
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,7 +22,7 @@ import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-// TODO: リリース前に正式な URL に差し替える
+// TODO: リリース前に正式なプライバシーポリシー URL に必ず差し替える
 private const val PRIVACY_POLICY_URL = "https://example.com/privacy-policy"
 
 private fun defaultExportFileName(): String {
@@ -118,8 +119,12 @@ fun SettingsRoute(
         onConfirmImport = { viewModel.confirmImport() },
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
         onPrivacyPolicyClick = {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
-            context.startActivity(intent)
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
+                context.startActivity(intent)
+            } catch (_: ActivityNotFoundException) {
+                // No browser available
+            }
         },
         onOpenSourceLicenseClick = onOpenSourceLicenseClick,
         modifier = modifier
