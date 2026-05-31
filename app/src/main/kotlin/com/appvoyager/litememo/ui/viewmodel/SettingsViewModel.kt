@@ -51,7 +51,7 @@ class SettingsViewModel @Inject constructor(
 
     private var pendingImportReference: ExportFileReference? = null
 
-    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
+    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.CONFLATED)
     internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(

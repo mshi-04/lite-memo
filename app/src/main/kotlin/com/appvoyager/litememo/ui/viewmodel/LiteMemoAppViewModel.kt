@@ -18,7 +18,7 @@ class LiteMemoAppViewModel @Inject constructor(
     private val purgeExpiredTrashedMemosUseCase: PurgeExpiredTrashedMemosUseCase
 ) : ViewModel() {
 
-    private val _restoreMemoErrorEvent = Channel<Unit>(Channel.BUFFERED)
+    private val _restoreMemoErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val restoreMemoErrorEvent = _restoreMemoErrorEvent.receiveAsFlow()
 
     init {

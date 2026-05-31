@@ -64,10 +64,10 @@ class MemoEditViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MemoEditUiState())
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
-    private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
+    private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.CONFLATED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    private val _draftErrorEvent = Channel<Unit>(Channel.BUFFERED)
+    private val _draftErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val draftErrorEvent = _draftErrorEvent.receiveAsFlow()
 
     private var autosaveJob: Job? = null
