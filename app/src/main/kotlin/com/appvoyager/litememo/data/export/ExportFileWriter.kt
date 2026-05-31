@@ -14,9 +14,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class ExportFileWriter @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val json: Json,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
     suspend fun write(uri: Uri, data: LiteMemoExportDto) {

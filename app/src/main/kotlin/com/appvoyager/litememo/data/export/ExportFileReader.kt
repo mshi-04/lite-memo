@@ -15,10 +15,10 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 class ExportFileReader @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val json: Json,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @Named("importMaxFileSizeBytes") private val maxFileSizeBytes: Long
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:Named("importMaxFileSizeBytes") private val maxFileSizeBytes: Long
 ) {
 
     suspend fun read(uri: Uri): LiteMemoExportDto = withContext(ioDispatcher) {
