@@ -9,11 +9,11 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository
-import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
+import javax.inject.Inject
 
 class DataStoreUserSettingsRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>

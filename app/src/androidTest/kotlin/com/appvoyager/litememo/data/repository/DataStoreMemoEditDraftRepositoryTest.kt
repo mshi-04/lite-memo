@@ -15,8 +15,6 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import java.io.File
-import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,6 +26,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class DataStoreMemoEditDraftRepositoryTest {

@@ -17,8 +17,6 @@ import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import java.io.File
-import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -29,6 +27,8 @@ import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)

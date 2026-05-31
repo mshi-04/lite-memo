@@ -5,10 +5,10 @@ import com.appvoyager.litememo.domain.model.sortedBy
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import javax.inject.Inject
 
 class SearchMemosUseCase @Inject constructor(
     private val memoRepository: MemoRepository,

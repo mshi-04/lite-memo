@@ -13,9 +13,9 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class RoomMemoRepository @Inject constructor(
     private val memoDao: MemoDao,

@@ -23,7 +23,6 @@ import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class MemoEditViewModel @Inject constructor(

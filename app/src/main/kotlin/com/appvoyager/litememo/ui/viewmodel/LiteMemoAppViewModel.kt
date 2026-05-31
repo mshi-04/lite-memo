@@ -6,11 +6,11 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class LiteMemoAppViewModel @Inject constructor(

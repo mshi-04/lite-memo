@@ -15,13 +15,13 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoEditDraftRepository
-import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.IOException
+import javax.inject.Inject
 
 class DataStoreMemoEditDraftRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
