@@ -97,38 +97,40 @@ class CalendarViewModel @Inject constructor(
         UiControls(expanded, datePickerVisible, searching, query)
     }
 
-    val uiState: StateFlow<CalendarUiState> = combine(
-        observedCalendarData,
-        selectedMonth,
-        selectedDate,
-        uiControls,
-        searchResults
-    ) { observed, month, date, controls, searchHits ->
-        val hasError = observed.monthSummary == null ||
-            observed.memos == null ||
-            observed.tags == null
-        CalendarUiState(
-            isLoading = false,
-            hasError = hasError,
-            selectedMonth = month.value,
-            selectedDate = date.value,
-            isCalendarExpanded = controls.expanded,
-            isDatePickerVisible = controls.datePickerVisible,
-            isSearchActive = controls.searching,
-            searchQuery = controls.query,
-            days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
-            memos = if (observed.memos != null && observed.tags != null) {
-                MemoUiModel.fromDomain(observed.memos, observed.tags)
-            } else {
-                emptyList()
-            },
-            hasSearchError = searchHits == null,
-            searchResults = if (searchHits != null && observed.tags != null) {
-                MemoUiModel.fromDomain(searchHits, observed.tags)
-            } else {
-                emptyList()
-            }
-        )
+    val uiState: StateFlow<CalendarUiState> = retryTrigger.flatMapLatest {
+        combine(
+            observedCalendarData,
+            selectedMonth,
+            selectedDate,
+            uiControls,
+            searchResults
+        ) { observed, month, date, controls, searchHits ->
+            val hasError = observed.monthSummary == null ||
+                observed.memos == null ||
+                observed.tags == null
+            CalendarUiState(
+                isLoading = false,
+                hasError = hasError,
+                selectedMonth = month.value,
+                selectedDate = date.value,
+                isCalendarExpanded = controls.expanded,
+                isDatePickerVisible = controls.datePickerVisible,
+                isSearchActive = controls.searching,
+                searchQuery = controls.query,
+                days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
+                memos = if (observed.memos != null && observed.tags != null) {
+                    MemoUiModel.fromDomain(observed.memos, observed.tags)
+                } else {
+                    emptyList()
+                },
+                hasSearchError = searchHits == null,
+                searchResults = if (searchHits != null && observed.tags != null) {
+                    MemoUiModel.fromDomain(searchHits, observed.tags)
+                } else {
+                    emptyList()
+                }
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
