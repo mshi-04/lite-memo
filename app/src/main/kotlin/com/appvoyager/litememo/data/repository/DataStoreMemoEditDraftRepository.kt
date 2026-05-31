@@ -35,10 +35,7 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
         val keys = keys(target)
         val title = prefs[keys.title] ?: return null
         val body = prefs[keys.body] ?: return null
-        val tagIds = prefs[keys.tagIds]
-            ?.let { raw -> runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList()) }
-            .orEmpty()
-            .mapNotNull { runCatching { TagId(it) }.getOrNull() }
+        val tagIds = decodeTagIds(prefs[keys.tagIds])
 
         return MemoEditDraft(
             target = target,
@@ -77,6 +74,13 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
             prefs.remove(keys.isFavorite)
             prefs.remove(keys.createdAt)
         }
+    }
+
+    private fun decodeTagIds(raw: String?): List<TagId> {
+        val rawIds = raw?.let {
+            runCatching { json.decodeFromString<List<String>>(it) }.getOrDefault(emptyList())
+        }.orEmpty()
+        return rawIds.mapNotNull { runCatching { TagId(it) }.getOrNull() }
     }
 
     private fun keys(target: MemoEditDraftTarget): DraftKeys {
