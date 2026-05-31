@@ -53,28 +53,26 @@ class CalendarViewModel @Inject constructor(
     private val searchQuery = MutableStateFlow("")
     private val retryTrigger = MutableStateFlow(0)
 
-    private val observedCalendarData = retryTrigger.flatMapLatest {
-        combine(
-            selectedMonth.flatMapLatest { month ->
-                observeCalendarMonthSummaryUseCase(month)
-                    .map<CalendarMonthSummary, CalendarMonthSummary?> { it }
-                    .catch { emit(null) }
-            },
-            selectedDate.flatMapLatest { date ->
-                observeMemosByCalendarDateUseCase(date)
-                    .map<List<Memo>, List<Memo>?> { it }
-                    .catch { emit(null) }
-            },
-            observeTagsUseCase()
-                .map<List<Tag>, List<Tag>?> { it }
+    private val observedCalendarData = combine(
+        selectedMonth.flatMapLatest { month ->
+            observeCalendarMonthSummaryUseCase(month)
+                .map<CalendarMonthSummary, CalendarMonthSummary?> { it }
                 .catch { emit(null) }
-        ) { monthSummary, memos, tags ->
-            ObservedCalendarData(
-                monthSummary = monthSummary,
-                memos = memos,
-                tags = tags
-            )
-        }
+        },
+        selectedDate.flatMapLatest { date ->
+            observeMemosByCalendarDateUseCase(date)
+                .map<List<Memo>, List<Memo>?> { it }
+                .catch { emit(null) }
+        },
+        observeTagsUseCase()
+            .map<List<Tag>, List<Tag>?> { it }
+            .catch { emit(null) }
+    ) { monthSummary, memos, tags ->
+        ObservedCalendarData(
+            monthSummary = monthSummary,
+            memos = memos,
+            tags = tags
+        )
     }
 
     private val searchResults = searchQuery
@@ -97,38 +95,41 @@ class CalendarViewModel @Inject constructor(
         UiControls(expanded, datePickerVisible, searching, query)
     }
 
-    val uiState: StateFlow<CalendarUiState> = combine(
-        observedCalendarData,
-        selectedMonth,
-        selectedDate,
-        uiControls,
-        searchResults
-    ) { observed, month, date, controls, searchHits ->
-        val hasError = observed.monthSummary == null ||
-            observed.memos == null ||
-            observed.tags == null
-        CalendarUiState(
-            isLoading = false,
-            hasError = hasError,
-            selectedMonth = month.value,
-            selectedDate = date.value,
-            isCalendarExpanded = controls.expanded,
-            isDatePickerVisible = controls.datePickerVisible,
-            isSearchActive = controls.searching,
-            searchQuery = controls.query,
-            days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
-            memos = if (observed.memos != null && observed.tags != null) {
-                MemoUiModel.fromDomain(observed.memos, observed.tags)
-            } else {
-                emptyList()
-            },
-            hasSearchError = searchHits == null,
-            searchResults = if (searchHits != null && observed.tags != null) {
-                MemoUiModel.fromDomain(searchHits, observed.tags)
-            } else {
-                emptyList()
-            }
-        )
+    // retry() でこのフロー全体を再購読し、カレンダーデータと検索の両方を再実行する
+    val uiState: StateFlow<CalendarUiState> = retryTrigger.flatMapLatest {
+        combine(
+            observedCalendarData,
+            selectedMonth,
+            selectedDate,
+            uiControls,
+            searchResults
+        ) { observed, month, date, controls, searchHits ->
+            val hasError = observed.monthSummary == null ||
+                observed.memos == null ||
+                observed.tags == null
+            CalendarUiState(
+                isLoading = false,
+                hasError = hasError,
+                selectedMonth = month.value,
+                selectedDate = date.value,
+                isCalendarExpanded = controls.expanded,
+                isDatePickerVisible = controls.datePickerVisible,
+                isSearchActive = controls.searching,
+                searchQuery = controls.query,
+                days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
+                memos = if (observed.memos != null && observed.tags != null) {
+                    MemoUiModel.fromDomain(observed.memos, observed.tags)
+                } else {
+                    emptyList()
+                },
+                hasSearchError = searchHits == null,
+                searchResults = if (searchHits != null && observed.tags != null) {
+                    MemoUiModel.fromDomain(searchHits, observed.tags)
+                } else {
+                    emptyList()
+                }
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

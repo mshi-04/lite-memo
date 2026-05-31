@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.screen
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,6 +9,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -18,10 +20,11 @@ import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-// TODO: リリース前に正式な URL に差し替える
+// TODO: リリース前に正式なプライバシーポリシー URL に必ず差し替える
 private const val PRIVACY_POLICY_URL = "https://example.com/privacy-policy"
 
 private fun defaultExportFileName(): String {
@@ -41,6 +44,7 @@ fun SettingsRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -64,6 +68,7 @@ fun SettingsRoute(
     val appLockNoDeviceCredentialMessage =
         stringResource(R.string.settings_app_lock_no_device_credential)
     val appLockUnavailableMessage = stringResource(R.string.settings_app_lock_unavailable)
+    val browserNotFoundMessage = stringResource(R.string.settings_browser_not_found)
 
     LaunchedEffect(viewModel) {
         viewModel.snackbarEvent.collect { event ->
@@ -118,8 +123,17 @@ fun SettingsRoute(
         onConfirmImport = { viewModel.confirmImport() },
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
         onPrivacyPolicyClick = {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
-            context.startActivity(intent)
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
+                context.startActivity(intent)
+            } catch (_: ActivityNotFoundException) {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = browserNotFoundMessage,
+                        withDismissAction = true
+                    )
+                }
+            }
         },
         onOpenSourceLicenseClick = onOpenSourceLicenseClick,
         modifier = modifier

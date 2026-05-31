@@ -135,9 +135,11 @@ fun MemoEditScreen(
             else -> {
                 val colorScheme = MaterialTheme.colorScheme
                 val bodyFocusRequester = remember { FocusRequester() }
-                LaunchedEffect(Unit) {
-                    awaitFrame()
-                    bodyFocusRequester.requestFocus()
+                LaunchedEffect(uiState.memoId) {
+                    if (uiState.memoId == null) {
+                        awaitFrame()
+                        runCatching { bodyFocusRequester.requestFocus() }
+                    }
                 }
                 Column(
                     modifier = Modifier

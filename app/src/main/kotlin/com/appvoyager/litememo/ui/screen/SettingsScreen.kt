@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.appvoyager.litememo.R
@@ -43,6 +44,7 @@ import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.ui.component.toDisplayString
 import com.appvoyager.litememo.ui.state.SettingsUiState
+import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @Composable
 fun SettingsScreen(
@@ -495,4 +497,86 @@ private fun ThemeMode.toDisplayString(): String = when (this) {
     ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    LiteMemoTheme {
+        SettingsScreen(
+            uiState = SettingsUiState(appVersion = "1.0.0"),
+            onThemeModeSelected = {},
+            onMemoSortOrderSelected = {},
+            onAppLockEnabledChange = {},
+            onShowThemeDialog = {},
+            onDismissThemeDialog = {},
+            onExpandSortOrder = {},
+            onCollapseSortOrder = {},
+            onTagManageClick = {},
+            onTrashClick = {},
+            onExportClick = {},
+            onImportClick = {},
+            onConfirmImport = {},
+            onDismissImportConfirmDialog = {},
+            onPrivacyPolicyClick = {},
+            onOpenSourceLicenseClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsRowsPreview() {
+    LiteMemoTheme {
+        Column(modifier = Modifier.padding(24.dp)) {
+            SectionHeader(text = stringResource(R.string.settings_section_display))
+            ThemeRow(currentMode = ThemeMode.SYSTEM, onClick = {})
+            SortOrderRow(
+                currentOrder = MemoSortOrder.UPDATED_NEWEST,
+                expanded = false,
+                onExpand = {},
+                onCollapse = {},
+                onSelected = {}
+            )
+            VersionRow(version = "1.0.0")
+            SettingsSwitchRow(
+                label = stringResource(R.string.settings_app_lock),
+                checked = true,
+                onCheckedChange = {}
+            )
+            SettingsClickableRow(
+                label = stringResource(R.string.settings_open_source_licenses),
+                onClick = {},
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ImportConfirmDialogPreview() {
+    LiteMemoTheme {
+        ImportConfirmDialog(
+            onConfirm = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ThemeSelectionDialogPreview() {
+    LiteMemoTheme {
+        ThemeSelectionDialog(
+            currentMode = ThemeMode.SYSTEM,
+            onModeSelected = {},
+            onDismiss = {}
+        )
+    }
 }

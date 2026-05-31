@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -311,11 +312,12 @@ private fun TagEditDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             if (isSelected) {
+                                val selectedColor = Color(colorArgb.toInt())
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp),
-                                    tint = Color.White
+                                    tint = checkmarkTintFor(selectedColor)
                                 )
                             }
                         }
@@ -335,6 +337,15 @@ private fun TagEditDialog(
         }
     )
 }
+
+// Material Design 3 の high-emphasis content に合わせ、背景輝度でチェックマーク色を選ぶ。
+// 明るい背景（luminance > 0.5）は 87% 黒、暗い背景は白を使う。
+private fun checkmarkTintFor(backgroundColor: Color): Color =
+    if (backgroundColor.luminance() > 0.5f) {
+        Color(0xDE000000)
+    } else {
+        Color(0xFFFFFFFF)
+    }
 
 @Preview(showBackground = true)
 @Composable

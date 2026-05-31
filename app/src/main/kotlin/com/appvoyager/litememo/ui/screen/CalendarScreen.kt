@@ -425,12 +425,12 @@ private fun CalendarDatePickerDialog(
                     datePickerState.selectedDateMillis?.let(onDatePicked) ?: onDismiss()
                 }
             ) {
-                Text(text = stringResource(android.R.string.ok))
+                Text(text = stringResource(R.string.ok_label))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = stringResource(android.R.string.cancel))
+                Text(text = stringResource(R.string.cancel_label))
             }
         }
     ) {
@@ -444,7 +444,7 @@ private fun calendarContainerColor(): Color {
         return MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f)
     }
 
-    return Color.White
+    return MaterialTheme.colorScheme.surface
 }
 
 @Composable
