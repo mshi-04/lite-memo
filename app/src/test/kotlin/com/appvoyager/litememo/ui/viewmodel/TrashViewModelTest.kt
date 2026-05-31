@@ -4,8 +4,12 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.DeleteMemoPermanentlyUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
@@ -14,6 +18,7 @@ import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
@@ -91,6 +96,24 @@ class TrashViewModelTest {
     }
 
     @Test
+    fun restoreMemoEmitsActionErrorWhenRestoreFails() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
+        val viewModel = trashViewModel(
+            memoRepository = RestoreFailingMemoRepository(listOf(memo))
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.restoreMemo(memo.id)
+        advanceUntilIdle()
+        val event = viewModel.actionErrorEvent.first()
+
+        // Assert
+        assertEquals(Unit, event)
+    }
+
+    @Test
     fun initTriggersExpiredTrashPurge() = runTest(dispatcher) {
         // Arrange
         val repository = FakeMemoRepository(listOf(memoFixture(deletedAt = 2_000L)))
@@ -104,7 +127,7 @@ class TrashViewModelTest {
     }
 
     private fun trashViewModel(
-        memoRepository: FakeMemoRepository = FakeMemoRepository(),
+        memoRepository: MemoRepository = FakeMemoRepository(),
         tagRepository: FakeTagRepository = FakeTagRepository(listOf(tagFixture()))
     ) = TrashViewModel(
         observeTrashedMemosUseCase = ObserveTrashedMemosUseCase(memoRepository),
@@ -116,4 +139,44 @@ class TrashViewModelTest {
             currentTimeProvider = MutableTimeProvider(TimestampMillis(0L))
         )
     )
+
+    private class RestoreFailingMemoRepository(initialMemos: List<Memo>) : MemoRepository {
+
+        private val repository = FakeMemoRepository(initialMemos)
+
+        override fun observeActiveMemos(): Flow<List<Memo>> = repository.observeActiveMemos()
+
+        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+            repository.observeActiveMemosBySearchQuery(query)
+
+        override fun observeActiveMemosCreatedBetween(
+            from: TimestampMillis,
+            to: TimestampMillis
+        ): Flow<List<Memo>> = repository.observeActiveMemosCreatedBetween(from, to)
+
+        override fun observeTrashedMemos(): Flow<List<Memo>> = repository.observeTrashedMemos()
+
+        override suspend fun getActiveMemo(id: MemoId): Memo? = repository.getActiveMemo(id)
+
+        override suspend fun saveMemo(memo: Memo) = repository.saveMemo(memo)
+
+        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) =
+            repository.moveMemoToTrash(id, deletedAt)
+
+        override suspend fun restoreMemoFromTrash(id: MemoId): Unit =
+            throw IllegalStateException("Failed to restore memo.")
+
+        override suspend fun deleteMemoPermanently(id: MemoId) =
+            repository.deleteMemoPermanently(id)
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) =
+            repository.deleteTrashedMemosDeletedAtOrBefore(cutoff)
+
+        override suspend fun getAllActiveMemos(): List<Memo> = repository.getAllActiveMemos()
+
+        override suspend fun saveAllMemos(memos: List<Memo>) = repository.saveAllMemos(memos)
+
+        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) =
+            repository.importAll(tags, memos)
+    }
 }

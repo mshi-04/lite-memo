@@ -30,6 +30,7 @@ import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -61,10 +63,13 @@ class HomeViewModel @Inject constructor(
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
     private val isSearchActive = MutableStateFlow(false)
     private val searchQuery = MutableStateFlow("")
-    private val hasActionError = MutableStateFlow(false)
     private val selection = MutableStateFlow(HomeSelectionUiState())
     private val bulkTagDialog = MutableStateFlow(HomeBulkTagDialogUiState())
-    private val retryTrigger = MutableStateFlow(0)
+    private val retryTrigger = MutableStateFlow(false)
+
+    // 操作失敗は一回限りの通知なので Channel event で扱う(取りこぼし防止に BUFFERED)
+    private val _actionErrorEvent = Channel<Unit>(Channel.BUFFERED)
+    val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
     private val searchResults = searchQuery
         .flatMapLatest { query ->
@@ -77,27 +82,19 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-    private val interactionControls = combine(
-        hasActionError,
-        selection,
-        bulkTagDialog
-    ) { actionError, selection, tagDialog ->
-        InteractionControls(actionError, selection, tagDialog)
-    }
-
     private val uiControls = combine(
         selectedFilter,
         isSearchActive,
         searchQuery,
-        interactionControls
-    ) { filter, searching, query, interaction ->
-        UiControls(
+        selection,
+        bulkTagDialog
+    ) { filter, searching, query, activeSelection, tagDialog ->
+        HomeUiControls(
             filter = filter,
             searching = searching,
             query = query,
-            actionError = interaction.actionError,
-            selection = interaction.selection,
-            tagDialog = interaction.tagDialog
+            selection = activeSelection,
+            tagDialog = tagDialog
         )
     }
 
@@ -116,7 +113,6 @@ class HomeViewModel @Inject constructor(
 
             HomeUiState(
                 isLoading = false,
-                hasActionError = controls.actionError,
                 selectedFilter = effectiveFilter,
                 memoSortOrder = sortOrder,
                 isSearchActive = controls.searching,
@@ -139,7 +135,6 @@ class HomeViewModel @Inject constructor(
                 HomeUiState(
                     isLoading = false,
                     hasError = true,
-                    hasActionError = hasActionError.value,
                     selectedFilter = selectedFilter.value,
                     isSearchActive = isSearchActive.value,
                     searchQuery = searchQuery.value,
@@ -190,17 +185,15 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
-                hasActionError.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                hasActionError.value = true
+                _actionErrorEvent.trySend(Unit)
             }
         }
     }
 
     fun startSelection(memoId: MemoId) {
-        hasActionError.value = false
         bulkTagDialog.value = HomeBulkTagDialogUiState()
         selection.value = HomeSelectionUiState(selectedMemoIds = setOf(memoId))
     }
@@ -260,18 +253,12 @@ class HomeViewModel @Inject constructor(
         return (state.memos + state.searchResults).find { it.id == selectedId.value }
     }
 
-    fun dismissActionError() {
-        hasActionError.value = false
-    }
-
     fun retry() {
-        hasActionError.value = false
-        retryTrigger.update { it + 1 }
+        retryTrigger.update { !it }
     }
 
     private fun requestBulkTagOperation(operation: HomeBulkTagDialogUiState.Operation) {
         if (!selection.value.isActive) return
-        hasActionError.value = false
         bulkTagDialog.value = HomeBulkTagDialogUiState(operation)
     }
 
@@ -287,13 +274,12 @@ class HomeViewModel @Inject constructor(
                         action = action
                     )
                 )
-                hasActionError.value = false
                 clearSelection()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
                 bulkTagDialog.value = HomeBulkTagDialogUiState()
-                hasActionError.value = true
+                _actionErrorEvent.trySend(Unit)
             }
         }
     }
@@ -311,20 +297,12 @@ class HomeViewModel @Inject constructor(
         } else {
             this
         }
-
-    private data class UiControls(
-        val filter: HomeFilterUiState,
-        val searching: Boolean,
-        val query: String,
-        val actionError: Boolean,
-        val selection: HomeSelectionUiState,
-        val tagDialog: HomeBulkTagDialogUiState
-    )
-
-    private data class InteractionControls(
-        val actionError: Boolean,
-        val selection: HomeSelectionUiState,
-        val tagDialog: HomeBulkTagDialogUiState
-    )
-
 }
+
+private data class HomeUiControls(
+    val filter: HomeFilterUiState,
+    val searching: Boolean,
+    val query: String,
+    val selection: HomeSelectionUiState,
+    val tagDialog: HomeBulkTagDialogUiState
+)

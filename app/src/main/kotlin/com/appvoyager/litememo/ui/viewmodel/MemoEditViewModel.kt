@@ -64,11 +64,14 @@ class MemoEditViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MemoEditUiState(memoId = memoId))
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
-    private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.CONFLATED)
+    private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
     private val _draftErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val draftErrorEvent = _draftErrorEvent.receiveAsFlow()
+
+    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.BUFFERED)
+    val operationErrorEvent = _operationErrorEvent.receiveAsFlow()
 
     private var autosaveJob: Job? = null
     private var shouldPersistDraft = false
@@ -162,12 +165,11 @@ class MemoEditViewModel @Inject constructor(
             viewModelScope.launch {
                 autosaveJob?.cancel()
                 try {
-                    clearDraft()
+                    clearDraft(notifyOnFailure = false)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Throwable) {
-                    // エラーは draftErrorEvent で通知済み
-                    _uiState.update { state -> state.copy(hasError = true) }
+                    _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
                     return@launch
                 }
                 clearSavedState()
@@ -189,14 +191,14 @@ class MemoEditViewModel @Inject constructor(
                     )
                 )
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraft(notifyOnFailure = false)
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                _uiState.update { state -> state.copy(hasError = true) }
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
             }
         }
     }
@@ -208,7 +210,7 @@ class MemoEditViewModel @Inject constructor(
             try {
                 val memoId = moveMemoToTrashUseCase(MemoId(id))
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraft(notifyOnFailure = false)
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memoId))
@@ -216,8 +218,9 @@ class MemoEditViewModel @Inject constructor(
                 throw e
             } catch (_: Throwable) {
                 _uiState.update { state ->
-                    state.copy(isDeletePending = false, hasError = true)
+                    state.copy(isDeletePending = false)
                 }
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
             }
         }
     }
@@ -275,13 +278,15 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    private suspend fun clearDraft() {
+    private suspend fun clearDraft(notifyOnFailure: Boolean = true) {
         try {
             clearMemoEditDraftUseCase(draftTarget)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            _draftErrorEvent.trySend(Unit)
+            if (notifyOnFailure) {
+                _draftErrorEvent.trySend(Unit)
+            }
             throw e
         }
     }
@@ -349,7 +354,7 @@ class MemoEditViewModel @Inject constructor(
 
     private fun MemoEditDraft.toUiState() = MemoEditUiState(
         isLoading = false,
-        memoId = memoId,
+        memoId = this@MemoEditViewModel.memoId,
         title = title.value,
         body = body.value,
         isFavorite = isFavorite,
@@ -379,4 +384,9 @@ class MemoEditViewModel @Inject constructor(
 sealed interface MemoEditNavigationEvent {
     data object NavigateBack : MemoEditNavigationEvent
     data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent
+}
+
+sealed interface MemoEditOperationErrorEvent {
+    data object SaveFailed : MemoEditOperationErrorEvent
+    data object DeleteFailed : MemoEditOperationErrorEvent
 }

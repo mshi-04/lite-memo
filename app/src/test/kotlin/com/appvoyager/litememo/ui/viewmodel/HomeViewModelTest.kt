@@ -252,7 +252,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun setMemoFavoriteShowsErrorWhenFavoriteUpdateFails() = runTest(dispatcher) {
+    fun setMemoFavoriteEmitsActionErrorWhenFavoriteUpdateFails() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1")
         val viewModel = homeViewModel(
@@ -263,10 +263,10 @@ class HomeViewModelTest {
         // Act
         viewModel.setMemoFavorite("memo-1", true)
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.hasActionError }
+        val event = viewModel.actionErrorEvent.first()
 
         // Assert
-        assertTrue(state.hasActionError)
+        assertEquals(Unit, event)
     }
 
     @Test
@@ -321,26 +321,28 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun setSelectedMemosFavoriteKeepsSelectionWhenBulkActionFails() = runTest(dispatcher) {
-        // Arrange
-        val memo = memoFixture(id = "memo-1")
-        val viewModel = homeViewModel(
-            memoRepository = SaveFailingMemoRepository(memo)
-        )
-        advanceUntilIdle()
-        viewModel.startSelection(MemoId("memo-1"))
-        viewModel.uiState.first { it.selection.isActive }
+    fun setSelectedMemosFavoriteKeepsSelectionAndEmitsActionErrorWhenBulkActionFails() =
+        runTest(dispatcher) {
+            // Arrange
+            val memo = memoFixture(id = "memo-1")
+            val viewModel = homeViewModel(
+                memoRepository = SaveFailingMemoRepository(memo)
+            )
+            advanceUntilIdle()
+            viewModel.startSelection(MemoId("memo-1"))
+            viewModel.uiState.first { it.selection.isActive }
 
-        // Act
-        viewModel.setSelectedMemosFavorite(true)
-        advanceUntilIdle()
-        val state = viewModel.uiState.first { it.hasActionError }
+            // Act
+            viewModel.setSelectedMemosFavorite(true)
+            advanceUntilIdle()
+            val state = viewModel.uiState.first {
+                it.selection.selectedMemoIds == setOf(MemoId("memo-1"))
+            }
+            val event = viewModel.actionErrorEvent.first()
 
-        // Assert
-        val expected = true to setOf(MemoId("memo-1"))
-        val actual = state.hasActionError to state.selection.selectedMemoIds
-        assertEquals(expected, actual)
-    }
+            // Assert
+            assertEquals(Unit to setOf(MemoId("memo-1")), event to state.selection.selectedMemoIds)
+        }
 
     @Test
     fun requestAddTagToSelectedMemosShowsTagDialog() = runTest(dispatcher) {

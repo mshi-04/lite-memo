@@ -213,9 +213,12 @@ class MemoEditViewModelTest {
         viewModel.save()
         advanceUntilIdle()
         val event = withTimeoutOrNull(1) { viewModel.navigationEvent.first() }
+        val operationErrorEvent = viewModel.operationErrorEvent.first()
 
         // Assert
         assertNull(event)
+        assertEquals(MemoEditOperationErrorEvent.SaveFailed, operationErrorEvent)
+        assertEquals(false, viewModel.uiState.value.hasError)
     }
 
     @Test
@@ -234,6 +237,28 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(MemoEditNavigationEvent.MemoDeleted(memo.id), event)
+    }
+
+    @Test
+    fun deleteEmitsDeleteErrorWhenDraftClearFails() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(
+            memo = memo,
+            draftRepository = draftRepository
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.delete()
+        advanceUntilIdle()
+        val event = viewModel.operationErrorEvent.first()
+
+        // Assert
+        assertEquals(MemoEditOperationErrorEvent.DeleteFailed, event)
+        assertEquals(false, viewModel.uiState.value.isDeletePending)
+        assertEquals(false, viewModel.uiState.value.hasError)
     }
 
     private fun memoEditViewModel(

@@ -55,6 +55,8 @@ import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.component.tagColor
+import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.state.DEFAULT_TAG_COLORS
 import com.appvoyager.litememo.ui.state.TagEditState
 import com.appvoyager.litememo.ui.state.TagManageUiState
@@ -71,7 +73,6 @@ fun TagManageScreen(
     onDeleteRequest: (TagUiModel) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
-    onDismissDeleteError: () -> Unit,
     onEditNameChanged: (String) -> Unit,
     onEditColorSelected: (Long) -> Unit,
     onSaveEdit: () -> Unit,
@@ -177,19 +178,6 @@ fun TagManageScreen(
             }
         )
     }
-
-    if (uiState.hasDeleteError) {
-        AlertDialog(
-            onDismissRequest = onDismissDeleteError,
-            title = { Text(text = stringResource(R.string.tag_delete_error_title)) },
-            text = { Text(text = stringResource(R.string.tag_delete_error_body)) },
-            confirmButton = {
-                TextButton(onClick = onDismissDeleteError) {
-                    Text(text = stringResource(R.string.settings_dialog_ok))
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -205,7 +193,7 @@ private fun TagRow(tag: TagUiModel, onEditClick: () -> Unit, onDeleteClick: () -
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(Color(tag.colorArgb.toInt()))
+                .background(tag.toComposeColor())
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
@@ -257,10 +245,18 @@ private fun TagEditDialog(
                     value = state.name,
                     onValueChange = onNameChanged,
                     label = { Text(text = stringResource(R.string.tag_name_hint)) },
-                    isError = state.nameError,
+                    isError = state.nameError || state.duplicateNameError,
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (state.duplicateNameError) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.tag_duplicate_name_error),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 if (state.saveError) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -291,7 +287,7 @@ private fun TagEditDialog(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color(colorArgb.toInt()))
+                                .background(tagColor(colorArgb))
                                 .semantics {
                                     role = Role.RadioButton
                                     selected = isSelected
@@ -312,7 +308,7 @@ private fun TagEditDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             if (isSelected) {
-                                val selectedColor = Color(colorArgb.toInt())
+                                val selectedColor = tagColor(colorArgb)
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
@@ -338,14 +334,15 @@ private fun TagEditDialog(
     )
 }
 
-// Material Design 3 の high-emphasis content に合わせ、背景輝度でチェックマーク色を選ぶ。
-// 明るい背景（luminance > 0.5）は 87% 黒、暗い背景は白を使う。
 private fun checkmarkTintFor(backgroundColor: Color): Color =
     if (backgroundColor.luminance() > 0.5f) {
-        Color(0xDE000000)
+        CheckmarkTintOnLightColor
     } else {
-        Color(0xFFFFFFFF)
+        CheckmarkTintOnDarkColor
     }
+
+private val CheckmarkTintOnLightColor = Color(0xDE000000)
+private val CheckmarkTintOnDarkColor = Color(0xFFFFFFFF)
 
 @Preview(showBackground = true)
 @Composable
@@ -366,7 +363,6 @@ private fun TagManageScreenPreview() {
             onDeleteRequest = {},
             onConfirmDelete = {},
             onDismissDelete = {},
-            onDismissDeleteError = {},
             onEditNameChanged = {},
             onEditColorSelected = {},
             onSaveEdit = {},

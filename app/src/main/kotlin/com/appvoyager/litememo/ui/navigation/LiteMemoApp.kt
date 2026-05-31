@@ -60,6 +60,8 @@ fun LiteMemoApp(
     val undoLabel = stringResource(R.string.undo_label)
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
     val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
+    val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
+    val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
@@ -128,7 +130,8 @@ fun LiteMemoApp(
                                 withDismissAction = true
                             )
                         }
-                    }
+                    },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(LiteMemoDestination.Calendar.route) {
@@ -158,12 +161,14 @@ fun LiteMemoApp(
             }
             composable(TRASH_ROUTE) {
                 TrashRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(TAG_MANAGE_ROUTE) {
                 TagManageRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(OSS_LICENSES_ROUTE) {
@@ -199,6 +204,22 @@ fun LiteMemoApp(
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(
                                 message = draftErrorMessage,
+                                withDismissAction = true
+                            )
+                        }
+                    },
+                    onSaveError = {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = saveMemoErrorMessage,
+                                withDismissAction = true
+                            )
+                        }
+                    },
+                    onDeleteError = {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = deleteMemoErrorMessage,
                                 withDismissAction = true
                             )
                         }
