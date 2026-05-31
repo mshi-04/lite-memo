@@ -40,7 +40,8 @@
 
 - 画面上に状態として残る失敗は UI state の boolean や sealed state で表す
 - Snackbar、画面遷移、認証要求など一回限りの通知は Channel event で表す
-- 一回限り event の Channel は、古い通知を溜め込まないように原則 `Channel.CONFLATED` を使う
+- 一回限り event の Channel は、`latest wins`（最新だけ届けばよい）が成立する場合に限り `Channel.CONFLATED` を使う
+- 中間イベントを落とせない通知（内容の異なる Snackbar、結果付き画面遷移など）は `Channel.BUFFERED` など取りこぼさない手段を選ぶ
 
 ## Test
 

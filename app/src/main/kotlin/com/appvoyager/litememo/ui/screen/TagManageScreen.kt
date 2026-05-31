@@ -338,6 +338,8 @@ private fun TagEditDialog(
     )
 }
 
+// Material Design 3 の high-emphasis content に合わせ、背景輝度でチェックマーク色を選ぶ。
+// 明るい背景（luminance > 0.5）は 87% 黒、暗い背景は白を使う。
 private fun checkmarkTintFor(backgroundColor: Color): Color =
     if (backgroundColor.luminance() > 0.5f) {
         Color(0xDE000000)

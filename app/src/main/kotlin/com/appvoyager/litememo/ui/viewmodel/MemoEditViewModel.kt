@@ -61,7 +61,7 @@ class MemoEditViewModel @Inject constructor(
         ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
         ?: MemoEditDraftTarget.newMemo(createdAt)
 
-    private val _uiState = MutableStateFlow(MemoEditUiState())
+    private val _uiState = MutableStateFlow(MemoEditUiState(memoId = memoId))
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
     private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.CONFLATED)
