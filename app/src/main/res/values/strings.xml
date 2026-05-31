@@ -158,6 +158,7 @@
     <string name="settings_section_app_info">アプリ情報</string>
     <string name="settings_version">バージョン</string>
     <string name="settings_privacy_policy">プライバシーポリシー</string>
+    <string name="settings_browser_not_found">ブラウザが見つかりませんでした。</string>
     <string name="settings_open_source_licenses">オープンソースライセンス</string>
     <string name="settings_dialog_ok">OK</string>
 </resources>

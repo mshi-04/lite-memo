@@ -9,6 +9,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -19,6 +20,7 @@ import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -42,6 +44,7 @@ fun SettingsRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -65,6 +68,7 @@ fun SettingsRoute(
     val appLockNoDeviceCredentialMessage =
         stringResource(R.string.settings_app_lock_no_device_credential)
     val appLockUnavailableMessage = stringResource(R.string.settings_app_lock_unavailable)
+    val browserNotFoundMessage = stringResource(R.string.settings_browser_not_found)
 
     LaunchedEffect(viewModel) {
         viewModel.snackbarEvent.collect { event ->
@@ -123,7 +127,12 @@ fun SettingsRoute(
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
                 context.startActivity(intent)
             } catch (_: ActivityNotFoundException) {
-                // No browser available
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = browserNotFoundMessage,
+                        withDismissAction = true
+                    )
+                }
             }
         },
         onOpenSourceLicenseClick = onOpenSourceLicenseClick,

@@ -158,6 +158,7 @@
     <string name="settings_section_app_info">App information</string>
     <string name="settings_version">Version</string>
     <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_browser_not_found">No browser app was found.</string>
     <string name="settings_open_source_licenses">Open source licenses</string>
     <string name="settings_dialog_ok">OK</string>
 </resources>
