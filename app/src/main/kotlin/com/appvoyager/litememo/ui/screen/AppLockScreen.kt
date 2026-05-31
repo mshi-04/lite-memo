@@ -20,11 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
 import com.appvoyager.litememo.ui.state.AppLockUiState
+import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @Composable
 fun AppLockScreen(
@@ -101,5 +103,32 @@ private fun AppLockMessage?.toDisplayText(status: AppLockStatus): String = when 
         AppLockStatus.LOADING -> stringResource(R.string.app_lock_loading)
         AppLockStatus.AUTHENTICATING -> stringResource(R.string.app_lock_authenticating)
         else -> stringResource(R.string.app_lock_body)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AppLockScreenPreview() {
+    LiteMemoTheme {
+        AppLockScreen(
+            uiState = AppLockUiState(status = AppLockStatus.LOCKED),
+            onUnlockClick = {},
+            onOpenSecuritySettings = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AppLockNoDeviceCredentialPreview() {
+    LiteMemoTheme {
+        AppLockScreen(
+            uiState = AppLockUiState(
+                status = AppLockStatus.UNAVAILABLE,
+                message = AppLockMessage.NO_DEVICE_CREDENTIAL
+            ),
+            onUnlockClick = {},
+            onOpenSecuritySettings = {}
+        )
     }
 }
