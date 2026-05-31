@@ -6,7 +6,9 @@ import android.provider.OpenableColumns
 import com.appvoyager.litememo.data.di.IoDispatcher
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import javax.inject.Inject
 import javax.inject.Named
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,7 +31,7 @@ class ExportFileReader @Inject constructor(
             )
         }
         val jsonString = context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            inputStream.bufferedReader(Charsets.UTF_8).readText()
+            readUtf8WithLimit(inputStream)
         } ?: throw IOException("Failed to open input stream for URI: $uri")
         try {
             json.decodeFromString<LiteMemoExportDto>(jsonString)
@@ -61,6 +63,27 @@ class ExportFileReader @Inject constructor(
             .openAssetFileDescriptor(uri, "r")
             ?.use { it.length }
         return length?.takeIf { it >= 0 }
+    }
+
+    private fun readUtf8WithLimit(inputStream: InputStream): String {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        val output = ByteArrayOutputStream()
+        var total = 0L
+
+        while (true) {
+            val read = inputStream.read(buffer)
+            if (read < 0) break
+
+            total += read
+            if (total > maxFileSizeBytes) {
+                throw IOException(
+                    "Import file too large: exceeded limit of $maxFileSizeBytes bytes."
+                )
+            }
+            output.write(buffer, 0, read)
+        }
+
+        return output.toString(Charsets.UTF_8.name())
     }
 
 }
