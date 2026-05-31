@@ -12,7 +12,7 @@
 
 ## テスト対象の優先度
 
-優先してテストするもの:
+JVM 上の Unit Test で優先してテストするもの:
 
 - 値オブジェクトの生成条件と不正値
 - UseCase の正常系と失敗系
@@ -22,7 +22,6 @@
 後回しにしてよいもの:
 
 - Compose UI の細かい見た目
-- Android Framework に強く依存する処理
 - まだ仕様が固まっていない画面構成
 
 ## 命名
@@ -70,3 +69,13 @@ class MemoTitleTest {
 - suspend 関数や Flow を扱う Unit Test は `kotlinx.coroutines.test.runTest` を使う
 - `runBlocking` は既存テストの保守を除き、新規・更新する Unit Test では使わない
 - 仮想時間制御、coroutine leak 検出、テスト間の分離を `runTest` に任せる
+
+## Instrumented Test
+
+Android Framework に強く依存する処理は `androidTest`（instrumented test）で検証します。
+
+- Room の DAO とマイグレーション
+- DataStore や ContentResolver を使う Repository 実装
+- 必要に応じて Compose UI Test
+
+instrumented test でも、テスト関数名は英語、`runTest` の方針をそろえます。
