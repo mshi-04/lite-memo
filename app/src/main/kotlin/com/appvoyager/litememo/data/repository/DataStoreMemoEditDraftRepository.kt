@@ -19,9 +19,13 @@ import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class DataStoreMemoEditDraftRepository @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val json: Json
 ) : MemoEditDraftRepository {
 
     override suspend fun getDraft(target: MemoEditDraftTarget): MemoEditDraft? {
@@ -32,9 +36,8 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
         val title = prefs[keys.title] ?: return null
         val body = prefs[keys.body] ?: return null
         val tagIds = prefs[keys.tagIds]
+            ?.let { raw -> runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList()) }
             .orEmpty()
-            .split(TAG_ID_SEPARATOR, LEGACY_TAG_ID_SEPARATOR)
-            .filter { it.isNotEmpty() }
             .mapNotNull { runCatching { TagId(it) }.getOrNull() }
 
         return MemoEditDraft(
@@ -54,7 +57,7 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
         dataStore.edit { prefs ->
             prefs[keys.title] = draft.title.value
             prefs[keys.body] = draft.body.value
-            prefs[keys.tagIds] = draft.tagIds.joinToString(TAG_ID_SEPARATOR) { it.value }
+            prefs[keys.tagIds] = json.encodeToString(draft.tagIds.map { it.value })
             prefs[keys.isFavorite] = draft.isFavorite
             val createdAt = draft.createdAt
             if (createdAt == null) {
@@ -89,7 +92,5 @@ class DataStoreMemoEditDraftRepository @Inject constructor(
 
     private companion object {
         const val KEY_PREFIX = "memo_edit_draft_"
-        const val TAG_ID_SEPARATOR = ","
-        const val LEGACY_TAG_ID_SEPARATOR = "\n"
     }
 }
