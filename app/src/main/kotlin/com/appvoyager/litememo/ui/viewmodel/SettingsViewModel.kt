@@ -17,8 +17,6 @@ import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import javax.inject.Named
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +26,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Named
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(

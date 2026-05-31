@@ -6,9 +6,9 @@ import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.repository.TagRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRepository {
 

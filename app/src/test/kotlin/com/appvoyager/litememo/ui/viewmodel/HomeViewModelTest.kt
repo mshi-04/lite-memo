@@ -25,8 +25,6 @@ import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
-import java.time.Instant
-import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +42,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
