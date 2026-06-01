@@ -112,8 +112,8 @@ fun SettingsRoute(
                 viewModel.setAppLockEnabled(false)
             }
         },
-        onShowThemeDialog = { viewModel.showThemeDialog() },
-        onDismissThemeDialog = { viewModel.dismissThemeDialog() },
+        onExpandThemeDropdown = { viewModel.expandThemeDropdown() },
+        onCollapseThemeDropdown = { viewModel.collapseThemeDropdown() },
         onExpandSortOrder = { viewModel.expandSortOrder() },
         onCollapseSortOrder = { viewModel.collapseSortOrder() },
         onTagManageClick = onTagManageClick,

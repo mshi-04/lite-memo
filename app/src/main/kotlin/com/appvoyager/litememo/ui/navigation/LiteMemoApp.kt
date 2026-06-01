@@ -1,6 +1,14 @@
 package com.appvoyager.litememo.ui.navigation
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -19,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -125,7 +134,13 @@ fun LiteMemoApp(
             startDestination = LiteMemoDestination.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(LiteMemoDestination.Home.route) {
+            composable(
+                route = LiteMemoDestination.Home.route,
+                enterTransition = { bottomTabEnterTransition(this) },
+                exitTransition = { bottomTabExitTransition(this) },
+                popEnterTransition = { bottomTabEnterTransition(this) },
+                popExitTransition = { bottomTabExitTransition(this) }
+            ) {
                 HomeRoute(
                     onMemoClick = { memoId ->
                         navController.navigate(memoEditRouteWithId(memoId))
@@ -139,7 +154,13 @@ fun LiteMemoApp(
                     snackbarHostState = snackbarHostState
                 )
             }
-            composable(LiteMemoDestination.Calendar.route) {
+            composable(
+                route = LiteMemoDestination.Calendar.route,
+                enterTransition = { bottomTabEnterTransition(this) },
+                exitTransition = { bottomTabExitTransition(this) },
+                popEnterTransition = { bottomTabEnterTransition(this) },
+                popExitTransition = { bottomTabExitTransition(this) }
+            ) {
                 CalendarRoute(
                     onMemoClick = { memoId ->
                         navController.navigate(memoEditRouteWithId(memoId))
@@ -149,7 +170,13 @@ fun LiteMemoApp(
                     }
                 )
             }
-            composable(LiteMemoDestination.Settings.route) {
+            composable(
+                route = LiteMemoDestination.Settings.route,
+                enterTransition = { bottomTabEnterTransition(this) },
+                exitTransition = { bottomTabExitTransition(this) },
+                popEnterTransition = { bottomTabEnterTransition(this) },
+                popExitTransition = { bottomTabExitTransition(this) }
+            ) {
                 SettingsRoute(
                     snackbarHostState = snackbarHostState,
                     onRequestAppLockAuthentication = onRequestAppLockAuthentication,
@@ -228,3 +255,43 @@ fun LiteMemoApp(
         }
     }
 }
+
+private fun bottomTabEnterTransition(
+    scope: AnimatedContentTransitionScope<NavBackStackEntry>
+): EnterTransition {
+    val direction = bottomTabTransitionDirection(scope) ?: return EnterTransition.None
+    return slideInHorizontally(
+        animationSpec = tween(BOTTOM_TAB_TRANSITION_DURATION_MS),
+        initialOffsetX = { width -> width / 4 * direction }
+    ) + fadeIn(animationSpec = tween(BOTTOM_TAB_FADE_IN_DURATION_MS))
+}
+
+private fun bottomTabExitTransition(
+    scope: AnimatedContentTransitionScope<NavBackStackEntry>
+): ExitTransition {
+    val direction = bottomTabTransitionDirection(scope) ?: return ExitTransition.None
+    return slideOutHorizontally(
+        animationSpec = tween(BOTTOM_TAB_TRANSITION_DURATION_MS),
+        targetOffsetX = { width -> -width / 4 * direction }
+    ) + fadeOut(animationSpec = tween(BOTTOM_TAB_FADE_OUT_DURATION_MS))
+}
+
+private fun bottomTabTransitionDirection(
+    scope: AnimatedContentTransitionScope<NavBackStackEntry>
+): Int? {
+    val initialIndex = bottomTabRouteIndex(scope.initialState.destination.route) ?: return null
+    val targetIndex = bottomTabRouteIndex(scope.targetState.destination.route) ?: return null
+    if (initialIndex == targetIndex) return null
+    return if (targetIndex > initialIndex) 1 else -1
+}
+
+private fun bottomTabRouteIndex(route: String?): Int? {
+    val index = LiteMemoDestination.entries.indexOfFirst { destination ->
+        destination.route == route
+    }
+    return index.takeIf { it >= 0 }
+}
+
+private const val BOTTOM_TAB_TRANSITION_DURATION_MS = 220
+private const val BOTTOM_TAB_FADE_IN_DURATION_MS = 160
+private const val BOTTOM_TAB_FADE_OUT_DURATION_MS = 120

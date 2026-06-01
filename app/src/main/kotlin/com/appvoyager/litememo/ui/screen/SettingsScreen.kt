@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
@@ -21,16 +22,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -52,8 +48,8 @@ fun SettingsScreen(
     onThemeModeSelected: (ThemeMode) -> Unit,
     onMemoSortOrderSelected: (MemoSortOrder) -> Unit,
     onAppLockEnabledChange: (Boolean) -> Unit,
-    onShowThemeDialog: () -> Unit,
-    onDismissThemeDialog: () -> Unit,
+    onExpandThemeDropdown: () -> Unit,
+    onCollapseThemeDropdown: () -> Unit,
     onExpandSortOrder: () -> Unit,
     onCollapseSortOrder: () -> Unit,
     onTagManageClick: () -> Unit,
@@ -84,7 +80,10 @@ fun SettingsScreen(
             item {
                 ThemeRow(
                     currentMode = uiState.themeMode,
-                    onClick = onShowThemeDialog
+                    expanded = uiState.themeDropdownExpanded,
+                    onExpand = onExpandThemeDropdown,
+                    onCollapse = onCollapseThemeDropdown,
+                    onSelected = onThemeModeSelected
                 )
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -166,7 +165,7 @@ fun SettingsScreen(
                             )
                         } else {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -190,7 +189,7 @@ fun SettingsScreen(
                             )
                         } else {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -217,7 +216,7 @@ fun SettingsScreen(
                     onClick = onPrivacyPolicyClick,
                     trailingIcon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -251,13 +250,6 @@ fun SettingsScreen(
         )
     }
 
-    if (uiState.showThemeDialog) {
-        ThemeSelectionDialog(
-            currentMode = uiState.themeMode,
-            onModeSelected = onThemeModeSelected,
-            onDismiss = onDismissThemeDialog
-        )
-    }
 }
 
 @Composable
@@ -271,11 +263,17 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun ThemeRow(currentMode: ThemeMode, onClick: () -> Unit) {
+private fun ThemeRow(
+    currentMode: ThemeMode,
+    expanded: Boolean,
+    onExpand: () -> Unit,
+    onCollapse: () -> Unit,
+    onSelected: (ThemeMode) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onExpand)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -285,11 +283,34 @@ private fun ThemeRow(currentMode: ThemeMode, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = currentMode.toDisplayString(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+        Box {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = currentMode.toDisplayString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = onCollapse
+            ) {
+                ThemeMode.entries.forEach { mode ->
+                    DropdownMenuItem(
+                        text = { Text(text = mode.toDisplayString()) },
+                        onClick = {
+                            onSelected(mode)
+                            onCollapse()
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -301,43 +322,45 @@ private fun SortOrderRow(
     onCollapse: () -> Unit,
     onSelected: (MemoSortOrder) -> Unit
 ) {
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onExpand)
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.settings_sort_order),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = currentOrder.toDisplayString(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onCollapse
-        ) {
-            MemoSortOrder.entries.forEach { order ->
-                DropdownMenuItem(
-                    text = { Text(text = order.toDisplayString()) },
-                    onClick = {
-                        onSelected(order)
-                        onCollapse()
-                    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onExpand)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.settings_sort_order),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Box {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = currentOrder.toDisplayString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = onCollapse
+            ) {
+                MemoSortOrder.entries.forEach { order ->
+                    DropdownMenuItem(
+                        text = { Text(text = order.toDisplayString()) },
+                        onClick = {
+                            onSelected(order)
+                            onCollapse()
+                        }
+                    )
+                }
             }
         }
     }
@@ -443,56 +466,6 @@ private fun ImportConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun ThemeSelectionDialog(
-    currentMode: ThemeMode,
-    onModeSelected: (ThemeMode) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var selectedMode by remember(currentMode) { mutableStateOf(currentMode) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.settings_theme)) },
-        text = {
-            Column {
-                ThemeMode.entries.forEach { mode ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedMode = mode }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = mode == selectedMode,
-                            onClick = { selectedMode = mode }
-                        )
-                        Text(
-                            text = mode.toDisplayString(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onModeSelected(selectedMode)
-                onDismiss()
-            }) {
-                Text(text = stringResource(R.string.settings_dialog_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.cancel_label))
-            }
-        }
-    )
-}
-
-@Composable
 private fun ThemeMode.toDisplayString(): String = when (this) {
     ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
@@ -508,8 +481,8 @@ private fun SettingsScreenPreview() {
             onThemeModeSelected = {},
             onMemoSortOrderSelected = {},
             onAppLockEnabledChange = {},
-            onShowThemeDialog = {},
-            onDismissThemeDialog = {},
+            onExpandThemeDropdown = {},
+            onCollapseThemeDropdown = {},
             onExpandSortOrder = {},
             onCollapseSortOrder = {},
             onTagManageClick = {},
@@ -530,7 +503,13 @@ private fun SettingsRowsPreview() {
     LiteMemoTheme {
         Column(modifier = Modifier.padding(24.dp)) {
             SectionHeader(text = stringResource(R.string.settings_section_display))
-            ThemeRow(currentMode = ThemeMode.SYSTEM, onClick = {})
+            ThemeRow(
+                currentMode = ThemeMode.SYSTEM,
+                expanded = false,
+                onExpand = {},
+                onCollapse = {},
+                onSelected = {}
+            )
             SortOrderRow(
                 currentOrder = MemoSortOrder.UPDATED_NEWEST,
                 expanded = false,
@@ -564,18 +543,6 @@ private fun ImportConfirmDialogPreview() {
     LiteMemoTheme {
         ImportConfirmDialog(
             onConfirm = {},
-            onDismiss = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ThemeSelectionDialogPreview() {
-    LiteMemoTheme {
-        ThemeSelectionDialog(
-            currentMode = ThemeMode.SYSTEM,
-            onModeSelected = {},
             onDismiss = {}
         )
     }

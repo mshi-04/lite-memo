@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +58,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -76,6 +79,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -313,7 +317,27 @@ private fun CalendarMonthCard(
     onCalendarExpandedToggle: () -> Unit,
     onDatePickerRequested: () -> Unit
 ) {
+    val swipeThresholdPx = with(LocalDensity.current) { MONTH_SWIPE_THRESHOLD_DP.dp.toPx() }
+
     Card(
+        modifier = Modifier.pointerInput(swipeThresholdPx) {
+            var dragAmount = 0f
+            detectHorizontalDragGestures(
+                onDragStart = { dragAmount = 0f },
+                onHorizontalDrag = { _, amount -> dragAmount += amount },
+                onDragEnd = {
+                    if (abs(dragAmount) >= swipeThresholdPx) {
+                        if (dragAmount < 0f) {
+                            onNextMonth()
+                        } else {
+                            onPreviousMonth()
+                        }
+                    }
+                    dragAmount = 0f
+                },
+                onDragCancel = { dragAmount = 0f }
+            )
+        },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = calendarContainerColor()),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -358,6 +382,8 @@ private fun CalendarMonthCard(
         }
     }
 }
+
+private const val MONTH_SWIPE_THRESHOLD_DP = 72
 
 @Composable
 private fun CalendarMonthHeader(

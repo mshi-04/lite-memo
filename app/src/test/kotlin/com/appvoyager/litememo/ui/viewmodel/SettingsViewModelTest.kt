@@ -195,6 +195,38 @@ class SettingsViewModelTest {
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
 
+    @Test
+    fun expandThemeDropdownCollapsesSortOrderDropdown() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = settingsViewModel(BlockingExportFileRepository())
+        viewModel.expandSortOrder()
+        advanceUntilIdle()
+
+        // Act
+        viewModel.expandThemeDropdown()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.themeDropdownExpanded }
+
+        // Assert
+        assertEquals(true to false, state.themeDropdownExpanded to state.sortOrderExpanded)
+    }
+
+    @Test
+    fun expandSortOrderCollapsesThemeDropdown() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = settingsViewModel(BlockingExportFileRepository())
+        viewModel.expandThemeDropdown()
+        advanceUntilIdle()
+
+        // Act
+        viewModel.expandSortOrder()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.sortOrderExpanded }
+
+        // Assert
+        assertEquals(false to true, state.themeDropdownExpanded to state.sortOrderExpanded)
+    }
+
     private fun settingsViewModel(exportFileRepository: ExportFileRepository): SettingsViewModel =
         settingsViewModel(
             exportFileRepository = exportFileRepository,
