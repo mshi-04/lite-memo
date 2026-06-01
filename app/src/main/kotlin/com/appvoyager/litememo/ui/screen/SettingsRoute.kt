@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
@@ -34,12 +35,12 @@ private fun defaultExportFileName(): String {
 
 @Composable
 fun SettingsRoute(
+    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
     onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
     onOpenSourceLicenseClick: () -> Unit = {},
     onTagManageClick: () -> Unit = {},
     onTrashClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -124,7 +125,7 @@ fun SettingsRoute(
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
         onPrivacyPolicyClick = {
             try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
+                val intent = Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri())
                 context.startActivity(intent)
             } catch (_: ActivityNotFoundException) {
                 coroutineScope.launch {

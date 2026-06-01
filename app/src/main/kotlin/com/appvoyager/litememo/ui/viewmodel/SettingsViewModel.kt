@@ -31,11 +31,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val observeThemeModeUseCase: ObserveThemeModeUseCase,
+    observeThemeModeUseCase: ObserveThemeModeUseCase,
+    observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
+    observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
     private val setThemeModeUseCase: SetThemeModeUseCase,
-    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
-    private val observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
     private val setAppLockEnabledUseCase: SetAppLockEnabledUseCase,
     private val exportMemosUseCase: ExportMemosUseCase,
     private val importMemosUseCase: ImportMemosUseCase,
