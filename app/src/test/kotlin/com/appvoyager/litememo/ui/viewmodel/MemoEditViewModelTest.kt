@@ -76,10 +76,10 @@ class MemoEditViewModelTest {
         val state = viewModel.uiState.value
 
         // Assert
-        assertEquals("Saved title", state.title)
-        assertEquals("Saved body", state.body)
-        assertEquals(setOf("tag-1"), state.selectedTagIds)
-        assertEquals(true, state.isFavorite)
+        assertEquals(
+            listOf<Any>("Saved title", "Saved body", setOf("tag-1"), true),
+            listOf<Any>(state.title, state.body, state.selectedTagIds, state.isFavorite)
+        )
     }
 
     @Test
@@ -100,10 +100,10 @@ class MemoEditViewModelTest {
         val state = viewModel.uiState.value
 
         // Assert
-        assertEquals("Stored title", state.title)
-        assertEquals("Stored body", state.body)
-        assertEquals(setOf("tag-1"), state.selectedTagIds)
-        assertEquals(true, state.isFavorite)
+        assertEquals(
+            listOf<Any>("Stored title", "Stored body", setOf("tag-1"), true),
+            listOf<Any>(state.title, state.body, state.selectedTagIds, state.isFavorite)
+        )
     }
 
     @Test
