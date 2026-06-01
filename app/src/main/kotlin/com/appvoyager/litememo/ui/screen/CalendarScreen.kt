@@ -320,24 +320,6 @@ private fun CalendarMonthCard(
     val swipeThresholdPx = with(LocalDensity.current) { MONTH_SWIPE_THRESHOLD_DP.dp.toPx() }
 
     Card(
-        modifier = Modifier.pointerInput(swipeThresholdPx) {
-            var dragAmount = 0f
-            detectHorizontalDragGestures(
-                onDragStart = { dragAmount = 0f },
-                onHorizontalDrag = { _, amount -> dragAmount += amount },
-                onDragEnd = {
-                    if (abs(dragAmount) >= swipeThresholdPx) {
-                        if (dragAmount < 0f) {
-                            onNextMonth()
-                        } else {
-                            onPreviousMonth()
-                        }
-                    }
-                    dragAmount = 0f
-                },
-                onDragCancel = { dragAmount = 0f }
-            )
-        },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = calendarContainerColor()),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -369,7 +351,26 @@ private fun CalendarMonthCard(
                 )
             ) {
                 Column(
-                    modifier = Modifier.animateContentSize(animationSpec = tween(220))
+                    modifier = Modifier
+                        .pointerInput(swipeThresholdPx) {
+                            var dragAmount = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { dragAmount = 0f },
+                                onHorizontalDrag = { _, amount -> dragAmount += amount },
+                                onDragEnd = {
+                                    if (abs(dragAmount) >= swipeThresholdPx) {
+                                        if (dragAmount < 0f) {
+                                            onNextMonth()
+                                        } else {
+                                            onPreviousMonth()
+                                        }
+                                    }
+                                    dragAmount = 0f
+                                },
+                                onDragCancel = { dragAmount = 0f }
+                            )
+                        }
+                        .animateContentSize(animationSpec = tween(220))
                 ) {
                     Spacer(modifier = Modifier.height(18.dp))
                     AnimatedCalendarGrid(

@@ -35,9 +35,9 @@ private fun defaultExportFileName(): String {
 
 @Composable
 fun SettingsRoute(
-    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState,
     onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    modifier: Modifier = Modifier,
     onOpenSourceLicenseClick: () -> Unit = {},
     onTagManageClick: () -> Unit = {},
     onTrashClick: () -> Unit = {},
