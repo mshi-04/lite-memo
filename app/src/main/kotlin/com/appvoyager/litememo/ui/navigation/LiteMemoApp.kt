@@ -63,6 +63,16 @@ fun LiteMemoApp(
     val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
     val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
+    val showErrorSnackbar: (String) -> Unit = remember(coroutineScope, snackbarHostState) {
+        { message ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    withDismissAction = true
+                )
+            }
+        }
+    }
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
         currentDestination?.hierarchy?.any { it.route == dest.route } == true
@@ -124,12 +134,7 @@ fun LiteMemoApp(
                         navController.navigate(MEMO_EDIT_BASE)
                     },
                     onShareError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = shareErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(shareErrorMessage)
                     },
                     snackbarHostState = snackbarHostState
                 )
@@ -193,36 +198,16 @@ fun LiteMemoApp(
                 MemoEditRoute(
                     onNavigateBack = { navController.popBackStack() },
                     onShareError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = shareErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(shareErrorMessage)
                     },
                     onDraftError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = draftErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(draftErrorMessage)
                     },
                     onSaveError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = saveMemoErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(saveMemoErrorMessage)
                     },
                     onDeleteError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = deleteMemoErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
                         navController.popBackStack()
