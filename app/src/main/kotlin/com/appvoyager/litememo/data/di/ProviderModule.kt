@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.data.di
 
-import com.appvoyager.litememo.BuildConfig
 import com.appvoyager.litememo.data.provider.SystemCurrentTimeProvider
 import com.appvoyager.litememo.data.provider.UuidMemoIdProvider
 import com.appvoyager.litememo.data.provider.UuidTagIdProvider
@@ -11,8 +10,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import java.time.ZoneId
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -25,25 +22,10 @@ object ProviderModule {
 
     @Provides
     @Singleton
-    fun provideZoneId(): ZoneId = ZoneId.systemDefault()
-
-    @Provides
-    @Singleton
     fun provideMemoIdProvider(): MemoIdProvider = UuidMemoIdProvider()
 
     @Provides
     @Singleton
     fun provideTagIdProvider(): TagIdProvider = UuidTagIdProvider()
-
-    @Provides
-    @Singleton
-    @Named("appVersion")
-    fun provideAppVersion(): String = BuildConfig.VERSION_NAME
-
-    @Provides
-    @Named("importMaxFileSizeBytes")
-    fun provideImportMaxFileSizeBytes(): Long = DEFAULT_IMPORT_MAX_FILE_SIZE_BYTES
-
-    private const val DEFAULT_IMPORT_MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024
 
 }

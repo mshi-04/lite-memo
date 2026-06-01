@@ -6,9 +6,12 @@ if [ ! -f "./gradlew" ] || [ ! -x "./gradlew" ]; then
     exit 1
 fi
 
-echo "Running KtLint..."
-./gradlew app:ktlintCheck --no-daemon -p .
+echo "Running KtLint format..."
+./gradlew app:ktlintFormat --no-daemon -p .
 if [ $? -ne 0 ]; then
-    echo "KtLint failed. Push aborted."
+    echo "KtLint format failed. Commit aborted."
     exit 1
 fi
+
+# Stage any files that KtLint reformatted so they are included in this commit.
+git add -u

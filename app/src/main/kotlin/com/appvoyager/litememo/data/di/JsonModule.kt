@@ -13,8 +13,17 @@ object JsonModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json = Json {
+    @ExportJson
+    fun provideExportJson(): Json = Json {
         prettyPrint = true
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
+    @Provides
+    @Singleton
+    @InternalJson
+    fun provideInternalJson(): Json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }

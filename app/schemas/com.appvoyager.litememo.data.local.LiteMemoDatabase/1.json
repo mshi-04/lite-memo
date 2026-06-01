@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "fe6b8035c834a381d13351e8d6895040",
+    "identityHash": "915192950f60c16162235f453e12b9d2",
     "entities": [
       {
         "tableName": "memos",
@@ -65,15 +65,6 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_memos_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
-          },
-          {
-            "name": "index_memos_updatedAt",
-            "unique": false,
-            "columnNames": [
-              "updatedAt"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_memos_updatedAt` ON `${TABLE_NAME}` (`updatedAt`)"
           },
           {
             "name": "index_memos_deletedAt",
@@ -213,7 +204,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fe6b8035c834a381d13351e8d6895040')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '915192950f60c16162235f453e12b9d2')"
     ]
   }
 }

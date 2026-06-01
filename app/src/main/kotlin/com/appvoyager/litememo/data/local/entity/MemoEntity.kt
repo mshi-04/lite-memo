@@ -8,7 +8,6 @@ import androidx.room.PrimaryKey
     tableName = "memos",
     indices = [
         Index(value = ["createdAt"]),
-        Index(value = ["updatedAt"]),
         Index(value = ["deletedAt"])
     ]
 )

@@ -9,14 +9,14 @@
 
 ## Git フックの有効化
 
-pre-push フックとして KtLint が設定されています。
+pre-commit フックとして KtLint が設定されています。
 クローン後に以下を実行してフックを有効にしてください。
 
 ```sh
 git config core.hooksPath .githooks
 ```
 
-これにより、`git push` 時に自動で KtLint が実行され、違反があるとプッシュが中断されます。
+これにより、`git commit` 時に自動で KtLint（ktlintFormat）が実行され、コードが自動整形されて変更がステージされます。整形に失敗した場合はコミットが中断されます。
 
 ## ローカルでの CI 相当チェック（任意）
 
