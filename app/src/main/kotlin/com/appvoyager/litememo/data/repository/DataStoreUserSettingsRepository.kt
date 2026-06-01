@@ -48,7 +48,7 @@ class DataStoreUserSettingsRepository @Inject constructor(
         dataStore.edit { prefs -> prefs[APP_LOCK_ENABLED_KEY] = enabled }
     }
 
-    private companion object {
+    internal companion object {
         val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         val MEMO_SORT_ORDER_KEY = stringPreferencesKey("memo_sort_order")
         val APP_LOCK_ENABLED_KEY = booleanPreferencesKey("app_lock_enabled")

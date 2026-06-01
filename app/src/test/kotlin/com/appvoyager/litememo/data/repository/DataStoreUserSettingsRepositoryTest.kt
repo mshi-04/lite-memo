@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +50,7 @@ class DataStoreUserSettingsRepositoryTest {
         // Arrange
         val dataStore = dataStore(backgroundScope)
         dataStore.edit { prefs ->
-            prefs[stringPreferencesKey("theme_mode")] = "NOT_A_VALID_MODE"
+            prefs[DataStoreUserSettingsRepository.THEME_MODE_KEY] = "NOT_A_VALID_MODE"
         }
         val repository = DataStoreUserSettingsRepository(dataStore)
 
@@ -93,7 +92,7 @@ class DataStoreUserSettingsRepositoryTest {
         // Arrange
         val dataStore = dataStore(backgroundScope)
         dataStore.edit { prefs ->
-            prefs[stringPreferencesKey("memo_sort_order")] = "NOT_A_VALID_ORDER"
+            prefs[DataStoreUserSettingsRepository.MEMO_SORT_ORDER_KEY] = "NOT_A_VALID_ORDER"
         }
         val repository = DataStoreUserSettingsRepository(dataStore)
 

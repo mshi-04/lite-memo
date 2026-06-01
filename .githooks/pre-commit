@@ -6,12 +6,35 @@ if [ ! -f "./gradlew" ] || [ ! -x "./gradlew" ]; then
     exit 1
 fi
 
+if [ -n "$(git diff --name-only)" ]; then
+    echo "Error: unstaged tracked changes found."
+    echo "Please stage or stash them before committing because ktlintFormat may update tracked files."
+    exit 1
+fi
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMRT)
+STAGED_KOTLIN_FILES=$(printf '%s\n' "$STAGED_FILES" | grep -E '\.kts?$' || true)
+
+if [ -z "$STAGED_KOTLIN_FILES" ]; then
+    echo "No staged Kotlin files. Skipping KtLint format."
+    exit 0
+fi
+
 echo "Running KtLint format..."
-./gradlew app:ktlintFormat --no-daemon -p .
+./gradlew app:ktlintFormat --no-daemon
 if [ $? -ne 0 ]; then
     echo "KtLint format failed. Commit aborted."
     exit 1
 fi
 
-# Stage any files that KtLint reformatted so they are included in this commit.
-git add -u
+printf '%s\n' "$STAGED_FILES" | while IFS= read -r file; do
+    if [ -n "$file" ]; then
+        git add -- "$file"
+    fi
+done
+
+if [ -n "$(git diff --name-only)" ]; then
+    echo "KtLint format changed files that were not staged."
+    echo "Please review the changes and commit again."
+    exit 1
+fi

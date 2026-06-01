@@ -6,7 +6,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.time.ZoneId
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -19,7 +18,7 @@ object AppConfigModule {
 
     @Provides
     @Singleton
-    @Named("appVersion")
+    @AppVersion
     fun provideAppVersion(): String = BuildConfig.VERSION_NAME
 
     @Provides
