@@ -32,7 +32,6 @@ android {
         create("dev") {
             dimension = "environment"
             applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
             signingConfig = signingConfigs.getByName("debug")
         }
         create("prod") {

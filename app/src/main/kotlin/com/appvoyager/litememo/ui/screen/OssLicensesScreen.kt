@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,8 +36,10 @@ fun OssLicensesScreen(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text(text = stringResource(R.string.settings_open_source_licenses)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
