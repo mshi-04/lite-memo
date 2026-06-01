@@ -358,12 +358,10 @@ private fun CalendarMonthCard(
                                 onDragStart = { dragAmount = 0f },
                                 onHorizontalDrag = { _, amount -> dragAmount += amount },
                                 onDragEnd = {
-                                    if (abs(dragAmount) >= swipeThresholdPx) {
-                                        if (dragAmount < 0f) {
-                                            onNextMonth()
-                                        } else {
-                                            onPreviousMonth()
-                                        }
+                                    when (resolveMonthSwipe(dragAmount, swipeThresholdPx)) {
+                                        MonthSwipeDirection.NEXT -> onNextMonth()
+                                        MonthSwipeDirection.PREVIOUS -> onPreviousMonth()
+                                        null -> Unit
                                     }
                                     dragAmount = 0f
                                 },
@@ -385,6 +383,13 @@ private fun CalendarMonthCard(
 }
 
 private const val MONTH_SWIPE_THRESHOLD_DP = 72
+
+internal enum class MonthSwipeDirection { PREVIOUS, NEXT }
+
+internal fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeDirection? {
+    if (abs(dragAmount) < thresholdPx) return null
+    return if (dragAmount < 0f) MonthSwipeDirection.NEXT else MonthSwipeDirection.PREVIOUS
+}
 
 @Composable
 private fun CalendarMonthHeader(

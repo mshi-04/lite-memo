@@ -273,7 +273,7 @@ private fun ThemeRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(role = Role.DropdownList, onClick = if (expanded) onCollapse else onExpand)
+            .clickable(role = Role.Button, onClick = if (expanded) onCollapse else onExpand)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -325,7 +325,7 @@ private fun SortOrderRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(role = Role.DropdownList, onClick = if (expanded) onCollapse else onExpand)
+            .clickable(role = Role.Button, onClick = if (expanded) onCollapse else onExpand)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
