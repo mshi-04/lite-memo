@@ -5,8 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.appvoyager.litememo.data.di.UserSettingsDataStore
 import com.appvoyager.litememo.data.util.dataOrEmptyOnIoError
+import com.appvoyager.litememo.di.UserSettingsDataStore
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository

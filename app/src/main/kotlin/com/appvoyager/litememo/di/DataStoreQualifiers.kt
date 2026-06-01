@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.data.di
+package com.appvoyager.litememo.di
 
 import javax.inject.Qualifier
 

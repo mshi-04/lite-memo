@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.data.di
+package com.appvoyager.litememo.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
