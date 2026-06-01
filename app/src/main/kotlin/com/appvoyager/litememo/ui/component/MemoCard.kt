@@ -178,7 +178,7 @@ private fun updatedAtLabel(updatedAtMillis: Long): String {
     val zoneId = remember { ZoneId.systemDefault() }
     val timeFormatter = remember { DateTimeFormatter.ofPattern("H:mm") }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("M/d") }
-    val today = remember(zoneId) { LocalDate.now(zoneId) }
+    val today = LocalDate.now(zoneId)
     val updatedAt = remember(updatedAtMillis, zoneId) {
         Instant.ofEpochMilli(updatedAtMillis).atZone(zoneId)
     }

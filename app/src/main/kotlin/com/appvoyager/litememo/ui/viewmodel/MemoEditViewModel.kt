@@ -165,11 +165,10 @@ class MemoEditViewModel @Inject constructor(
             viewModelScope.launch {
                 autosaveJob?.cancel()
                 try {
-                    clearDraft(notifyOnFailure = false)
+                    clearDraft()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Throwable) {
-                    _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
                     return@launch
                 }
                 clearSavedState()
@@ -191,7 +190,7 @@ class MemoEditViewModel @Inject constructor(
                     )
                 )
                 autosaveJob?.cancel()
-                clearDraft(notifyOnFailure = false)
+                clearDraftAfterCompletedOperation()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
@@ -210,7 +209,7 @@ class MemoEditViewModel @Inject constructor(
             try {
                 val memoId = moveMemoToTrashUseCase(MemoId(id))
                 autosaveJob?.cancel()
-                clearDraft(notifyOnFailure = false)
+                clearDraftAfterCompletedOperation()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memoId))
@@ -288,6 +287,16 @@ class MemoEditViewModel @Inject constructor(
                 _draftErrorEvent.trySend(Unit)
             }
             throw e
+        }
+    }
+
+    private suspend fun clearDraftAfterCompletedOperation() {
+        try {
+            clearDraft()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // clearDraft already emitted draftErrorEvent.
         }
     }
 

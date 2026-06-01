@@ -334,15 +334,22 @@ private fun TagEditDialog(
     )
 }
 
-private fun checkmarkTintFor(backgroundColor: Color): Color =
-    if (backgroundColor.luminance() > 0.5f) {
-        CheckmarkTintOnLightColor
-    } else {
-        CheckmarkTintOnDarkColor
-    }
+@Composable
+private fun checkmarkTintFor(backgroundColor: Color): Color {
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val surface = MaterialTheme.colorScheme.surface
+    val darkerThemeColor = if (onSurface.luminance() <= surface.luminance()) onSurface else surface
+    val lighterThemeColor = if (onSurface.luminance() > surface.luminance()) onSurface else surface
 
-private val CheckmarkTintOnLightColor = Color(0xDE000000)
-private val CheckmarkTintOnDarkColor = Color(0xFFFFFFFF)
+    return if (backgroundColor.luminance() > LIGHT_BACKGROUND_LUMINANCE_THRESHOLD) {
+        darkerThemeColor.copy(alpha = CHECKMARK_TINT_ON_LIGHT_ALPHA)
+    } else {
+        lighterThemeColor
+    }
+}
+
+private const val LIGHT_BACKGROUND_LUMINANCE_THRESHOLD = 0.5f
+private const val CHECKMARK_TINT_ON_LIGHT_ALPHA = 0.87f
 
 @Preview(showBackground = true)
 @Composable

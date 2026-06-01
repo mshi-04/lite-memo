@@ -8,6 +8,7 @@ import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
+import com.appvoyager.litememo.domain.usecase.DuplicateTagNameException
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveTagUseCase
 import com.appvoyager.litememo.ui.state.TagEditState
@@ -41,8 +42,8 @@ class TagManageViewModel @Inject constructor(
     private val deleteDialog = MutableStateFlow<TagUiModel?>(null)
     private val retryTrigger = MutableStateFlow(false)
 
-    // 削除失敗は一回限りの通知なので Channel event で扱う(取りこぼし防止に BUFFERED)
-    private val _deleteErrorEvent = Channel<Unit>(Channel.BUFFERED)
+    // 削除失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
+    private val _deleteErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val deleteErrorEvent = _deleteErrorEvent.receiveAsFlow()
 
     val uiState: StateFlow<TagManageUiState> = retryTrigger.flatMapLatest {
@@ -112,8 +113,17 @@ class TagManageViewModel @Inject constructor(
                 )
             }.onSuccess {
                 editingTag.value = null
-            }.onFailure {
-                editingTag.update { current -> current?.copy(saveError = true) }
+            }.onFailure { error ->
+                editingTag.update { current ->
+                    when (error) {
+                        is DuplicateTagNameException -> current?.copy(
+                            duplicateNameError = true,
+                            saveError = false
+                        )
+
+                        else -> current?.copy(saveError = true)
+                    }
+                }
             }
         }
     }

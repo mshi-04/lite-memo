@@ -15,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -76,6 +77,32 @@ class TagManageViewModelTest {
 
         // Assert
         assertEquals(true, state.editingTag?.duplicateNameError)
+    }
+
+    @Test
+    fun saveEditMapsDuplicateNameExceptionToDuplicateNameError() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = tagManageViewModel(
+            tagRepository = StaleObserveTagRepository(
+                listOf(
+                    tagFixture(id = "tag-1", name = "Work")
+                )
+            )
+        )
+        viewModel.uiState.first { !it.isLoading }
+
+        // Act
+        viewModel.startCreate()
+        viewModel.updateEditName("Work")
+        viewModel.saveEdit()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.editingTag?.duplicateNameError == true }
+
+        // Assert
+        assertEquals(
+            false to true,
+            state.editingTag?.saveError to state.editingTag?.duplicateNameError
+        )
     }
 
     @Test
@@ -146,6 +173,26 @@ class TagManageViewModelTest {
 
         override suspend fun deleteTag(id: TagId): Unit =
             throw IllegalStateException("Failed to delete tag.")
+
+        override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
+
+        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
+    }
+
+    private class StaleObserveTagRepository(initialTags: List<Tag>) : TagRepository {
+
+        private val repository = FakeTagRepository(initialTags)
+
+        override fun observeTags(): Flow<List<Tag>> = flowOf(emptyList())
+
+        override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
+
+        override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
+            repository.getTagsByIds(ids)
+
+        override suspend fun saveTag(tag: Tag) = repository.saveTag(tag)
+
+        override suspend fun deleteTag(id: TagId) = repository.deleteTag(id)
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
 

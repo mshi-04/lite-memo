@@ -48,8 +48,8 @@ class TrashViewModel @Inject constructor(
     private val hasPurgeError = MutableStateFlow(false)
     private val permanentDeleteDialog = MutableStateFlow<TrashedMemoUiModel?>(null)
 
-    // 操作失敗は一回限りの通知なので Channel event で扱う(取りこぼし防止に BUFFERED)
-    private val _actionErrorEvent = Channel<Unit>(Channel.BUFFERED)
+    // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
+    private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
     private val observedData = retryTrigger.flatMapLatest {
