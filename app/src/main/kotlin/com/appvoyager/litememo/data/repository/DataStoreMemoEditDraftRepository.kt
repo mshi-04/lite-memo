@@ -6,10 +6,10 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.appvoyager.litememo.data.di.InternalJson
-import com.appvoyager.litememo.data.di.MemoEditDraftDataStore
 import com.appvoyager.litememo.data.model.DraftKeys
 import com.appvoyager.litememo.data.util.dataOrEmptyOnIoError
+import com.appvoyager.litememo.di.InternalJson
+import com.appvoyager.litememo.di.MemoEditDraftDataStore
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
 import com.appvoyager.litememo.domain.model.value.MemoBody
