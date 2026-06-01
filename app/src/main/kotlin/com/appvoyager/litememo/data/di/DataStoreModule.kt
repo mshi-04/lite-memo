@@ -18,8 +18,18 @@ object DataStoreModule {
 
     @Provides
     @Singleton
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+    @UserSettingsDataStore
+    fun provideUserSettingsDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         PreferenceDataStoreFactory.create {
             context.preferencesDataStoreFile("user_settings")
         }
+
+    @Provides
+    @Singleton
+    @MemoEditDraftDataStore
+    fun provideMemoEditDraftDataStore(
+        @ApplicationContext context: Context
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create {
+        context.preferencesDataStoreFile("memo_edit_drafts")
+    }
 }

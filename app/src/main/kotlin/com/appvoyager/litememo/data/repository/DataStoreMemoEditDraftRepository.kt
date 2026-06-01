@@ -4,10 +4,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.appvoyager.litememo.data.di.InternalJson
+import com.appvoyager.litememo.data.di.MemoEditDraftDataStore
 import com.appvoyager.litememo.data.model.DraftKeys
+import com.appvoyager.litememo.data.util.dataOrEmptyOnIoError
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
 import com.appvoyager.litememo.domain.model.value.MemoBody
@@ -15,23 +17,19 @@ import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoEditDraftRepository
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.IOException
 import javax.inject.Inject
 
 class DataStoreMemoEditDraftRepository @Inject constructor(
-    private val dataStore: DataStore<Preferences>,
-    private val json: Json
+    @param:MemoEditDraftDataStore private val dataStore: DataStore<Preferences>,
+    @param:InternalJson private val json: Json
 ) : MemoEditDraftRepository {
 
     override suspend fun getDraft(target: MemoEditDraftTarget): MemoEditDraft? {
-        val prefs = dataStore.data.catch { e ->
-            if (e is IOException) emit(emptyPreferences()) else throw e
-        }.first()
+        val prefs = dataStore.dataOrEmptyOnIoError().first()
         val keys = keys(target)
         val title = prefs[keys.title] ?: return null
         val body = prefs[keys.body] ?: return null

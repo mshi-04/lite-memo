@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appvoyager.litememo.di.AppVersion
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
@@ -27,7 +28,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Named
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -40,7 +40,7 @@ class SettingsViewModel @Inject constructor(
     private val exportMemosUseCase: ExportMemosUseCase,
     private val importMemosUseCase: ImportMemosUseCase,
     private val exportFileRepository: ExportFileRepository,
-    @param:Named("appVersion") private val appVersion: String
+    @param:AppVersion private val appVersion: String
 ) : ViewModel() {
 
     private val showThemeDialog = MutableStateFlow(false)

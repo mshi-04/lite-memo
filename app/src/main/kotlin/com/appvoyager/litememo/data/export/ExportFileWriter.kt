@@ -2,6 +2,7 @@ package com.appvoyager.litememo.data.export
 
 import android.content.Context
 import android.net.Uri
+import com.appvoyager.litememo.data.di.ExportJson
 import com.appvoyager.litememo.data.di.IoDispatcher
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 class ExportFileWriter @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val json: Json,
+    @param:ExportJson private val json: Json,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 

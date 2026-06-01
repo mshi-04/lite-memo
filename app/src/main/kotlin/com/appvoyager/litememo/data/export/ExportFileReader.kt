@@ -3,6 +3,8 @@ package com.appvoyager.litememo.data.export
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.appvoyager.litememo.data.di.ExportJson
+import com.appvoyager.litememo.data.di.ImportMaxFileSizeBytes
 import com.appvoyager.litememo.data.di.IoDispatcher
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -14,13 +16,12 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import javax.inject.Inject
-import javax.inject.Named
 
 class ExportFileReader @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val json: Json,
+    @param:ExportJson private val json: Json,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @param:Named("importMaxFileSizeBytes") private val maxFileSizeBytes: Long
+    @param:ImportMaxFileSizeBytes private val maxFileSizeBytes: Long
 ) {
 
     suspend fun read(uri: Uri): LiteMemoExportDto = withContext(ioDispatcher) {

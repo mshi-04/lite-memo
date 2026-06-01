@@ -142,18 +142,21 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeActiveMemosCreatedBetweenWithEqualRangeThrowsBeforeCallingDao() {
+    fun observeActiveMemosCreatedBetweenWithEqualRangeReturnsEmpty() = runTest {
         // Arrange
-        val dao = FakeMemoDao(failOnObserveMemosBetween = true)
+        val dao = FakeMemoDao(
+            memosWithTagRefs = listOf(memoWithTagRefs(memoId = "memo-1", createdAt = 1_000L))
+        )
         val repository = createRepository(dao)
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException::class.java) {
-            repository.observeActiveMemosCreatedBetween(
-                from = TimestampMillis(1_000L),
-                to = TimestampMillis(1_000L)
-            )
-        }
+        // Act
+        val memos = repository.observeActiveMemosCreatedBetween(
+            from = TimestampMillis(1_000L),
+            to = TimestampMillis(1_000L)
+        ).first()
+
+        // Assert
+        assertEquals(emptyList<MemoId>(), memos.map { it.id })
     }
 
     @Test
@@ -356,6 +359,22 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun executeImportThrowsWhenDuplicateTagIdsProvided() {
+        // Arrange
+        val repository = createRepositoryForImport(FakeMemoDao(), FakeTagDao())
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                repository.executeImport(
+                    tags = listOf(tagFixture(id = "t1"), tagFixture(id = "t1")),
+                    memos = emptyList()
+                )
+            }
+        }
+    }
+
+    @Test
     fun executeImportCallsTagDaoBeforeMemoDao() = runTest {
         // Arrange
         val callOrder = mutableListOf<String>()
@@ -383,7 +402,7 @@ class RoomMemoRepositoryTest {
                 throw UnsupportedOperationException()
             override fun clearAllTables() = throw UnsupportedOperationException()
         }
-        return RoomMemoRepository(memoDao, dummyDatabase)
+        return RoomMemoRepository(memoDao, tagDao, dummyDatabase)
     }
 
     private fun createRepository(dao: FakeMemoDao): RoomMemoRepository {
@@ -395,7 +414,7 @@ class RoomMemoRepositoryTest {
                 throw UnsupportedOperationException()
             override fun clearAllTables() = throw UnsupportedOperationException()
         }
-        return RoomMemoRepository(dao, dummyDatabase)
+        return RoomMemoRepository(dao, FakeTagDao(), dummyDatabase)
     }
 
     private fun memoWithTagRefs(
