@@ -16,33 +16,7 @@ comments_location_policy = "both"
 inline_comments_severity_threshold = 3
 
 issues_user_guidelines = """
-レビュー結果、要約、指摘、補足、マージ可否はすべて日本語で書いてください。
-英語のコード識別子、ファイルパス、Gradleタスク名、API名はそのまま表記してください。
-
-Lite Memo は Android 向けの軽量メモアプリです。レビューでは、バグ、セキュリティ、データ破損、クラッシュ、パフォーマンス劣化、ユーザー体験の明確な退行を優先して指摘してください。
-
-指摘には必ず [Critical] / [Suggestion] / [Nitpick] のいずれかを付けてください。
-- [Critical]: マージ前に必ず直すべきバグ、セキュリティ問題、データ破損、クラッシュ、重大なアーキテクチャ違反。
-- [Suggestion]: 修正を推奨する品質、保守性、一貫性、テスト不足の問題。
-- [Nitpick]: マージをブロックしない細部の改善。
-
-各指摘には上から通し番号を振ってください。
-最後に Critical の件数とマージ可否を日本語で明記してください。
-"""
-
-compliance_user_guidelines = """
-Lite Memo のレビューでは、以下のプロジェクト方針に沿っているか確認してください。
-
-- Clean Architecture + MVVM を基本とし、依存方向は presentation -> domain <- data を守る。
-- UI は ViewModel に依存し、ViewModel は UseCase 経由で domain にアクセスする。
-- domain 層は Android Framework に依存しない。
-- Repository implementation、Room、DTO、mapper などのデータ層詳細を presentation 層へ漏らさない。
-- Hilt による依存注入の責務が data / domain / presentation の境界を壊していない。
-- Room entity や DTO と domain model がずれる場合は data 層で mapper を使う。
-- Jetpack Compose / Material 3 を基本とし、Compose Preview を壊しにくい小さなUIコンポーネントへ分ける。
-- ライト / ダークモードに対応し、固定色の直書きを避ける。
-- 表示文字列は strings.xml に寄せ、日本語 / 英語対応を前提にする。
-- Unit Test は JUnit 5 を使い、テスト関数名は英語にする。
-- テストは Arrange / Act / Assert の意図が分かる構成にする。
-- 1つのテスト関数では、原則として1つの振る舞いを1つの主要な assert で検証する。
+Lite Memo は Android 向けの軽量メモアプリです。
+バグ、セキュリティ、データ破損、クラッシュ、パフォーマンス劣化、
+ユーザー体験の明確な退行を優先して指摘してください。
 """
