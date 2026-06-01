@@ -23,6 +23,12 @@ pr_compliances:
     success_criteria: "状態を持たない XxxScreen と ViewModel 接続の XxxRoute を分離する。ViewModel は StateFlow で状態を公開し、非同期は Coroutines で UI スレッドを止めない。画面遷移は Navigation Compose。ライト / ダーク対応し固定色を直書きしない。Compose Preview を壊しにくい小さな部品に分割する。"
     failure_criteria: "Screen と Route を分離せず ViewModel 依存が混在する。UI スレッドをブロックする同期処理。固定色の直書き。巨大な単一 Composable。"
 
+  - title: "アクセシビリティ対応"
+    compliance_label: true
+    objective: "TalkBack やスイッチ制御などの支援技術に対応し、すべてのユーザーが利用可能な UI を保つ"
+    success_criteria: "意味のある画像・アイコンには contentDescription を設定する。カスタム Composable は semantics で role / state を明示する。ドロップダウンやトグルなどの操作要素は役割が支援技術へ伝わるようにする。タッチターゲットは最小 48dp を確保し、色のみに依存せず十分なコントラストを保つ。"
+    failure_criteria: "意味のある画像・アイコンに contentDescription がない。カスタムコントロールに role / state の semantics がない。タッチターゲットが小さすぎる。色だけで状態を伝えている。"
+
   - title: "一回限り通知の扱い"
     compliance_label: false
     objective: "一回限りのイベントを取りこぼさず状態と区別して扱う"
@@ -32,8 +38,8 @@ pr_compliances:
   - title: "ローカライズ"
     compliance_label: true
     objective: "日本語 / 英語対応を前提に表示文字列を管理する"
-    success_criteria: "表示文字列は strings.xml に寄せる。日本語 / 英語の両対応を前提とする。"
-    failure_criteria: "UI に表示文字列を直書きする。"
+    success_criteria: "表示文字列は strings.xml に寄せ、日本語 / 英語の両対応を前提とする。件数などは plurals を使い、動的な値は %s / %d などのプレースホルダーで管理する。日付・数値はロケールを考慮してフォーマットし、RTL 言語へ拡張しても破綻しにくい配置にする。"
+    failure_criteria: "UI に表示文字列を直書きする。複数形・動的挿入・日付・数値を固定文字列や固定フォーマットで扱う。RTL 拡張時に崩れやすい方向固定の UI を増やす。"
 
   - title: "Unit Test 方針"
     compliance_label: false

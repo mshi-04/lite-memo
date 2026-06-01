@@ -34,11 +34,29 @@ class MonthSwipeTest {
     }
 
     @Test
-    fun resolvesToActionWhenDragEqualsThreshold() {
+    fun resolvesToNullWhenDragIsZero() {
+        // Act
+        val result = resolveMonthSwipe(dragAmount = 0f, thresholdPx = 100f)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun resolvesToNextWhenDragEqualsNegativeThreshold() {
         // Act
         val result = resolveMonthSwipe(dragAmount = -100f, thresholdPx = 100f)
 
         // Assert
         assertEquals(MonthSwipeDirection.NEXT, result)
+    }
+
+    @Test
+    fun resolvesToPreviousWhenDragEqualsPositiveThreshold() {
+        // Act
+        val result = resolveMonthSwipe(dragAmount = 100f, thresholdPx = 100f)
+
+        // Assert
+        assertEquals(MonthSwipeDirection.PREVIOUS, result)
     }
 }
