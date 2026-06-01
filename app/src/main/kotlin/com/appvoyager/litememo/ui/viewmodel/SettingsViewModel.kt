@@ -2,7 +2,7 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appvoyager.litememo.data.di.AppVersion
+import com.appvoyager.litememo.di.AppVersion
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference

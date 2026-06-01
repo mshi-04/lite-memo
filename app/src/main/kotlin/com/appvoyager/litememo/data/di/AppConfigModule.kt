@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.data.di
 
 import com.appvoyager.litememo.BuildConfig
+import com.appvoyager.litememo.di.AppVersion
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
