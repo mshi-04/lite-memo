@@ -6,7 +6,6 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 data class TrashUiState(
     val isLoading: Boolean = true,
     val hasError: Boolean = false,
-    val hasActionError: Boolean = false,
     val memos: List<TrashedMemoUiModel> = emptyList(),
     val showPermanentDeleteDialog: TrashedMemoUiModel? = null
 )

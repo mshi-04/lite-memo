@@ -3,24 +3,28 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.SaveTagCommand
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
+import com.appvoyager.litememo.domain.usecase.DuplicateTagNameException
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveTagUseCase
-import com.appvoyager.litememo.ui.state.DEFAULT_TAG_COLORS
 import com.appvoyager.litememo.ui.state.TagEditState
 import com.appvoyager.litememo.ui.state.TagManageUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -36,25 +40,27 @@ class TagManageViewModel @Inject constructor(
 
     private val editingTag = MutableStateFlow<TagEditState?>(null)
     private val deleteDialog = MutableStateFlow<TagUiModel?>(null)
-    private val hasDeleteError = MutableStateFlow(false)
-    private val retryTrigger = MutableStateFlow(0)
+    private val retryTrigger = MutableStateFlow(false)
+
+    // 削除失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
+    private val _deleteErrorEvent = Channel<Unit>(Channel.CONFLATED)
+    val deleteErrorEvent = _deleteErrorEvent.receiveAsFlow()
 
     val uiState: StateFlow<TagManageUiState> = retryTrigger.flatMapLatest {
         combine(
-            observeTagsUseCase(),
+            observeTagsUseCase()
+                .map<List<Tag>, List<Tag>?> { it }
+                .catch { emit(null) },
             editingTag,
-            deleteDialog,
-            hasDeleteError
-        ) { tags, editing, deleting, deleteError ->
+            deleteDialog
+        ) { tags, editing, deleting ->
             TagManageUiState(
                 isLoading = false,
-                hasDeleteError = deleteError,
-                tags = tags.map { TagUiModel.fromDomain(it) },
+                hasError = tags == null,
+                tags = tags?.map { TagUiModel.fromDomain(it) } ?: emptyList(),
                 editingTag = editing,
                 showDeleteDialog = deleting
             )
-        }.catch {
-            emit(TagManageUiState(isLoading = false, hasError = true))
         }
     }.stateIn(
         scope = viewModelScope,
@@ -76,7 +82,9 @@ class TagManageViewModel @Inject constructor(
     }
 
     fun updateEditName(name: String) {
-        editingTag.update { it?.copy(name = name, nameError = false, saveError = false) }
+        editingTag.update {
+            it?.copy(name = name, nameError = false, duplicateNameError = false, saveError = false)
+        }
     }
 
     fun selectEditColor(colorArgb: Long) {
@@ -90,6 +98,10 @@ class TagManageViewModel @Inject constructor(
             editingTag.update { it?.copy(nameError = true) }
             return
         }
+        if (isDuplicateName(trimmedName, state.id)) {
+            editingTag.update { it?.copy(duplicateNameError = true) }
+            return
+        }
         viewModelScope.launch {
             runCatching {
                 saveTagUseCase(
@@ -101,8 +113,17 @@ class TagManageViewModel @Inject constructor(
                 )
             }.onSuccess {
                 editingTag.value = null
-            }.onFailure {
-                editingTag.update { state -> state?.copy(saveError = true) }
+            }.onFailure { error ->
+                editingTag.update { current ->
+                    when (error) {
+                        is DuplicateTagNameException -> current?.copy(
+                            duplicateNameError = true,
+                            saveError = false
+                        )
+
+                        else -> current?.copy(saveError = true)
+                    }
+                }
             }
         }
     }
@@ -122,16 +143,11 @@ class TagManageViewModel @Inject constructor(
                 deleteTagUseCase(TagId(tag.id))
             }.onSuccess {
                 deleteDialog.value = null
-                hasDeleteError.value = false
             }.onFailure {
                 deleteDialog.value = null
-                hasDeleteError.value = true
+                _deleteErrorEvent.trySend(Unit)
             }
         }
-    }
-
-    fun dismissDeleteError() {
-        hasDeleteError.value = false
     }
 
     fun dismissDeleteDialog() {
@@ -139,6 +155,10 @@ class TagManageViewModel @Inject constructor(
     }
 
     fun retry() {
-        retryTrigger.update { it + 1 }
+        retryTrigger.update { !it }
     }
+
+    // 同名タグ(自分自身を除く)が既に存在するかを判定する
+    private fun isDuplicateName(name: String, excludeId: String?): Boolean =
+        uiState.value.tags.any { it.name == name && it.id != excludeId }
 }

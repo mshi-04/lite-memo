@@ -169,7 +169,7 @@ private fun MemoTag(tag: TagUiModel?) {
 @Composable
 private fun memoAccentColor(memo: MemoUiModel): Color {
     if (memo.isFavorite) return MaterialTheme.colorScheme.error
-    return memo.tags.firstOrNull()?.colorArgb?.let { Color(it.toInt()) }
+    return memo.tags.firstOrNull()?.toComposeColor()
         ?: MaterialTheme.colorScheme.primary
 }
 

@@ -54,7 +54,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,6 +66,8 @@ import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.component.tagColor
+import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.component.toDisplayString
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
@@ -93,7 +94,6 @@ fun HomeScreen(
     onRequestRemoveTagFromSelectedMemos: () -> Unit,
     onApplySelectedTag: (TagId) -> Unit,
     onDismissBulkTagDialog: () -> Unit,
-    onDismissActionError: () -> Unit,
     onShareSelectedMemo: () -> Unit,
     onMemoClick: (String) -> Unit,
     onCreateMemoClick: () -> Unit,
@@ -145,19 +145,6 @@ fun HomeScreen(
         onApplySelectedTag = onApplySelectedTag,
         onDismiss = onDismissBulkTagDialog
     )
-
-    if (uiState.hasActionError) {
-        AlertDialog(
-            onDismissRequest = onDismissActionError,
-            title = { Text(text = stringResource(R.string.home_bulk_action_error_title)) },
-            text = { Text(text = stringResource(R.string.home_bulk_action_error_body)) },
-            confirmButton = {
-                TextButton(onClick = onDismissActionError) {
-                    Text(text = stringResource(R.string.settings_dialog_ok))
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -536,7 +523,7 @@ private fun HomeBulkTagDialog(
                                     modifier = Modifier
                                         .size(10.dp)
                                         .clip(CircleShape)
-                                        .background(Color(tag.colorArgb.toInt()))
+                                        .background(tag.toComposeColor())
                                 )
                                 Text(
                                     text = tag.name,
@@ -725,7 +712,7 @@ private fun FilterButton(
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
-                        .background(Color(it.toInt()))
+                        .background(tagColor(it))
                 )
             }
         }
@@ -760,7 +747,6 @@ private fun HomeScreenPreview() {
             onRequestRemoveTagFromSelectedMemos = {},
             onApplySelectedTag = {},
             onDismissBulkTagDialog = {},
-            onDismissActionError = {},
             onShareSelectedMemo = {},
             onMemoClick = {},
             onCreateMemoClick = {},
@@ -792,7 +778,6 @@ private fun HomeScreenDarkPreview() {
             onRequestRemoveTagFromSelectedMemos = {},
             onApplySelectedTag = {},
             onDismissBulkTagDialog = {},
-            onDismissActionError = {},
             onShareSelectedMemo = {},
             onMemoClick = {},
             onCreateMemoClick = {},

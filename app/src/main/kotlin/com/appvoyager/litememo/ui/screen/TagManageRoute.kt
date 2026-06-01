@@ -1,19 +1,34 @@
 package com.appvoyager.litememo.ui.screen
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.viewmodel.TagManageViewModel
 
 @Composable
 fun TagManageRoute(
     onNavigateBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     viewModel: TagManageViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val deleteErrorMessage = stringResource(R.string.tag_delete_error_body)
+
+    LaunchedEffect(viewModel, snackbarHostState, deleteErrorMessage) {
+        viewModel.deleteErrorEvent.collect {
+            snackbarHostState.showSnackbar(
+                message = deleteErrorMessage,
+                withDismissAction = true
+            )
+        }
+    }
 
     TagManageScreen(
         uiState = uiState,
@@ -23,7 +38,6 @@ fun TagManageRoute(
         onDeleteRequest = { viewModel.requestDelete(it) },
         onConfirmDelete = { viewModel.confirmDelete() },
         onDismissDelete = { viewModel.dismissDeleteDialog() },
-        onDismissDeleteError = { viewModel.dismissDeleteError() },
         onEditNameChanged = { viewModel.updateEditName(it) },
         onEditColorSelected = { viewModel.selectEditColor(it) },
         onSaveEdit = { viewModel.saveEdit() },

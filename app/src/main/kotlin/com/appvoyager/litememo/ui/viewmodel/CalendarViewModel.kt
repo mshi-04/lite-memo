@@ -92,7 +92,7 @@ class CalendarViewModel @Inject constructor(
         isSearchActive,
         searchQuery
     ) { expanded, datePickerVisible, searching, query ->
-        UiControls(expanded, datePickerVisible, searching, query)
+        CalendarUiControls(expanded, datePickerVisible, searching, query)
     }
 
     // retry() でこのフロー全体を再購読し、カレンダーデータと検索の両方を再実行する
@@ -215,17 +215,17 @@ class CalendarViewModel @Inject constructor(
         )
     }
 
-    private data class ObservedCalendarData(
-        val monthSummary: CalendarMonthSummary?,
-        val memos: List<Memo>?,
-        val tags: List<Tag>?
-    )
-
-    private data class UiControls(
-        val expanded: Boolean,
-        val datePickerVisible: Boolean,
-        val searching: Boolean,
-        val query: String
-    )
-
 }
+
+private data class ObservedCalendarData(
+    val monthSummary: CalendarMonthSummary?,
+    val memos: List<Memo>?,
+    val tags: List<Tag>?
+)
+
+private data class CalendarUiControls(
+    val expanded: Boolean,
+    val datePickerVisible: Boolean,
+    val searching: Boolean,
+    val query: String
+)

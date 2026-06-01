@@ -61,7 +61,6 @@ fun TrashScreen(
     onPermanentDeleteRequest: (TrashedMemoUiModel) -> Unit,
     onConfirmPermanentDelete: () -> Unit,
     onDismissPermanentDelete: () -> Unit,
-    onDismissActionError: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -144,19 +143,6 @@ fun TrashScreen(
             }
         )
     }
-
-    if (uiState.hasActionError) {
-        AlertDialog(
-            onDismissRequest = onDismissActionError,
-            title = { Text(text = stringResource(R.string.trash_action_error_title)) },
-            text = { Text(text = stringResource(R.string.trash_action_error_body)) },
-            confirmButton = {
-                TextButton(onClick = onDismissActionError) {
-                    Text(text = stringResource(R.string.settings_dialog_ok))
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -235,7 +221,7 @@ private fun deletedAtLabel(deletedAt: TimestampMillis): String {
     return formatter.format(deletedAtDateTime)
 }
 
-@Preview(showBackground = true, name = "メモ一覧")
+@Preview(showBackground = true, name = "ゴミ箱一覧")
 @Composable
 private fun TrashScreenPreview() {
     LiteMemoTheme {
@@ -257,7 +243,6 @@ private fun TrashScreenPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }
@@ -274,7 +259,6 @@ private fun TrashScreenEmptyPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }
@@ -291,7 +275,6 @@ private fun TrashScreenLoadingPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }
@@ -308,7 +291,6 @@ private fun TrashScreenErrorPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }

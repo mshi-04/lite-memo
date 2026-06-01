@@ -60,7 +60,19 @@ fun LiteMemoApp(
     val undoLabel = stringResource(R.string.undo_label)
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
     val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
+    val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
+    val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
+    val showErrorSnackbar: (String) -> Unit = remember(coroutineScope, snackbarHostState) {
+        { message ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    withDismissAction = true
+                )
+            }
+        }
+    }
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
         currentDestination?.hierarchy?.any { it.route == dest.route } == true
@@ -122,13 +134,9 @@ fun LiteMemoApp(
                         navController.navigate(MEMO_EDIT_BASE)
                     },
                     onShareError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = shareErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
-                    }
+                        showErrorSnackbar(shareErrorMessage)
+                    },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(LiteMemoDestination.Calendar.route) {
@@ -158,12 +166,14 @@ fun LiteMemoApp(
             }
             composable(TRASH_ROUTE) {
                 TrashRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(TAG_MANAGE_ROUTE) {
                 TagManageRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(OSS_LICENSES_ROUTE) {
@@ -188,20 +198,16 @@ fun LiteMemoApp(
                 MemoEditRoute(
                     onNavigateBack = { navController.popBackStack() },
                     onShareError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = shareErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(shareErrorMessage)
                     },
                     onDraftError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = draftErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(draftErrorMessage)
+                    },
+                    onSaveError = {
+                        showErrorSnackbar(saveMemoErrorMessage)
+                    },
+                    onDeleteError = {
+                        showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
                         navController.popBackStack()

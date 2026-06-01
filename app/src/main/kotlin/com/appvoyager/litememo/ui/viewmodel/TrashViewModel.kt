@@ -16,6 +16,7 @@ import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -42,10 +44,13 @@ class TrashViewModel @Inject constructor(
         purgeExpiredTrashedMemos()
     }
 
-    private val retryTrigger = MutableStateFlow(0)
-    private val hasActionError = MutableStateFlow(false)
+    private val retryTrigger = MutableStateFlow(false)
     private val hasPurgeError = MutableStateFlow(false)
     private val permanentDeleteDialog = MutableStateFlow<TrashedMemoUiModel?>(null)
+
+    // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
+    private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
+    val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
     private val observedData = retryTrigger.flatMapLatest {
         combine(
@@ -62,15 +67,13 @@ class TrashViewModel @Inject constructor(
 
     val uiState: StateFlow<TrashUiState> = combine(
         observedData,
-        hasActionError,
         hasPurgeError,
         permanentDeleteDialog
-    ) { observed, actionError, purgeError, dialog ->
+    ) { observed, purgeError, dialog ->
         val hasError = observed.memos == null || observed.tags == null || purgeError
         TrashUiState(
             isLoading = false,
             hasError = hasError,
-            hasActionError = actionError,
             memos = if (!hasError) {
                 toUiModels(
                     memos = requireNotNull(observed.memos),
@@ -91,11 +94,10 @@ class TrashViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 restoreMemoFromTrashUseCase(id)
-                hasActionError.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                hasActionError.value = true
+                _actionErrorEvent.trySend(Unit)
             }
         }
     }
@@ -114,25 +116,19 @@ class TrashViewModel @Inject constructor(
             try {
                 deleteMemoPermanentlyUseCase(memo.id)
                 permanentDeleteDialog.value = null
-                hasActionError.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
                 permanentDeleteDialog.value = null
-                hasActionError.value = true
+                _actionErrorEvent.trySend(Unit)
             }
         }
     }
 
-    fun dismissActionError() {
-        hasActionError.value = false
-    }
-
     fun retry() {
-        hasActionError.value = false
         hasPurgeError.value = false
         purgeExpiredTrashedMemos()
-        retryTrigger.update { it + 1 }
+        retryTrigger.update { !it }
     }
 
     private fun purgeExpiredTrashedMemos() {
@@ -162,6 +158,6 @@ class TrashViewModel @Inject constructor(
             )
         }
     }
-
-    private data class ObservedTrashData(val memos: List<Memo>?, val tags: List<Tag>?)
 }
+
+private data class ObservedTrashData(val memos: List<Memo>?, val tags: List<Tag>?)

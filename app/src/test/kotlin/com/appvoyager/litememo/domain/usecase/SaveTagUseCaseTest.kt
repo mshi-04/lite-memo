@@ -105,6 +105,39 @@ class SaveTagUseCaseTest {
         assertEquals(emptyList<Any>(), repository.savedTags)
     }
 
+    @Test
+    fun invokeThrowsWhenTagNameAlreadyExists() {
+        // Arrange
+        val existing = tagFixture(id = "tag-1", name = "Work")
+        val useCase = saveTagUseCase(tagRepository = FakeTagRepository(listOf(existing)))
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                useCase(SaveTagCommand(name = TagName("Work"), color = TagColor(0xFF6750A4)))
+            }
+        }
+    }
+
+    @Test
+    fun invokeAllowsSameNameWhenUpdatingSameTag() = runTest {
+        // Arrange
+        val existing = tagFixture(id = "tag-1", name = "Work")
+        val useCase = saveTagUseCase(tagRepository = FakeTagRepository(listOf(existing)))
+
+        // Act
+        val tag = useCase(
+            SaveTagCommand(
+                id = existing.id,
+                name = TagName("Work"),
+                color = TagColor(0xFF006D3B)
+            )
+        )
+
+        // Assert
+        assertEquals(existing.id, tag.id)
+    }
+
     private fun saveTagUseCase(
         tagRepository: FakeTagRepository = FakeTagRepository(),
         tagIdProvider: QueueTagIdProvider = QueueTagIdProvider(),
