@@ -7,6 +7,17 @@
 - JDK 17（Gradle の `jvmToolchain` は 17）
 - ビルドフレーバーは `dev` / `prod`。開発・動作確認は `dev` を使う
 
+## Firebase / Crashlytics
+
+Crashlytics は `dev` / `prod` の両方に導入済みです。
+Firebase 設定ファイルは flavor ごとに配置します。
+
+- `app/src/dev/google-services.json`: `com.appvoyager.litememo.dev`
+- `app/src/prod/google-services.json`: `com.appvoyager.litememo`
+
+`app/google-services.json` は全 variant の fallback になるため、flavor 固有の設定ファイルは `src/<flavor>/` 配下に置きます。
+release ビルドは R8 対象で、Crashlytics Gradle Plugin が release variant の mapping file upload task を生成します。
+
 ## Git フックの有効化
 
 pre-commit フックとして KtLint が設定されています。

@@ -5,7 +5,7 @@
 ## 概要
 
 Lite Memo は Android 向けの軽量メモアプリです。
-永続化（Room）、設定（DataStore）、CI（GitHub Actions）は導入済みで、残る主な予定は広告（AdMob）と Google Play 公開フローです。
+永続化（Room）、設定（DataStore）、Crashlytics、CI（GitHub Actions）は導入済みで、残る主な予定は広告（AdMob）と Google Play 公開フローです。
 
 現在の基本情報:
 
@@ -23,6 +23,7 @@ Lite Memo は Android 向けの軽量メモアプリです。
   - `data/`: Repository 実装、Room、DataStore、mapper、Hilt module、Export/Import
 - `app/src/main/res/`: Android リソース（表示文字列は `strings.xml` に集約）
 - `app/schemas/`: Room のエクスポート済みスキーマ
+- `app/src/dev/google-services.json` / `app/src/prod/google-services.json`: Firebase 設定
 - `gradle/libs.versions.toml`: 依存関係とプラグインのバージョン管理
 - `.github/workflows/`: CI / CodeQL（設定済み）
 - `fastlane/`: KtLint・テスト実行などの CI レーン
