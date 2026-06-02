@@ -99,12 +99,12 @@ dependencies {
     implementation(libs.androidx.room.runtime)
 
     // Kotlin
-    implementation(platform(libs.firebase.bom))
     implementation(platform(libs.kotlinx.serialization.bom))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
 
     // Firebase
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
 
     // DI
