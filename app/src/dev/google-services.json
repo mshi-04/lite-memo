@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "535084330534",
+    "project_id": "litememo-dev",
+    "storage_bucket": "litememo-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535084330534:android:06986329468acf26f540e7",
+        "android_client_info": {
+          "package_name": "com.appvoyager.litememo.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqQDlAG2ZOkZ5oS1HPr3XnZjGEDbiDCM8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
