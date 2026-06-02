@@ -77,8 +77,8 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(
-            listOf<Any>("Saved title", "Saved body", setOf("tag-1"), true),
-            listOf<Any>(state.title, state.body, state.selectedTagIds, state.isFavorite)
+            MemoEditDraftSnapshot("Saved title", "Saved body", setOf("tag-1"), true),
+            MemoEditDraftSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
         )
     }
 
@@ -101,8 +101,8 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(
-            listOf<Any>("Stored title", "Stored body", setOf("tag-1"), true),
-            listOf<Any>(state.title, state.body, state.selectedTagIds, state.isFavorite)
+            MemoEditDraftSnapshot("Stored title", "Stored body", setOf("tag-1"), true),
+            MemoEditDraftSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
         )
     }
 
@@ -380,3 +380,10 @@ class MemoEditViewModelTest {
         isFavorite = isFavorite
     )
 }
+
+private data class MemoEditDraftSnapshot(
+    val title: String,
+    val body: String,
+    val selectedTagIds: Set<String>,
+    val isFavorite: Boolean
+)
