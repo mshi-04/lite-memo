@@ -76,10 +76,10 @@ class MemoEditViewModelTest {
         val state = viewModel.uiState.value
 
         // Assert
-        assertEquals("Saved title", state.title)
-        assertEquals("Saved body", state.body)
-        assertEquals(setOf("tag-1"), state.selectedTagIds)
-        assertEquals(true, state.isFavorite)
+        assertEquals(
+            MemoEditDraftSnapshot("Saved title", "Saved body", setOf("tag-1"), true),
+            MemoEditDraftSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
+        )
     }
 
     @Test
@@ -100,10 +100,10 @@ class MemoEditViewModelTest {
         val state = viewModel.uiState.value
 
         // Assert
-        assertEquals("Stored title", state.title)
-        assertEquals("Stored body", state.body)
-        assertEquals(setOf("tag-1"), state.selectedTagIds)
-        assertEquals(true, state.isFavorite)
+        assertEquals(
+            MemoEditDraftSnapshot("Stored title", "Stored body", setOf("tag-1"), true),
+            MemoEditDraftSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
+        )
     }
 
     @Test
@@ -380,3 +380,10 @@ class MemoEditViewModelTest {
         isFavorite = isFavorite
     )
 }
+
+private data class MemoEditDraftSnapshot(
+    val title: String,
+    val body: String,
+    val selectedTagIds: Set<String>,
+    val isFavorite: Boolean
+)
