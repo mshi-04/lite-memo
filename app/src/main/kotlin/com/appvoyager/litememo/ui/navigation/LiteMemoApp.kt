@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -37,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.component.BannerAd
 import com.appvoyager.litememo.ui.screen.CalendarRoute
 import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.MemoEditRoute
@@ -100,30 +102,33 @@ fun LiteMemoApp(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
-                    LiteMemoDestination.entries.forEach { destination ->
-                        val selected = currentDestination
-                            ?.hierarchy
-                            ?.any { it.route == destination.route } == true
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                navController.navigate(destination.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
+                Column {
+                    BannerAd()
+                    NavigationBar {
+                        LiteMemoDestination.entries.forEach { destination ->
+                            val selected = currentDestination
+                                ?.hierarchy
+                                ?.any { it.route == destination.route } == true
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    navController.navigate(destination.route) {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = destination.icon,
-                                    contentDescription = stringResource(destination.labelResId)
-                                )
-                            },
-                            label = { Text(text = stringResource(destination.labelResId)) }
-                        )
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = destination.icon,
+                                        contentDescription = stringResource(destination.labelResId)
+                                    )
+                                },
+                                label = { Text(text = stringResource(destination.labelResId)) }
+                            )
+                        }
                     }
                 }
             }

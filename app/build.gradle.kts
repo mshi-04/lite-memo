@@ -107,6 +107,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
 
+    // Ads
+    implementation(libs.play.services.ads)
+
     // DI
     implementation(libs.hilt.android)
     implementation(libs.hilt.lifecycle.viewmodel.compose)
