@@ -1,11 +1,11 @@
 package com.appvoyager.litememo.ui.screen
 
 import android.content.res.Configuration
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -17,11 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -57,7 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.ErrorContent
@@ -66,8 +66,6 @@ import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
-import com.appvoyager.litememo.ui.component.toDisplayString
-import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
@@ -78,7 +76,6 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 fun HomeScreen(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
-    onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onMemoLongClick: (String) -> Unit,
@@ -86,9 +83,8 @@ fun HomeScreen(
     onClearSelection: () -> Unit,
     onMoveSelectedMemosToTrash: () -> Unit,
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
-    onRequestAddTagToSelectedMemos: () -> Unit,
-    onRequestRemoveTagFromSelectedMemos: () -> Unit,
-    onApplySelectedTag: (TagId) -> Unit,
+    onRequestToggleTagForSelectedMemos: () -> Unit,
+    onToggleSelectedMemosTag: (TagId) -> Unit,
     onDismissBulkTagDialog: () -> Unit,
     onShareSelectedMemo: () -> Unit,
     onMemoClick: (String) -> Unit,
@@ -119,7 +115,6 @@ fun HomeScreen(
             else -> HomeContent(
                 uiState = uiState,
                 onFilterSelected = onFilterSelected,
-                onSortOrderSelected = onSortOrderSelected,
                 onSearchToggle = onSearchToggle,
                 onSearchQueryChanged = onSearchQueryChanged,
                 onMemoLongClick = onMemoLongClick,
@@ -127,8 +122,7 @@ fun HomeScreen(
                 onClearSelection = onClearSelection,
                 onMoveSelectedMemosToTrash = onMoveSelectedMemosToTrash,
                 onSetSelectedMemosFavorite = onSetSelectedMemosFavorite,
-                onRequestAddTagToSelectedMemos = onRequestAddTagToSelectedMemos,
-                onRequestRemoveTagFromSelectedMemos = onRequestRemoveTagFromSelectedMemos,
+                onRequestToggleTagForSelectedMemos = onRequestToggleTagForSelectedMemos,
                 onShareSelectedMemo = onShareSelectedMemo,
                 onMemoClick = onMemoClick,
                 modifier = Modifier.padding(innerPadding)
@@ -138,16 +132,16 @@ fun HomeScreen(
 
     HomeBulkTagDialog(
         uiState = uiState,
-        onApplySelectedTag = onApplySelectedTag,
+        onToggleSelectedMemosTag = onToggleSelectedMemosTag,
         onDismiss = onDismissBulkTagDialog
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeContent(
     uiState: HomeUiState,
     onFilterSelected: (HomeFilterUiState) -> Unit,
-    onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onMemoLongClick: (String) -> Unit,
@@ -155,8 +149,7 @@ private fun HomeContent(
     onClearSelection: () -> Unit,
     onMoveSelectedMemosToTrash: () -> Unit,
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
-    onRequestAddTagToSelectedMemos: () -> Unit,
-    onRequestRemoveTagFromSelectedMemos: () -> Unit,
+    onRequestToggleTagForSelectedMemos: () -> Unit,
     onShareSelectedMemo: () -> Unit,
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -166,8 +159,8 @@ private fun HomeContent(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            if (uiState.selection.isActive) {
+        if (uiState.selection.isActive) {
+            stickyHeader {
                 HomeSelectionToolbar(
                     selectedCount = uiState.selection.selectedCount,
                     allSelectedFavorite = uiState.allSelectedFavorite,
@@ -176,11 +169,15 @@ private fun HomeContent(
                     onToggleFavorite = {
                         onSetSelectedMemosFavorite(!uiState.allSelectedFavorite)
                     },
-                    onAddTag = onRequestAddTagToSelectedMemos,
-                    onRemoveTag = onRequestRemoveTagFromSelectedMemos,
-                    onShareSelectedMemo = onShareSelectedMemo
+                    onToggleTag = onRequestToggleTagForSelectedMemos,
+                    onShareSelectedMemo = onShareSelectedMemo,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
                 )
-            } else {
+            }
+        } else {
+            item {
                 HomeTopBar(
                     isSearchActive = uiState.isSearchActive,
                     searchQuery = uiState.searchQuery,
@@ -228,12 +225,10 @@ private fun HomeContent(
             }
         } else {
             item {
-                HomeFilterAndSortRow(
+                HomeFilterRow(
                     selectedFilter = uiState.selectedFilter,
                     tags = uiState.tags,
-                    onFilterSelected = onFilterSelected,
-                    currentSortOrder = uiState.memoSortOrder,
-                    onSortOrderSelected = onSortOrderSelected
+                    onFilterSelected = onFilterSelected
                 )
             }
             if (uiState.memos.isEmpty()) {
@@ -361,68 +356,148 @@ private fun HomeSelectionToolbar(
     onClearSelection: () -> Unit,
     onMoveToTrash: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onAddTag: () -> Unit,
-    onRemoveTag: () -> Unit,
-    onShareSelectedMemo: () -> Unit
+    onToggleTag: () -> Unit,
+    onShareSelectedMemo: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Row(
+        modifier = modifier.height(48.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onClearSelection) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(R.string.clear_selection)
-                )
-            }
-            Text(
-                text = stringResource(R.string.selected_memo_count, selectedCount),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            IconButton(onClick = onMoveToTrash) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.move_selected_memos_to_trash),
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
-            IconButton(onClick = onToggleFavorite) {
-                Icon(
-                    imageVector = if (allSelectedFavorite) {
-                        Icons.Default.Star
-                    } else {
-                        Icons.Default.StarBorder
-                    },
-                    contentDescription = if (allSelectedFavorite) {
-                        stringResource(R.string.remove_selected_memos_from_favorite)
-                    } else {
-                        stringResource(R.string.add_selected_memos_to_favorite)
-                    }
-                )
-            }
-            SelectionMoreMenu(
-                enabled = selectedCount == 1,
-                onShareClick = onShareSelectedMemo
+        IconButton(onClick = onClearSelection) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(R.string.clear_selection)
             )
         }
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            TextButton(onClick = onAddTag) {
-                Text(text = stringResource(R.string.add_tag_to_selected_memos))
+        Text(
+            text = stringResource(R.string.selected_memo_count, selectedCount),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        IconButton(onClick = onMoveToTrash) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = stringResource(R.string.move_selected_memos_to_trash),
+                tint = MaterialTheme.colorScheme.error
+            )
+        }
+        IconButton(onClick = onToggleFavorite) {
+            Icon(
+                imageVector = if (allSelectedFavorite) {
+                    Icons.Default.Star
+                } else {
+                    Icons.Default.StarBorder
+                },
+                contentDescription = if (allSelectedFavorite) {
+                    stringResource(R.string.remove_selected_memos_from_favorite)
+                } else {
+                    stringResource(R.string.add_selected_memos_to_favorite)
+                }
+            )
+        }
+        IconButton(onClick = onToggleTag) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Label,
+                contentDescription = stringResource(R.string.toggle_tag_for_selected_memos)
+            )
+        }
+        SelectionMoreMenu(
+            enabled = selectedCount == 1,
+            onShareClick = onShareSelectedMemo
+        )
+    }
+}
+
+@Composable
+private fun HomeBulkTagDialog(
+    uiState: HomeUiState,
+    onToggleSelectedMemosTag: (TagId) -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (!uiState.bulkTagDialog.isVisible) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.toggle_tag_for_selected_memos)) },
+        text = {
+            if (uiState.tags.isEmpty()) {
+                Text(text = stringResource(R.string.home_bulk_tag_empty_body))
+            } else {
+                LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                    items(
+                        items = uiState.tags,
+                        key = { tag -> tag.id }
+                    ) { tag ->
+                        val tagId = TagId(tag.id)
+                        FilterChip(
+                            selected = tagId in uiState.allSelectedTagIds,
+                            onClick = { onToggleSelectedMemosTag(tagId) },
+                            label = {
+                                Text(
+                                    text = tag.name,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(tag.toComposeColor())
+                                )
+                            }
+                        )
+                    }
+                }
             }
-            TextButton(onClick = onRemoveTag) {
-                Text(text = stringResource(R.string.remove_tag_from_selected_memos))
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel_label))
             }
+        }
+    )
+}
+
+@Composable
+private fun HomeFilterRow(
+    selectedFilter: HomeFilterUiState,
+    tags: List<TagUiModel>,
+    onFilterSelected: (HomeFilterUiState) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterButton(
+            label = stringResource(R.string.filter_all),
+            selected = selectedFilter == HomeFilterUiState.All,
+            onClick = { onFilterSelected(HomeFilterUiState.All) }
+        )
+        FilterButton(
+            label = stringResource(R.string.unorganized_label),
+            selected = selectedFilter == HomeFilterUiState.Unorganized,
+            onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
+        )
+        FilterButton(
+            label = stringResource(R.string.filter_favorite),
+            selected = selectedFilter == HomeFilterUiState.Favorite,
+            onClick = { onFilterSelected(HomeFilterUiState.Favorite) }
+        )
+        tags.forEach { tag ->
+            val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
+            FilterButton(
+                label = tag.name,
+                selected = selectedFilter == tagFilter,
+                onClick = { onFilterSelected(tagFilter) },
+                colorArgb = tag.colorArgb
+            )
         }
     }
 }
@@ -454,153 +529,6 @@ private fun SelectionMoreMenu(enabled: Boolean, onShareClick: () -> Unit) {
                     onShareClick()
                 }
             )
-        }
-    }
-}
-
-@Composable
-private fun HomeBulkTagDialog(
-    uiState: HomeUiState,
-    onApplySelectedTag: (TagId) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val operation = uiState.bulkTagDialog.operation ?: return
-    val titleResId = when (operation) {
-        HomeBulkTagDialogUiState.Operation.AddTag -> R.string.home_bulk_add_tag_title
-        HomeBulkTagDialogUiState.Operation.RemoveTag -> R.string.home_bulk_remove_tag_title
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(titleResId)) },
-        text = {
-            if (uiState.tags.isEmpty()) {
-                Text(text = stringResource(R.string.home_bulk_tag_empty_body))
-            } else {
-                LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
-                    items(
-                        items = uiState.tags,
-                        key = { tag -> tag.id }
-                    ) { tag ->
-                        TextButton(
-                            onClick = { onApplySelectedTag(TagId(tag.id)) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(tag.toComposeColor())
-                                )
-                                Text(
-                                    text = tag.name,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.cancel_label))
-            }
-        }
-    )
-}
-
-@Composable
-private fun HomeFilterAndSortRow(
-    selectedFilter: HomeFilterUiState,
-    tags: List<TagUiModel>,
-    onFilterSelected: (HomeFilterUiState) -> Unit,
-    currentSortOrder: MemoSortOrder,
-    onSortOrderSelected: (MemoSortOrder) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            FilterButton(
-                label = stringResource(R.string.filter_all),
-                selected = selectedFilter == HomeFilterUiState.All,
-                onClick = { onFilterSelected(HomeFilterUiState.All) }
-            )
-            FilterButton(
-                label = stringResource(R.string.unorganized_label),
-                selected = selectedFilter == HomeFilterUiState.Unorganized,
-                onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
-            )
-            FilterButton(
-                label = stringResource(R.string.filter_favorite),
-                selected = selectedFilter == HomeFilterUiState.Favorite,
-                onClick = { onFilterSelected(HomeFilterUiState.Favorite) }
-            )
-            tags.forEach { tag ->
-                val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
-                FilterButton(
-                    label = tag.name,
-                    selected = selectedFilter == tagFilter,
-                    onClick = { onFilterSelected(tagFilter) },
-                    colorArgb = tag.colorArgb
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SortOrderDropdown(
-                currentOrder = currentSortOrder,
-                onSelected = onSortOrderSelected
-            )
-        }
-    }
-}
-
-@Composable
-private fun SortOrderDropdown(currentOrder: MemoSortOrder, onSelected: (MemoSortOrder) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        TextButton(onClick = { expanded = true }) {
-            Text(
-                text = currentOrder.toDisplayString(),
-                style = MaterialTheme.typography.labelMedium
-            )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            MemoSortOrder.entries.forEach { order ->
-                DropdownMenuItem(
-                    text = { Text(text = order.toDisplayString()) },
-                    onClick = {
-                        onSelected(order)
-                        expanded = false
-                    }
-                )
-            }
         }
     }
 }
@@ -644,7 +572,6 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
-            onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
             onMemoLongClick = {},
@@ -652,9 +579,8 @@ private fun HomeScreenPreview() {
             onClearSelection = {},
             onMoveSelectedMemosToTrash = {},
             onSetSelectedMemosFavorite = {},
-            onRequestAddTagToSelectedMemos = {},
-            onRequestRemoveTagFromSelectedMemos = {},
-            onApplySelectedTag = {},
+            onRequestToggleTagForSelectedMemos = {},
+            onToggleSelectedMemosTag = {},
             onDismissBulkTagDialog = {},
             onShareSelectedMemo = {},
             onMemoClick = {},
@@ -674,7 +600,6 @@ private fun HomeScreenDarkPreview() {
         HomeScreen(
             uiState = previewHomeState(),
             onFilterSelected = {},
-            onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
             onMemoLongClick = {},
@@ -682,9 +607,8 @@ private fun HomeScreenDarkPreview() {
             onClearSelection = {},
             onMoveSelectedMemosToTrash = {},
             onSetSelectedMemosFavorite = {},
-            onRequestAddTagToSelectedMemos = {},
-            onRequestRemoveTagFromSelectedMemos = {},
-            onApplySelectedTag = {},
+            onRequestToggleTagForSelectedMemos = {},
+            onToggleSelectedMemosTag = {},
             onDismissBulkTagDialog = {},
             onShareSelectedMemo = {},
             onMemoClick = {},

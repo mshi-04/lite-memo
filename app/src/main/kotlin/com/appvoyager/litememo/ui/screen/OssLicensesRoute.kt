@@ -34,7 +34,6 @@ fun OssLicensesRoute(onNavigateBack: () -> Unit, modifier: Modifier = Modifier) 
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 context.startActivity(intent)
             } catch (_: ActivityNotFoundException) {
-                // No browser available
             }
         },
         onNavigateBack = onNavigateBack,

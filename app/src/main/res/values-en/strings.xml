@@ -30,16 +30,12 @@
     <!-- Home -->
     <string name="filter_all">All</string>
     <string name="filter_favorite">Favorites</string>
-    <string name="selected_memo">Selected memo</string>
     <string name="selected_memo_count">%1$d selected</string>
     <string name="clear_selection">Clear selection</string>
     <string name="move_selected_memos_to_trash">Move selected memos to trash</string>
     <string name="add_selected_memos_to_favorite">Add selected memos to favorites</string>
     <string name="remove_selected_memos_from_favorite">Remove selected memos from favorites</string>
-    <string name="add_tag_to_selected_memos">Add tag</string>
-    <string name="remove_tag_from_selected_memos">Remove tag</string>
-    <string name="home_bulk_add_tag_title">Add tag</string>
-    <string name="home_bulk_remove_tag_title">Remove tag</string>
+    <string name="toggle_tag_for_selected_memos">Toggle tags</string>
     <string name="home_bulk_tag_empty_body">No tags are available.</string>
     <string name="home_bulk_action_error_title">Action failed</string>
     <string name="home_bulk_action_error_body">An error occurred while updating memos. Please try again.</string>

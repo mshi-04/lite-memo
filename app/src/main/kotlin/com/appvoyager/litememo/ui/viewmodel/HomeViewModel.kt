@@ -6,19 +6,16 @@ import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
 import com.appvoyager.litememo.domain.model.MemoFilter
-import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
-import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
-import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
@@ -49,10 +46,8 @@ class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val filterMemosUseCase: FilterMemosUseCase,
-    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
     private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
-    private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
     private val applyMemoBulkActionUseCase: ApplyMemoBulkActionUseCase,
     private val formatMemoTextUseCase: FormatMemoTextUseCase
 ) : ViewModel() {
@@ -99,26 +94,33 @@ class HomeViewModel @Inject constructor(
         combine(
             observeMemosUseCase(),
             observeTagsUseCase(),
-            observeMemoSortOrderUseCase(),
             uiControls,
             searchResults
-        ) { memos, tags, sortOrder, controls, searchHits ->
+        ) { memos, tags, controls, searchHits ->
             val tagUiModels = tags.map { TagUiModel.fromDomain(it) }
             val effectiveFilter = controls.filter.effectiveFilter(tags)
             val filteredMemos = filterMemosUseCase(memos, effectiveFilter.toDomainFilter())
             val memoById = memos.associateBy { it.id }
+            val selectedMemos = controls.selection.selectedMemoIds.mapNotNull(memoById::get)
             val allSelectedFavorite = controls.selection.selectedMemoIds.isNotEmpty() &&
                 controls.selection.selectedMemoIds.all { memoById[it]?.isFavorite == true }
+            val allSelectedTagIds = selectedMemos
+                .takeIf {
+                    it.isNotEmpty() && it.size == controls.selection.selectedMemoIds.size
+                }
+                ?.map { memo -> memo.tagIds.toSet() }
+                ?.reduce { commonTagIds, tagIds -> commonTagIds intersect tagIds }
+                ?: emptySet()
 
             HomeUiState(
                 isLoading = false,
                 selectedFilter = effectiveFilter,
-                memoSortOrder = sortOrder,
                 isSearchActive = controls.searching,
                 searchQuery = controls.query,
                 hasSearchError = searchHits == null,
                 selection = controls.selection,
                 allSelectedFavorite = allSelectedFavorite,
+                allSelectedTagIds = allSelectedTagIds,
                 bulkTagDialog = controls.tagDialog,
                 tags = tagUiModels,
                 memos = MemoUiModel.fromDomain(filteredMemos, tags),
@@ -145,17 +147,6 @@ class HomeViewModel @Inject constructor(
 
     fun selectFilter(filter: HomeFilterUiState) {
         selectedFilter.value = filter
-    }
-
-    fun selectSortOrder(order: MemoSortOrder) {
-        viewModelScope.launch {
-            try {
-                setMemoSortOrderUseCase(order)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-            }
-        }
     }
 
     fun toggleSearch() {
@@ -218,23 +209,21 @@ class HomeViewModel @Inject constructor(
         applySelectedMemoAction(MemoBulkAction.setFavorite(isFavorite))
     }
 
-    fun requestAddTagToSelectedMemos() {
-        requestBulkTagOperation(HomeBulkTagDialogUiState.Operation.AddTag)
-    }
-
-    fun requestRemoveTagFromSelectedMemos() {
-        requestBulkTagOperation(HomeBulkTagDialogUiState.Operation.RemoveTag)
+    fun requestToggleTagForSelectedMemos() {
+        if (!selection.value.isActive) return
+        bulkTagDialog.value = HomeBulkTagDialogUiState(isVisible = true)
     }
 
     fun dismissBulkTagDialog() {
         bulkTagDialog.value = HomeBulkTagDialogUiState()
     }
 
-    fun applySelectedTag(tagId: TagId) {
-        val operation = bulkTagDialog.value.operation ?: return
-        val action = when (operation) {
-            HomeBulkTagDialogUiState.Operation.AddTag -> MemoBulkAction.addTag(tagId)
-            HomeBulkTagDialogUiState.Operation.RemoveTag -> MemoBulkAction.removeTag(tagId)
+    fun toggleSelectedMemosTag(tagId: TagId) {
+        if (!bulkTagDialog.value.isVisible) return
+        val action = if (tagId in uiState.value.allSelectedTagIds) {
+            MemoBulkAction.removeTag(tagId)
+        } else {
+            MemoBulkAction.addTag(tagId)
         }
         applySelectedMemoAction(action)
     }
@@ -249,11 +238,6 @@ class HomeViewModel @Inject constructor(
 
     fun retry() {
         retryTrigger.update { !it }
-    }
-
-    private fun requestBulkTagOperation(operation: HomeBulkTagDialogUiState.Operation) {
-        if (!selection.value.isActive) return
-        bulkTagDialog.value = HomeBulkTagDialogUiState(operation)
     }
 
     private fun applySelectedMemoAction(action: MemoBulkAction) {

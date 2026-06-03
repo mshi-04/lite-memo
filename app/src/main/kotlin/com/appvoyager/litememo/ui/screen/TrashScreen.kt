@@ -106,7 +106,7 @@ fun TrashScreen(
             ) {
                 items(
                     items = uiState.memos,
-                    key = { it.id }
+                    key = { it.id.value }
                 ) { memo ->
                     TrashedMemoCard(
                         memo = memo,

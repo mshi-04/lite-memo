@@ -16,13 +16,10 @@ import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
-import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
-import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
-import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -411,7 +408,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun requestAddTagToSelectedMemosShowsTagDialog() = runTest(dispatcher) {
+    fun requestToggleTagForSelectedMemosShowsTagDialog() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
         advanceUntilIdle()
@@ -419,14 +416,12 @@ class HomeViewModelTest {
         viewModel.uiState.first { it.selection.isActive }
 
         // Act
-        viewModel.requestAddTagToSelectedMemos()
+        viewModel.requestToggleTagForSelectedMemos()
         advanceUntilIdle()
-        val state = viewModel.uiState.first {
-            it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
-        }
+        val state = viewModel.uiState.first { it.bulkTagDialog.isVisible }
 
         // Assert
-        assertEquals(HomeBulkTagDialogUiState.Operation.AddTag, state.bulkTagDialog.operation)
+        assertEquals(true, state.bulkTagDialog.isVisible)
     }
 
     @Test
@@ -435,44 +430,102 @@ class HomeViewModelTest {
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
         advanceUntilIdle()
         viewModel.startSelection(MemoId("memo-1"))
-        viewModel.requestAddTagToSelectedMemos()
-        viewModel.uiState.first {
-            it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
-        }
+        viewModel.requestToggleTagForSelectedMemos()
+        viewModel.uiState.first { it.bulkTagDialog.isVisible }
 
         // Act
         viewModel.dismissBulkTagDialog()
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.selection.isActive && it.bulkTagDialog.operation == null
+            it.selection.isActive && !it.bulkTagDialog.isVisible
         }
 
         // Assert
-        assertEquals(null, state.bulkTagDialog.operation)
+        assertEquals(false, state.bulkTagDialog.isVisible)
     }
 
     @Test
-    fun applySelectedTagClearsSelectionWhenBulkActionSucceeds() = runTest(dispatcher) {
+    fun uiStateMarksTagSelectedWhenEverySelectedMemoHasTag() = runTest(dispatcher) {
         // Arrange
         val tagId = TagId("tag-1")
         val viewModel = homeViewModel(
-            memos = listOf(memoFixture(id = "memo-1")),
+            memos = listOf(
+                memoFixture(id = "memo-1", tagIds = listOf(tagId)),
+                memoFixture(id = "memo-2", tagIds = listOf(tagId))
+            ),
             tags = listOf(tagFixture(id = tagId.value))
         )
         advanceUntilIdle()
         viewModel.startSelection(MemoId("memo-1"))
-        viewModel.requestAddTagToSelectedMemos()
-        viewModel.uiState.first {
-            it.bulkTagDialog.operation == HomeBulkTagDialogUiState.Operation.AddTag
-        }
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
 
         // Act
-        viewModel.applySelectedTag(tagId)
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.selection.isActive }
+        val state = viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
 
         // Assert
-        assertEquals(false to null, state.selection.isActive to state.bulkTagDialog.operation)
+        assertEquals(setOf(tagId), state.allSelectedTagIds)
+    }
+
+    @Test
+    fun toggleSelectedMemosTagAddsTagWhenSomeSelectedMemosDoNotHaveTag() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1", tagIds = listOf(tagId)),
+                memoFixture(id = "memo-2")
+            ),
+            tags = listOf(tagFixture(id = tagId.value))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+        viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
+        viewModel.requestToggleTagForSelectedMemos()
+
+        // Act
+        viewModel.toggleSelectedMemosTag(tagId)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            !it.selection.isActive &&
+                it.memos.all { memo -> memo.tags.any { tag -> tag.id == tagId.value } }
+        }
+
+        // Assert
+        assertEquals(setOf("memo-1", "memo-2"), state.memos.map { it.id }.toSet())
+    }
+
+    @Test
+    fun toggleSelectedMemosTagRemovesTagWhenEverySelectedMemoHasTag() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1", tagIds = listOf(tagId)),
+                memoFixture(id = "memo-2", tagIds = listOf(tagId))
+            ),
+            tags = listOf(tagFixture(id = tagId.value))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+        viewModel.uiState.first { it.allSelectedTagIds == setOf(tagId) }
+        viewModel.requestToggleTagForSelectedMemos()
+
+        // Act
+        viewModel.toggleSelectedMemosTag(tagId)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            !it.selection.isActive && it.memos.all { memo -> memo.tags.isEmpty() }
+        }
+
+        // Assert
+        assertEquals(emptySet<String>(), state.memos.flatMap { it.tags }.map { it.id }.toSet())
     }
 
     @Test
@@ -617,13 +670,11 @@ class HomeViewModelTest {
             observeMemosUseCase = ObserveMemosUseCase(memoRepository, userSettingsRepository),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             filterMemosUseCase = FilterMemosUseCase(),
-            observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
             searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
             setMemoFavoriteUseCase = SetMemoFavoriteUseCase(
                 memoRepository,
                 MutableTimeProvider(TimestampMillis(today + 1))
             ),
-            setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
             applyMemoBulkActionUseCase = ApplyMemoBulkActionUseCase(
                 memoRepository = memoRepository,
                 tagRepository = tagRepository,

@@ -11,13 +11,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -88,20 +84,12 @@ fun MemoCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = memo.title,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (selected) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(R.string.selected_memo),
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
