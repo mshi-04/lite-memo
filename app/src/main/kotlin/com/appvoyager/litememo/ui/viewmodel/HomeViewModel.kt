@@ -106,6 +106,9 @@ class HomeViewModel @Inject constructor(
             val tagUiModels = tags.map { TagUiModel.fromDomain(it) }
             val effectiveFilter = controls.filter.effectiveFilter(tags)
             val filteredMemos = filterMemosUseCase(memos, effectiveFilter.toDomainFilter())
+            val memoById = memos.associateBy { it.id }
+            val allSelectedFavorite = controls.selection.selectedMemoIds.isNotEmpty() &&
+                controls.selection.selectedMemoIds.all { memoById[it]?.isFavorite == true }
 
             HomeUiState(
                 isLoading = false,
@@ -115,6 +118,7 @@ class HomeViewModel @Inject constructor(
                 searchQuery = controls.query,
                 hasSearchError = searchHits == null,
                 selection = controls.selection,
+                allSelectedFavorite = allSelectedFavorite,
                 bulkTagDialog = controls.tagDialog,
                 tags = tagUiModels,
                 memos = MemoUiModel.fromDomain(filteredMemos, tags),

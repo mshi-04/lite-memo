@@ -11,6 +11,7 @@ data class HomeUiState(
     val searchQuery: String = "",
     val hasSearchError: Boolean = false,
     val selection: HomeSelectionUiState = HomeSelectionUiState(),
+    val allSelectedFavorite: Boolean = false,
     val bulkTagDialog: HomeBulkTagDialogUiState = HomeBulkTagDialogUiState(),
     val tags: List<TagUiModel> = emptyList(),
     val memos: List<MemoUiModel> = emptyList(),

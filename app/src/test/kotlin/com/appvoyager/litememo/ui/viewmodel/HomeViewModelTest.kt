@@ -325,6 +325,92 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun uiStateMarksAllSelectedFavoriteWhenEverySelectedMemoIsFavorite() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1", isFavorite = true),
+                memoFixture(id = "memo-2", isFavorite = true)
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
+
+        // Assert
+        assertTrue(state.allSelectedFavorite)
+    }
+
+    @Test
+    fun uiStateDoesNotMarkAllSelectedFavoriteWhenSelectionIsMixed() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1", isFavorite = true),
+                memoFixture(id = "memo-2", isFavorite = false)
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
+
+        // Assert
+        assertEquals(false, state.allSelectedFavorite)
+    }
+
+    @Test
+    fun uiStateKeepsMixedFavoriteSelectionWhenNonFavoriteMemoIsFilteredOut() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "favorite", isFavorite = true),
+                memoFixture(id = "normal", isFavorite = false)
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("favorite"))
+        viewModel.toggleMemoSelection(MemoId("normal"))
+
+        // Act
+        viewModel.selectFilter(HomeFilterUiState.Favorite)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selectedFilter == HomeFilterUiState.Favorite &&
+                it.selection.selectedMemoIds == setOf(MemoId("favorite"), MemoId("normal"))
+        }
+
+        // Assert
+        assertEquals(false, state.allSelectedFavorite)
+    }
+
+    @Test
+    fun uiStateDoesNotMarkAllSelectedFavoriteWhenNoMemoIsSelected() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1", isFavorite = true))
+        )
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(false, state.allSelectedFavorite)
+    }
+
+    @Test
     fun requestAddTagToSelectedMemosShowsTagDialog() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))

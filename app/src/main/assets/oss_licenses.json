@@ -45,9 +45,19 @@
     "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3"
   },
   {
+    "name": "Material Icons Extended",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/compose-material"
+  },
+  {
     "name": "Navigation Compose",
     "license": "Apache License 2.0",
     "url": "https://developer.android.com/jetpack/androidx/releases/navigation"
+  },
+  {
+    "name": "Google Mobile Ads SDK",
+    "license": "Google Developers Site Terms of Service",
+    "url": "https://developers.google.com/admob/android/sdk"
   },
   {
     "name": "Room",

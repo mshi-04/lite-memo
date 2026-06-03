@@ -28,7 +28,7 @@ fun BannerAd(modifier: Modifier = Modifier) {
     val adUnitId = stringResource(R.string.admob_banner_unit_id)
     val context = LocalContext.current
     val adWidthDp = LocalConfiguration.current.screenWidthDp
-    val adView = remember {
+    val adView = remember(context, adUnitId, adWidthDp) {
         AdView(context).apply {
             setAdSize(
                 AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, adWidthDp)
@@ -39,7 +39,7 @@ fun BannerAd(modifier: Modifier = Modifier) {
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner, adView) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> adView.pause()

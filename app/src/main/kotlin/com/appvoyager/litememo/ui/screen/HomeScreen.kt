@@ -161,9 +161,6 @@ private fun HomeContent(
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val allSelectedFavorite = (uiState.memos + uiState.searchResults)
-        .filter { uiState.selection.contains(MemoId(it.id)) }
-        .let { selected -> selected.isNotEmpty() && selected.all { it.isFavorite } }
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -173,10 +170,12 @@ private fun HomeContent(
             if (uiState.selection.isActive) {
                 HomeSelectionToolbar(
                     selectedCount = uiState.selection.selectedCount,
-                    allSelectedFavorite = allSelectedFavorite,
+                    allSelectedFavorite = uiState.allSelectedFavorite,
                     onClearSelection = onClearSelection,
                     onMoveToTrash = onMoveSelectedMemosToTrash,
-                    onToggleFavorite = { onSetSelectedMemosFavorite(!allSelectedFavorite) },
+                    onToggleFavorite = {
+                        onSetSelectedMemosFavorite(!uiState.allSelectedFavorite)
+                    },
                     onAddTag = onRequestAddTagToSelectedMemos,
                     onRemoveTag = onRequestRemoveTagFromSelectedMemos,
                     onShareSelectedMemo = onShareSelectedMemo
