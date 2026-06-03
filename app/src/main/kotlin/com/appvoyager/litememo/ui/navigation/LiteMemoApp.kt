@@ -1,6 +1,15 @@
 package com.appvoyager.litememo.ui.navigation
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -19,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -28,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.component.BannerAd
 import com.appvoyager.litememo.ui.screen.CalendarRoute
 import com.appvoyager.litememo.ui.screen.HomeRoute
 import com.appvoyager.litememo.ui.screen.MemoEditRoute
@@ -60,7 +71,19 @@ fun LiteMemoApp(
     val undoLabel = stringResource(R.string.undo_label)
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
     val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
+    val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
+    val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
+    val showErrorSnackbar: (String) -> Unit = remember(coroutineScope, snackbarHostState) {
+        { message ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    withDismissAction = true
+                )
+            }
+        }
+    }
 
     val showBottomBar = LiteMemoDestination.entries.any { dest ->
         currentDestination?.hierarchy?.any { it.route == dest.route } == true
@@ -79,30 +102,33 @@ fun LiteMemoApp(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
-                    LiteMemoDestination.entries.forEach { destination ->
-                        val selected = currentDestination
-                            ?.hierarchy
-                            ?.any { it.route == destination.route } == true
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                navController.navigate(destination.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
+                Column {
+                    BannerAd()
+                    NavigationBar {
+                        LiteMemoDestination.entries.forEach { destination ->
+                            val selected = currentDestination
+                                ?.hierarchy
+                                ?.any { it.route == destination.route } == true
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    navController.navigate(destination.route) {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = destination.icon,
-                                    contentDescription = stringResource(destination.labelResId)
-                                )
-                            },
-                            label = { Text(text = stringResource(destination.labelResId)) }
-                        )
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = destination.icon,
+                                        contentDescription = stringResource(destination.labelResId)
+                                    )
+                                },
+                                label = { Text(text = stringResource(destination.labelResId)) }
+                            )
+                        }
                     }
                 }
             }
@@ -113,7 +139,13 @@ fun LiteMemoApp(
             startDestination = LiteMemoDestination.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(LiteMemoDestination.Home.route) {
+            composable(
+                route = LiteMemoDestination.Home.route,
+                enterTransition = { bottomTabEnterTransition(this) },
+                exitTransition = { bottomTabExitTransition(this) },
+                popEnterTransition = { bottomTabEnterTransition(this) },
+                popExitTransition = { bottomTabExitTransition(this) }
+            ) {
                 HomeRoute(
                     onMemoClick = { memoId ->
                         navController.navigate(memoEditRouteWithId(memoId))
@@ -122,16 +154,18 @@ fun LiteMemoApp(
                         navController.navigate(MEMO_EDIT_BASE)
                     },
                     onShareError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = shareErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
-                    }
+                        showErrorSnackbar(shareErrorMessage)
+                    },
+                    snackbarHostState = snackbarHostState
                 )
             }
-            composable(LiteMemoDestination.Calendar.route) {
+            composable(
+                route = LiteMemoDestination.Calendar.route,
+                enterTransition = { bottomTabEnterTransition(this) },
+                exitTransition = { bottomTabExitTransition(this) },
+                popEnterTransition = { bottomTabEnterTransition(this) },
+                popExitTransition = { bottomTabExitTransition(this) }
+            ) {
                 CalendarRoute(
                     onMemoClick = { memoId ->
                         navController.navigate(memoEditRouteWithId(memoId))
@@ -141,7 +175,13 @@ fun LiteMemoApp(
                     }
                 )
             }
-            composable(LiteMemoDestination.Settings.route) {
+            composable(
+                route = LiteMemoDestination.Settings.route,
+                enterTransition = { bottomTabEnterTransition(this) },
+                exitTransition = { bottomTabExitTransition(this) },
+                popEnterTransition = { bottomTabEnterTransition(this) },
+                popExitTransition = { bottomTabExitTransition(this) }
+            ) {
                 SettingsRoute(
                     snackbarHostState = snackbarHostState,
                     onRequestAppLockAuthentication = onRequestAppLockAuthentication,
@@ -158,12 +198,14 @@ fun LiteMemoApp(
             }
             composable(TRASH_ROUTE) {
                 TrashRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(TAG_MANAGE_ROUTE) {
                 TagManageRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable(OSS_LICENSES_ROUTE) {
@@ -188,20 +230,16 @@ fun LiteMemoApp(
                 MemoEditRoute(
                     onNavigateBack = { navController.popBackStack() },
                     onShareError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = shareErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(shareErrorMessage)
                     },
                     onDraftError = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = draftErrorMessage,
-                                withDismissAction = true
-                            )
-                        }
+                        showErrorSnackbar(draftErrorMessage)
+                    },
+                    onSaveError = {
+                        showErrorSnackbar(saveMemoErrorMessage)
+                    },
+                    onDeleteError = {
+                        showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
                         navController.popBackStack()
@@ -222,3 +260,43 @@ fun LiteMemoApp(
         }
     }
 }
+
+private fun bottomTabEnterTransition(
+    scope: AnimatedContentTransitionScope<NavBackStackEntry>
+): EnterTransition {
+    val direction = bottomTabTransitionDirection(scope) ?: return EnterTransition.None
+    return slideInHorizontally(
+        animationSpec = tween(BOTTOM_TAB_TRANSITION_DURATION_MS),
+        initialOffsetX = { width -> width / 4 * direction }
+    ) + fadeIn(animationSpec = tween(BOTTOM_TAB_FADE_IN_DURATION_MS))
+}
+
+private fun bottomTabExitTransition(
+    scope: AnimatedContentTransitionScope<NavBackStackEntry>
+): ExitTransition {
+    val direction = bottomTabTransitionDirection(scope) ?: return ExitTransition.None
+    return slideOutHorizontally(
+        animationSpec = tween(BOTTOM_TAB_TRANSITION_DURATION_MS),
+        targetOffsetX = { width -> -width / 4 * direction }
+    ) + fadeOut(animationSpec = tween(BOTTOM_TAB_FADE_OUT_DURATION_MS))
+}
+
+private fun bottomTabTransitionDirection(
+    scope: AnimatedContentTransitionScope<NavBackStackEntry>
+): Int? {
+    val initialIndex = bottomTabRouteIndex(scope.initialState.destination.route) ?: return null
+    val targetIndex = bottomTabRouteIndex(scope.targetState.destination.route) ?: return null
+    if (initialIndex == targetIndex) return null
+    return if (targetIndex > initialIndex) 1 else -1
+}
+
+private fun bottomTabRouteIndex(route: String?): Int? {
+    val index = LiteMemoDestination.entries.indexOfFirst { destination ->
+        destination.route == route
+    }
+    return index.takeIf { it >= 0 }
+}
+
+private const val BOTTOM_TAB_TRANSITION_DURATION_MS = 220
+private const val BOTTOM_TAB_FADE_IN_DURATION_MS = 160
+private const val BOTTOM_TAB_FADE_OUT_DURATION_MS = 120

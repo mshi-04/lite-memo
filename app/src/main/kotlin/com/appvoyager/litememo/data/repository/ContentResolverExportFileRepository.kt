@@ -8,6 +8,7 @@ import com.appvoyager.litememo.data.mapper.toDto
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.domain.repository.ExportFileRepository
+import java.io.IOException
 import javax.inject.Inject
 
 class ContentResolverExportFileRepository @Inject constructor(
@@ -19,8 +20,14 @@ class ContentResolverExportFileRepository @Inject constructor(
         exportFileWriter.write(reference.toUri(), data.toDto())
     }
 
-    override suspend fun read(reference: ExportFileReference): ExportData =
-        exportFileReader.read(reference.toUri()).toDomain()
+    override suspend fun read(reference: ExportFileReference): ExportData {
+        val dto = exportFileReader.read(reference.toUri())
+        return try {
+            dto.toDomain()
+        } catch (e: IllegalArgumentException) {
+            throw IOException("Invalid export file format.", e)
+        }
+    }
 
     private fun ExportFileReference.toUri(): Uri = Uri.parse(value)
 }

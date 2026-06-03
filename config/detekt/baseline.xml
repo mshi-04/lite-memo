@@ -1,0 +1,159 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:MemoEditViewModel.kt$MemoEditViewModel$draft.title.value.isBlank() &amp;&amp; draft.body.value.isBlank() &amp;&amp; draft.tagIds.isEmpty() &amp;&amp; !draft.isFavorite</ID>
+    <ID>ComplexCondition:MemoEditViewModel.kt$MemoEditViewModel$title.isBlank() &amp;&amp; body.isBlank() &amp;&amp; tagIds.isEmpty() &amp;&amp; !isFavorite</ID>
+    <ID>EmptyFunctionBlock:RoomMemoRepositoryTest.kt$RoomMemoRepositoryTest.FakeTagDao${}</ID>
+    <ID>LambdaParameterInRestartableEffect:MemoEditRoute.kt$onDeleteError</ID>
+    <ID>LambdaParameterInRestartableEffect:MemoEditRoute.kt$onDraftError</ID>
+    <ID>LambdaParameterInRestartableEffect:MemoEditRoute.kt$onMemoDeleted</ID>
+    <ID>LambdaParameterInRestartableEffect:MemoEditRoute.kt$onNavigateBack</ID>
+    <ID>LambdaParameterInRestartableEffect:MemoEditRoute.kt$onSaveError</ID>
+    <ID>LongMethod:CalendarScreen.kt$@Composable private fun CalendarContent( uiState: CalendarUiState, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, onDateSelected: (LocalDate) -&gt; Unit, onCalendarExpandedToggle: () -&gt; Unit, onDatePickerRequested: () -&gt; Unit, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit, onMemoClick: (String) -&gt; Unit )</ID>
+    <ID>LongMethod:CalendarScreen.kt$@Composable private fun CalendarMonthCard( uiState: CalendarUiState, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, onDateSelected: (LocalDate) -&gt; Unit, onCalendarExpandedToggle: () -&gt; Unit, onDatePickerRequested: () -&gt; Unit )</ID>
+    <ID>LongMethod:CalendarScreen.kt$@Composable private fun CalendarTopBar( isSearchActive: Boolean, searchQuery: String, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit )</ID>
+    <ID>LongMethod:HomeScreen.kt$@Composable private fun HomeTopBar( isSearchActive: Boolean, searchQuery: String, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit )</ID>
+    <ID>LongMethod:HomeScreen.kt$@OptIn(ExperimentalFoundationApi::class) @Composable private fun HomeContent( uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -&gt; Unit, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit, onMemoLongClick: (String) -&gt; Unit, onMemoSelectionToggle: (String) -&gt; Unit, onClearSelection: () -&gt; Unit, onMoveSelectedMemosToTrash: () -&gt; Unit, onSetSelectedMemosFavorite: (Boolean) -&gt; Unit, onRequestToggleTagForSelectedMemos: () -&gt; Unit, onShareSelectedMemo: () -&gt; Unit, onMemoClick: (String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:LiteMemoApp.kt$@Composable fun LiteMemoApp( onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -&gt; Unit) -&gt; Unit, viewModel: LiteMemoAppViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:MemoCard.kt$@OptIn(ExperimentalFoundationApi::class) @Composable fun MemoCard( memo: MemoUiModel, onClick: () -&gt; Unit, modifier: Modifier = Modifier, onLongClick: (() -&gt; Unit)? = null, selected: Boolean = false )</ID>
+    <ID>LongMethod:MemoEditScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) @Composable fun MemoEditScreen( uiState: MemoEditUiState, onTitleChanged: (String) -&gt; Unit, onBodyChanged: (String) -&gt; Unit, onTagToggled: (String) -&gt; Unit, onSave: () -&gt; Unit, onDelete: () -&gt; Unit, onBackRequest: () -&gt; Unit, onRetry: () -&gt; Unit, onShareMemo: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SettingsRoute.kt$@Composable fun SettingsRoute( snackbarHostState: SnackbarHostState, onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -&gt; Unit) -&gt; Unit, modifier: Modifier = Modifier, onOpenSourceLicenseClick: () -&gt; Unit = {}, onTagManageClick: () -&gt; Unit = {}, onTrashClick: () -&gt; Unit = {}, viewModel: SettingsViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:SettingsScreen.kt$@Composable fun SettingsScreen( uiState: SettingsUiState, onThemeModeSelected: (ThemeMode) -&gt; Unit, onMemoSortOrderSelected: (MemoSortOrder) -&gt; Unit, onAppLockEnabledChange: (Boolean) -&gt; Unit, onExpandThemeDropdown: () -&gt; Unit, onCollapseThemeDropdown: () -&gt; Unit, onExpandSortOrder: () -&gt; Unit, onCollapseSortOrder: () -&gt; Unit, onTagManageClick: () -&gt; Unit, onTrashClick: () -&gt; Unit, onExportClick: () -&gt; Unit, onImportClick: () -&gt; Unit, onConfirmImport: () -&gt; Unit, onDismissImportConfirmDialog: () -&gt; Unit, onPrivacyPolicyClick: () -&gt; Unit, onOpenSourceLicenseClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:TagManageScreen.kt$@OptIn(ExperimentalLayoutApi::class) @Composable private fun TagEditDialog( state: TagEditState, onNameChanged: (String) -&gt; Unit, onColorSelected: (Long) -&gt; Unit, onSave: () -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>LongMethod:TagManageScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TagManageScreen( uiState: TagManageUiState, onBackClick: () -&gt; Unit, onCreateClick: () -&gt; Unit, onEditClick: (String) -&gt; Unit, onDeleteRequest: (TagUiModel) -&gt; Unit, onConfirmDelete: () -&gt; Unit, onDismissDelete: () -&gt; Unit, onEditNameChanged: (String) -&gt; Unit, onEditColorSelected: (Long) -&gt; Unit, onSaveEdit: () -&gt; Unit, onCancelEdit: () -&gt; Unit, onRetry: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:TrashScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TrashScreen( uiState: TrashUiState, onBackClick: () -&gt; Unit, onRestoreClick: (MemoId) -&gt; Unit, onPermanentDeleteRequest: (TrashedMemoUiModel) -&gt; Unit, onConfirmPermanentDelete: () -&gt; Unit, onDismissPermanentDelete: () -&gt; Unit, onRetry: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:CalendarScreen.kt$( month: YearMonth?, isExpanded: Boolean, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, onCalendarExpandedToggle: () -&gt; Unit, onDatePickerRequested: () -&gt; Unit )</ID>
+    <ID>LongParameterList:CalendarScreen.kt$( uiState: CalendarUiState, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, onDateSelected: (LocalDate) -&gt; Unit, onCalendarExpandedToggle: () -&gt; Unit, onDatePickerRequested: () -&gt; Unit )</ID>
+    <ID>LongParameterList:CalendarScreen.kt$( uiState: CalendarUiState, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, onDateSelected: (LocalDate) -&gt; Unit, onCalendarExpandedToggle: () -&gt; Unit, onDatePickerRequested: () -&gt; Unit, onDatePickerDismissed: () -&gt; Unit, onDatePicked: (Long) -&gt; Unit, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit, onRetry: () -&gt; Unit, onMemoClick: (String) -&gt; Unit, onCreateMemoClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:CalendarScreen.kt$( uiState: CalendarUiState, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, onDateSelected: (LocalDate) -&gt; Unit, onCalendarExpandedToggle: () -&gt; Unit, onDatePickerRequested: () -&gt; Unit, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit, onMemoClick: (String) -&gt; Unit )</ID>
+    <ID>LongParameterList:DomainTestFixtures.kt$( id: String = "memo-1", title: String = "Title", body: String = "Body", createdAt: Long = 1000L, updatedAt: Long = createdAt, tagIds: List&lt;TagId&gt; = emptyList(), isFavorite: Boolean = false, deletedAt: Long? = null )</ID>
+    <ID>LongParameterList:HomeRoute.kt$( onMemoClick: (String) -&gt; Unit, onCreateMemoClick: () -&gt; Unit, onShareError: () -&gt; Unit, snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel() )</ID>
+    <ID>LongParameterList:HomeScreen.kt$( memo: MemoUiModel, isSelectionActive: Boolean, selected: Boolean, onMemoClick: (String) -&gt; Unit, onMemoSelectionToggle: (String) -&gt; Unit, onMemoLongClick: (String) -&gt; Unit )</ID>
+    <ID>LongParameterList:HomeScreen.kt$( selectedCount: Int, allSelectedFavorite: Boolean, onClearSelection: () -&gt; Unit, onMoveToTrash: () -&gt; Unit, onToggleFavorite: () -&gt; Unit, onToggleTag: () -&gt; Unit, onShareSelectedMemo: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:HomeScreen.kt$( uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -&gt; Unit, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit, onMemoLongClick: (String) -&gt; Unit, onMemoSelectionToggle: (String) -&gt; Unit, onClearSelection: () -&gt; Unit, onMoveSelectedMemosToTrash: () -&gt; Unit, onSetSelectedMemosFavorite: (Boolean) -&gt; Unit, onRequestToggleTagForSelectedMemos: () -&gt; Unit, onShareSelectedMemo: () -&gt; Unit, onMemoClick: (String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:HomeScreen.kt$( uiState: HomeUiState, onFilterSelected: (HomeFilterUiState) -&gt; Unit, onSearchToggle: () -&gt; Unit, onSearchQueryChanged: (String) -&gt; Unit, onMemoLongClick: (String) -&gt; Unit, onMemoSelectionToggle: (String) -&gt; Unit, onClearSelection: () -&gt; Unit, onMoveSelectedMemosToTrash: () -&gt; Unit, onSetSelectedMemosFavorite: (Boolean) -&gt; Unit, onRequestToggleTagForSelectedMemos: () -&gt; Unit, onToggleSelectedMemosTag: (TagId) -&gt; Unit, onDismissBulkTagDialog: () -&gt; Unit, onShareSelectedMemo: () -&gt; Unit, onMemoClick: (String) -&gt; Unit, onCreateMemoClick: () -&gt; Unit, onRetry: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:HomeViewModel.kt$HomeViewModel$( private val observeMemosUseCase: ObserveMemosUseCase, private val observeTagsUseCase: ObserveTagsUseCase, private val filterMemosUseCase: FilterMemosUseCase, private val searchMemosUseCase: SearchMemosUseCase, private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase, private val applyMemoBulkActionUseCase: ApplyMemoBulkActionUseCase, private val formatMemoTextUseCase: FormatMemoTextUseCase )</ID>
+    <ID>LongParameterList:MemoEditRoute.kt$( onNavigateBack: () -&gt; Unit, onMemoDeleted: (MemoId) -&gt; Unit, onSaveError: () -&gt; Unit, onDeleteError: () -&gt; Unit, onDraftError: () -&gt; Unit, onShareError: () -&gt; Unit, modifier: Modifier = Modifier, viewModel: MemoEditViewModel = hiltViewModel() )</ID>
+    <ID>LongParameterList:MemoEditScreen.kt$( uiState: MemoEditUiState, onTitleChanged: (String) -&gt; Unit, onBodyChanged: (String) -&gt; Unit, onTagToggled: (String) -&gt; Unit, onSave: () -&gt; Unit, onDelete: () -&gt; Unit, onBackRequest: () -&gt; Unit, onRetry: () -&gt; Unit, onShareMemo: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:MemoEditViewModel.kt$MemoEditViewModel$( private val savedStateHandle: SavedStateHandle, private val getMemoUseCase: GetMemoUseCase, private val saveMemoUseCase: SaveMemoUseCase, private val moveMemoToTrashUseCase: MoveMemoToTrashUseCase, private val observeTagsUseCase: ObserveTagsUseCase, private val getMemoEditDraftUseCase: GetMemoEditDraftUseCase, private val saveMemoEditDraftUseCase: SaveMemoEditDraftUseCase, private val clearMemoEditDraftUseCase: ClearMemoEditDraftUseCase, private val formatMemoTextUseCase: FormatMemoTextUseCase )</ID>
+    <ID>LongParameterList:MemoEditViewModelTest.kt$MemoEditViewModelTest$( target: MemoEditDraftTarget = MemoEditDraftTarget.newMemo(null), title: String = "", body: String = "", createdAt: TimestampMillis? = null, tagIds: List&lt;TagId&gt; = emptyList(), isFavorite: Boolean = false )</ID>
+    <ID>LongParameterList:SaveMemoEditDraftUseCaseTest.kt$SaveMemoEditDraftUseCaseTest$( target: MemoEditDraftTarget = MemoEditDraftTarget.newMemo(null), title: String = "", body: String = "", createdAt: TimestampMillis? = null, tagIds: List&lt;TagId&gt; = emptyList(), isFavorite: Boolean = false )</ID>
+    <ID>LongParameterList:SettingsRoute.kt$( snackbarHostState: SnackbarHostState, onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -&gt; Unit) -&gt; Unit, modifier: Modifier = Modifier, onOpenSourceLicenseClick: () -&gt; Unit = {}, onTagManageClick: () -&gt; Unit = {}, onTrashClick: () -&gt; Unit = {}, viewModel: SettingsViewModel = hiltViewModel() )</ID>
+    <ID>LongParameterList:SettingsScreen.kt$( uiState: SettingsUiState, onThemeModeSelected: (ThemeMode) -&gt; Unit, onMemoSortOrderSelected: (MemoSortOrder) -&gt; Unit, onAppLockEnabledChange: (Boolean) -&gt; Unit, onExpandThemeDropdown: () -&gt; Unit, onCollapseThemeDropdown: () -&gt; Unit, onExpandSortOrder: () -&gt; Unit, onCollapseSortOrder: () -&gt; Unit, onTagManageClick: () -&gt; Unit, onTrashClick: () -&gt; Unit, onExportClick: () -&gt; Unit, onImportClick: () -&gt; Unit, onConfirmImport: () -&gt; Unit, onDismissImportConfirmDialog: () -&gt; Unit, onPrivacyPolicyClick: () -&gt; Unit, onOpenSourceLicenseClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:SettingsViewModel.kt$SettingsViewModel$( observeThemeModeUseCase: ObserveThemeModeUseCase, observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase, observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase, private val setThemeModeUseCase: SetThemeModeUseCase, private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase, private val setAppLockEnabledUseCase: SetAppLockEnabledUseCase, private val exportMemosUseCase: ExportMemosUseCase, private val importMemosUseCase: ImportMemosUseCase, private val exportFileRepository: ExportFileRepository, @param:AppVersion private val appVersion: String )</ID>
+    <ID>LongParameterList:TagManageScreen.kt$( uiState: TagManageUiState, onBackClick: () -&gt; Unit, onCreateClick: () -&gt; Unit, onEditClick: (String) -&gt; Unit, onDeleteRequest: (TagUiModel) -&gt; Unit, onConfirmDelete: () -&gt; Unit, onDismissDelete: () -&gt; Unit, onEditNameChanged: (String) -&gt; Unit, onEditColorSelected: (Long) -&gt; Unit, onSaveEdit: () -&gt; Unit, onCancelEdit: () -&gt; Unit, onRetry: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:TrashScreen.kt$( uiState: TrashUiState, onBackClick: () -&gt; Unit, onRestoreClick: (MemoId) -&gt; Unit, onPermanentDeleteRequest: (TrashedMemoUiModel) -&gt; Unit, onConfirmPermanentDelete: () -&gt; Unit, onDismissPermanentDelete: () -&gt; Unit, onRetry: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>MagicNumber:CalendarGrid.kt$120</ID>
+    <ID>MagicNumber:CalendarGrid.kt$160</ID>
+    <ID>MagicNumber:CalendarGrid.kt$220</ID>
+    <ID>MagicNumber:CalendarScreen.kt$0xFF006D3B</ID>
+    <ID>MagicNumber:CalendarScreen.kt$0xFF6750A4</ID>
+    <ID>MagicNumber:CalendarScreen.kt$11</ID>
+    <ID>MagicNumber:CalendarScreen.kt$120</ID>
+    <ID>MagicNumber:CalendarScreen.kt$14</ID>
+    <ID>MagicNumber:CalendarScreen.kt$15</ID>
+    <ID>MagicNumber:CalendarScreen.kt$160</ID>
+    <ID>MagicNumber:CalendarScreen.kt$180</ID>
+    <ID>MagicNumber:CalendarScreen.kt$19</ID>
+    <ID>MagicNumber:CalendarScreen.kt$2026</ID>
+    <ID>MagicNumber:CalendarScreen.kt$220</ID>
+    <ID>MagicNumber:CalendarScreen.kt$28</ID>
+    <ID>MagicNumber:CalendarScreen.kt$5</ID>
+    <ID>MagicNumber:CalendarScreen.kt$9</ID>
+    <ID>MagicNumber:CalendarViewModel.kt$CalendarViewModel$5_000</ID>
+    <ID>MagicNumber:Color.kt$0xFF141218</ID>
+    <ID>MagicNumber:Color.kt$0xFF1D1B20</ID>
+    <ID>MagicNumber:Color.kt$0xFF21005D</ID>
+    <ID>MagicNumber:Color.kt$0xFF332D41</ID>
+    <ID>MagicNumber:Color.kt$0xFF381E72</ID>
+    <ID>MagicNumber:Color.kt$0xFF49454F</ID>
+    <ID>MagicNumber:Color.kt$0xFF4F378B</ID>
+    <ID>MagicNumber:Color.kt$0xFF625B71</ID>
+    <ID>MagicNumber:Color.kt$0xFF6750A4</ID>
+    <ID>MagicNumber:Color.kt$0xFF79747E</ID>
+    <ID>MagicNumber:Color.kt$0xFF938F99</ID>
+    <ID>MagicNumber:Color.kt$0xFFB3261E</ID>
+    <ID>MagicNumber:Color.kt$0xFFCAC4D0</ID>
+    <ID>MagicNumber:Color.kt$0xFFCCC2DC</ID>
+    <ID>MagicNumber:Color.kt$0xFFD0BCFF</ID>
+    <ID>MagicNumber:Color.kt$0xFFE6E0E9</ID>
+    <ID>MagicNumber:Color.kt$0xFFE7E0EC</ID>
+    <ID>MagicNumber:Color.kt$0xFFEADDFF</ID>
+    <ID>MagicNumber:Color.kt$0xFFF2B8B5</ID>
+    <ID>MagicNumber:Color.kt$0xFFF4EFF7</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFFBFE</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFFFFF</ID>
+    <ID>MagicNumber:HomeScreen.kt$0xFF6750A4</ID>
+    <ID>MagicNumber:HomeScreen.kt$0xFFB3261E</ID>
+    <ID>MagicNumber:HomeViewModel.kt$HomeViewModel$5_000</ID>
+    <ID>MagicNumber:SettingsViewModel.kt$SettingsViewModel$5_000</ID>
+    <ID>MagicNumber:TagManageScreen.kt$0xFF006D3B</ID>
+    <ID>MagicNumber:TagManageScreen.kt$0xFF6750A4</ID>
+    <ID>MagicNumber:TagManageScreen.kt$0xFFB3261E</ID>
+    <ID>MagicNumber:TagManageScreen.kt$16</ID>
+    <ID>MagicNumber:TagManageScreen.kt$8</ID>
+    <ID>MagicNumber:TagManageViewModel.kt$TagManageViewModel$5_000</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF0061A4</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF006874</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF006D3B</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF5C6BC0</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF6750A4</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF795548</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF7D5260</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFF984061</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFFB3261E</ID>
+    <ID>MagicNumber:TagPalette.kt$0xFFE65100</ID>
+    <ID>MagicNumber:TrashScreen.kt$0xFF6750A4</ID>
+    <ID>MagicNumber:TrashScreen.kt$1_000L</ID>
+    <ID>MagicNumber:TrashViewModel.kt$TrashViewModel$5_000</ID>
+    <ID>MatchingDeclarationName:OssLicensesScreen.kt$OssLicense</ID>
+    <ID>ModifierMissing:LiteMemoApp.kt$LiteMemoApp</ID>
+    <ID>ParameterNaming:CalendarGrid.kt$onDateSelected</ID>
+    <ID>ParameterNaming:CalendarScreen.kt$onDatePicked</ID>
+    <ID>ParameterNaming:CalendarScreen.kt$onDatePickerDismissed</ID>
+    <ID>ParameterNaming:CalendarScreen.kt$onDatePickerRequested</ID>
+    <ID>ParameterNaming:CalendarScreen.kt$onDateSelected</ID>
+    <ID>ParameterNaming:CalendarScreen.kt$onSearchQueryChanged</ID>
+    <ID>ParameterNaming:HomeScreen.kt$onFilterSelected</ID>
+    <ID>ParameterNaming:HomeScreen.kt$onSearchQueryChanged</ID>
+    <ID>ParameterNaming:MemoEditRoute.kt$onMemoDeleted</ID>
+    <ID>ParameterNaming:MemoEditScreen.kt$onBodyChanged</ID>
+    <ID>ParameterNaming:MemoEditScreen.kt$onTagToggled</ID>
+    <ID>ParameterNaming:MemoEditScreen.kt$onTitleChanged</ID>
+    <ID>ParameterNaming:SettingsScreen.kt$onMemoSortOrderSelected</ID>
+    <ID>ParameterNaming:SettingsScreen.kt$onSelected</ID>
+    <ID>ParameterNaming:SettingsScreen.kt$onThemeModeSelected</ID>
+    <ID>ParameterNaming:TagManageScreen.kt$onColorSelected</ID>
+    <ID>ParameterNaming:TagManageScreen.kt$onEditColorSelected</ID>
+    <ID>ParameterNaming:TagManageScreen.kt$onEditNameChanged</ID>
+    <ID>ParameterNaming:TagManageScreen.kt$onNameChanged</ID>
+    <ID>ReturnCount:AppLockAuthenticator.kt$AppLockAuthenticator$fun authenticate(callback: (AppLockAuthenticationResult) -&gt; Unit)</ID>
+    <ID>ReturnCount:DataStoreMemoEditDraftRepository.kt$DataStoreMemoEditDraftRepository$override suspend fun getDraft(target: MemoEditDraftTarget): MemoEditDraft?</ID>
+    <ID>ReturnCount:LiteMemoApp.kt$private fun bottomTabTransitionDirection( scope: AnimatedContentTransitionScope&lt;NavBackStackEntry&gt; ): Int?</ID>
+    <ID>ReturnCount:MemoEditViewModel.kt$MemoEditViewModel$private fun savedStateDraft(): MemoEditDraft?</ID>
+    <ID>ReturnCount:TagManageViewModel.kt$TagManageViewModel$fun saveEdit()</ID>
+    <ID>SpreadOperator:DatabaseModule.kt$DatabaseModule$(*LiteMemoMigrations.ALL)</ID>
+    <ID>TooGenericExceptionCaught:MemoEditViewModel.kt$MemoEditViewModel$e: Throwable</ID>
+    <ID>TooManyFunctions:CalendarScreen.kt$com.appvoyager.litememo.ui.screen.CalendarScreen.kt</ID>
+    <ID>TooManyFunctions:CalendarViewModel.kt$CalendarViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:HomeScreen.kt$com.appvoyager.litememo.ui.screen.HomeScreen.kt</ID>
+    <ID>TooManyFunctions:HomeViewModel.kt$HomeViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:MemoDao.kt$MemoDao</ID>
+    <ID>TooManyFunctions:MemoEditViewModel.kt$MemoEditViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:MemoRepository.kt$MemoRepository</ID>
+    <ID>TooManyFunctions:RoomMemoRepository.kt$RoomMemoRepository : MemoRepository</ID>
+    <ID>TooManyFunctions:SettingsScreen.kt$com.appvoyager.litememo.ui.screen.SettingsScreen.kt</ID>
+    <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:TagManageViewModel.kt$TagManageViewModel : ViewModel</ID>
+    <ID>UseCheckOrError:ApplyMemoBulkActionUseCaseTest.kt$ApplyMemoBulkActionUseCaseTest.WriteFailingMemoRepository$throw IllegalStateException("Failed to move memo.")</ID>
+    <ID>UseCheckOrError:ApplyMemoBulkActionUseCaseTest.kt$ApplyMemoBulkActionUseCaseTest.WriteFailingMemoRepository$throw IllegalStateException("Failed to save memo.")</ID>
+    <ID>UseCheckOrError:DomainTestFixtures.kt$QueueMemoIdProvider$throw IllegalStateException("No more MemoId available in QueueMemoIdProvider.")</ID>
+    <ID>UseCheckOrError:DomainTestFixtures.kt$QueueTagIdProvider$throw IllegalStateException("No more TagId available in QueueTagIdProvider.")</ID>
+    <ID>UseCheckOrError:HomeViewModelTest.kt$HomeViewModelTest.SaveFailingMemoRepository$throw IllegalStateException("Failed to save memo.")</ID>
+    <ID>UseCheckOrError:HomeViewModelTest.kt$HomeViewModelTest.SaveFailingMemoRepository$throw IllegalStateException("Failed to save memos.")</ID>
+    <ID>UseCheckOrError:TagManageViewModelTest.kt$TagManageViewModelTest.DeleteFailingTagRepository$throw IllegalStateException("Failed to delete tag.")</ID>
+    <ID>UseCheckOrError:TagManageViewModelTest.kt$TagManageViewModelTest.ObserveFailingTagRepository$throw IllegalStateException("Failed to observe tags.")</ID>
+    <ID>UseCheckOrError:TrashViewModelTest.kt$TrashViewModelTest.RestoreFailingMemoRepository$throw IllegalStateException("Failed to restore memo.")</ID>
+  </CurrentIssues>
+</SmellBaseline>

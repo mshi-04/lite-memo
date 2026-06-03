@@ -5,21 +5,24 @@ import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
+import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -32,6 +35,9 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarViewModelTest {
@@ -183,8 +189,42 @@ class CalendarViewModelTest {
         assertEquals(listOf("仕事"), state.memos.single().tags.map { it.name })
     }
 
+    @Test
+    fun retryReloadsSearchResultsAfterSearchError() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = RetryableSearchMemoRepository(
+            delegate = FakeMemoRepository(
+                listOf(
+                    memoFixture(
+                        id = "memo-1",
+                        title = "Shopping",
+                        body = "Buy coffee",
+                        createdAt = epochMillis("2026-05-15T10:00:00Z")
+                    )
+                )
+            )
+        )
+        val viewModel = calendarViewModel(memoRepository = memoRepository)
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("Shopping")
+        advanceUntilIdle()
+        viewModel.uiState.first { it.hasSearchError }
+
+        // Act
+        memoRepository.allowSearch()
+        viewModel.retry()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.hasSearchError && it.searchResults.isNotEmpty() }
+
+        // Assert
+        assertEquals(
+            false to listOf("Shopping"),
+            state.hasSearchError to state.searchResults.map { it.title }
+        )
+    }
+
     private fun calendarViewModel(
-        memoRepository: FakeMemoRepository = FakeMemoRepository(),
+        memoRepository: MemoRepository = FakeMemoRepository(),
         tags: List<Tag> = emptyList()
     ): CalendarViewModel {
         val tagRepository = FakeTagRepository(tags)
@@ -207,5 +247,52 @@ class CalendarViewModelTest {
             currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
             zoneId = zoneId
         )
+    }
+
+    private class RetryableSearchMemoRepository(private val delegate: FakeMemoRepository) :
+        MemoRepository {
+
+        private var searchFails = true
+
+        fun allowSearch() {
+            searchFails = false
+        }
+
+        override fun observeActiveMemos(): Flow<List<Memo>> = delegate.observeActiveMemos()
+
+        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
+            if (searchFails) {
+                flow { throw IllegalStateException("Search failed.") }
+            } else {
+                delegate.observeActiveMemosBySearchQuery(query)
+            }
+
+        override fun observeActiveMemosCreatedBetween(
+            from: TimestampMillis,
+            to: TimestampMillis
+        ): Flow<List<Memo>> = delegate.observeActiveMemosCreatedBetween(from, to)
+
+        override fun observeTrashedMemos(): Flow<List<Memo>> = delegate.observeTrashedMemos()
+
+        override suspend fun getActiveMemo(id: MemoId): Memo? = delegate.getActiveMemo(id)
+
+        override suspend fun saveMemo(memo: Memo) = delegate.saveMemo(memo)
+
+        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) =
+            delegate.moveMemoToTrash(id, deletedAt)
+
+        override suspend fun restoreMemoFromTrash(id: MemoId) = delegate.restoreMemoFromTrash(id)
+
+        override suspend fun deleteMemoPermanently(id: MemoId) = delegate.deleteMemoPermanently(id)
+
+        override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) =
+            delegate.deleteTrashedMemosDeletedAtOrBefore(cutoff)
+
+        override suspend fun getAllActiveMemos(): List<Memo> = delegate.getAllActiveMemos()
+
+        override suspend fun saveAllMemos(memos: List<Memo>) = delegate.saveAllMemos(memos)
+
+        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) =
+            delegate.importAll(tags, memos)
     }
 }

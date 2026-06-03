@@ -1,11 +1,11 @@
-package com.appvoyager.litememo.data.di
+package com.appvoyager.litememo.di
 
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 import kotlinx.serialization.json.Json
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -13,8 +13,17 @@ object JsonModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json = Json {
+    @ExportJson
+    fun provideExportJson(): Json = Json {
         prettyPrint = true
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
+    @Provides
+    @Singleton
+    @InternalJson
+    fun provideInternalJson(): Json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }

@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appvoyager.litememo.di.AppVersion
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
@@ -17,8 +18,6 @@ import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import javax.inject.Named
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,22 +27,23 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val observeThemeModeUseCase: ObserveThemeModeUseCase,
+    observeThemeModeUseCase: ObserveThemeModeUseCase,
+    observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
+    observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
     private val setThemeModeUseCase: SetThemeModeUseCase,
-    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
-    private val observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
     private val setAppLockEnabledUseCase: SetAppLockEnabledUseCase,
     private val exportMemosUseCase: ExportMemosUseCase,
     private val importMemosUseCase: ImportMemosUseCase,
     private val exportFileRepository: ExportFileRepository,
-    @param:Named("appVersion") private val appVersion: String
+    @param:AppVersion private val appVersion: String
 ) : ViewModel() {
 
-    private val showThemeDialog = MutableStateFlow(false)
+    private val themeDropdownExpanded = MutableStateFlow(false)
     private val sortOrderExpanded = MutableStateFlow(false)
     private val isExporting = MutableStateFlow(false)
     private val isImporting = MutableStateFlow(false)
@@ -51,7 +51,7 @@ class SettingsViewModel @Inject constructor(
 
     private var pendingImportReference: ExportFileReference? = null
 
-    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
+    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.CONFLATED)
     internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
@@ -59,13 +59,13 @@ class SettingsViewModel @Inject constructor(
         observeMemoSortOrderUseCase(),
         observeAppLockEnabledUseCase(),
         combine(
-            showThemeDialog,
+            themeDropdownExpanded,
             sortOrderExpanded,
             isExporting,
             isImporting,
             showImportConfirmDialog
-        ) { dialog, expanded, exporting, importing, importDialog ->
-            UiFlags(dialog, expanded, exporting, importing, importDialog)
+        ) { themeExpanded, expanded, exporting, importing, importDialog ->
+            UiFlags(themeExpanded, expanded, exporting, importing, importDialog)
         }
     ) { themeMode, sortOrder, appLockEnabled, flags ->
         SettingsUiState(
@@ -73,7 +73,7 @@ class SettingsViewModel @Inject constructor(
             memoSortOrder = sortOrder,
             appLockEnabled = appLockEnabled,
             appVersion = appVersion,
-            showThemeDialog = flags.showThemeDialog,
+            themeDropdownExpanded = flags.themeDropdownExpanded,
             sortOrderExpanded = flags.sortOrderExpanded,
             isExporting = flags.isExporting,
             isImporting = flags.isImporting,
@@ -119,15 +119,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun showThemeDialog() {
-        showThemeDialog.value = true
+    fun expandThemeDropdown() {
+        sortOrderExpanded.value = false
+        themeDropdownExpanded.value = true
     }
 
-    fun dismissThemeDialog() {
-        showThemeDialog.value = false
+    fun collapseThemeDropdown() {
+        themeDropdownExpanded.value = false
     }
 
     fun expandSortOrder() {
+        themeDropdownExpanded.value = false
         sortOrderExpanded.value = true
     }
 
@@ -198,7 +200,7 @@ internal sealed interface SettingsSnackbarEvent {
 }
 
 private data class UiFlags(
-    val showThemeDialog: Boolean,
+    val themeDropdownExpanded: Boolean,
     val sortOrderExpanded: Boolean,
     val isExporting: Boolean,
     val isImporting: Boolean,

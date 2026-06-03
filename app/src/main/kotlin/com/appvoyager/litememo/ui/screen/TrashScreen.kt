@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,14 +62,15 @@ fun TrashScreen(
     onPermanentDeleteRequest: (TrashedMemoUiModel) -> Unit,
     onConfirmPermanentDelete: () -> Unit,
     onDismissPermanentDelete: () -> Unit,
-    onDismissActionError: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -104,7 +106,7 @@ fun TrashScreen(
             ) {
                 items(
                     items = uiState.memos,
-                    key = { it.id }
+                    key = { it.id.value }
                 ) { memo ->
                     TrashedMemoCard(
                         memo = memo,
@@ -140,19 +142,6 @@ fun TrashScreen(
             dismissButton = {
                 TextButton(onClick = onDismissPermanentDelete) {
                     Text(text = stringResource(R.string.cancel_label))
-                }
-            }
-        )
-    }
-
-    if (uiState.hasActionError) {
-        AlertDialog(
-            onDismissRequest = onDismissActionError,
-            title = { Text(text = stringResource(R.string.trash_action_error_title)) },
-            text = { Text(text = stringResource(R.string.trash_action_error_body)) },
-            confirmButton = {
-                TextButton(onClick = onDismissActionError) {
-                    Text(text = stringResource(R.string.settings_dialog_ok))
                 }
             }
         )
@@ -235,7 +224,7 @@ private fun deletedAtLabel(deletedAt: TimestampMillis): String {
     return formatter.format(deletedAtDateTime)
 }
 
-@Preview(showBackground = true, name = "メモ一覧")
+@Preview(showBackground = true, name = "ゴミ箱一覧")
 @Composable
 private fun TrashScreenPreview() {
     LiteMemoTheme {
@@ -257,7 +246,6 @@ private fun TrashScreenPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }
@@ -274,7 +262,6 @@ private fun TrashScreenEmptyPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }
@@ -291,7 +278,6 @@ private fun TrashScreenLoadingPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }
@@ -308,7 +294,6 @@ private fun TrashScreenErrorPreview() {
             onPermanentDeleteRequest = {},
             onConfirmPermanentDelete = {},
             onDismissPermanentDelete = {},
-            onDismissActionError = {},
             onRetry = {}
         )
     }

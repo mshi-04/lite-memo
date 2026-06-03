@@ -23,7 +23,6 @@ import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class MemoEditViewModel @Inject constructor(
@@ -61,14 +61,17 @@ class MemoEditViewModel @Inject constructor(
         ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
         ?: MemoEditDraftTarget.newMemo(createdAt)
 
-    private val _uiState = MutableStateFlow(MemoEditUiState())
+    private val _uiState = MutableStateFlow(MemoEditUiState(memoId = memoId))
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
     private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    private val _draftErrorEvent = Channel<Unit>(Channel.BUFFERED)
+    private val _draftErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val draftErrorEvent = _draftErrorEvent.receiveAsFlow()
+
+    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.BUFFERED)
+    val operationErrorEvent = _operationErrorEvent.receiveAsFlow()
 
     private var autosaveJob: Job? = null
     private var shouldPersistDraft = false
@@ -158,9 +161,7 @@ class MemoEditViewModel @Inject constructor(
         val state = _uiState.value
         val title = state.title
         val body = state.body
-        if (title.isBlank() && body.isBlank() &&
-            state.selectedTagIds.isEmpty() && !state.isFavorite
-        ) {
+        if (title.isBlank() && body.isBlank()) {
             viewModelScope.launch {
                 autosaveJob?.cancel()
                 try {
@@ -168,7 +169,7 @@ class MemoEditViewModel @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Throwable) {
-                    // エラーは draftErrorEvent で通知済み
+                    return@launch
                 }
                 clearSavedState()
                 shouldPersistDraft = false
@@ -189,14 +190,14 @@ class MemoEditViewModel @Inject constructor(
                     )
                 )
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraftAfterCompletedOperation()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                _uiState.update { state -> state.copy(hasError = true) }
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
             }
         }
     }
@@ -208,7 +209,7 @@ class MemoEditViewModel @Inject constructor(
             try {
                 val memoId = moveMemoToTrashUseCase(MemoId(id))
                 autosaveJob?.cancel()
-                clearDraft()
+                clearDraftAfterCompletedOperation()
                 clearSavedState()
                 shouldPersistDraft = false
                 _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memoId))
@@ -216,8 +217,9 @@ class MemoEditViewModel @Inject constructor(
                 throw e
             } catch (_: Throwable) {
                 _uiState.update { state ->
-                    state.copy(isDeletePending = false, hasError = true)
+                    state.copy(isDeletePending = false)
                 }
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
             }
         }
     }
@@ -275,14 +277,26 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    private suspend fun clearDraft() {
+    private suspend fun clearDraft(notifyOnFailure: Boolean = true) {
         try {
             clearMemoEditDraftUseCase(draftTarget)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            _draftErrorEvent.trySend(Unit)
+            if (notifyOnFailure) {
+                _draftErrorEvent.trySend(Unit)
+            }
             throw e
+        }
+    }
+
+    private suspend fun clearDraftAfterCompletedOperation() {
+        try {
+            clearDraft()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // clearDraft already emitted draftErrorEvent.
         }
     }
 
@@ -349,7 +363,7 @@ class MemoEditViewModel @Inject constructor(
 
     private fun MemoEditDraft.toUiState() = MemoEditUiState(
         isLoading = false,
-        memoId = memoId,
+        memoId = this@MemoEditViewModel.memoId,
         title = title.value,
         body = body.value,
         isFavorite = isFavorite,
@@ -379,4 +393,9 @@ class MemoEditViewModel @Inject constructor(
 sealed interface MemoEditNavigationEvent {
     data object NavigateBack : MemoEditNavigationEvent
     data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent
+}
+
+sealed interface MemoEditOperationErrorEvent {
+    data object SaveFailed : MemoEditOperationErrorEvent
+    data object DeleteFailed : MemoEditOperationErrorEvent
 }

@@ -1,0 +1,5 @@
+<resources>
+    <!-- AdMob: dev フレーバーは Google 公式テスト ID を使う -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+</resources>

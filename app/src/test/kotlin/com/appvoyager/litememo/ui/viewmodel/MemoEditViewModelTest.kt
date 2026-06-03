@@ -34,8 +34,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -74,10 +76,10 @@ class MemoEditViewModelTest {
         val state = viewModel.uiState.value
 
         // Assert
-        assertEquals("Saved title", state.title)
-        assertEquals("Saved body", state.body)
-        assertEquals(setOf("tag-1"), state.selectedTagIds)
-        assertEquals(true, state.isFavorite)
+        assertEquals(
+            MemoEditDraftSnapshot("Saved title", "Saved body", setOf("tag-1"), true),
+            MemoEditDraftSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
+        )
     }
 
     @Test
@@ -98,10 +100,10 @@ class MemoEditViewModelTest {
         val state = viewModel.uiState.value
 
         // Assert
-        assertEquals("Stored title", state.title)
-        assertEquals("Stored body", state.body)
-        assertEquals(setOf("tag-1"), state.selectedTagIds)
-        assertEquals(true, state.isFavorite)
+        assertEquals(
+            MemoEditDraftSnapshot("Stored title", "Stored body", setOf("tag-1"), true),
+            MemoEditDraftSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
+        )
     }
 
     @Test
@@ -200,6 +202,74 @@ class MemoEditViewModelTest {
     }
 
     @Test
+    fun saveDoesNotNavigateBackWhenBlankDraftClearFails() = runTest(dispatcher) {
+        // Arrange
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(draftRepository = draftRepository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.updateTitle(" ")
+        viewModel.save()
+        advanceUntilIdle()
+        val event = withTimeoutOrNull(1) { viewModel.navigationEvent.first() }
+
+        // Assert
+        assertNull(event)
+    }
+
+    @Test
+    fun saveEmitsDraftErrorWhenBlankDraftClearFails() = runTest(dispatcher) {
+        // Arrange
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(draftRepository = draftRepository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.updateTitle(" ")
+        viewModel.save()
+        advanceUntilIdle()
+        val event = viewModel.draftErrorEvent.first()
+
+        // Assert
+        assertEquals(Unit, event)
+    }
+
+    @Test
+    fun saveNavigatesBackWhenDraftClearFailsAfterMemoIsSaved() = runTest(dispatcher) {
+        // Arrange
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(draftRepository = draftRepository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.updateTitle("Title")
+        viewModel.save()
+        advanceUntilIdle()
+        val event = viewModel.navigationEvent.first()
+
+        // Assert
+        assertEquals(MemoEditNavigationEvent.NavigateBack, event)
+    }
+
+    @Test
+    fun saveEmitsDraftErrorWhenDraftClearFailsAfterMemoIsSaved() = runTest(dispatcher) {
+        // Arrange
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(draftRepository = draftRepository)
+        advanceUntilIdle()
+
+        // Act
+        viewModel.updateTitle("Title")
+        viewModel.save()
+        advanceUntilIdle()
+        val event = viewModel.draftErrorEvent.first()
+
+        // Assert
+        assertEquals(Unit, event)
+    }
+
+    @Test
     fun deleteEmitsMemoDeletedEventWithDeletedMemo() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1")
@@ -215,6 +285,46 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(MemoEditNavigationEvent.MemoDeleted(memo.id), event)
+    }
+
+    @Test
+    fun deleteEmitsMemoDeletedEventWhenDraftClearFails() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(
+            memo = memo,
+            draftRepository = draftRepository
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.delete()
+        advanceUntilIdle()
+        val event = viewModel.navigationEvent.first()
+
+        // Assert
+        assertEquals(MemoEditNavigationEvent.MemoDeleted(memo.id), event)
+    }
+
+    @Test
+    fun deleteEmitsDraftErrorWhenDraftClearFails() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+        val draftRepository = FakeMemoEditDraftRepository(clearDraftError = IllegalStateException())
+        val viewModel = memoEditViewModel(
+            memo = memo,
+            draftRepository = draftRepository
+        )
+        advanceUntilIdle()
+
+        // Act
+        viewModel.delete()
+        advanceUntilIdle()
+        val event = viewModel.draftErrorEvent.first()
+
+        // Assert
+        assertEquals(Unit, event)
     }
 
     private fun memoEditViewModel(
@@ -270,3 +380,10 @@ class MemoEditViewModelTest {
         isFavorite = isFavorite
     )
 }
+
+private data class MemoEditDraftSnapshot(
+    val title: String,
+    val body: String,
+    val selectedTagIds: Set<String>,
+    val isFavorite: Boolean
+)

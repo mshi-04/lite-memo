@@ -1,6 +1,13 @@
 package com.appvoyager.litememo.data.repository
 
+import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.appvoyager.litememo.domain.model.MemoEditDraft
 import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
 import com.appvoyager.litememo.domain.model.value.MemoBody
@@ -8,22 +15,60 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
+import kotlinx.serialization.json.Json
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.File
+import java.util.UUID
 
+@RunWith(AndroidJUnit4::class)
 class DataStoreMemoEditDraftRepositoryTest {
 
-    @TempDir
-    lateinit var tempDir: File
+    private lateinit var dataStoreScope: CoroutineScope
+    private lateinit var dataStoreFile: File
+    private lateinit var dataStore: DataStore<Preferences>
+    private lateinit var repository: DataStoreMemoEditDraftRepository
+
+    private val json = Json
+
+    @Before
+    fun setUp() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        dataStoreFile = File(
+            context.cacheDir,
+            "draft_${UUID.randomUUID()}.preferences_pb"
+        )
+
+        dataStoreScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        dataStore = PreferenceDataStoreFactory.create(
+            scope = dataStoreScope,
+            produceFile = { dataStoreFile }
+        )
+
+        repository = DataStoreMemoEditDraftRepository(dataStore, json)
+    }
+
+    @After
+    fun tearDown() {
+        dataStoreScope.cancel()
+        if (dataStoreFile.exists()) {
+            dataStoreFile.delete()
+        }
+    }
 
     @Test
     fun getDraftReturnsSavedDraft() = runTest {
         // Arrange
-        val repository = repository(this)
         val draft = memoEditDraft(
             title = "Title",
             body = "Body",
@@ -42,7 +87,6 @@ class DataStoreMemoEditDraftRepositoryTest {
     @Test
     fun clearDraftRemovesSavedDraft() = runTest {
         // Arrange
-        val repository = repository(this)
         val draft = memoEditDraft(title = "Title")
         repository.saveDraft(draft)
 
@@ -56,7 +100,6 @@ class DataStoreMemoEditDraftRepositoryTest {
     @Test
     fun getDraftKeepsTargetsSeparated() = runTest {
         // Arrange
-        val repository = repository(this)
         val newDraft = memoEditDraft(
             target = MemoEditDraftTarget.newMemo(null),
             title = "New"
@@ -80,11 +123,35 @@ class DataStoreMemoEditDraftRepositoryTest {
         )
     }
 
-    private fun repository(scope: CoroutineScope): DataStoreMemoEditDraftRepository {
-        val dataStore = PreferenceDataStoreFactory.create(scope = scope) {
-            File(tempDir, "draft.preferences_pb")
+    @Test
+    fun getDraftRestoresTagIdsContainingSeparatorCharacters() = runTest {
+        // Arrange
+        val draft = memoEditDraft(
+            title = "Title",
+            tagIds = listOf(TagId("tag,with,comma"), TagId("tag\nwith\nnewline"))
+        )
+
+        // Act
+        repository.saveDraft(draft)
+
+        // Assert
+        assertEquals(draft, repository.getDraft(draft.target))
+    }
+
+    @Test
+    fun getDraftDropsTagIdsStoredInLegacyCommaFormat() = runTest {
+        // Arrange
+        val target = MemoEditDraftTarget.newMemo(null)
+        repository.saveDraft(memoEditDraft(target = target, title = "Title", body = "Body"))
+        dataStore.edit { prefs ->
+            prefs[stringPreferencesKey("memo_edit_draft_${target.value}_tag_ids")] = "tag-1,tag-2"
         }
-        return DataStoreMemoEditDraftRepository(dataStore)
+
+        // Act
+        val restored = repository.getDraft(target)
+
+        // Assert
+        assertEquals(emptyList<TagId>(), restored?.tagIds)
     }
 
     private fun memoEditDraft(

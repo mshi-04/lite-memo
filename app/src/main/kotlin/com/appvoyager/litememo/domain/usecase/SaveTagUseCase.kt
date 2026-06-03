@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.model.SaveTagCommand
 import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.TagRepository
@@ -17,6 +18,10 @@ class SaveTagUseCase @Inject constructor(
         val existingTag = command.id?.let { id ->
             requireNotNull(tagRepository.getTag(id)) { "Tag not found: ${id.value}" }
         }
+        val duplicatedTag = tagRepository.getAllTags().firstOrNull { tag ->
+            tag.name == command.name && tag.id != command.id
+        }
+        if (duplicatedTag != null) throw DuplicateTagNameException(command.name)
         val tag = Tag(
             id = existingTag?.id ?: tagIdProvider.newTagId(),
             name = command.name,
@@ -29,3 +34,6 @@ class SaveTagUseCase @Inject constructor(
     }
 
 }
+
+class DuplicateTagNameException(tagName: TagName) :
+    IllegalArgumentException("Tag name already exists: ${tagName.value}")

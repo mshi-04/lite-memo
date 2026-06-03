@@ -13,10 +13,11 @@
 ## Architecture
 
 - 構造は Clean Architecture + MVVM を基本にする
-- 依存方向は `presentation -> domain <- data` を守る
+- 依存方向は `ui -> domain <- data` を守る（プレゼンテーション層は `ui` パッケージ）
 - UI は ViewModel に依存し、ViewModel は UseCase 経由で domain にアクセスする
-- data 層の実装詳細を presentation 層へ漏らさない
+- data 層の実装詳細を `ui` 層へ漏らさない
 - DI は Hilt を使う
+- 詳細なレイヤー / パッケージ構成は `docs/architecture.md` を参照する
 
 ## Kotlin
 
@@ -36,6 +37,13 @@
 - 非同期処理は Coroutines を使い、UI スレッドをブロックしない
 - 構造化データは Room、軽量な設定値は DataStore に分ける
 
+## UI Event / Error
+
+- 画面上に状態として残る失敗は UI state の boolean や sealed state で表す
+- Snackbar、画面遷移、認証要求など一回限りの通知は Channel event で表す
+- 一回限り event の Channel は、`latest wins`（最新だけ届けばよい）が成立する場合に限り `Channel.CONFLATED` を使う
+- 中間イベントを落とせない通知（内容の異なる Snackbar、結果付き画面遷移など）は `Channel.BUFFERED` など取りこぼさない手段を選ぶ
+
 ## Test
 
 - Unit Test の方針は `docs/unit-test.md` を確認する
@@ -48,11 +56,9 @@
 
 ## まだ固定しないこと
 
-この段階では、以下を固定しません。
+以下は未確定で、必要になった時点で決めます。
 
-- 詳細な画面構成
-- DB スキーマ
-- パッケージ分割
-- 広告の表示位置や頻度
-- GitHub Actions のジョブ構成
+- 広告（AdMob）の表示位置や頻度
 - Google Play 公開手順
+
+DB スキーマ、パッケージ分割、CI（GitHub Actions）のジョブ構成は既に確立しているため、変更時は既存構成に合わせます（スキーマ変更時は Room の migration を追加する）。

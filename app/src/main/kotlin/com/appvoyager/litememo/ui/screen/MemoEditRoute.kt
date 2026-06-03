@@ -12,12 +12,15 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.viewmodel.MemoEditNavigationEvent
+import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (MemoId) -> Unit,
+    onSaveError: () -> Unit,
+    onDeleteError: () -> Unit,
     onDraftError: () -> Unit,
     onShareError: () -> Unit,
     modifier: Modifier = Modifier,
@@ -38,6 +41,15 @@ fun MemoEditRoute(
     LaunchedEffect(viewModel) {
         viewModel.draftErrorEvent.collect {
             onDraftError()
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.operationErrorEvent.collect { event ->
+            when (event) {
+                MemoEditOperationErrorEvent.SaveFailed -> onSaveError()
+                MemoEditOperationErrorEvent.DeleteFailed -> onDeleteError()
+            }
         }
     }
 

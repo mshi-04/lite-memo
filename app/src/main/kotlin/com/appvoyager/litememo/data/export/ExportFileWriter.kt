@@ -2,23 +2,26 @@ package com.appvoyager.litememo.data.export
 
 import android.content.Context
 import android.net.Uri
+import com.appvoyager.litememo.data.di.IoDispatcher
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
+import com.appvoyager.litememo.di.ExportJson
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.IOException
-import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.IOException
+import javax.inject.Inject
 
 class ExportFileWriter @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val json: Json
+    @param:ApplicationContext private val context: Context,
+    @param:ExportJson private val json: Json,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
     suspend fun write(uri: Uri, data: LiteMemoExportDto) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             try {
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                     val jsonString = json.encodeToString(data)

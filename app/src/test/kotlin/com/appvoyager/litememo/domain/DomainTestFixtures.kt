@@ -18,10 +18,10 @@ import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.MemoEditDraftRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
-import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 
 fun memoFixture(
     id: String = "memo-1",
@@ -63,6 +63,7 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     private val memos = MutableStateFlow(initialMemos)
     val savedMemos = mutableListOf<Memo>()
+    val importedTags = mutableListOf<Tag>()
     val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
@@ -143,12 +144,19 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         memos.forEach { saveMemo(it) }
     }
 
+    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
+        importedTags += tags
+        memos.forEach { saveMemo(it) }
+    }
+
     fun currentMemos(): List<Memo> = memos.value
 
 }
 
-class FakeMemoEditDraftRepository(initialDrafts: List<MemoEditDraft> = emptyList()) :
-    MemoEditDraftRepository {
+class FakeMemoEditDraftRepository(
+    initialDrafts: List<MemoEditDraft> = emptyList(),
+    private val clearDraftError: Throwable? = null
+) : MemoEditDraftRepository {
 
     private val drafts = initialDrafts.associateBy { it.target }.toMutableMap()
     val savedDrafts = mutableListOf<MemoEditDraft>()
@@ -162,6 +170,7 @@ class FakeMemoEditDraftRepository(initialDrafts: List<MemoEditDraft> = emptyList
     }
 
     override suspend fun clearDraft(target: MemoEditDraftTarget) {
+        clearDraftError?.let { throw it }
         clearedTargets += target
         drafts.remove(target)
     }

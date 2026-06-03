@@ -4,24 +4,21 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.appvoyager.litememo.data.util.dataOrEmptyOnIoError
+import com.appvoyager.litememo.di.UserSettingsDataStore
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository
-import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class DataStoreUserSettingsRepository @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    @param:UserSettingsDataStore private val dataStore: DataStore<Preferences>
 ) : UserSettingsRepository {
 
-    private val preferencesFlow: Flow<Preferences> = dataStore.data.catch { e ->
-        if (e is IOException) emit(emptyPreferences()) else throw e
-    }
+    private val preferencesFlow: Flow<Preferences> = dataStore.dataOrEmptyOnIoError()
 
     override fun observeThemeMode(): Flow<ThemeMode> = preferencesFlow.map { prefs ->
         val name = prefs[THEME_MODE_KEY]
@@ -51,7 +48,7 @@ class DataStoreUserSettingsRepository @Inject constructor(
         dataStore.edit { prefs -> prefs[APP_LOCK_ENABLED_KEY] = enabled }
     }
 
-    private companion object {
+    internal companion object {
         val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         val MEMO_SORT_ORDER_KEY = stringPreferencesKey("memo_sort_order")
         val APP_LOCK_ENABLED_KEY = booleanPreferencesKey("app_lock_enabled")

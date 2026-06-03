@@ -11,3 +11,8 @@
 .cxx
 local.properties
 fastlane/report.xml
+
+# Release signing (keep secrets out of VCS)
+keystore.properties
+*.jks
+*.keystore

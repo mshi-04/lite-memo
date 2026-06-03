@@ -9,17 +9,47 @@ platform :android do
     )
   end
 
-  desc "Run unit tests"
-  lane :unit_test do
+  desc "Run detekt"
+  lane :detekt do
     gradle(
-      tasks: ["app:testDebugUnitTest"],
+      tasks: ["app:detekt"],
       flags: "--no-daemon"
     )
   end
 
-  desc "Run CI checks (KtLint + Unit Test)"
+  desc "Run Android Lint (prod)"
+  lane :lint do
+    gradle(
+      tasks: ["app:lintProdDebug"],
+      flags: "--no-daemon"
+    )
+  end
+
+  # unit test は JVM 上で実行され R8/minify を通らないため debug variant のみで全テストをカバーする。
+  # release:true のときは R8/minify ビルドが壊れていないかを assembleProdRelease で追加検証する。
+  desc "Run unit tests (debug only by default; pass release:true to also verify the release build)"
+  lane :unit_test do |options|
+    tasks = ["app:testProdDebugUnitTest"]
+    tasks << "app:assembleProdRelease" if options[:release]
+    gradle(
+      tasks: tasks,
+      flags: "--no-daemon"
+    )
+  end
+
+  desc "Run CI checks (KtLint + detekt + Android Lint + Unit Test)"
   lane :ci do
     ktlint
+    detekt
+    lint
     unit_test
+  end
+
+  desc "Run Android UI/Instrumentation tests"
+  lane :android_test do
+    gradle(
+      tasks: ["app:connectedDevDebugAndroidTest"],
+      flags: "--no-daemon"
+    )
   end
 end

@@ -1,7 +1,7 @@
 # Tech Stack
 
-この文書は Lite Memo の導入予定スタックをまとめます。
-導入済みかどうかは、必ず `app/build.gradle.kts` と `gradle/libs.versions.toml` を確認してください。
+この文書は Lite Memo の技術スタックをまとめます。
+バージョンの正確な値は、必ず `app/build.gradle.kts` と `gradle/libs.versions.toml` を確認してください。
 
 ## Android / UI
 
@@ -9,37 +9,75 @@
 - Jetpack Compose
 - Material 3
 - Material 3 `NavigationBar` / Bottom Navigation
+- Material Icons（Core）
 - Navigation Compose
 - ライト / ダークモード
 
 ## DI
 
 - Hilt
+- `hilt-lifecycle-viewmodel-compose`（Compose から ViewModel を注入）
 
 ## State / Async
 
 - StateFlow
 - Coroutines
 
-## Test
-
-- JUnit 5
-
 ## Data
 
-- Room
-- DataStore
+- Room（構造化データ。migration とスキーマエクスポートあり）
+- DataStore（Preferences）
+- kotlinx.serialization（JSON。Export / Import に使用）
 
-Room はメモなどの構造化データに使います。
-DataStore はテーマ、表示設定、初回起動状態などの軽量な設定値に使います。
+Room はメモ・タグなどの構造化データに使います。
+DataStore はテーマ、表示設定、メモ編集の下書きなどの軽量な設定値に使います。
+
+## Security
+
+- androidx.biometric（アプリロック / 生体認証）
+
+## Observability
+
+- Firebase Crashlytics（クラッシュ収集）
+- Google Services Gradle Plugin（flavor ごとの `google-services.json` を処理）
+
+## Test
+
+- JUnit 5（Unit Test）
+- kotlinx-coroutines-test（`runTest`）
+- Compose UI Test / Espresso / Room testing（instrumented test）
+
+## Build
+
+- JDK 17（jvmToolchain）
+- compileSdk 36 / minSdk 28 / targetSdk 36
+- productFlavors: `dev` / `prod`
+- release ビルド: R8 minify + リソース圧縮 + ProGuard
+- Crashlytics Gradle Plugin（release の mapping file upload）
+- KtLint（コード整形）
+- detekt（静的解析。書き方・複雑度 + Compose 特化ルール `io.nlopez.compose.rules`。baseline 運用）
+- Android Lint（Android 特有の問題検出。`warningsAsErrors` + baseline 運用）
+
+## CI
+
+- GitHub Actions
+  - CI: Static Analysis（KtLint / detekt / Android Lint）/ Unit Test / Android Test
+  - Gradle Wrapper Validation（wrapper の改ざん検知）
+  - actionlint（ワークフロー検査）
+  - CodeQL、Dependabot
+- fastlane（`ci` / `ktlint` / `detekt` / `lint` / `unit_test` / `android_test` レーン）
 
 ## Monetization / Release
 
-- AdMob
-- GitHub Actions
-- Google Play 公開
+- AdMob（Google Mobile Ads SDK）
+  - バナー: `LiteMemoApp` のボトムナビゲーション上部に、全タブ共通のアンカー型アダプティブバナーを表示
+  - インタースティシャル: 導入予定（未実装）
+  - アプリ ID / 広告ユニット ID は flavor 別の `strings.xml` で管理
+    - `dev`: Google 公式テスト ID（`app/src/dev/res`）
+    - `prod`: 本番 ID（`app/src/prod/res`）
+- Google Play 公開（未導入・予定）
 
-AdMob、署名、Google Play、リリース設定に関係する秘密情報はコミットしません。
+署名鍵・ストアパスワードなどリリース署名に関する秘密情報はコミットしません。
 
 ## Localization
 

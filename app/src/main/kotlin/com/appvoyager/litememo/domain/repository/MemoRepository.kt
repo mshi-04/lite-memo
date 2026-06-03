@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.domain.repository
 
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
@@ -12,9 +13,6 @@ interface MemoRepository {
 
     fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 
-    /**
-     * 作成日時が [from, to) の半開区間に含まれるメモを監視する。
-     */
     fun observeActiveMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis
@@ -37,5 +35,7 @@ interface MemoRepository {
     suspend fun getAllActiveMemos(): List<Memo>
 
     suspend fun saveAllMemos(memos: List<Memo>)
+
+    suspend fun importAll(tags: List<Tag>, memos: List<Memo>)
 
 }

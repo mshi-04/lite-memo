@@ -6,31 +6,26 @@ import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
 import com.appvoyager.litememo.domain.model.MemoFilter
-import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
-import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
-import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
-import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
-import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,9 +34,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -49,11 +46,8 @@ class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val filterMemosUseCase: FilterMemosUseCase,
-    private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
-    private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
     private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
-    private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
     private val applyMemoBulkActionUseCase: ApplyMemoBulkActionUseCase,
     private val formatMemoTextUseCase: FormatMemoTextUseCase
 ) : ViewModel() {
@@ -61,10 +55,13 @@ class HomeViewModel @Inject constructor(
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
     private val isSearchActive = MutableStateFlow(false)
     private val searchQuery = MutableStateFlow("")
-    private val hasActionError = MutableStateFlow(false)
     private val selection = MutableStateFlow(HomeSelectionUiState())
     private val bulkTagDialog = MutableStateFlow(HomeBulkTagDialogUiState())
-    private val retryTrigger = MutableStateFlow(0)
+    private val retryTrigger = MutableStateFlow(false)
+
+    // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
+    private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
+    val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
     private val searchResults = searchQuery
         .flatMapLatest { query ->
@@ -77,27 +74,19 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-    private val interactionControls = combine(
-        hasActionError,
-        selection,
-        bulkTagDialog
-    ) { actionError, selection, tagDialog ->
-        InteractionControls(actionError, selection, tagDialog)
-    }
-
     private val uiControls = combine(
         selectedFilter,
         isSearchActive,
         searchQuery,
-        interactionControls
-    ) { filter, searching, query, interaction ->
-        UiControls(
+        selection,
+        bulkTagDialog
+    ) { filter, searching, query, activeSelection, tagDialog ->
+        HomeUiControls(
             filter = filter,
             searching = searching,
             query = query,
-            actionError = interaction.actionError,
-            selection = interaction.selection,
-            tagDialog = interaction.tagDialog
+            selection = activeSelection,
+            tagDialog = tagDialog
         )
     }
 
@@ -105,32 +94,35 @@ class HomeViewModel @Inject constructor(
         combine(
             observeMemosUseCase(),
             observeTagsUseCase(),
-            observeMemoSortOrderUseCase(),
             uiControls,
             searchResults
-        ) { memos, tags, sortOrder, controls, searchHits ->
-            val summary = getHomeSummaryUseCase(memos)
+        ) { memos, tags, controls, searchHits ->
             val tagUiModels = tags.map { TagUiModel.fromDomain(it) }
             val effectiveFilter = controls.filter.effectiveFilter(tags)
             val filteredMemos = filterMemosUseCase(memos, effectiveFilter.toDomainFilter())
+            val memoById = memos.associateBy { it.id }
+            val selectedMemos = controls.selection.selectedMemoIds.mapNotNull(memoById::get)
+            val allSelectedFavorite = controls.selection.selectedMemoIds.isNotEmpty() &&
+                controls.selection.selectedMemoIds.all { memoById[it]?.isFavorite == true }
+            val allSelectedTagIds = selectedMemos
+                .takeIf {
+                    it.isNotEmpty() && it.size == controls.selection.selectedMemoIds.size
+                }
+                ?.map { memo -> memo.tagIds.toSet() }
+                ?.reduce { commonTagIds, tagIds -> commonTagIds intersect tagIds }
+                ?: emptySet()
 
             HomeUiState(
                 isLoading = false,
-                hasActionError = controls.actionError,
                 selectedFilter = effectiveFilter,
-                memoSortOrder = sortOrder,
                 isSearchActive = controls.searching,
                 searchQuery = controls.query,
                 hasSearchError = searchHits == null,
                 selection = controls.selection,
+                allSelectedFavorite = allSelectedFavorite,
+                allSelectedTagIds = allSelectedTagIds,
                 bulkTagDialog = controls.tagDialog,
                 tags = tagUiModels,
-                summary = HomeSummaryUiState(
-                    totalCount = summary.totalCount,
-                    todayCount = summary.todayCount,
-                    unorganizedCount = summary.unorganizedCount,
-                    favoriteCount = summary.favoriteCount
-                ),
                 memos = MemoUiModel.fromDomain(filteredMemos, tags),
                 searchResults = MemoUiModel.fromDomain(searchHits ?: emptyList(), tags)
             )
@@ -139,7 +131,6 @@ class HomeViewModel @Inject constructor(
                 HomeUiState(
                     isLoading = false,
                     hasError = true,
-                    hasActionError = hasActionError.value,
                     selectedFilter = selectedFilter.value,
                     isSearchActive = isSearchActive.value,
                     searchQuery = searchQuery.value,
@@ -156,17 +147,6 @@ class HomeViewModel @Inject constructor(
 
     fun selectFilter(filter: HomeFilterUiState) {
         selectedFilter.value = filter
-    }
-
-    fun selectSortOrder(order: MemoSortOrder) {
-        viewModelScope.launch {
-            try {
-                setMemoSortOrderUseCase(order)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-            }
-        }
     }
 
     fun toggleSearch() {
@@ -190,17 +170,15 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
-                hasActionError.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                hasActionError.value = true
+                _actionErrorEvent.trySend(Unit)
             }
         }
     }
 
     fun startSelection(memoId: MemoId) {
-        hasActionError.value = false
         bulkTagDialog.value = HomeBulkTagDialogUiState()
         selection.value = HomeSelectionUiState(selectedMemoIds = setOf(memoId))
     }
@@ -231,24 +209,23 @@ class HomeViewModel @Inject constructor(
         applySelectedMemoAction(MemoBulkAction.setFavorite(isFavorite))
     }
 
-    fun requestAddTagToSelectedMemos() {
-        requestBulkTagOperation(HomeBulkTagDialogUiState.Operation.AddTag)
-    }
-
-    fun requestRemoveTagFromSelectedMemos() {
-        requestBulkTagOperation(HomeBulkTagDialogUiState.Operation.RemoveTag)
+    fun requestToggleTagForSelectedMemos() {
+        if (!selection.value.isActive) return
+        bulkTagDialog.value = HomeBulkTagDialogUiState(isVisible = true)
     }
 
     fun dismissBulkTagDialog() {
         bulkTagDialog.value = HomeBulkTagDialogUiState()
     }
 
-    fun applySelectedTag(tagId: TagId) {
-        val operation = bulkTagDialog.value.operation ?: return
-        val action = when (operation) {
-            HomeBulkTagDialogUiState.Operation.AddTag -> MemoBulkAction.addTag(tagId)
-            HomeBulkTagDialogUiState.Operation.RemoveTag -> MemoBulkAction.removeTag(tagId)
+    fun toggleSelectedMemosTag(tagId: TagId) {
+        if (!bulkTagDialog.value.isVisible) return
+        val action = if (tagId in uiState.value.allSelectedTagIds) {
+            MemoBulkAction.removeTag(tagId)
+        } else {
+            MemoBulkAction.addTag(tagId)
         }
+        bulkTagDialog.value = HomeBulkTagDialogUiState()
         applySelectedMemoAction(action)
     }
 
@@ -260,19 +237,8 @@ class HomeViewModel @Inject constructor(
         return (state.memos + state.searchResults).find { it.id == selectedId.value }
     }
 
-    fun dismissActionError() {
-        hasActionError.value = false
-    }
-
     fun retry() {
-        hasActionError.value = false
-        retryTrigger.update { it + 1 }
-    }
-
-    private fun requestBulkTagOperation(operation: HomeBulkTagDialogUiState.Operation) {
-        if (!selection.value.isActive) return
-        hasActionError.value = false
-        bulkTagDialog.value = HomeBulkTagDialogUiState(operation)
+        retryTrigger.update { !it }
     }
 
     private fun applySelectedMemoAction(action: MemoBulkAction) {
@@ -287,13 +253,12 @@ class HomeViewModel @Inject constructor(
                         action = action
                     )
                 )
-                hasActionError.value = false
                 clearSelection()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
                 bulkTagDialog.value = HomeBulkTagDialogUiState()
-                hasActionError.value = true
+                _actionErrorEvent.trySend(Unit)
             }
         }
     }
@@ -311,20 +276,12 @@ class HomeViewModel @Inject constructor(
         } else {
             this
         }
-
-    private data class UiControls(
-        val filter: HomeFilterUiState,
-        val searching: Boolean,
-        val query: String,
-        val actionError: Boolean,
-        val selection: HomeSelectionUiState,
-        val tagDialog: HomeBulkTagDialogUiState
-    )
-
-    private data class InteractionControls(
-        val actionError: Boolean,
-        val selection: HomeSelectionUiState,
-        val tagDialog: HomeBulkTagDialogUiState
-    )
-
 }
+
+private data class HomeUiControls(
+    val filter: HomeFilterUiState,
+    val searching: Boolean,
+    val query: String,
+    val selection: HomeSelectionUiState,
+    val tagDialog: HomeBulkTagDialogUiState
+)

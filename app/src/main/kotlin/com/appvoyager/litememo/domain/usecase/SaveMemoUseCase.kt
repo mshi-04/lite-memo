@@ -17,6 +17,7 @@ class SaveMemoUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(command: SaveMemoCommand): Memo {
+        // タグやお気に入りだけではメモを保存しない。本文またはタイトルが必須。
         require(command.title.value.isNotBlank() || command.body.value.isNotBlank()) {
             "Memo title or body must not be blank."
         }
@@ -26,12 +27,13 @@ class SaveMemoUseCase @Inject constructor(
         }
         val tagIds = command.tagIds.distinct()
         validateTagIds(tagIds)
+        val createdAt = existingMemo?.createdAt ?: command.createdAt ?: now
         val memo = Memo(
             id = existingMemo?.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
-            createdAt = existingMemo?.createdAt ?: command.createdAt ?: now,
-            updatedAt = now,
+            createdAt = createdAt,
+            updatedAt = if (now.value >= createdAt.value) now else createdAt,
             tagIds = tagIds,
             isFavorite = command.isFavorite
         )

@@ -1,0 +1,5 @@
+<resources>
+    <!-- AdMob: prod フレーバーは本番 ID を使う -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-5896093681909704~8301428359</string>
+    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-5896093681909704/6988346681</string>
+</resources>

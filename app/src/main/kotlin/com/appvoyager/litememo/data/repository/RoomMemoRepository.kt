@@ -1,19 +1,28 @@
 package com.appvoyager.litememo.data.repository
 
+import androidx.annotation.VisibleForTesting
+import androidx.room.withTransaction
+import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
+import com.appvoyager.litememo.data.local.dao.TagDao
 import com.appvoyager.litememo.data.mapper.toDomain
 import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toTagRefs
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.MemoRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : MemoRepository {
+class RoomMemoRepository @Inject constructor(
+    private val memoDao: MemoDao,
+    private val tagDao: TagDao,
+    private val database: LiteMemoDatabase
+) : MemoRepository {
 
     override fun observeActiveMemos(): Flow<List<Memo>> =
         memoDao.observeActiveMemosWithTagRefs().map { memos ->
@@ -31,7 +40,7 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         from: TimestampMillis,
         to: TimestampMillis
     ): Flow<List<Memo>> {
-        require(from.value < to.value) { "from must be earlier than to." }
+        require(from.value <= to.value) { "from must not be later than to." }
         return memoDao
             .observeActiveMemosWithTagRefsCreatedBetween(from.value, to.value)
             .map { memos ->
@@ -79,15 +88,46 @@ class RoomMemoRepository @Inject constructor(private val memoDao: MemoDao) : Mem
         memoDao.getAllActiveMemosWithTagRefs().map { it.toDomain() }
 
     override suspend fun saveAllMemos(memos: List<Memo>) {
-        val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
-            .filterValues { it > 1 }.keys
-        require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
+        requireNoDuplicateMemoIds(memos)
 
         val entities = memos.map { it.toEntity() }
         val tagRefsByMemoId = memos.associate { memo ->
             memo.id.value to memo.toTagRefs()
         }
         memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
+    }
+
+    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
+        database.withTransaction {
+            executeImport(tags, memos)
+        }
+    }
+
+    @VisibleForTesting
+    internal suspend fun executeImport(tags: List<Tag>, memos: List<Memo>) {
+        requireNoDuplicateTagIds(tags)
+        requireNoDuplicateMemoIds(memos)
+
+        val tagEntities = tags.map { it.toEntity() }
+        val entities = memos.map { it.toEntity() }
+        val tagRefsByMemoId = memos.associate { memo ->
+            memo.id.value to memo.toTagRefs()
+        }
+
+        tagDao.upsertAllTags(tagEntities)
+        memoDao.upsertAllMemosWithTags(entities, tagRefsByMemoId)
+    }
+
+    private fun requireNoDuplicateMemoIds(memos: List<Memo>) {
+        val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
+            .filterValues { it > 1 }.keys
+        require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
+    }
+
+    private fun requireNoDuplicateTagIds(tags: List<Tag>) {
+        val duplicateIds = tags.groupingBy { it.id.value }.eachCount()
+            .filterValues { it > 1 }.keys
+        require(duplicateIds.isEmpty()) { "Duplicate tag ids: $duplicateIds" }
     }
 
     private fun String.toEscapedLikePattern(): String = buildString {
