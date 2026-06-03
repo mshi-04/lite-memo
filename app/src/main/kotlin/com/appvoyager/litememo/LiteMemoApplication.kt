@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 @HiltAndroidApp
 class LiteMemoApplication : Application() {
 
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
