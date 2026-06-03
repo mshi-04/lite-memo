@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.component
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -28,34 +29,37 @@ fun BannerAd(modifier: Modifier = Modifier) {
     val adUnitId = stringResource(R.string.admob_banner_unit_id)
     val context = LocalContext.current
     val adWidthDp = LocalConfiguration.current.screenWidthDp
-    val adView = remember(context, adUnitId, adWidthDp) {
-        AdView(context).apply {
-            setAdSize(
-                AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, adWidthDp)
-            )
-            this.adUnitId = adUnitId
-            loadAd(AdRequest.Builder().build())
-        }
-    }
-
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, adView) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_PAUSE -> adView.pause()
-                Lifecycle.Event.ON_RESUME -> adView.resume()
-                else -> Unit
+
+    key(context, adUnitId, adWidthDp) {
+        val adView = remember {
+            AdView(context).apply {
+                setAdSize(
+                    AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, adWidthDp)
+                )
+                this.adUnitId = adUnitId
+                loadAd(AdRequest.Builder().build())
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            adView.destroy()
-        }
-    }
 
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { adView }
-    )
+        DisposableEffect(lifecycleOwner, adView) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_PAUSE -> adView.pause()
+                    Lifecycle.Event.ON_RESUME -> adView.resume()
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                adView.destroy()
+            }
+        }
+
+        AndroidView(
+            modifier = modifier.fillMaxWidth(),
+            factory = { adView }
+        )
+    }
 }
