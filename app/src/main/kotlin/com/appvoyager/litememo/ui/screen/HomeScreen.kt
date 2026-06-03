@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,10 +27,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -72,7 +69,6 @@ import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.component.toDisplayString
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
-import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.state.TagUiModel
@@ -85,7 +81,6 @@ fun HomeScreen(
     onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onFavoriteToggle: (String, Boolean) -> Unit,
     onMemoLongClick: (String) -> Unit,
     onMemoSelectionToggle: (String) -> Unit,
     onClearSelection: () -> Unit,
@@ -127,7 +122,6 @@ fun HomeScreen(
                 onSortOrderSelected = onSortOrderSelected,
                 onSearchToggle = onSearchToggle,
                 onSearchQueryChanged = onSearchQueryChanged,
-                onFavoriteToggle = onFavoriteToggle,
                 onMemoLongClick = onMemoLongClick,
                 onMemoSelectionToggle = onMemoSelectionToggle,
                 onClearSelection = onClearSelection,
@@ -156,7 +150,6 @@ private fun HomeContent(
     onSortOrderSelected: (MemoSortOrder) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onFavoriteToggle: (String, Boolean) -> Unit,
     onMemoLongClick: (String) -> Unit,
     onMemoSelectionToggle: (String) -> Unit,
     onClearSelection: () -> Unit,
@@ -168,6 +161,9 @@ private fun HomeContent(
     onMemoClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val allSelectedFavorite = (uiState.memos + uiState.searchResults)
+        .filter { uiState.selection.contains(MemoId(it.id)) }
+        .let { selected -> selected.isNotEmpty() && selected.all { it.isFavorite } }
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -177,10 +173,10 @@ private fun HomeContent(
             if (uiState.selection.isActive) {
                 HomeSelectionToolbar(
                     selectedCount = uiState.selection.selectedCount,
+                    allSelectedFavorite = allSelectedFavorite,
                     onClearSelection = onClearSelection,
                     onMoveToTrash = onMoveSelectedMemosToTrash,
-                    onAddFavorite = { onSetSelectedMemosFavorite(true) },
-                    onRemoveFavorite = { onSetSelectedMemosFavorite(false) },
+                    onToggleFavorite = { onSetSelectedMemosFavorite(!allSelectedFavorite) },
                     onAddTag = onRequestAddTagToSelectedMemos,
                     onRemoveTag = onRequestRemoveTagFromSelectedMemos,
                     onShareSelectedMemo = onShareSelectedMemo
@@ -227,29 +223,11 @@ private fun HomeContent(
                         selected = uiState.selection.contains(MemoId(memo.id)),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
-                        onFavoriteToggle = onFavoriteToggle,
                         onMemoLongClick = onMemoLongClick
                     )
                 }
             }
         } else {
-            item {
-                Text(
-                    text = stringResource(R.string.welcome_back),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.recent_memos),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            item {
-                SummaryCard(summary = uiState.summary)
-            }
             item {
                 HomeFilterAndSortRow(
                     selectedFilter = uiState.selectedFilter,
@@ -274,7 +252,6 @@ private fun HomeContent(
                         selected = uiState.selection.contains(MemoId(memo.id)),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
-                        onFavoriteToggle = onFavoriteToggle,
                         onMemoLongClick = onMemoLongClick
                     )
                 }
@@ -290,7 +267,6 @@ private fun SelectableMemoCard(
     selected: Boolean,
     onMemoClick: (String) -> Unit,
     onMemoSelectionToggle: (String) -> Unit,
-    onFavoriteToggle: (String, Boolean) -> Unit,
     onMemoLongClick: (String) -> Unit
 ) {
     MemoCard(
@@ -301,11 +277,6 @@ private fun SelectableMemoCard(
             } else {
                 onMemoClick(memo.id)
             }
-        },
-        onFavoriteToggle = if (isSelectionActive) {
-            null
-        } else {
-            { onFavoriteToggle(memo.id, !memo.isFavorite) }
         },
         onLongClick = { onMemoLongClick(memo.id) },
         selected = selected
@@ -387,10 +358,10 @@ private fun HomeTopBar(
 @Composable
 private fun HomeSelectionToolbar(
     selectedCount: Int,
+    allSelectedFavorite: Boolean,
     onClearSelection: () -> Unit,
     onMoveToTrash: () -> Unit,
-    onAddFavorite: () -> Unit,
-    onRemoveFavorite: () -> Unit,
+    onToggleFavorite: () -> Unit,
     onAddTag: () -> Unit,
     onRemoveTag: () -> Unit,
     onShareSelectedMemo: () -> Unit
@@ -424,19 +395,18 @@ private fun HomeSelectionToolbar(
                     tint = MaterialTheme.colorScheme.error
                 )
             }
-            IconButton(onClick = onAddFavorite) {
+            IconButton(onClick = onToggleFavorite) {
                 Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = stringResource(R.string.add_selected_memos_to_favorite)
-                )
-            }
-            IconButton(onClick = onRemoveFavorite) {
-                Icon(
-                    imageVector = Icons.Outlined.Star,
-                    contentDescription = stringResource(
-                        R.string.remove_selected_memos_from_favorite
-                    ),
-                    tint = MaterialTheme.colorScheme.outline
+                    imageVector = if (allSelectedFavorite) {
+                        Icons.Default.Star
+                    } else {
+                        Icons.Default.StarBorder
+                    },
+                    contentDescription = if (allSelectedFavorite) {
+                        stringResource(R.string.remove_selected_memos_from_favorite)
+                    } else {
+                        stringResource(R.string.add_selected_memos_to_favorite)
+                    }
                 )
             }
             SelectionMoreMenu(
@@ -547,67 +517,6 @@ private fun HomeBulkTagDialog(
             }
         }
     )
-}
-
-@Composable
-private fun SummaryCard(summary: HomeSummaryUiState) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.memo_count, summary.totalCount),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(
-                        R.string.home_summary_detail,
-                        summary.unorganizedCount,
-                        summary.favoriteCount
-                    ),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            TodayCountBox(todayCount = summary.todayCount)
-        }
-    }
-}
-
-@Composable
-private fun TodayCountBox(todayCount: Int) {
-    Column(
-        modifier = Modifier
-            .size(width = 72.dp, height = 60.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = todayCount.toString(),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = stringResource(R.string.today_label),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelMedium
-        )
-    }
 }
 
 @Composable
@@ -739,7 +648,6 @@ private fun HomeScreenPreview() {
             onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
-            onFavoriteToggle = { _, _ -> },
             onMemoLongClick = {},
             onMemoSelectionToggle = {},
             onClearSelection = {},
@@ -770,7 +678,6 @@ private fun HomeScreenDarkPreview() {
             onSortOrderSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
-            onFavoriteToggle = { _, _ -> },
             onMemoLongClick = {},
             onMemoSelectionToggle = {},
             onClearSelection = {},
@@ -793,12 +700,6 @@ private fun previewHomeState() = HomeUiState(
     tags = listOf(
         TagUiModel("tag-life", "生活", 0xFF6750A4),
         TagUiModel("tag-work", "仕事", 0xFFB3261E)
-    ),
-    summary = HomeSummaryUiState(
-        totalCount = 4,
-        todayCount = 2,
-        unorganizedCount = 2,
-        favoriteCount = 1
     ),
     memos = listOf(
         MemoUiModel(

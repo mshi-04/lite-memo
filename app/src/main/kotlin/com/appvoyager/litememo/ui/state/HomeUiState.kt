@@ -13,7 +13,6 @@ data class HomeUiState(
     val selection: HomeSelectionUiState = HomeSelectionUiState(),
     val bulkTagDialog: HomeBulkTagDialogUiState = HomeBulkTagDialogUiState(),
     val tags: List<TagUiModel> = emptyList(),
-    val summary: HomeSummaryUiState = HomeSummaryUiState(),
     val memos: List<MemoUiModel> = emptyList(),
     val searchResults: List<MemoUiModel> = emptyList()
 )

@@ -15,12 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,7 +45,6 @@ fun MemoCard(
     memo: MemoUiModel,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onFavoriteToggle: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     selected: Boolean = false
 ) {
@@ -87,7 +83,7 @@ fun MemoCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 18.dp, top = 14.dp, end = 14.dp, bottom = 14.dp)
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -105,33 +101,13 @@ fun MemoCard(
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                    } else if (onFavoriteToggle != null) {
-                        IconButton(onClick = onFavoriteToggle) {
-                            Icon(
-                                imageVector = if (memo.isFavorite) {
-                                    Icons.Default.Star
-                                } else {
-                                    Icons.Outlined.Star
-                                },
-                                contentDescription = if (memo.isFavorite) {
-                                    stringResource(R.string.remove_favorite_memo)
-                                } else {
-                                    stringResource(R.string.add_favorite_memo)
-                                },
-                                tint = if (memo.isFavorite) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.outline
-                                }
-                            )
-                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = memo.body,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -167,11 +143,8 @@ private fun MemoTag(tag: TagUiModel?) {
 }
 
 @Composable
-private fun memoAccentColor(memo: MemoUiModel): Color {
-    if (memo.isFavorite) return MaterialTheme.colorScheme.error
-    return memo.tags.firstOrNull()?.toComposeColor()
-        ?: MaterialTheme.colorScheme.primary
-}
+private fun memoAccentColor(memo: MemoUiModel): Color = memo.tags.firstOrNull()?.toComposeColor()
+    ?: MaterialTheme.colorScheme.primary
 
 @Composable
 private fun updatedAtLabel(updatedAtMillis: Long): String {
