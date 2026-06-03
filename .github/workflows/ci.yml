@@ -19,8 +19,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ktlint:
-    name: KtLint
+  static-analysis:
+    name: Static Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -52,6 +52,12 @@ jobs:
 
       - name: Run KtLint
         run: bundle exec fastlane android ktlint
+
+      - name: Run detekt
+        run: bundle exec fastlane android detekt
+
+      - name: Run Android Lint
+        run: bundle exec fastlane android lint
 
   unit-test:
     name: Unit Test
@@ -164,3 +170,29 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bundle exec fastlane android android_test
+
+  wrapper-validation:
+    name: Gradle Wrapper Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run actionlint
+        uses: raven-actions/actionlint@205b530c5d9fa8f44ae9ed59f341a0db994aa6f8 # v2.1.2

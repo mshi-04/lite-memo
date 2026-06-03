@@ -1,6 +1,10 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.google.services)
     alias(libs.plugins.hilt)
@@ -9,6 +13,21 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
 }
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties =
+    Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            keystorePropertiesFile.inputStream().use { load(it) }
+            val requiredKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+            val missingKeys = requiredKeys.filter { getProperty(it).isNullOrBlank() }
+            if (missingKeys.isNotEmpty()) {
+                throw GradleException(
+                    "keystore.properties に必須キーがありません: ${missingKeys.joinToString()}"
+                )
+            }
+        }
+    }
 
 android {
     namespace = "com.appvoyager.litememo"
@@ -29,6 +48,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     flavorDimensions += "environment"
     productFlavors {
         create("dev") {
@@ -43,6 +73,9 @@ android {
 
     buildTypes {
         release {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -60,6 +93,12 @@ android {
             it.useJUnitPlatform()
         }
     }
+    lint {
+        warningsAsErrors = true
+        abortOnError = true
+        baseline = file("lint-baseline.xml")
+        disable += setOf("NewerVersionAvailable", "GradleDependency", "AndroidGradlePluginVersion")
+    }
 }
 
 kotlin {
@@ -70,6 +109,50 @@ ktlint {
     android.set(true)
     version.set(libs.versions.ktlintCli)
     outputToConsole.set(true)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+}
+
+val preCommitFilesProperty = providers.gradleProperty("preCommitFiles")
+
+tasks.register<Detekt>("detektPreCommit") {
+    description = "Runs detekt only on files passed via -PpreCommitFiles."
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline.set(rootProject.file("config/detekt/baseline.xml"))
+    val files =
+        preCommitFilesProperty.orNull
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.map { rootProject.file(it) }
+            .orEmpty()
+    setSource(files)
+    onlyIf { files.isNotEmpty() }
+}
+
+val ktlintCliConfiguration: Configuration by configurations.creating
+dependencies {
+    ktlintCliConfiguration(libs.ktlint.cli)
+}
+
+tasks.register<JavaExec>("ktlintFormatPreCommit") {
+    description = "Formats files passed via -PpreCommitFiles using the ktlint CLI."
+    classpath = ktlintCliConfiguration
+    mainClass.set("com.pinterest.ktlint.Main")
+    val files =
+        preCommitFilesProperty.orNull
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.map { rootProject.file(it).absolutePath }
+            .orEmpty()
+    args = listOf("--format") + files
+    onlyIf { files.isNotEmpty() }
 }
 
 room {
@@ -134,4 +217,7 @@ dependencies {
 
     // Debug tooling
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Static analysis
+    detektPlugins(libs.detekt.compose.rules)
 }

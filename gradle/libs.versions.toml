@@ -1,6 +1,8 @@
 [versions]
 # Build plugins
 agp = "9.2.1"
+composeRulesDetekt = "0.4.23"
+detekt = "1.23.8"
 firebaseBom = "34.14.0"
 firebaseCrashlyticsPlugin = "3.0.7"
 googleServices = "4.4.4"
@@ -78,6 +80,10 @@ hilt-lifecycle-viewmodel-compose = { group = "androidx.hilt", name = "hilt-lifec
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
+# Static analysis
+detekt-compose-rules = { group = "io.nlopez.compose.rules", name = "detekt", version.ref = "composeRulesDetekt" }
+ktlint-cli = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "ktlintCli" }
+
 # Ads
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 
@@ -90,6 +96,7 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 # Build plugins
 android-application = { id = "com.android.application", version.ref = "agp" }
 androidx-room = { id = "androidx.room", version.ref = "room" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
