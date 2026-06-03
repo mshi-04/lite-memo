@@ -41,12 +41,6 @@ class ExportFileReader @Inject constructor(
         }
     }
 
-    /**
-     * Returns the file size in bytes, or null if it cannot be determined.
-     *
-     * Prefers SAF's [OpenableColumns.SIZE] (the reliable source for `content://` URIs),
-     * and falls back to the asset file descriptor length for schemes such as `file://`.
-     */
     private fun fileSize(uri: Uri): Long? {
         val sizeFromColumns = context.contentResolver
             .query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)

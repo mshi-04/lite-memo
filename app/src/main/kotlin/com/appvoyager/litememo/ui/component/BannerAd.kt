@@ -18,12 +18,6 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 
-/**
- * AdMob のアンカー型アダプティブバナーを表示する。
- * 広告ユニット ID は文字列リソースで管理し、flavor ごとにテスト/本番 ID を切り替える。
- * AdView はライフサイクルに合わせて pause/resume/destroy し、
- * バックグラウンド中の不要なリフレッシュやリークを防ぐ。
- */
 @Composable
 fun BannerAd(modifier: Modifier = Modifier) {
     val adUnitId = stringResource(R.string.admob_banner_unit_id)

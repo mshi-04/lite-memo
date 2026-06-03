@@ -13,9 +13,6 @@ interface MemoRepository {
 
     fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 
-    /**
-     * 作成日時が [from, to) の半開区間に含まれるメモを監視する。
-     */
     fun observeActiveMemosCreatedBetween(
         from: TimestampMillis,
         to: TimestampMillis

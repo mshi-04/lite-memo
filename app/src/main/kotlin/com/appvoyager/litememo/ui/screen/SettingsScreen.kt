@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.screen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -67,12 +68,15 @@ fun SettingsScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 24.dp,
+                top = 16.dp,
+                end = 24.dp,
+                bottom = 48.dp
+            )
         ) {
             item {
-                Spacer(modifier = Modifier.height(16.dp))
                 SectionHeader(text = stringResource(R.string.settings_section_display))
                 Spacer(modifier = Modifier.height(8.dp))
             }

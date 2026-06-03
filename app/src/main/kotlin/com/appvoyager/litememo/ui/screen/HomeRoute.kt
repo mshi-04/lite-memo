@@ -28,7 +28,10 @@ fun HomeRoute(
     val actionErrorMessage = stringResource(R.string.home_bulk_action_error_body)
 
     DisposableEffect(viewModel) {
-        onDispose { viewModel.closeSearch() }
+        onDispose {
+            viewModel.closeSearch()
+            viewModel.clearSelection()
+        }
     }
 
     LaunchedEffect(viewModel, snackbarHostState, actionErrorMessage) {
@@ -43,7 +46,6 @@ fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onFilterSelected = { filter -> viewModel.selectFilter(filter) },
-        onSortOrderSelected = { order -> viewModel.selectSortOrder(order) },
         onSearchToggle = { viewModel.toggleSearch() },
         onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
         onMemoLongClick = { memoId -> viewModel.startSelection(MemoId(memoId)) },
@@ -53,9 +55,8 @@ fun HomeRoute(
         onSetSelectedMemosFavorite = { isFavorite ->
             viewModel.setSelectedMemosFavorite(isFavorite)
         },
-        onRequestAddTagToSelectedMemos = { viewModel.requestAddTagToSelectedMemos() },
-        onRequestRemoveTagFromSelectedMemos = { viewModel.requestRemoveTagFromSelectedMemos() },
-        onApplySelectedTag = { tagId -> viewModel.applySelectedTag(tagId) },
+        onRequestToggleTagForSelectedMemos = { viewModel.requestToggleTagForSelectedMemos() },
+        onToggleSelectedMemosTag = { tagId -> viewModel.toggleSelectedMemosTag(tagId) },
         onDismissBulkTagDialog = { viewModel.dismissBulkTagDialog() },
         onShareSelectedMemo = {
             val memo = viewModel.getSelectedMemoForShare() ?: return@HomeScreen
