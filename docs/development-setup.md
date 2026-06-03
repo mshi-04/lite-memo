@@ -78,3 +78,8 @@ Gradle から直接実行する場合は次のとおりです。
 ./gradlew detekt
 ./gradlew :app:lintProdDebug
 ```
+
+## CI キャッシュ
+
+GitHub Actions の Gradle / AVD キャッシュは、長期運用する `main` / `develop` の push で作成します。
+Pull Request では既存キャッシュの復元だけを行い、PR 固有の `refs/pull/.../merge` に重いキャッシュを作らないようにします。
