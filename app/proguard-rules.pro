@@ -12,13 +12,12 @@
 #   public *;
 #}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Preserve line number information for debugging stack traces
+# (required for readable Crashlytics reports when minify is enabled).
+-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Hide the original source file name while keeping line numbers.
+-renamesourcefileattribute SourceFile
 
 # kotlinx.serialization
 -keepattributes *Annotation*, InnerClasses
