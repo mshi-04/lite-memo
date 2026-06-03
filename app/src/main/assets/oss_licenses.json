@@ -15,6 +15,11 @@
     "url": "https://developer.android.com/jetpack/androidx/releases/datastore"
   },
   {
+    "name": "Google Mobile Ads SDK",
+    "license": "AdMob Terms of Service",
+    "url": "https://developers.google.com/admob/android/sdk"
+  },
+  {
     "name": "Hilt",
     "license": "Apache License 2.0",
     "url": "https://dagger.dev/hilt/"
@@ -43,6 +48,11 @@
     "name": "Material 3",
     "license": "Apache License 2.0",
     "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3"
+  },
+  {
+    "name": "Material Icons Extended",
+    "license": "Apache License 2.0",
+    "url": "https://developer.android.com/jetpack/androidx/releases/compose-material"
   },
   {
     "name": "Navigation Compose",

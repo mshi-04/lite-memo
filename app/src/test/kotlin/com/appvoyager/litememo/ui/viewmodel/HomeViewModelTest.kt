@@ -16,7 +16,6 @@ import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
-import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
@@ -43,7 +42,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
@@ -84,24 +82,6 @@ class HomeViewModelTest {
 
         // Assert
         assertEquals("買い物リスト", state.memos.single().title)
-    }
-
-    @Test
-    fun uiStateContainsSummaryFromAllMemos() = runTest(dispatcher) {
-        // Arrange
-        val viewModel = homeViewModel(
-            memos = listOf(
-                memoFixture(id = "normal", updatedAt = today),
-                memoFixture(id = "Favorite", updatedAt = today, isFavorite = true)
-            )
-        )
-
-        // Act
-        advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.isLoading }
-
-        // Assert
-        assertEquals(2, state.summary.totalCount)
     }
 
     @Test
@@ -345,6 +325,92 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun uiStateMarksAllSelectedFavoriteWhenEverySelectedMemoIsFavorite() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1", isFavorite = true),
+                memoFixture(id = "memo-2", isFavorite = true)
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
+
+        // Assert
+        assertTrue(state.allSelectedFavorite)
+    }
+
+    @Test
+    fun uiStateDoesNotMarkAllSelectedFavoriteWhenSelectionIsMixed() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "memo-1", isFavorite = true),
+                memoFixture(id = "memo-2", isFavorite = false)
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.toggleMemoSelection(MemoId("memo-2"))
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(MemoId("memo-1"), MemoId("memo-2"))
+        }
+
+        // Assert
+        assertEquals(false, state.allSelectedFavorite)
+    }
+
+    @Test
+    fun uiStateKeepsMixedFavoriteSelectionWhenNonFavoriteMemoIsFilteredOut() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "favorite", isFavorite = true),
+                memoFixture(id = "normal", isFavorite = false)
+            )
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("favorite"))
+        viewModel.toggleMemoSelection(MemoId("normal"))
+
+        // Act
+        viewModel.selectFilter(HomeFilterUiState.Favorite)
+        advanceUntilIdle()
+        val state = viewModel.uiState.first {
+            it.selectedFilter == HomeFilterUiState.Favorite &&
+                it.selection.selectedMemoIds == setOf(MemoId("favorite"), MemoId("normal"))
+        }
+
+        // Assert
+        assertEquals(false, state.allSelectedFavorite)
+    }
+
+    @Test
+    fun uiStateDoesNotMarkAllSelectedFavoriteWhenNoMemoIsSelected() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1", isFavorite = true))
+        )
+
+        // Act
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(false, state.allSelectedFavorite)
+    }
+
+    @Test
     fun requestAddTagToSelectedMemosShowsTagDialog() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
@@ -551,10 +617,6 @@ class HomeViewModelTest {
             observeMemosUseCase = ObserveMemosUseCase(memoRepository, userSettingsRepository),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             filterMemosUseCase = FilterMemosUseCase(),
-            getHomeSummaryUseCase = GetHomeSummaryUseCase(
-                currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
-                zoneId = ZoneId.of("UTC")
-            ),
             observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
             searchMemosUseCase = SearchMemosUseCase(memoRepository, userSettingsRepository),
             setMemoFavoriteUseCase = SetMemoFavoriteUseCase(

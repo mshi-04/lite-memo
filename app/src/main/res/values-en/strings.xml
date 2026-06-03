@@ -28,14 +28,8 @@
     <string name="app_lock_auth_unavailable">Device authentication is currently unavailable.</string>
 
     <!-- Home -->
-    <string name="welcome_back">Welcome back</string>
-    <string name="recent_memos">Recent memos</string>
-    <string name="memo_count">%1$d memos</string>
-    <string name="home_summary_detail">Unorganized %1$d / Favorites %2$d</string>
     <string name="filter_all">All</string>
     <string name="filter_favorite">Favorites</string>
-    <string name="add_favorite_memo">Add to favorites</string>
-    <string name="remove_favorite_memo">Remove from favorites</string>
     <string name="selected_memo">Selected memo</string>
     <string name="selected_memo_count">%1$d selected</string>
     <string name="clear_selection">Clear selection</string>

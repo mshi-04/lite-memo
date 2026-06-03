@@ -13,7 +13,6 @@ import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.usecase.ApplyMemoBulkActionUseCase
 import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
-import com.appvoyager.litememo.domain.usecase.GetHomeSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
@@ -23,7 +22,6 @@ import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
-import com.appvoyager.litememo.ui.state.HomeSummaryUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.state.TagUiModel
@@ -51,7 +49,6 @@ class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val filterMemosUseCase: FilterMemosUseCase,
-    private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
     private val observeMemoSortOrderUseCase: ObserveMemoSortOrderUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
     private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
@@ -106,10 +103,12 @@ class HomeViewModel @Inject constructor(
             uiControls,
             searchResults
         ) { memos, tags, sortOrder, controls, searchHits ->
-            val summary = getHomeSummaryUseCase(memos)
             val tagUiModels = tags.map { TagUiModel.fromDomain(it) }
             val effectiveFilter = controls.filter.effectiveFilter(tags)
             val filteredMemos = filterMemosUseCase(memos, effectiveFilter.toDomainFilter())
+            val memoById = memos.associateBy { it.id }
+            val allSelectedFavorite = controls.selection.selectedMemoIds.isNotEmpty() &&
+                controls.selection.selectedMemoIds.all { memoById[it]?.isFavorite == true }
 
             HomeUiState(
                 isLoading = false,
@@ -119,14 +118,9 @@ class HomeViewModel @Inject constructor(
                 searchQuery = controls.query,
                 hasSearchError = searchHits == null,
                 selection = controls.selection,
+                allSelectedFavorite = allSelectedFavorite,
                 bulkTagDialog = controls.tagDialog,
                 tags = tagUiModels,
-                summary = HomeSummaryUiState(
-                    totalCount = summary.totalCount,
-                    todayCount = summary.todayCount,
-                    unorganizedCount = summary.unorganizedCount,
-                    favoriteCount = summary.favoriteCount
-                ),
                 memos = MemoUiModel.fromDomain(filteredMemos, tags),
                 searchResults = MemoUiModel.fromDomain(searchHits ?: emptyList(), tags)
             )

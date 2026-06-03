@@ -28,14 +28,8 @@
     <string name="app_lock_auth_unavailable">現在、端末認証を利用できません。</string>
 
     <!-- Home -->
-    <string name="welcome_back">おかえりなさい</string>
-    <string name="recent_memos">最近のメモ</string>
-    <string name="memo_count">%1$d件のメモ</string>
-    <string name="home_summary_detail">未整理 %1$d件 / お気に入り %2$d件</string>
     <string name="filter_all">すべて</string>
     <string name="filter_favorite">お気に入り</string>
-    <string name="add_favorite_memo">お気に入りに追加</string>
-    <string name="remove_favorite_memo">お気に入りから削除</string>
     <string name="selected_memo">選択済みメモ</string>
     <string name="selected_memo_count">%1$d件選択中</string>
     <string name="clear_selection">選択を解除</string>
