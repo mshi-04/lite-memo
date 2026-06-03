@@ -42,7 +42,6 @@ class ExportFileReader @Inject constructor(
     }
 
     private fun fileSize(uri: Uri): Long? {
-        // content:// は SAF の SIZE を優先し、取得できない URI だけ descriptor に倒す。
         val sizeFromColumns = context.contentResolver
             .query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)
             ?.use { cursor ->

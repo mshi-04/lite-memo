@@ -445,6 +445,27 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun toggleSelectedMemosTagClosesTagDialogImmediately() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = "memo-1")),
+            tags = listOf(tagFixture(id = tagId.value))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.requestToggleTagForSelectedMemos()
+        viewModel.uiState.first { it.bulkTagDialog.isVisible }
+
+        // Act
+        viewModel.toggleSelectedMemosTag(tagId)
+        val state = viewModel.uiState.first { !it.bulkTagDialog.isVisible }
+
+        // Assert
+        assertEquals(false, state.bulkTagDialog.isVisible)
+    }
+
+    @Test
     fun uiStateMarksTagSelectedWhenEverySelectedMemoHasTag() = runTest(dispatcher) {
         // Arrange
         val tagId = TagId("tag-1")

@@ -225,6 +225,7 @@ class HomeViewModel @Inject constructor(
         } else {
             MemoBulkAction.addTag(tagId)
         }
+        bulkTagDialog.value = HomeBulkTagDialogUiState()
         applySelectedMemoAction(action)
     }
 
