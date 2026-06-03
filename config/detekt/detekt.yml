@@ -1,0 +1,15 @@
+build:
+  maxIssues: 0
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - "Composable"
+
+style:
+  UnusedPrivateMember:
+    ignoreAnnotated:
+      - "Preview"
+
+Compose:
+  active: true
