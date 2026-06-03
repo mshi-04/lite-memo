@@ -158,7 +158,6 @@ class TagManageViewModel @Inject constructor(
         retryTrigger.update { !it }
     }
 
-    // 同名タグ(自分自身を除く)が既に存在するかを判定する
     private fun isDuplicateName(name: String, excludeId: String?): Boolean =
         uiState.value.tags.any { it.name == name && it.id != excludeId }
 }

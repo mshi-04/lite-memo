@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.ui.state
 
-/** タグ作成時に選択できる既定の色パレット(ARGB)。 */
 internal val DEFAULT_TAG_COLORS: List<Long> = listOf(
     0xFF6750A4,
     0xFFB3261E,
