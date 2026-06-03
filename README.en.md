@@ -39,7 +39,7 @@ It is built around Kotlin / Jetpack Compose / Material 3, following Clean Archit
 
 ## Project Structure
 
-```
+```text
 app/src/main/kotlin/com/appvoyager/litememo/
 ├── ui/      Compose screens, ViewModels, UI state, navigation, theme
 ├── domain/  models, value objects, use cases, repository interfaces

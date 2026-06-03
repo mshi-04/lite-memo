@@ -17,6 +17,13 @@ val keystoreProperties =
     Properties().apply {
         if (keystorePropertiesFile.exists()) {
             keystorePropertiesFile.inputStream().use { load(it) }
+            val requiredKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+            val missingKeys = requiredKeys.filter { getProperty(it).isNullOrBlank() }
+            if (missingKeys.isNotEmpty()) {
+                throw GradleException(
+                    "keystore.properties に必須キーがありません: ${missingKeys.joinToString()}"
+                )
+            }
         }
     }
 

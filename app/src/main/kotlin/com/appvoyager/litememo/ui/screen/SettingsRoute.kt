@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-// TODO: リリース前に正式なプライバシーポリシー URL に必ず差し替える
-private const val PRIVACY_POLICY_URL = "https://example.com/privacy-policy"
+// GitHub Pages (docs/privacy/) で公開しているプライバシーポリシー
+private const val PRIVACY_POLICY_URL = "https://mshi-04.github.io/lite-memo/privacy/"
 
 private fun defaultExportFileName(): String {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
