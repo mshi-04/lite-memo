@@ -97,7 +97,7 @@ android {
         warningsAsErrors = true
         abortOnError = true
         baseline = file("lint-baseline.xml")
-        disable += setOf("NewerVersionAvailable", "GradleDependency")
+        disable += setOf("NewerVersionAvailable", "GradleDependency", "AndroidGradlePluginVersion")
     }
 }
 
