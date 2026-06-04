@@ -57,7 +57,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build
-        run: ./gradlew clean :app:assembleDebug --no-daemon --no-build-cache
+        run: ./gradlew clean :app:assembleDebug --no-daemon --no-build-cache -Dkotlin.compiler.execution.strategy=in-process
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
