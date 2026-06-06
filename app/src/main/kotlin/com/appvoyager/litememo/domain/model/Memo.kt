@@ -21,8 +21,8 @@ data class Memo(
         require(updatedAt.value >= createdAt.value) {
             "Memo updatedAt must be greater than or equal to createdAt."
         }
-        require(deletedAt == null || deletedAt.value >= createdAt.value) {
-            "Memo deletedAt must be greater than or equal to createdAt."
+        require(deletedAt == null || deletedAt.value >= updatedAt.value) {
+            "Memo deletedAt must be greater than or equal to updatedAt."
         }
     }
 

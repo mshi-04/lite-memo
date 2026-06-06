@@ -1,7 +1,7 @@
 package com.appvoyager.litememo.domain.usecase
 
+import com.appvoyager.litememo.domain.model.updatedAtFrom
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import javax.inject.Inject
@@ -16,7 +16,7 @@ class MoveMemoToTrashUseCase @Inject constructor(
             "Memo not found: ${id.value}"
         }
         val now = currentTimeProvider.now()
-        val deletedAt = TimestampMillis(maxOf(now.value, memo.createdAt.value))
+        val deletedAt = memo.updatedAtFrom(now)
         memoRepository.moveMemoToTrash(id, deletedAt)
         return id
     }

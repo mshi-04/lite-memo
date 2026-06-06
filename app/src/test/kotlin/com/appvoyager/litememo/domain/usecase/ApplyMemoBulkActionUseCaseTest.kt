@@ -43,6 +43,29 @@ class ApplyMemoBulkActionUseCaseTest {
     }
 
     @Test
+    fun invokeKeepsExistingUpdatedAtForTrashWhenCurrentTimeIsEarlierThanUpdatedAt() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository(
+            listOf(memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 5000L))
+        )
+        val useCase = applyMemoBulkActionUseCase(
+            memoRepository = repository,
+            now = TimestampMillis(3000L)
+        )
+
+        // Act
+        useCase(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("memo-1")),
+                action = MemoBulkAction.moveToTrash()
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), repository.movedToTrash.single().deletedAt)
+    }
+
+    @Test
     fun invokeSavesFavoriteUpdatesInInputOrder() = runTest {
         // Arrange
         val repository = FakeMemoRepository(
