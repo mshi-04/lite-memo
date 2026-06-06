@@ -254,12 +254,21 @@ private fun TrashedMemoList(
             TrashedMemoCard(
                 memo = memo,
                 selection = TrashedMemoCardSelection(
-                    isActive = uiState.selection.isActive,
                     selected = uiState.selection.contains(memo.id)
                 ),
                 actions = TrashedMemoCardActions(
-                    onLongClick = { actions.onMemoLongClick(memo.id) },
-                    onSelectionToggle = { actions.onMemoSelectionToggle(memo.id) }
+                    onClick = {
+                        if (uiState.selection.isActive) {
+                            actions.onMemoSelectionToggle(memo.id)
+                        }
+                    },
+                    onLongClick = {
+                        if (uiState.selection.isActive) {
+                            actions.onMemoSelectionToggle(memo.id)
+                        } else {
+                            actions.onMemoLongClick(memo.id)
+                        }
+                    }
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -291,11 +300,7 @@ private fun TrashedMemoCard(
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = border,
         modifier = modifier.combinedClickable(
-            onClick = {
-                if (selection.isActive) {
-                    actions.onSelectionToggle()
-                }
-            },
+            onClick = actions.onClick,
             onLongClick = actions.onLongClick,
             role = Role.Button
         )
@@ -332,12 +337,9 @@ private fun TrashedMemoCard(
     }
 }
 
-private data class TrashedMemoCardSelection(val isActive: Boolean, val selected: Boolean)
+private data class TrashedMemoCardSelection(val selected: Boolean)
 
-private data class TrashedMemoCardActions(
-    val onLongClick: () -> Unit,
-    val onSelectionToggle: () -> Unit
-)
+private data class TrashedMemoCardActions(val onClick: () -> Unit, val onLongClick: () -> Unit)
 
 @Composable
 private fun EmptyTrashConfirmDialog(actions: TrashScreenActions) {
