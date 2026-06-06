@@ -88,6 +88,29 @@ class ApplyMemoBulkActionUseCaseTest {
     }
 
     @Test
+    fun invokeKeepsExistingUpdatedAtForFavoriteWhenCurrentTimeIsEarlierThanUpdatedAt() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository(
+            listOf(memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 5000L))
+        )
+        val useCase = applyMemoBulkActionUseCase(
+            memoRepository = repository,
+            now = TimestampMillis(3000L)
+        )
+
+        // Act
+        useCase(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("memo-1")),
+                action = MemoBulkAction.setFavorite(true)
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), repository.savedMemos.single().updatedAt)
+    }
+
+    @Test
     fun invokeAddsTagInInputOrder() = runTest {
         // Arrange
         val tagId = TagId("tag-1")
@@ -136,6 +159,31 @@ class ApplyMemoBulkActionUseCaseTest {
 
         // Assert
         assertEquals(TimestampMillis(3000L), repository.savedMemos.single().updatedAt)
+    }
+
+    @Test
+    fun invokeKeepsExistingUpdatedAtForAddTagWhenCurrentTimeIsEarlierThanUpdatedAt() = runTest {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val repository = FakeMemoRepository(
+            listOf(memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 5000L))
+        )
+        val useCase = applyMemoBulkActionUseCase(
+            memoRepository = repository,
+            tagRepository = FakeTagRepository(listOf(tagFixture(id = tagId.value))),
+            now = TimestampMillis(3000L)
+        )
+
+        // Act
+        useCase(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("memo-1")),
+                action = MemoBulkAction.addTag(tagId)
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), repository.savedMemos.single().updatedAt)
     }
 
     @Test
@@ -189,6 +237,38 @@ class ApplyMemoBulkActionUseCaseTest {
 
         // Assert
         assertEquals(TimestampMillis(3000L), repository.savedMemos.single().updatedAt)
+    }
+
+    @Test
+    fun invokeKeepsExistingUpdatedAtForRemoveTagWhenCurrentTimeIsEarlierThanUpdatedAt() = runTest {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(
+                    id = "memo-1",
+                    createdAt = 1000L,
+                    updatedAt = 5000L,
+                    tagIds = listOf(tagId)
+                )
+            )
+        )
+        val useCase = applyMemoBulkActionUseCase(
+            memoRepository = repository,
+            tagRepository = FakeTagRepository(listOf(tagFixture(id = tagId.value))),
+            now = TimestampMillis(3000L)
+        )
+
+        // Act
+        useCase(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("memo-1")),
+                action = MemoBulkAction.removeTag(tagId)
+            )
+        )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), repository.savedMemos.single().updatedAt)
     }
 
     @Test

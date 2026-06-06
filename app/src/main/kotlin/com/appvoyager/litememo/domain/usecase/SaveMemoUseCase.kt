@@ -3,6 +3,7 @@ package com.appvoyager.litememo.domain.usecase
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
@@ -33,7 +34,13 @@ class SaveMemoUseCase @Inject constructor(
             title = command.title,
             body = command.body,
             createdAt = createdAt,
-            updatedAt = if (now.value >= createdAt.value) now else createdAt,
+            updatedAt = TimestampMillis(
+                maxOf(
+                    now.value,
+                    existingMemo?.updatedAt?.value ?: createdAt.value,
+                    createdAt.value
+                )
+            ),
             tagIds = tagIds,
             isFavorite = command.isFavorite
         )

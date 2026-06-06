@@ -115,5 +115,5 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
     }
 
     private fun Memo.updatedAtFrom(now: TimestampMillis): TimestampMillis =
-        TimestampMillis(maxOf(now.value, createdAt.value))
+        TimestampMillis(maxOf(now.value, updatedAt.value, createdAt.value))
 }

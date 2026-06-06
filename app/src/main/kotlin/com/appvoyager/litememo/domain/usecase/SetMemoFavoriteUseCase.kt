@@ -20,7 +20,9 @@ class SetMemoFavoriteUseCase @Inject constructor(
 
         val now = currentTimeProvider.now()
         val updatedMemo = memo.copy(
-            updatedAt = TimestampMillis(maxOf(now.value, memo.createdAt.value)),
+            updatedAt = TimestampMillis(
+                maxOf(now.value, memo.updatedAt.value, memo.createdAt.value)
+            ),
             isFavorite = isFavorite
         )
 
