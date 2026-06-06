@@ -5,7 +5,6 @@ import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
 import com.appvoyager.litememo.domain.model.updatedAtFrom
 import com.appvoyager.litememo.domain.model.value.TagId
-import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
@@ -71,7 +70,7 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         memos.forEach { memo ->
             memoRepository.moveMemoToTrash(
                 id = memo.id,
-                deletedAt = TimestampMillis(maxOf(now.value, memo.createdAt.value))
+                deletedAt = memo.updatedAtFrom(now)
             )
         }
     }
