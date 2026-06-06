@@ -3,6 +3,7 @@ package com.appvoyager.litememo.domain.usecase
 import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
+import com.appvoyager.litememo.domain.model.updatedAtFrom
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
@@ -113,7 +114,4 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
             }
         memoRepository.saveAllMemos(updated)
     }
-
-    private fun Memo.updatedAtFrom(now: TimestampMillis): TimestampMillis =
-        TimestampMillis(maxOf(now.value, updatedAt.value, createdAt.value))
 }

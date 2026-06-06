@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
+import com.appvoyager.litememo.domain.model.updatedAtFrom
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
@@ -29,18 +30,14 @@ class SaveMemoUseCase @Inject constructor(
         val tagIds = command.tagIds.distinct()
         validateTagIds(tagIds)
         val createdAt = existingMemo?.createdAt ?: command.createdAt ?: now
+        val updatedAt = existingMemo?.updatedAtFrom(now)
+            ?: TimestampMillis(maxOf(now.value, createdAt.value))
         val memo = Memo(
             id = existingMemo?.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
             createdAt = createdAt,
-            updatedAt = TimestampMillis(
-                maxOf(
-                    now.value,
-                    existingMemo?.updatedAt?.value ?: createdAt.value,
-                    createdAt.value
-                )
-            ),
+            updatedAt = updatedAt,
             tagIds = tagIds,
             isFavorite = command.isFavorite
         )

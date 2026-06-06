@@ -31,6 +31,7 @@ class ExportMemosUseCase @Inject constructor(
 
 }
 
+// createdAt が同値のときは id（UUID）で決定論的に並びを固定する。
 private fun List<Memo>.sortedMemosForExport(): List<Memo> =
     sortedWith(compareBy<Memo> { it.createdAt.value }.thenBy { it.id.value })
 
