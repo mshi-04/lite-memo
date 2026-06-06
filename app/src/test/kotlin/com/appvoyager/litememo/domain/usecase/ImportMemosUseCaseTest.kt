@@ -98,6 +98,25 @@ class ImportMemosUseCaseTest {
     }
 
     @Test
+    fun invokeRemovesDuplicateTagIdsFromImportedMemos() = runTest {
+        // Arrange
+        val tag1 = tagFixture(id = "t1")
+        val tag2 = tagFixture(id = "t2", name = "Tag2")
+        val memo = memoFixture(
+            id = "m1",
+            tagIds = listOf(TagId("t1"), TagId("t2"), TagId("t1"))
+        )
+        val memoRepo = FakeMemoRepository()
+        val useCase = importMemosUseCase(memoRepository = memoRepo)
+
+        // Act
+        useCase(exportData(tags = listOf(tag1, tag2), memos = listOf(memo)))
+
+        // Assert
+        assertEquals(listOf(TagId("t1"), TagId("t2")), memoRepo.currentMemos()[0].tagIds)
+    }
+
+    @Test
     fun invokeUpsertsMemoWithSameId() = runTest {
         // Arrange
         val existing = memoFixture(id = "m1", title = "Old")
