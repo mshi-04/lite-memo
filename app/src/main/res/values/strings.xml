@@ -106,11 +106,11 @@
     <string name="trash_title">ゴミ箱</string>
     <string name="trash_empty_title">ゴミ箱は空です</string>
     <string name="trash_empty_body">削除したメモはここに30日間保存されます。</string>
-    <string name="trash_restore_label">復元</string>
+    <string name="restore_selected_memos">選択したメモを復元</string>
     <string name="trash_deleted_at_label">削除: %1$s</string>
-    <string name="trash_permanent_delete_label">完全削除</string>
-    <string name="trash_permanent_delete_title">完全削除</string>
-    <string name="trash_permanent_delete_message">「%1$s」を完全に削除しますか？この操作は元に戻せません。</string>
+    <string name="trash_empty_action">ゴミ箱を空にする</string>
+    <string name="trash_empty_confirm_title">ゴミ箱を空にする</string>
+    <string name="trash_empty_confirm_message">ゴミ箱内のメモをすべて完全に削除しますか？この操作は元に戻せません。</string>
     <string name="trash_action_error_title">操作に失敗しました</string>
     <string name="trash_action_error_body">ゴミ箱の操作中にエラーが発生しました。もう一度お試しください。</string>
 
