@@ -79,7 +79,12 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         val now = currentTimeProvider.now()
         val updated = memos
             .filter { it.isFavorite != isFavorite }
-            .map { it.copy(updatedAt = now, isFavorite = isFavorite) }
+            .map { memo ->
+                memo.copy(
+                    updatedAt = memo.updatedAtFrom(now),
+                    isFavorite = isFavorite
+                )
+            }
         memoRepository.saveAllMemos(updated)
     }
 
@@ -87,7 +92,12 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         val now = currentTimeProvider.now()
         val updated = memos
             .filter { tagId !in it.tagIds }
-            .map { it.copy(updatedAt = now, tagIds = it.tagIds + tagId) }
+            .map { memo ->
+                memo.copy(
+                    updatedAt = memo.updatedAtFrom(now),
+                    tagIds = memo.tagIds + tagId
+                )
+            }
         memoRepository.saveAllMemos(updated)
     }
 
@@ -97,10 +107,13 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
             .filter { tagId in it.tagIds }
             .map { memo ->
                 memo.copy(
-                    updatedAt = now,
+                    updatedAt = memo.updatedAtFrom(now),
                     tagIds = memo.tagIds.filterNot { it == tagId }
                 )
             }
         memoRepository.saveAllMemos(updated)
     }
+
+    private fun Memo.updatedAtFrom(now: TimestampMillis): TimestampMillis =
+        TimestampMillis(maxOf(now.value, createdAt.value))
 }

@@ -47,6 +47,23 @@ class SetMemoFavoriteUseCaseTest {
     }
 
     @Test
+    fun invokeUsesCreatedAtForUpdatedAtWhenCurrentTimeIsEarlierThanCreatedAt() = runTest {
+        // Arrange
+        val memo = memoFixture(id = "memo-1", createdAt = 3000L)
+        val repository = FakeMemoRepository(listOf(memo))
+        val useCase = SetMemoFavoriteUseCase(
+            memoRepository = repository,
+            currentTimeProvider = MutableTimeProvider(TimestampMillis(2000L))
+        )
+
+        // Act
+        val updatedMemo = useCase(MemoId("memo-1"), true)
+
+        // Assert
+        assertEquals(TimestampMillis(3000L), updatedMemo.updatedAt)
+    }
+
+    @Test
     fun invokeKeepsUpdatedAtWhenFavoriteStateDoesNotChange() = runTest {
         // Arrange
         val memo = memoFixture(id = "memo-1", updatedAt = 1000L, isFavorite = true)
