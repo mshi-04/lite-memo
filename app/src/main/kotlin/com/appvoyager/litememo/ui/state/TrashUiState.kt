@@ -7,7 +7,8 @@ data class TrashUiState(
     val isLoading: Boolean = true,
     val hasError: Boolean = false,
     val memos: List<TrashedMemoUiModel> = emptyList(),
-    val showPermanentDeleteDialog: TrashedMemoUiModel? = null
+    val selection: TrashSelectionUiState = TrashSelectionUiState(),
+    val showEmptyTrashDialog: Boolean = false
 )
 
 data class TrashedMemoUiModel(

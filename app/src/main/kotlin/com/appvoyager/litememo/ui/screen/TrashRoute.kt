@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.viewmodel.TrashViewModel
 
 @Composable
@@ -32,12 +33,29 @@ fun TrashRoute(
 
     TrashScreen(
         uiState = uiState,
-        onBackClick = onNavigateBack,
-        onRestoreClick = { viewModel.restoreMemo(it) },
-        onPermanentDeleteRequest = { viewModel.requestPermanentDelete(it) },
-        onConfirmPermanentDelete = { viewModel.confirmPermanentDelete() },
-        onDismissPermanentDelete = { viewModel.dismissPermanentDeleteDialog() },
-        onRetry = { viewModel.retry() },
+        actions = object : TrashScreenActions {
+            override fun onBackClick() = onNavigateBack()
+
+            override fun onMemoLongClick(memoId: MemoId) {
+                viewModel.startSelection(memoId)
+            }
+
+            override fun onMemoSelectionToggle(memoId: MemoId) {
+                viewModel.toggleMemoSelection(memoId)
+            }
+
+            override fun onClearSelection() = viewModel.clearSelection()
+
+            override fun onRestoreSelectedMemos() = viewModel.restoreSelectedMemos()
+
+            override fun onEmptyTrashRequest() = viewModel.requestEmptyTrash()
+
+            override fun onConfirmEmptyTrash() = viewModel.confirmEmptyTrash()
+
+            override fun onDismissEmptyTrash() = viewModel.dismissEmptyTrashDialog()
+
+            override fun onRetry() = viewModel.retry()
+        },
         modifier = modifier
     )
 }

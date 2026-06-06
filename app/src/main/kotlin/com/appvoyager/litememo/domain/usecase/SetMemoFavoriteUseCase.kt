@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.updatedAtFrom
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
@@ -17,8 +18,9 @@ class SetMemoFavoriteUseCase @Inject constructor(
         }
         if (memo.isFavorite == isFavorite) return memo
 
+        val now = currentTimeProvider.now()
         val updatedMemo = memo.copy(
-            updatedAt = currentTimeProvider.now(),
+            updatedAt = memo.updatedAtFrom(now),
             isFavorite = isFavorite
         )
 
