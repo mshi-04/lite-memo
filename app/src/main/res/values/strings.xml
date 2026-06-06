@@ -106,6 +106,7 @@
     <string name="trash_title">ゴミ箱</string>
     <string name="trash_empty_title">ゴミ箱は空です</string>
     <string name="trash_empty_body">削除したメモはここに30日間保存されます。</string>
+    <string name="select_trashed_memo">メモを選択</string>
     <string name="restore_selected_memos">選択したメモを復元</string>
     <string name="trash_deleted_at_label">削除: %1$s</string>
     <string name="trash_empty_action">ゴミ箱を空にする</string>

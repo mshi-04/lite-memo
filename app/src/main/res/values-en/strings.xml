@@ -103,6 +103,7 @@
     <string name="trash_title">Trash</string>
     <string name="trash_empty_title">Trash is empty</string>
     <string name="trash_empty_body">Deleted memos are kept here for 30 days.</string>
+    <string name="select_trashed_memo">Select memo</string>
     <string name="restore_selected_memos">Restore selected memos</string>
     <string name="trash_deleted_at_label">Deleted: %1$s</string>
     <string name="trash_empty_action">Empty trash</string>

@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,6 +109,12 @@ private fun TrashTopAppBar(uiState: TrashUiState, actions: TrashScreenActions) {
     val canShowMenu = !uiState.hasError &&
         (uiState.selection.isActive || uiState.memos.isNotEmpty())
 
+    LaunchedEffect(canShowMenu) {
+        if (!canShowMenu) {
+            isMenuExpanded = false
+        }
+    }
+
     TopAppBar(
         windowInsets = WindowInsets(0, 0, 0, 0),
         navigationIcon = {
@@ -117,21 +124,20 @@ private fun TrashTopAppBar(uiState: TrashUiState, actions: TrashScreenActions) {
             TrashTopBarTitle(uiState = uiState)
         },
         actions = {
-            IconButton(
-                enabled = canShowMenu,
-                onClick = { isMenuExpanded = true }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.more_options)
+            if (canShowMenu) {
+                IconButton(onClick = { isMenuExpanded = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.more_options)
+                    )
+                }
+                TrashOverflowMenu(
+                    expanded = isMenuExpanded,
+                    selectionActive = uiState.selection.isActive,
+                    onDismiss = { isMenuExpanded = false },
+                    actions = actions
                 )
             }
-            TrashOverflowMenu(
-                expanded = isMenuExpanded,
-                selectionActive = uiState.selection.isActive,
-                onDismiss = { isMenuExpanded = false },
-                actions = actions
-            )
         }
     )
 }
@@ -302,6 +308,7 @@ private fun TrashedMemoCard(
         modifier = modifier.combinedClickable(
             onClick = actions.onClick,
             onLongClick = actions.onLongClick,
+            onLongClickLabel = stringResource(R.string.select_trashed_memo),
             role = Role.Button
         )
     ) {
