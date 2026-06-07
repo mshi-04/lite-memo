@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -371,7 +372,11 @@ private fun HomeSelectionToolbar(
             )
         }
         Text(
-            text = stringResource(R.string.selected_memo_count, selectedCount),
+            text = pluralStringResource(
+                R.plurals.selected_memo_count,
+                selectedCount,
+                selectedCount
+            ),
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold

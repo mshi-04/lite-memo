@@ -6,8 +6,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -22,7 +23,8 @@ import com.google.android.gms.ads.AdView
 fun BannerAd(modifier: Modifier = Modifier) {
     val adUnitId = stringResource(R.string.admob_banner_unit_id)
     val context = LocalContext.current
-    val adWidthDp = LocalConfiguration.current.screenWidthDp
+    val windowWidth = LocalWindowInfo.current.containerSize.width
+    val adWidthDp = with(LocalDensity.current) { windowWidth.toDp().value.toInt() }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     key(context, adUnitId, adWidthDp) {

@@ -62,50 +62,113 @@ class TrashViewModelTest {
     }
 
     @Test
-    fun restoreMemoDelegatesMemoId() = runTest(dispatcher) {
+    fun startSelectionSelectsMemo() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
+        val viewModel = trashViewModel(memoRepository = FakeMemoRepository(listOf(memo)))
+        advanceUntilIdle()
+        viewModel.uiState.first { it.memos.isNotEmpty() }
+
+        // Act
+        viewModel.startSelection(memo.id)
+        val state = viewModel.uiState.first { it.selection.isActive }
+
+        // Assert
+        assertEquals(setOf(memo.id), state.selection.selectedMemoIds)
+    }
+
+    @Test
+    fun toggleMemoSelectionRemovesSelectedMemo() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
+        val viewModel = trashViewModel(memoRepository = FakeMemoRepository(listOf(memo)))
+        advanceUntilIdle()
+        viewModel.uiState.first { it.memos.isNotEmpty() }
+        viewModel.startSelection(memo.id)
+
+        // Act
+        viewModel.toggleMemoSelection(memo.id)
+        val state = viewModel.uiState.first { !it.selection.isActive }
+
+        // Assert
+        assertEquals(emptySet<MemoId>(), state.selection.selectedMemoIds)
+    }
+
+    @Test
+    fun restoreSelectedMemosDelegatesSelectedMemoIds() = runTest(dispatcher) {
+        // Arrange
+        val memo1 = memoFixture(id = "memo-1", deletedAt = 2_000L)
+        val memo2 = memoFixture(id = "memo-2", deletedAt = 3_000L)
+        val repository = FakeMemoRepository(listOf(memo1, memo2))
+        val viewModel = trashViewModel(memoRepository = repository)
+        advanceUntilIdle()
+        viewModel.uiState.first { it.memos.size == 2 }
+        viewModel.startSelection(memo2.id)
+        viewModel.toggleMemoSelection(memo1.id)
+        viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(memo2.id, memo1.id)
+        }
+
+        // Act
+        viewModel.restoreSelectedMemos()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(listOf(memo2.id, memo1.id), repository.restoredIds)
+    }
+
+    @Test
+    fun requestEmptyTrashShowsEmptyTrashDialog() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
         val repository = FakeMemoRepository(listOf(memo))
         val viewModel = trashViewModel(memoRepository = repository)
         advanceUntilIdle()
+        viewModel.uiState.first { it.memos.isNotEmpty() }
 
         // Act
-        viewModel.restoreMemo(MemoId("memo-1"))
+        viewModel.requestEmptyTrash()
         advanceUntilIdle()
 
         // Assert
-        assertEquals(listOf(memo.id), repository.restoredIds)
+        assertEquals(true, viewModel.uiState.value.showEmptyTrashDialog)
     }
 
     @Test
-    fun confirmPermanentDeleteDelegatesSelectedMemoId() = runTest(dispatcher) {
+    fun confirmEmptyTrashDeletesAllVisibleTrashedMemos() = runTest(dispatcher) {
         // Arrange
-        val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
-        val repository = FakeMemoRepository(listOf(memo))
+        val memo1 = memoFixture(id = "memo-1", deletedAt = 2_000L)
+        val memo2 = memoFixture(id = "memo-2", deletedAt = 3_000L)
+        val repository = FakeMemoRepository(listOf(memo1, memo2))
         val viewModel = trashViewModel(memoRepository = repository)
         advanceUntilIdle()
-        val trashedMemo = viewModel.uiState.first { it.memos.isNotEmpty() }.memos.single()
+        viewModel.uiState.first { it.memos.isNotEmpty() }
+        viewModel.requestEmptyTrash()
 
         // Act
-        viewModel.requestPermanentDelete(trashedMemo)
-        viewModel.confirmPermanentDelete()
+        viewModel.confirmEmptyTrash()
         advanceUntilIdle()
 
         // Assert
-        assertEquals(listOf(memo.id), repository.permanentlyDeletedIds)
+        assertEquals(listOf(memo2.id, memo1.id), repository.permanentlyDeletedIds)
     }
 
     @Test
-    fun restoreMemoEmitsActionErrorWhenRestoreFails() = runTest(dispatcher) {
+    fun restoreSelectedMemosEmitsActionErrorWhenRestoreFails() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
         val viewModel = trashViewModel(
             memoRepository = RestoreFailingMemoRepository(listOf(memo))
         )
         advanceUntilIdle()
+        viewModel.uiState.first { it.memos.isNotEmpty() }
+        viewModel.startSelection(memo.id)
+        viewModel.uiState.first {
+            it.selection.selectedMemoIds == setOf(memo.id)
+        }
 
         // Act
-        viewModel.restoreMemo(memo.id)
+        viewModel.restoreSelectedMemos()
         advanceUntilIdle()
         val event = viewModel.actionErrorEvent.first()
 

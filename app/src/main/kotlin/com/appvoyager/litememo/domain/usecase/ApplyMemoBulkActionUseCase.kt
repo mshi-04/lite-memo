@@ -3,8 +3,8 @@ package com.appvoyager.litememo.domain.usecase
 import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
+import com.appvoyager.litememo.domain.model.updatedAtFrom
 import com.appvoyager.litememo.domain.model.value.TagId
-import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
@@ -70,7 +70,7 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         memos.forEach { memo ->
             memoRepository.moveMemoToTrash(
                 id = memo.id,
-                deletedAt = TimestampMillis(maxOf(now.value, memo.createdAt.value))
+                deletedAt = memo.updatedAtFrom(now)
             )
         }
     }
@@ -79,7 +79,12 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         val now = currentTimeProvider.now()
         val updated = memos
             .filter { it.isFavorite != isFavorite }
-            .map { it.copy(updatedAt = now, isFavorite = isFavorite) }
+            .map { memo ->
+                memo.copy(
+                    updatedAt = memo.updatedAtFrom(now),
+                    isFavorite = isFavorite
+                )
+            }
         memoRepository.saveAllMemos(updated)
     }
 
@@ -87,7 +92,12 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
         val now = currentTimeProvider.now()
         val updated = memos
             .filter { tagId !in it.tagIds }
-            .map { it.copy(updatedAt = now, tagIds = it.tagIds + tagId) }
+            .map { memo ->
+                memo.copy(
+                    updatedAt = memo.updatedAtFrom(now),
+                    tagIds = memo.tagIds + tagId
+                )
+            }
         memoRepository.saveAllMemos(updated)
     }
 
@@ -97,7 +107,7 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
             .filter { tagId in it.tagIds }
             .map { memo ->
                 memo.copy(
-                    updatedAt = now,
+                    updatedAt = memo.updatedAtFrom(now),
                     tagIds = memo.tagIds.filterNot { it == tagId }
                 )
             }

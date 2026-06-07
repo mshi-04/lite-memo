@@ -21,9 +21,16 @@ data class Memo(
         require(updatedAt.value >= createdAt.value) {
             "Memo updatedAt must be greater than or equal to createdAt."
         }
-        require(deletedAt == null || deletedAt.value >= createdAt.value) {
-            "Memo deletedAt must be greater than or equal to createdAt."
+        require(deletedAt == null || deletedAt.value >= updatedAt.value) {
+            "Memo deletedAt must be greater than or equal to updatedAt."
         }
     }
 
 }
+
+/**
+ * updatedAt が createdAt や現在の updatedAt を下回らないよう、now をクランプして返す。
+ * 端末時刻の巻き戻りなどで updatedAt が後退するのを防ぐ。
+ */
+fun Memo.updatedAtFrom(now: TimestampMillis): TimestampMillis =
+    TimestampMillis(maxOf(now.value, updatedAt.value, createdAt.value))

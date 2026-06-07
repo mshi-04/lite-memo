@@ -68,6 +68,33 @@ class ExportMemosUseCaseTest {
     }
 
     @Test
+    fun invokeReturnsMemosAndTagsInStableExportOrder() = runTest {
+        // Arrange
+        val memos = listOf(
+            memoFixture(id = "m3", createdAt = 3000L),
+            memoFixture(id = "m2", createdAt = 1000L),
+            memoFixture(id = "m1", createdAt = 1000L)
+        )
+        val tags = listOf(
+            tagFixture(id = "t3", createdAt = 3000L),
+            tagFixture(id = "t2", createdAt = 1000L),
+            tagFixture(id = "t1", createdAt = 1000L)
+        )
+        val useCase = exportMemosUseCase(
+            memoRepository = FakeMemoRepository(memos),
+            tagRepository = FakeTagRepository(tags)
+        )
+
+        // Act
+        val result = useCase()
+
+        // Assert
+        val expected = listOf("m1", "m2", "m3") to listOf("t1", "t2", "t3")
+        val actual = result.memos.map { it.id.value } to result.tags.map { it.id.value }
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun invokeReturnsEmptyExportDataWhenNoMemosOrTags() = runTest {
         // Arrange
         val useCase = exportMemosUseCase()

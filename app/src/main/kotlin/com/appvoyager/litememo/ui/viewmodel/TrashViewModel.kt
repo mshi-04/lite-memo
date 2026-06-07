@@ -11,6 +11,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
 import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.state.TrashSelectionUiState
 import com.appvoyager.litememo.ui.state.TrashUiState
 import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,7 +47,8 @@ class TrashViewModel @Inject constructor(
 
     private val retryTrigger = MutableStateFlow(false)
     private val hasPurgeError = MutableStateFlow(false)
-    private val permanentDeleteDialog = MutableStateFlow<TrashedMemoUiModel?>(null)
+    private val selection = MutableStateFlow(TrashSelectionUiState())
+    private val showEmptyTrashDialog = MutableStateFlow(false)
 
     // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
@@ -68,21 +70,27 @@ class TrashViewModel @Inject constructor(
     val uiState: StateFlow<TrashUiState> = combine(
         observedData,
         hasPurgeError,
-        permanentDeleteDialog
-    ) { observed, purgeError, dialog ->
+        selection,
+        showEmptyTrashDialog
+    ) { observed, purgeError, activeSelection, showEmptyDialog ->
         val hasError = observed.memos == null || observed.tags == null || purgeError
+        val uiMemos = if (!hasError) {
+            toUiModels(
+                memos = requireNotNull(observed.memos),
+                tags = requireNotNull(observed.tags)
+            )
+        } else {
+            emptyList()
+        }
+        val visibleMemoIds = uiMemos.map { it.id }.toSet()
         TrashUiState(
             isLoading = false,
             hasError = hasError,
-            memos = if (!hasError) {
-                toUiModels(
-                    memos = requireNotNull(observed.memos),
-                    tags = requireNotNull(observed.tags)
-                )
-            } else {
-                emptyList()
-            },
-            showPermanentDeleteDialog = dialog
+            memos = uiMemos,
+            selection = TrashSelectionUiState(
+                selectedMemoIds = activeSelection.selectedMemoIds intersect visibleMemoIds
+            ),
+            showEmptyTrashDialog = showEmptyDialog
         )
     }.stateIn(
         scope = viewModelScope,
@@ -90,10 +98,33 @@ class TrashViewModel @Inject constructor(
         initialValue = TrashUiState()
     )
 
-    fun restoreMemo(id: MemoId) {
+    fun startSelection(id: MemoId) {
+        showEmptyTrashDialog.value = false
+        selection.value = TrashSelectionUiState(selectedMemoIds = setOf(id))
+    }
+
+    fun toggleMemoSelection(id: MemoId) {
+        val current = selection.value.selectedMemoIds
+        val next = if (id in current) {
+            current - id
+        } else {
+            current + id
+        }
+        selection.value = TrashSelectionUiState(selectedMemoIds = next)
+    }
+
+    fun clearSelection() {
+        selection.value = TrashSelectionUiState()
+    }
+
+    fun restoreSelectedMemos() {
+        val memoIds = uiState.value.selection.selectedMemoIds.toList()
+        if (memoIds.isEmpty()) return
+
         viewModelScope.launch {
             try {
-                restoreMemoFromTrashUseCase(id)
+                memoIds.forEach { id -> restoreMemoFromTrashUseCase(id) }
+                clearSelection()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -102,24 +133,30 @@ class TrashViewModel @Inject constructor(
         }
     }
 
-    fun requestPermanentDelete(memo: TrashedMemoUiModel) {
-        permanentDeleteDialog.value = memo
+    fun requestEmptyTrash() {
+        if (uiState.value.memos.isEmpty()) return
+        showEmptyTrashDialog.value = true
     }
 
-    fun dismissPermanentDeleteDialog() {
-        permanentDeleteDialog.value = null
+    fun dismissEmptyTrashDialog() {
+        showEmptyTrashDialog.value = false
     }
 
-    fun confirmPermanentDelete() {
-        val memo = permanentDeleteDialog.value ?: return
+    fun confirmEmptyTrash() {
+        val memoIds = uiState.value.memos.map { it.id }
+        if (memoIds.isEmpty()) {
+            showEmptyTrashDialog.value = false
+            return
+        }
+
         viewModelScope.launch {
             try {
-                deleteMemoPermanentlyUseCase(memo.id)
-                permanentDeleteDialog.value = null
+                memoIds.forEach { id -> deleteMemoPermanentlyUseCase(id) }
+                showEmptyTrashDialog.value = false
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                permanentDeleteDialog.value = null
+                showEmptyTrashDialog.value = false
                 _actionErrorEvent.trySend(Unit)
             }
         }

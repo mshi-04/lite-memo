@@ -13,7 +13,7 @@ class ImportMemosUseCase @Inject constructor(private val memoRepository: MemoRep
 
         val validTagIds = data.tags.map { it.id }.toSet()
         val sanitizedMemos = data.memos.map { memo ->
-            val filtered = memo.tagIds.filter { it in validTagIds }
+            val filtered = memo.tagIds.filter { it in validTagIds }.distinct()
             if (filtered.size == memo.tagIds.size) memo else memo.copy(tagIds = filtered)
         }
 

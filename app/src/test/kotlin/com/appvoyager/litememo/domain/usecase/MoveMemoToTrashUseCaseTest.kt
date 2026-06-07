@@ -56,6 +56,27 @@ class MoveMemoToTrashUseCaseTest {
     }
 
     @Test
+    fun invokeUsesUpdatedAtWhenCurrentTimeIsEarlierThanUpdatedAt() = runTest {
+        // Arrange
+        val memo = memoFixture(id = "memo-1", createdAt = 1_000L, updatedAt = 2_000L)
+        val repository = FakeMemoRepository(listOf(memo))
+        val useCase = MoveMemoToTrashUseCase(
+            memoRepository = repository,
+            currentTimeProvider = MutableTimeProvider(TimestampMillis(1_500L))
+        )
+
+        // Act
+        useCase(memo.id)
+
+        // Assert
+        val expected = TrashMoveRecord(
+            memoId = memo.id,
+            deletedAt = TimestampMillis(2_000L)
+        )
+        assertEquals(listOf(expected), repository.movedToTrash)
+    }
+
+    @Test
     fun invokeThrowsWhenMemoIsNotActive() {
         // Arrange
         val repository = FakeMemoRepository(listOf(memoFixture(deletedAt = 2_000L)))

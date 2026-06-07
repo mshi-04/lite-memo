@@ -91,6 +91,29 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
+    fun invokeKeepsExistingUpdatedAtWhenCurrentTimeIsEarlierThanUpdatedAt() = runTest {
+        // Arrange
+        val existing = memoFixture(id = "memo-1", createdAt = 1000L, updatedAt = 5000L)
+        val useCase = saveMemoUseCase(
+            memoRepository = FakeMemoRepository(listOf(existing)),
+            timeProvider = MutableTimeProvider(TimestampMillis(3000L))
+        )
+
+        // Act
+        val memo =
+            useCase(
+                SaveMemoCommand(
+                    id = existing.id,
+                    title = MemoTitle("New"),
+                    body = MemoBody("Body")
+                )
+            )
+
+        // Assert
+        assertEquals(TimestampMillis(5000L), memo.updatedAt)
+    }
+
+    @Test
     fun invokeThrowsWhenMemoIdDoesNotExist() {
         // Arrange
         val useCase = saveMemoUseCase()

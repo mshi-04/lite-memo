@@ -42,19 +42,16 @@ git config core.hooksPath .githooks
 - **detekt**: 書き方・複雑度・アンチパターン（+ Compose 特化ルール）
 - **Android Lint**: Android 特有のバグ・非推奨 API・リソース・アクセシビリティ
 
-detekt と Android Lint は既存違反を baseline で吸収し、CI は新規違反のみで失敗します。
+detekt は既存違反を baseline で吸収し、CI は新規違反のみで失敗します。
+Android Lint は baseline なしで実行し、警告もエラーとして扱います。
 
 - detekt baseline: `config/detekt/baseline.xml`
-- Android Lint baseline: `app/lint-baseline.xml`
 
-ルールを直したうえで baseline を更新したい場合は、対象 baseline を削除してから再生成します。
+detekt のルールを直したうえで baseline を更新したい場合は、baseline を削除してから再生成します。
 
 ```sh
 # detekt baseline の再生成
 ./gradlew detektBaseline
-
-# Android Lint baseline の再生成（既存ファイルを削除してから実行）
-./gradlew :app:lintProdDebug
 ```
 
 ## ローカルでの CI 相当チェック（任意）
@@ -78,3 +75,8 @@ Gradle から直接実行する場合は次のとおりです。
 ./gradlew detekt
 ./gradlew :app:lintProdDebug
 ```
+
+## CI キャッシュ
+
+GitHub Actions の Gradle / AVD キャッシュは、長期運用する `main` / `develop` の push で作成します。
+Pull Request では既存キャッシュの復元だけを行い、PR 固有の `refs/pull/.../merge` に重いキャッシュを作らないようにします。
