@@ -2,12 +2,12 @@ package com.appvoyager.litememo.ui.screen
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -31,7 +31,7 @@ fun OssLicensesRoute(onNavigateBack: () -> Unit, modifier: Modifier = Modifier) 
         licenses = licenses,
         onLicenseClick = { url ->
             try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                 context.startActivity(intent)
             } catch (_: ActivityNotFoundException) {
             }

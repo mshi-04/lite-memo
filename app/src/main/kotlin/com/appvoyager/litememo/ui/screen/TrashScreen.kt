@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -170,8 +171,9 @@ private fun TrashNavigationIcon(uiState: TrashUiState, actions: TrashScreenActio
 private fun TrashTopBarTitle(uiState: TrashUiState) {
     Text(
         text = if (uiState.selection.isActive) {
-            stringResource(
-                R.string.selected_memo_count,
+            pluralStringResource(
+                R.plurals.selected_memo_count,
+                uiState.selection.selectedCount,
                 uiState.selection.selectedCount
             )
         } else {

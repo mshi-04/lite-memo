@@ -4,7 +4,6 @@
     <string name="home_tab">ホーム</string>
     <string name="calendar_tab">カレンダー</string>
     <string name="settings_tab">設定</string>
-    <string name="today_label">今日</string>
     <string name="yesterday_label">昨日</string>
     <string name="unorganized_label">未整理</string>
     <string name="create_memo">メモ作成</string>
@@ -30,26 +29,24 @@
     <!-- Home -->
     <string name="filter_all">すべて</string>
     <string name="filter_favorite">お気に入り</string>
-    <string name="selected_memo_count">%1$d件選択中</string>
+    <plurals name="selected_memo_count">
+        <item quantity="other">%1$d件選択中</item>
+    </plurals>
     <string name="clear_selection">選択を解除</string>
     <string name="move_selected_memos_to_trash">選択したメモをゴミ箱へ移動</string>
     <string name="add_selected_memos_to_favorite">選択したメモをお気に入りに追加</string>
     <string name="remove_selected_memos_from_favorite">選択したメモをお気に入りから削除</string>
     <string name="toggle_tag_for_selected_memos">タグを切り替え</string>
     <string name="home_bulk_tag_empty_body">利用できるタグがありません。</string>
-    <string name="home_bulk_action_error_title">操作に失敗しました</string>
     <string name="home_bulk_action_error_body">メモの操作中にエラーが発生しました。もう一度お試しください。</string>
     <string name="empty_home_title">まだメモがありません</string>
     <string name="empty_home_body">新しいメモを作成するとここに表示されます。</string>
 
     <!-- Calendar -->
-    <string name="calendar_placeholder_title">カレンダーは準備中です</string>
-    <string name="calendar_placeholder_body">日付ごとのメモ表示は今後追加します。</string>
     <string name="calendar_title">カレンダー</string>
     <string name="previous_month">前の月</string>
     <string name="next_month">次の月</string>
     <string name="toggle_calendar">カレンダーを開閉</string>
-    <string name="select_month">年月を選択</string>
     <string name="empty_calendar_title">この日のメモはありません</string>
     <string name="empty_calendar_body">別の日付を選ぶと、その日に作成したメモを確認できます。</string>
     <string name="month_title_format">yyyy年M月</string>
@@ -98,9 +95,7 @@
     <string name="delete_label">削除</string>
     <string name="tag_save_error">保存に失敗しました。もう一度お試しください。</string>
     <string name="tag_duplicate_name_error">同じ名前のタグが既にあります。</string>
-    <string name="tag_delete_error_title">削除に失敗しました</string>
     <string name="tag_delete_error_body">タグの削除中にエラーが発生しました。もう一度お試しください。</string>
-    <string name="tag_selection_label">タグ</string>
 
     <!-- Trash -->
     <string name="trash_title">ゴミ箱</string>
@@ -112,7 +107,6 @@
     <string name="trash_empty_action">ゴミ箱を空にする</string>
     <string name="trash_empty_confirm_title">ゴミ箱を空にする</string>
     <string name="trash_empty_confirm_message">ゴミ箱内のメモをすべて完全に削除しますか？この操作は元に戻せません。</string>
-    <string name="trash_action_error_title">操作に失敗しました</string>
     <string name="trash_action_error_body">ゴミ箱の操作中にエラーが発生しました。もう一度お試しください。</string>
 
     <!-- Search -->
@@ -154,5 +148,4 @@
     <string name="settings_privacy_policy">プライバシーポリシー</string>
     <string name="settings_browser_not_found">ブラウザが見つかりませんでした。</string>
     <string name="settings_open_source_licenses">オープンソースライセンス</string>
-    <string name="settings_dialog_ok">OK</string>
 </resources>

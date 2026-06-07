@@ -4,7 +4,6 @@
     <string name="home_tab">Home</string>
     <string name="calendar_tab">Calendar</string>
     <string name="settings_tab">Settings</string>
-    <string name="today_label">Today</string>
     <string name="yesterday_label">Yesterday</string>
     <string name="unorganized_label">Unorganized</string>
     <string name="create_memo">Create memo</string>
@@ -30,26 +29,25 @@
     <!-- Home -->
     <string name="filter_all">All</string>
     <string name="filter_favorite">Favorites</string>
-    <string name="selected_memo_count">%1$d selected</string>
+    <plurals name="selected_memo_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
     <string name="clear_selection">Clear selection</string>
     <string name="move_selected_memos_to_trash">Move selected memos to trash</string>
     <string name="add_selected_memos_to_favorite">Add selected memos to favorites</string>
     <string name="remove_selected_memos_from_favorite">Remove selected memos from favorites</string>
     <string name="toggle_tag_for_selected_memos">Toggle tags</string>
     <string name="home_bulk_tag_empty_body">No tags are available.</string>
-    <string name="home_bulk_action_error_title">Action failed</string>
     <string name="home_bulk_action_error_body">An error occurred while updating memos. Please try again.</string>
     <string name="empty_home_title">No memos yet</string>
     <string name="empty_home_body">New memos will appear here.</string>
 
     <!-- Calendar -->
-    <string name="calendar_placeholder_title">Calendar is coming soon</string>
-    <string name="calendar_placeholder_body">Viewing memos by date will be added later.</string>
     <string name="calendar_title">Calendar</string>
     <string name="previous_month">Previous month</string>
     <string name="next_month">Next month</string>
     <string name="toggle_calendar">Expand or collapse calendar</string>
-    <string name="select_month">Select month</string>
     <string name="empty_calendar_title">No memos for this day</string>
     <string name="empty_calendar_body">Choose another date to view memos created on that day.</string>
     <string name="month_title_format">MMMM yyyy</string>
@@ -73,6 +71,8 @@
     <string name="memo_deleted_message">Memo deleted</string>
     <string name="memo_restore_failed_message">Could not restore memo</string>
     <string name="memo_edit_draft_error_message">Draft operation failed</string>
+    <string name="memo_save_error_message">Could not save memo</string>
+    <string name="memo_delete_error_message">Could not delete memo</string>
     <string name="undo_label">Undo</string>
     <string name="cancel_label">Cancel</string>
     <string name="share_memo">Share</string>
@@ -95,9 +95,8 @@
     <string name="save_label">Save</string>
     <string name="delete_label">Delete</string>
     <string name="tag_save_error">Save failed. Please try again.</string>
-    <string name="tag_delete_error_title">Delete failed</string>
+    <string name="tag_duplicate_name_error">A tag with the same name already exists.</string>
     <string name="tag_delete_error_body">An error occurred while deleting the tag. Please try again.</string>
-    <string name="tag_selection_label">Tags</string>
 
     <!-- Trash -->
     <string name="trash_title">Trash</string>
@@ -109,7 +108,6 @@
     <string name="trash_empty_action">Empty trash</string>
     <string name="trash_empty_confirm_title">Empty trash</string>
     <string name="trash_empty_confirm_message">Permanently delete all memos in trash? This action cannot be undone.</string>
-    <string name="trash_action_error_title">Action failed</string>
     <string name="trash_action_error_body">An error occurred while updating trash. Please try again.</string>
 
     <!-- Search -->
@@ -151,5 +149,4 @@
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_browser_not_found">No browser app was found.</string>
     <string name="settings_open_source_licenses">Open source licenses</string>
-    <string name="settings_dialog_ok">OK</string>
 </resources>
