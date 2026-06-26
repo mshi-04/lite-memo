@@ -374,11 +374,15 @@ class ApplyMemoBulkActionUseCaseTest {
 
         // Assert
         assertEquals(
-            Triple(emptyList<Memo>(), emptyList<Memo>(), emptyList<Memo>()),
-            Triple(
-                alreadyFavoriteRepository.savedMemos,
-                alreadyTaggedRepository.savedMemos,
-                untaggedRepository.savedMemos
+            NoOpBulkChangeSnapshot(
+                alreadyFavoriteSavedMemos = emptyList(),
+                alreadyTaggedSavedMemos = emptyList(),
+                untaggedSavedMemos = emptyList()
+            ),
+            NoOpBulkChangeSnapshot(
+                alreadyFavoriteSavedMemos = alreadyFavoriteRepository.savedMemos,
+                alreadyTaggedSavedMemos = alreadyTaggedRepository.savedMemos,
+                untaggedSavedMemos = untaggedRepository.savedMemos
             )
         )
     }
@@ -605,4 +609,10 @@ class ApplyMemoBulkActionUseCaseTest {
             delegate.moveMemoToTrash(id, deletedAt)
         }
     }
+
+    private data class NoOpBulkChangeSnapshot(
+        val alreadyFavoriteSavedMemos: List<Memo>,
+        val alreadyTaggedSavedMemos: List<Memo>,
+        val untaggedSavedMemos: List<Memo>
+    )
 }

@@ -398,7 +398,7 @@ class RoomMemoRepositoryTest {
         }
 
         // Assert
-        assertEquals(0 to 0, tagDao.upsertedTags.size to memoDao.savedMemoBatches.size)
+        assertEquals(NoImportWritesSnapshot(), importWritesSnapshot(tagDao, memoDao))
     }
 
     @Test
@@ -433,7 +433,7 @@ class RoomMemoRepositoryTest {
         }
 
         // Assert
-        assertEquals(0 to 0, tagDao.upsertedTags.size to memoDao.savedMemoBatches.size)
+        assertEquals(NoImportWritesSnapshot(), importWritesSnapshot(tagDao, memoDao))
     }
 
     @Test
@@ -503,6 +503,17 @@ class RoomMemoRepositoryTest {
     private data class ObservedRange(val fromMillis: Long, val toMillis: Long)
 
     private data class SavedMemoBatch(val memo: MemoEntity, val tagRefs: List<MemoTagRefEntity>)
+
+    private data class NoImportWritesSnapshot(
+        val upsertedTagCount: Int = 0,
+        val savedMemoBatchCount: Int = 0
+    )
+
+    private fun importWritesSnapshot(tagDao: FakeTagDao, memoDao: FakeMemoDao) =
+        NoImportWritesSnapshot(
+            upsertedTagCount = tagDao.upsertedTags.size,
+            savedMemoBatchCount = memoDao.savedMemoBatches.size
+        )
 
     private class FakeMemoDao(
         memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),

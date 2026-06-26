@@ -323,46 +323,16 @@ class TrashViewModelTest {
         }
     }
 
-    private class PurgeFailingOnceMemoRepository : MemoRepository {
-        private val repository = FakeMemoRepository()
+    private class PurgeFailingOnceMemoRepository(
+        private val delegate: FakeMemoRepository = FakeMemoRepository()
+    ) : MemoRepository by delegate {
         var purgeAttempts = 0
             private set
-
-        override fun observeActiveMemos(): Flow<List<Memo>> = repository.observeActiveMemos()
-
-        override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
-            repository.observeActiveMemosBySearchQuery(query)
-
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = repository.observeActiveMemosCreatedBetween(from, to)
-
-        override fun observeTrashedMemos(): Flow<List<Memo>> = repository.observeTrashedMemos()
-
-        override suspend fun getActiveMemo(id: MemoId): Memo? = repository.getActiveMemo(id)
-
-        override suspend fun saveMemo(memo: Memo) = repository.saveMemo(memo)
-
-        override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) =
-            repository.moveMemoToTrash(id, deletedAt)
-
-        override suspend fun restoreMemoFromTrash(id: MemoId) = repository.restoreMemoFromTrash(id)
-
-        override suspend fun deleteMemoPermanently(id: MemoId) =
-            repository.deleteMemoPermanently(id)
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
             purgeAttempts += 1
             if (purgeAttempts == 1) error("Failed to purge trash.")
-            repository.deleteTrashedMemosDeletedAtOrBefore(cutoff)
+            delegate.deleteTrashedMemosDeletedAtOrBefore(cutoff)
         }
-
-        override suspend fun getAllActiveMemos(): List<Memo> = repository.getAllActiveMemos()
-
-        override suspend fun saveAllMemos(memos: List<Memo>) = repository.saveAllMemos(memos)
-
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) =
-            repository.importAll(tags, memos)
     }
 }

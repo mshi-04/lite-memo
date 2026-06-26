@@ -126,6 +126,8 @@ kover {
     reports {
         filters {
             includes {
+                // Keep PR coverage focused on layers that are exercised by JVM unit tests.
+                // Add new unit-testable packages here when production code moves into a new layer.
                 classes(
                     "com.appvoyager.litememo.data.local.entity.*",
                     "com.appvoyager.litememo.data.local.model.*",
