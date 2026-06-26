@@ -134,9 +134,11 @@ jobs:
 
       - name: Add coverage summary to job output
         run: |
-          echo "## Code Coverage" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Kover XML and HTML reports were generated for the prodDebug unit-test variant." >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Code Coverage"
+            echo ""
+            echo "Kover XML and HTML reports were generated for the prodDebug unit-test variant."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Kover reports
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
