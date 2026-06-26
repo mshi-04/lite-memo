@@ -138,6 +138,7 @@ jobs:
             echo "## Code Coverage"
             echo ""
             echo "Kover XML and HTML reports were generated for the prodDebug unit-test variant."
+            echo "Coverage is scoped to unit-testable domain, data mapping/repository, UI state, and ViewModel layers."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Kover reports
@@ -154,7 +155,7 @@ jobs:
         uses: mi-kas/kover-report@db9938358b8e1e6175dd4136132bf4eb7aa4ae6d # v2.4
         with:
           path: ${{ github.workspace }}/app/build/reports/kover/**/*.xml
-          title: Code Coverage
+          title: Unit-testable Code Coverage
           update-comment: true
           coverage-counter-type: LINE
 

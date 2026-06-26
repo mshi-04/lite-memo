@@ -122,6 +122,27 @@ detekt {
     baseline = rootProject.file("config/detekt/baseline.xml")
 }
 
+kover {
+    reports {
+        filters {
+            includes {
+                classes(
+                    "com.appvoyager.litememo.data.local.entity.*",
+                    "com.appvoyager.litememo.data.local.model.*",
+                    "com.appvoyager.litememo.data.mapper.*",
+                    "com.appvoyager.litememo.data.model.export.*",
+                    "com.appvoyager.litememo.data.repository.*",
+                    "com.appvoyager.litememo.domain.model.*",
+                    "com.appvoyager.litememo.domain.model.value.*",
+                    "com.appvoyager.litememo.domain.usecase.*",
+                    "com.appvoyager.litememo.ui.state.*",
+                    "com.appvoyager.litememo.ui.viewmodel.*"
+                )
+            }
+        }
+    }
+}
+
 val preCommitFilesProperty = providers.gradleProperty("preCommitFiles")
 
 tasks.register<Detekt>("detektPreCommit") {
