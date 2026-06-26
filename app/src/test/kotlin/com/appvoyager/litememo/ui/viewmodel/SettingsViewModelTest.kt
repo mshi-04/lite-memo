@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.viewmodel
 
+import app.cash.turbine.test
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
@@ -96,6 +97,119 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun flowExportMemosEmitsSuccessSnackbarWhenWriteSucceeds() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = ImmediateExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+
+        // Flow/Normal: export success is emitted as a snackbar event.
+        viewModel.snackbarEvent.test {
+            viewModel.exportMemos(ExportFileReference("content://export"))
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.ExportSuccess, awaitItem())
+        }
+        assertEquals(
+            listOf(ExportFileReference("content://export")),
+            exportFileRepository.writtenReferences
+        )
+    }
+
+    @Test
+    fun flowExportMemosEmitsErrorSnackbarWhenWriteFails() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = settingsViewModel(
+            ImmediateExportFileRepository(writeError = IllegalStateException("write failed"))
+        )
+
+        // Flow/Error: failed export is converted to an error snackbar.
+        viewModel.snackbarEvent.test {
+            viewModel.exportMemos(ExportFileReference("content://export"))
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.ExportError, awaitItem())
+        }
+    }
+
+    @Test
+    fun flowConfirmImportEmitsSuccessSnackbarWhenReadSucceeds() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = ImmediateExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+        viewModel.onImportFileSelected(ExportFileReference("content://import"))
+        advanceUntilIdle()
+
+        // Flow/Normal/StateTransition: import confirmation closes the dialog and emits success.
+        viewModel.snackbarEvent.test {
+            viewModel.confirmImport()
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.ImportSuccess, awaitItem())
+        }
+        assertEquals(false, viewModel.uiState.value.showImportConfirmDialog)
+        assertEquals(
+            listOf(ExportFileReference("content://import")),
+            exportFileRepository.readReferences
+        )
+    }
+
+    @Test
+    fun flowConfirmImportEmitsErrorSnackbarWhenReadFails() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = settingsViewModel(
+            ImmediateExportFileRepository(readError = IllegalStateException("read failed"))
+        )
+        viewModel.onImportFileSelected(ExportFileReference("content://import"))
+        advanceUntilIdle()
+
+        // Flow/Error: failed import is converted to an error snackbar.
+        viewModel.snackbarEvent.test {
+            viewModel.confirmImport()
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.ImportError, awaitItem())
+        }
+        assertEquals(false, viewModel.uiState.value.showImportConfirmDialog)
+    }
+
+    @Test
+    fun boundaryConfirmImportDoesNotReadWhenNoImportFileIsPending() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = ImmediateExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+
+        // Flow/Boundary: confirming without a selected file is a no-op and emits no snackbar.
+        viewModel.snackbarEvent.test {
+            viewModel.confirmImport()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+
+        // Assert
+        assertEquals(emptyList<ExportFileReference>(), exportFileRepository.readReferences)
+    }
+
+    @Test
+    fun boundaryDismissImportDialogClearsPendingReferenceBeforeConfirm() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = ImmediateExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+        viewModel.onImportFileSelected(ExportFileReference("content://import"))
+        advanceUntilIdle()
+        viewModel.uiState.first { it.showImportConfirmDialog }
+
+        // Flow/Boundary/Interaction: dismissed import selection cannot be confirmed later.
+        viewModel.snackbarEvent.test {
+            viewModel.dismissImportConfirmDialog()
+            viewModel.confirmImport()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+
+        // Assert
+        assertEquals(
+            false to emptyList<ExportFileReference>(),
+            viewModel.uiState.value.showImportConfirmDialog to exportFileRepository.readReferences
+        )
+    }
+
+    @Test
     fun appLockAuthenticationSuccessEnablesAppLock() = runTest(dispatcher) {
         // Arrange
         val userSettingsRepository = FakeUserSettingsRepository()
@@ -113,7 +227,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun appLockNoDeviceCredentialEmitsSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+    fun flowAppLockNoDeviceCredentialEmitsSnackbarAndKeepsDisabled() = runTest(dispatcher) {
         // Arrange
         val userSettingsRepository = FakeUserSettingsRepository()
         val viewModel = settingsViewModel(
@@ -121,22 +235,19 @@ class SettingsViewModelTest {
             userSettingsRepository = userSettingsRepository
         )
 
-        // Act
-        viewModel.onAppLockEnableAuthenticationResult(
-            AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL
-        )
-        advanceUntilIdle()
-
-        // Assert
-        assertEquals(
-            SettingsSnackbarEvent.AppLockNoDeviceCredential,
-            viewModel.snackbarEvent.first()
-        )
+        // Act & Assert
+        viewModel.snackbarEvent.test {
+            viewModel.onAppLockEnableAuthenticationResult(
+                AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL
+            )
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.AppLockNoDeviceCredential, awaitItem())
+        }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
 
     @Test
-    fun appLockUnavailableEmitsSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+    fun flowAppLockUnavailableEmitsSnackbarAndKeepsDisabled() = runTest(dispatcher) {
         // Arrange
         val userSettingsRepository = FakeUserSettingsRepository()
         val viewModel = settingsViewModel(
@@ -144,17 +255,17 @@ class SettingsViewModelTest {
             userSettingsRepository = userSettingsRepository
         )
 
-        // Act
-        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.UNAVAILABLE)
-        advanceUntilIdle()
-
-        // Assert
-        assertEquals(SettingsSnackbarEvent.AppLockUnavailable, viewModel.snackbarEvent.first())
+        // Act & Assert
+        viewModel.snackbarEvent.test {
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.UNAVAILABLE)
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.AppLockUnavailable, awaitItem())
+        }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
 
     @Test
-    fun appLockFailedEmitsFailedSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+    fun flowAppLockFailedEmitsFailedSnackbarAndKeepsDisabled() = runTest(dispatcher) {
         // Arrange
         val userSettingsRepository = FakeUserSettingsRepository()
         val viewModel = settingsViewModel(
@@ -162,20 +273,17 @@ class SettingsViewModelTest {
             userSettingsRepository = userSettingsRepository
         )
 
-        // Act
-        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.FAILED)
-        advanceUntilIdle()
-
-        // Assert
-        assertEquals(
-            SettingsSnackbarEvent.AppLockAuthenticationFailed,
-            viewModel.snackbarEvent.first()
-        )
+        // Act & Assert
+        viewModel.snackbarEvent.test {
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.FAILED)
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.AppLockAuthenticationFailed, awaitItem())
+        }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
 
     @Test
-    fun appLockCanceledEmitsCanceledSnackbarAndKeepsDisabled() = runTest(dispatcher) {
+    fun flowAppLockCanceledEmitsCanceledSnackbarAndKeepsDisabled() = runTest(dispatcher) {
         // Arrange
         val userSettingsRepository = FakeUserSettingsRepository()
         val viewModel = settingsViewModel(
@@ -183,15 +291,12 @@ class SettingsViewModelTest {
             userSettingsRepository = userSettingsRepository
         )
 
-        // Act
-        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.CANCELED)
-        advanceUntilIdle()
-
-        // Assert
-        assertEquals(
-            SettingsSnackbarEvent.AppLockAuthenticationCanceled,
-            viewModel.snackbarEvent.first()
-        )
+        // Act & Assert
+        viewModel.snackbarEvent.test {
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.CANCELED)
+            advanceUntilIdle()
+            assertEquals(SettingsSnackbarEvent.AppLockAuthenticationCanceled, awaitItem())
+        }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
 
@@ -289,6 +394,31 @@ class SettingsViewModelTest {
 
         fun completeRead() {
             readCompleted.complete(Unit)
+        }
+    }
+
+    private class ImmediateExportFileRepository(
+        private val readError: Throwable? = null,
+        private val writeError: Throwable? = null
+    ) : ExportFileRepository {
+
+        val writtenReferences = mutableListOf<ExportFileReference>()
+        val readReferences = mutableListOf<ExportFileReference>()
+
+        override suspend fun write(reference: ExportFileReference, data: ExportData) {
+            writeError?.let { throw it }
+            writtenReferences += reference
+        }
+
+        override suspend fun read(reference: ExportFileReference): ExportData {
+            readError?.let { throw it }
+            readReferences += reference
+            return ExportData(
+                version = ExportMemosUseCase.CURRENT_VERSION,
+                exportedAt = TimestampMillis(1_000L),
+                tags = emptyList(),
+                memos = emptyList()
+            )
         }
     }
 }

@@ -101,6 +101,61 @@ jobs:
             bundle exec fastlane android unit_test
           fi
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-provider: basic
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+      - name: Generate Kover coverage reports
+        run: ./gradlew :app:koverXmlReportProdDebug :app:koverHtmlReportProdDebug --no-daemon
+
+      - name: Add coverage summary to job output
+        run: |
+          echo "## Code Coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Kover XML and HTML reports were generated for the prodDebug unit-test variant." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Kover reports
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: kover-prod-debug-report
+          path: app/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Add coverage report to PR
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: mi-kas/kover-report@db9938358b8e1e6175dd4136132bf4eb7aa4ae6d # v2.4
+        with:
+          path: ${{ github.workspace }}/app/build/reports/kover/**/*.xml
+          title: Code Coverage
+          update-comment: true
+          coverage-counter-type: LINE
+
   android-test:
     name: Android Test
     runs-on: ubuntu-latest

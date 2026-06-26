@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kover)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -209,6 +210,8 @@ dependencies {
     // Unit test
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 

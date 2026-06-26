@@ -10,8 +10,15 @@ import com.appvoyager.litememo.domain.model.MemoBulkAction
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
+import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.tagFixture
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.confirmVerified
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -87,6 +94,34 @@ class ApplyMemoBulkActionUseCaseTest {
         // Assert
         val expectedIds = listOf(MemoId("memo-2"), MemoId("memo-1"))
         assertEquals(expectedIds, repository.savedMemos.map { it.id })
+    }
+
+    @Test
+    fun boundarySetFavoriteDeduplicatesMemoIdsBeforeSaving() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository(
+            listOf(
+                memoFixture(id = "memo-1"),
+                memoFixture(id = "memo-2")
+            )
+        )
+        val useCase = applyMemoBulkActionUseCase(memoRepository = repository)
+
+        // Act
+        useCase(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("memo-2"), MemoId("memo-1"), MemoId("memo-2")),
+                action = MemoBulkAction.setFavorite(true)
+            )
+        )
+
+        // Assert
+        assertEquals(
+            listOf(MemoId("memo-2"), MemoId("memo-1")),
+            repository.savedMemos.map {
+                it.id
+            }
+        )
     }
 
     @Test
@@ -295,6 +330,60 @@ class ApplyMemoBulkActionUseCaseTest {
     }
 
     @Test
+    fun boundaryNoOpBulkChangesPersistNoChangedMemos() = runTest {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val alreadyFavoriteRepository = FakeMemoRepository(
+            listOf(memoFixture(id = "favorite", isFavorite = true))
+        )
+        val alreadyTaggedRepository = FakeMemoRepository(
+            listOf(memoFixture(id = "tagged", tagIds = listOf(tagId)))
+        )
+        val untaggedRepository = FakeMemoRepository(
+            listOf(memoFixture(id = "untagged"))
+        )
+        val tagRepository = FakeTagRepository(listOf(tagFixture(id = tagId.value)))
+
+        // Boundary/Normal: no-op favorite/tag changes should not produce changed memos.
+        applyMemoBulkActionUseCase(
+            memoRepository = alreadyFavoriteRepository
+        )(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("favorite")),
+                action = MemoBulkAction.setFavorite(true)
+            )
+        )
+        applyMemoBulkActionUseCase(
+            memoRepository = alreadyTaggedRepository,
+            tagRepository = tagRepository
+        )(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("tagged")),
+                action = MemoBulkAction.addTag(tagId)
+            )
+        )
+        applyMemoBulkActionUseCase(
+            memoRepository = untaggedRepository,
+            tagRepository = tagRepository
+        )(
+            ApplyMemoBulkActionCommand(
+                memoIds = listOf(MemoId("untagged")),
+                action = MemoBulkAction.removeTag(tagId)
+            )
+        )
+
+        // Assert
+        assertEquals(
+            Triple(emptyList<Memo>(), emptyList<Memo>(), emptyList<Memo>()),
+            Triple(
+                alreadyFavoriteRepository.savedMemos,
+                alreadyTaggedRepository.savedMemos,
+                untaggedRepository.savedMemos
+            )
+        )
+    }
+
+    @Test
     fun invokeThrowsBeforeWritingWhenMemoIsMissing() = runTest {
         // Arrange
         val repository = FakeMemoRepository(listOf(memoFixture(id = "memo-1")))
@@ -339,6 +428,97 @@ class ApplyMemoBulkActionUseCaseTest {
         val expected = true to emptyList<Memo>()
         val actual = (error is IllegalArgumentException) to repository.savedMemos
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun boundaryEmptyMemoIdsDoesNotReadTimeOrDependencies() = runTest {
+        // Arrange
+        val memoRepository = mockk<MemoRepository>()
+        val tagRepository = mockk<TagRepository>()
+        val timeProvider = mockk<CurrentTimeProvider>()
+        val useCase = ApplyMemoBulkActionUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            currentTimeProvider = timeProvider
+        )
+
+        // Boundary/Interaction: empty input is a pure no-op.
+        useCase(
+            ApplyMemoBulkActionCommand(
+                memoIds = emptyList(),
+                action = MemoBulkAction.addTag(TagId("tag-1"))
+            )
+        )
+
+        // Assert
+        coVerify(exactly = 0) { memoRepository.getActiveMemo(any()) }
+        coVerify(exactly = 0) { tagRepository.getTag(any()) }
+        verify(exactly = 0) { timeProvider.now() }
+        confirmVerified(memoRepository, tagRepository, timeProvider)
+    }
+
+    @Test
+    fun interactionMissingMemoDoesNotWriteAnyBulkAction() = runTest {
+        // Arrange
+        val memoRepository = mockk<MemoRepository>()
+        val tagRepository = mockk<TagRepository>(relaxed = true)
+        val timeProvider = mockk<CurrentTimeProvider>()
+        coEvery { memoRepository.getActiveMemo(MemoId("missing")) } returns null
+        val useCase = ApplyMemoBulkActionUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            currentTimeProvider = timeProvider
+        )
+
+        // Act
+        val error = runCatching {
+            useCase(
+                ApplyMemoBulkActionCommand(
+                    memoIds = listOf(MemoId("missing")),
+                    action = MemoBulkAction.setFavorite(true)
+                )
+            )
+        }.exceptionOrNull()
+
+        // Assert
+        assertEquals(IllegalArgumentException::class.java, error?.javaClass)
+        coVerify(exactly = 1) { memoRepository.getActiveMemo(MemoId("missing")) }
+        coVerify(exactly = 0) { memoRepository.saveAllMemos(any()) }
+        confirmVerified(memoRepository, tagRepository)
+    }
+
+    @Test
+    fun interactionMissingTagDoesNotWriteAnyBulkAction() = runTest {
+        // Arrange
+        val tagId = TagId("missing")
+        val memo = memoFixture(id = "memo-1")
+        val memoRepository = mockk<MemoRepository>()
+        val tagRepository = mockk<TagRepository>()
+        val timeProvider = mockk<CurrentTimeProvider>()
+        coEvery { memoRepository.getActiveMemo(memo.id) } returns memo
+        coEvery { tagRepository.getTag(tagId) } returns null
+        val useCase = ApplyMemoBulkActionUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            currentTimeProvider = timeProvider
+        )
+
+        // Act
+        val error = runCatching {
+            useCase(
+                ApplyMemoBulkActionCommand(
+                    memoIds = listOf(memo.id),
+                    action = MemoBulkAction.addTag(tagId)
+                )
+            )
+        }.exceptionOrNull()
+
+        // Assert
+        assertEquals(IllegalArgumentException::class.java, error?.javaClass)
+        coVerify(exactly = 1) { memoRepository.getActiveMemo(memo.id) }
+        coVerify(exactly = 1) { tagRepository.getTag(tagId) }
+        coVerify(exactly = 0) { memoRepository.saveAllMemos(any()) }
+        confirmVerified(memoRepository, tagRepository)
     }
 
     @Test

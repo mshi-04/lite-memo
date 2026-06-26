@@ -11,6 +11,7 @@ kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
 ktlintCli = "1.8.0"
 ktlintGradle = "14.2.0"
+kover = "0.9.8"
 room = "2.8.4"
 
 # AndroidX
@@ -36,6 +37,8 @@ kotlinxSerialization = "1.8.1"
 # Test
 junitJupiter = "6.0.3"
 junitPlatform = "6.0.3"
+mockk = "1.14.11"
+turbine = "1.2.1"
 
 [libraries]
 # AndroidX
@@ -91,6 +94,8 @@ play-services-ads = { group = "com.google.android.gms", name = "play-services-ad
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junitJupiter" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitJupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]
 # Build plugins
@@ -104,3 +109,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

@@ -11,7 +11,17 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
+import com.appvoyager.litememo.domain.provider.MemoIdProvider
+import com.appvoyager.litememo.domain.repository.MemoRepository
+import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.tagFixture
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.confirmVerified
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -299,6 +309,136 @@ class SaveMemoUseCaseTest {
 
         // Assert
         assertEquals(emptyList<Any>(), repository.savedMemos)
+    }
+
+    @Test
+    fun interactionMissingTagDoesNotSaveMemoOrGenerateId() = runTest {
+        // Arrange
+        val missingTagId = TagId("missing")
+        val memoRepository = mockk<MemoRepository>(relaxed = true)
+        val tagRepository = mockk<TagRepository>()
+        val memoIdProvider = mockk<MemoIdProvider>()
+        val timeProvider = mockk<CurrentTimeProvider>()
+        coEvery { tagRepository.getTagsByIds(listOf(missingTagId)) } returns emptyList()
+        every { timeProvider.now() } returns TimestampMillis(1000L)
+        val useCase = SaveMemoUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            memoIdProvider = memoIdProvider,
+            currentTimeProvider = timeProvider
+        )
+
+        // Act
+        val error = runCatching {
+            useCase(
+                SaveMemoCommand(
+                    title = MemoTitle("Title"),
+                    body = MemoBody("Body"),
+                    tagIds = listOf(missingTagId)
+                )
+            )
+        }.exceptionOrNull()
+
+        // Assert
+        assertEquals(IllegalArgumentException::class.java, error?.javaClass)
+        coVerify(exactly = 1) { tagRepository.getTagsByIds(listOf(missingTagId)) }
+        coVerify(exactly = 0) { memoRepository.saveMemo(any()) }
+        verify(exactly = 0) { memoIdProvider.newMemoId() }
+        confirmVerified(tagRepository, memoIdProvider)
+    }
+
+    @Test
+    fun boundaryEmptyTagIdsSkipsTagValidation() = runTest {
+        // Arrange
+        val memoRepository = mockk<MemoRepository>()
+        val tagRepository = mockk<TagRepository>()
+        val memoIdProvider = mockk<MemoIdProvider>()
+        val timeProvider = mockk<CurrentTimeProvider>()
+        coEvery { memoRepository.saveMemo(any()) } returns Unit
+        every { memoIdProvider.newMemoId() } returns MemoId("generated-id")
+        every { timeProvider.now() } returns TimestampMillis(1000L)
+        val useCase = SaveMemoUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            memoIdProvider = memoIdProvider,
+            currentTimeProvider = timeProvider
+        )
+
+        // Boundary/Interaction: empty tag ids do not touch TagRepository.
+        useCase(SaveMemoCommand(title = MemoTitle("Title"), body = MemoBody("Body")))
+
+        // Assert
+        coVerify(exactly = 0) { tagRepository.getTagsByIds(any()) }
+        confirmVerified(tagRepository)
+    }
+
+    @Test
+    fun interactionUpdatingExistingMemoDoesNotGenerateNewMemoId() = runTest {
+        // Arrange
+        val existing = memoFixture(id = "memo-1")
+        val memoRepository = mockk<MemoRepository>()
+        val tagRepository = mockk<TagRepository>()
+        val memoIdProvider = mockk<MemoIdProvider>()
+        val timeProvider = mockk<CurrentTimeProvider>()
+        coEvery { memoRepository.getActiveMemo(existing.id) } returns existing
+        coEvery { memoRepository.saveMemo(any()) } returns Unit
+        every { timeProvider.now() } returns TimestampMillis(2000L)
+        val useCase = SaveMemoUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            memoIdProvider = memoIdProvider,
+            currentTimeProvider = timeProvider
+        )
+
+        // Interaction: existing memo update preserves id and skips id generation.
+        val memo = useCase(
+            SaveMemoCommand(
+                id = existing.id,
+                title = MemoTitle("Updated"),
+                body = MemoBody("Body")
+            )
+        )
+
+        // Assert
+        assertEquals(existing.id, memo.id)
+        verify(exactly = 0) { memoIdProvider.newMemoId() }
+        confirmVerified(memoIdProvider)
+    }
+
+    @Test
+    fun interactionMissingExistingMemoFailsBeforeTagValidationIdGenerationOrSave() = runTest {
+        // Arrange
+        val memoRepository = mockk<MemoRepository>()
+        val tagRepository = mockk<TagRepository>()
+        val memoIdProvider = mockk<MemoIdProvider>()
+        val timeProvider = mockk<CurrentTimeProvider>()
+        every { timeProvider.now() } returns TimestampMillis(1000L)
+        coEvery { memoRepository.getActiveMemo(MemoId("missing")) } returns null
+        val useCase = SaveMemoUseCase(
+            memoRepository = memoRepository,
+            tagRepository = tagRepository,
+            memoIdProvider = memoIdProvider,
+            currentTimeProvider = timeProvider
+        )
+
+        // Error/Interaction: missing existing memo stops before downstream validation or writes.
+        val error = runCatching {
+            useCase(
+                SaveMemoCommand(
+                    id = MemoId("missing"),
+                    title = MemoTitle("Title"),
+                    body = MemoBody("Body"),
+                    tagIds = listOf(TagId("tag-1"))
+                )
+            )
+        }.exceptionOrNull()
+
+        // Assert
+        assertEquals(IllegalArgumentException::class.java, error?.javaClass)
+        coVerify(exactly = 0) { tagRepository.getTagsByIds(any()) }
+        coVerify(exactly = 0) { memoRepository.saveMemo(any()) }
+        verify(exactly = 0) { memoIdProvider.newMemoId() }
+        confirmVerified(tagRepository, memoIdProvider)
     }
 
     @Test
