@@ -62,6 +62,9 @@ jobs:
   unit-test:
     name: Unit Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -100,6 +103,36 @@ jobs:
           else
             bundle exec fastlane android unit_test
           fi
+
+      - name: Generate Kover coverage reports
+        run: ./gradlew :app:koverXmlReportProdDebug :app:koverHtmlReportProdDebug --no-daemon
+
+      - name: Add coverage summary to job output
+        run: |
+          {
+            echo "## Code Coverage"
+            echo ""
+            echo "Kover XML and HTML reports were generated for the prodDebug unit-test variant."
+            echo "Coverage is scoped to unit-testable domain, data mapping/repository, UI state, and ViewModel layers."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Kover reports
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: kover-prod-debug-report
+          path: app/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Add coverage report to PR
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: mi-kas/kover-report@db9938358b8e1e6175dd4136132bf4eb7aa4ae6d # v2.4
+        with:
+          path: ${{ github.workspace }}/app/build/reports/kover/**/*.xml
+          title: Unit-testable Code Coverage
+          update-comment: true
+          coverage-counter-type: LINE
 
   android-test:
     name: Android Test
@@ -181,6 +214,19 @@ jobs:
             ~/.android/avd/*
             ~/.android/adb*
           key: avd-33
+
+  skill-sync:
+    name: Claude Code Skill Sync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check Claude Code skill synchronization
+        run: pwsh -File scripts/sync-claude-skills.ps1 -Check
 
   wrapper-validation:
     name: Gradle Wrapper Validation

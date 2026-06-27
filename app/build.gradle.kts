@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kover)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -45,7 +46,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.appvoyager.litememo.HiltTestRunner"
     }
 
     signingConfigs {
@@ -119,6 +120,29 @@ detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
     baseline = rootProject.file("config/detekt/baseline.xml")
+}
+
+kover {
+    reports {
+        filters {
+            includes {
+                // Keep PR coverage focused on layers that are exercised by JVM unit tests.
+                // Add new unit-testable packages here when production code moves into a new layer.
+                classes(
+                    "com.appvoyager.litememo.data.local.entity.*",
+                    "com.appvoyager.litememo.data.local.model.*",
+                    "com.appvoyager.litememo.data.mapper.*",
+                    "com.appvoyager.litememo.data.model.export.*",
+                    "com.appvoyager.litememo.data.repository.*",
+                    "com.appvoyager.litememo.domain.model.*",
+                    "com.appvoyager.litememo.domain.model.value.*",
+                    "com.appvoyager.litememo.domain.usecase.*",
+                    "com.appvoyager.litememo.ui.state.*",
+                    "com.appvoyager.litememo.ui.viewmodel.*"
+                )
+            }
+        }
+    }
 }
 
 val preCommitFilesProperty = providers.gradleProperty("preCommitFiles")
@@ -209,17 +233,26 @@ dependencies {
     // Unit test
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // Instrumented test
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(platform(libs.kotlinx.serialization.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    kspAndroidTest(libs.hilt.compiler)
 
     // Debug tooling
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Static analysis

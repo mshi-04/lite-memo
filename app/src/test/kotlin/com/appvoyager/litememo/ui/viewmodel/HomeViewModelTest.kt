@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.viewmodel
 
+import app.cash.turbine.test
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
@@ -237,13 +238,13 @@ class HomeViewModelTest {
         )
         advanceUntilIdle()
 
-        // Act
-        viewModel.setMemoFavorite("memo-1", true)
-        advanceUntilIdle()
-        val event = viewModel.actionErrorEvent.first()
-
-        // Assert
-        assertEquals(Unit, event)
+        // Act & Assert
+        // Flow/Error: favorite update failure emits exactly one action error event.
+        viewModel.actionErrorEvent.test {
+            viewModel.setMemoFavorite("memo-1", true)
+            advanceUntilIdle()
+            assertEquals(Unit, awaitItem())
+        }
     }
 
     @Test
@@ -309,16 +310,19 @@ class HomeViewModelTest {
             viewModel.startSelection(MemoId("memo-1"))
             viewModel.uiState.first { it.selection.isActive }
 
-            // Act
-            viewModel.setSelectedMemosFavorite(true)
-            advanceUntilIdle()
-            val state = viewModel.uiState.first {
-                it.selection.selectedMemoIds == setOf(MemoId("memo-1"))
+            // Act & Assert
+            // Flow/Error/StateTransition: bulk failure emits an error and keeps selection.
+            viewModel.actionErrorEvent.test {
+                viewModel.setSelectedMemosFavorite(true)
+                advanceUntilIdle()
+                val state = viewModel.uiState.first {
+                    it.selection.selectedMemoIds == setOf(MemoId("memo-1"))
+                }
+                assertEquals(
+                    Unit to setOf(MemoId("memo-1")),
+                    awaitItem() to state.selection.selectedMemoIds
+                )
             }
-            val event = viewModel.actionErrorEvent.first()
-
-            // Assert
-            assertEquals(Unit to setOf(MemoId("memo-1")), event to state.selection.selectedMemoIds)
         }
 
     @Test
@@ -423,6 +427,22 @@ class HomeViewModelTest {
         // Assert
         assertEquals(true, state.bulkTagDialog.isVisible)
     }
+
+    @Test
+    fun boundaryRequestToggleTagForSelectedMemosDoesNothingWhenSelectionIsEmpty() =
+        runTest(dispatcher) {
+            // Arrange
+            val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+            advanceUntilIdle()
+            viewModel.uiState.first { !it.isLoading }
+
+            // Act
+            viewModel.requestToggleTagForSelectedMemos()
+            advanceUntilIdle()
+
+            // Assert
+            assertEquals(false, viewModel.uiState.value.bulkTagDialog.isVisible)
+        }
 
     @Test
     fun dismissBulkTagDialogClearsDialog() = runTest(dispatcher) {

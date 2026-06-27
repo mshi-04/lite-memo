@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -161,6 +162,7 @@ fun SettingsScreen(
                     label = stringResource(R.string.settings_export),
                     onClick = onExportClick,
                     enabled = !uiState.isExporting && !uiState.isImporting,
+                    testTag = "settingsExportAction",
                     trailingIcon = {
                         if (uiState.isExporting) {
                             CircularProgressIndicator(
@@ -185,10 +187,13 @@ fun SettingsScreen(
                     label = stringResource(R.string.settings_import),
                     onClick = onImportClick,
                     enabled = !uiState.isExporting && !uiState.isImporting,
+                    testTag = "settingsImportAction",
                     trailingIcon = {
                         if (uiState.isImporting) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .testTag("settingsImportLoadingIndicator"),
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -423,11 +428,13 @@ private fun SettingsClickableRow(
     label: String,
     onClick: () -> Unit,
     trailingIcon: @Composable () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    testTag: String? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(testTag?.let { Modifier.testTag(it) } ?: Modifier)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
