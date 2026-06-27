@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kover)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -121,6 +122,29 @@ detekt {
     baseline = rootProject.file("config/detekt/baseline.xml")
 }
 
+kover {
+    reports {
+        filters {
+            includes {
+                // Keep PR coverage focused on layers that are exercised by JVM unit tests.
+                // Add new unit-testable packages here when production code moves into a new layer.
+                classes(
+                    "com.appvoyager.litememo.data.local.entity.*",
+                    "com.appvoyager.litememo.data.local.model.*",
+                    "com.appvoyager.litememo.data.mapper.*",
+                    "com.appvoyager.litememo.data.model.export.*",
+                    "com.appvoyager.litememo.data.repository.*",
+                    "com.appvoyager.litememo.domain.model.*",
+                    "com.appvoyager.litememo.domain.model.value.*",
+                    "com.appvoyager.litememo.domain.usecase.*",
+                    "com.appvoyager.litememo.ui.state.*",
+                    "com.appvoyager.litememo.ui.viewmodel.*"
+                )
+            }
+        }
+    }
+}
+
 val preCommitFilesProperty = providers.gradleProperty("preCommitFiles")
 
 tasks.register<Detekt>("detektPreCommit") {
@@ -209,6 +233,8 @@ dependencies {
     // Unit test
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 

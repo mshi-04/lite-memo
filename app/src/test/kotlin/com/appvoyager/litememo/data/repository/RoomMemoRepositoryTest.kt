@@ -269,6 +269,32 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun moveMemoToTrashThrowsWhenDaoDoesNotMoveMemo() {
+        // Arrange
+        val dao = FakeMemoDao(movedToTrashCount = 0)
+        val repository = createRepository(dao)
+
+        // Act & Assert
+        // Error/Repository: DAO zero affected rows are exposed as an illegal state.
+        assertThrows(IllegalStateException::class.java) {
+            runTest { repository.moveMemoToTrash(MemoId("memo-1"), TimestampMillis(2_000L)) }
+        }
+    }
+
+    @Test
+    fun restoreMemoFromTrashThrowsWhenDaoDoesNotRestoreMemo() {
+        // Arrange
+        val dao = FakeMemoDao(restoredCount = 0)
+        val repository = createRepository(dao)
+
+        // Act & Assert
+        // Error/Repository: DAO zero affected rows are exposed as an illegal state.
+        assertThrows(IllegalStateException::class.java) {
+            runTest { repository.restoreMemoFromTrash(MemoId("memo-1")) }
+        }
+    }
+
+    @Test
     fun deleteMemoPermanentlyDelegatesMemoIdValueToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
@@ -359,6 +385,26 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun interactionExecuteImportDoesNotWriteWhenDuplicateMemoIdsProvided() = runTest {
+        // Arrange
+        val memoDao = FakeMemoDao()
+        val tagDao = FakeTagDao()
+        val repository = createRepositoryForImport(memoDao, tagDao)
+
+        // Act
+        // Interaction/Error: duplicate memo ids are rejected before any DAO write.
+        runCatching {
+            repository.executeImport(
+                tags = listOf(tagFixture(id = "t1")),
+                memos = listOf(memoFixture(id = "m1"), memoFixture(id = "m1"))
+            )
+        }
+
+        // Assert
+        assertEquals(NoImportWritesSnapshot(), importWritesSnapshot(tagDao, memoDao))
+    }
+
+    @Test
     fun executeImportThrowsWhenDuplicateTagIdsProvided() {
         // Arrange
         val repository = createRepositoryForImport(FakeMemoDao(), FakeTagDao())
@@ -372,6 +418,26 @@ class RoomMemoRepositoryTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun interactionExecuteImportDoesNotWriteWhenDuplicateTagIdsProvided() = runTest {
+        // Arrange
+        val memoDao = FakeMemoDao()
+        val tagDao = FakeTagDao()
+        val repository = createRepositoryForImport(memoDao, tagDao)
+
+        // Act
+        // Interaction/Error: duplicate tag ids are rejected before any DAO write.
+        runCatching {
+            repository.executeImport(
+                tags = listOf(tagFixture(id = "t1"), tagFixture(id = "t1")),
+                memos = listOf(memoFixture(id = "m1"))
+            )
+        }
+
+        // Assert
+        assertEquals(NoImportWritesSnapshot(), importWritesSnapshot(tagDao, memoDao))
     }
 
     @Test
@@ -442,9 +508,22 @@ class RoomMemoRepositoryTest {
 
     private data class SavedMemoBatch(val memo: MemoEntity, val tagRefs: List<MemoTagRefEntity>)
 
+    private data class NoImportWritesSnapshot(
+        val upsertedTagCount: Int = 0,
+        val savedMemoBatchCount: Int = 0
+    )
+
+    private fun importWritesSnapshot(tagDao: FakeTagDao, memoDao: FakeMemoDao) =
+        NoImportWritesSnapshot(
+            upsertedTagCount = tagDao.upsertedTags.size,
+            savedMemoBatchCount = memoDao.savedMemoBatches.size
+        )
+
     private class FakeMemoDao(
         memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),
         private val failOnObserveMemosBetween: Boolean = false,
+        private val movedToTrashCount: Int = 1,
+        private val restoredCount: Int = 1,
         private val deletedPermanentlyCount: Int = 1,
         private val onUpsertAllMemosWithTags: (() -> Unit)? = null
     ) : MemoDao {
@@ -517,12 +596,12 @@ class RoomMemoRepositoryTest {
 
         override suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int {
             movedToTrash = MovedToTrashRecord(memoId = id, deletedAt = deletedAt)
-            return 1
+            return movedToTrashCount
         }
 
         override suspend fun restoreMemoFromTrash(id: String): Int {
             restoredMemoId = id
-            return 1
+            return restoredCount
         }
 
         override suspend fun deleteMemoPermanently(id: String): Int {

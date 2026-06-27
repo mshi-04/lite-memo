@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.viewmodel
 
+import app.cash.turbine.test
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.QueueTagIdProvider
@@ -80,6 +81,62 @@ class TagManageViewModelTest {
     }
 
     @Test
+    fun boundarySaveEditDoesNotTreatCurrentTagNameAsDuplicate() = runTest(dispatcher) {
+        // Arrange
+        val tagRepository = FakeTagRepository(listOf(tagFixture(id = "tag-1", name = "Work")))
+        val viewModel = tagManageViewModel(tagRepository = tagRepository)
+        viewModel.uiState.first { it.tags.isNotEmpty() }
+
+        // Act
+        viewModel.startEdit("tag-1")
+        viewModel.saveEdit()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.editingTag == null }
+
+        // Assert
+        assertEquals(
+            null to listOf("Work"),
+            state.editingTag to tagRepository.currentTags().map { it.name.value }
+        )
+    }
+
+    @Test
+    fun boundarySaveEditSetsNameErrorWhenNameIsBlank() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = tagManageViewModel()
+        viewModel.startCreate()
+
+        // Act
+        viewModel.updateEditName("   ")
+        viewModel.saveEdit()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.editingTag?.nameError == true }
+
+        // Assert
+        assertEquals(true to "   ", state.editingTag?.nameError to state.editingTag?.name)
+    }
+
+    @Test
+    fun normalSaveEditClearsEditingTagWhenCreateSucceeds() = runTest(dispatcher) {
+        // Arrange
+        val tagRepository = FakeTagRepository()
+        val viewModel = tagManageViewModel(tagRepository = tagRepository)
+        viewModel.startCreate()
+
+        // Act
+        viewModel.updateEditName("Work")
+        viewModel.saveEdit()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.editingTag == null && it.tags.isNotEmpty() }
+
+        // Assert
+        assertEquals(
+            null to listOf("Work"),
+            state.editingTag to tagRepository.currentTags().map { it.name.value }
+        )
+    }
+
+    @Test
     fun saveEditMapsDuplicateNameExceptionToDuplicateNameError() = runTest(dispatcher) {
         // Arrange
         val viewModel = tagManageViewModel(
@@ -106,7 +163,7 @@ class TagManageViewModelTest {
     }
 
     @Test
-    fun confirmDeleteEmitsDeleteErrorWhenDeleteFails() = runTest(dispatcher) {
+    fun flowConfirmDeleteEmitsDeleteErrorWhenDeleteFails() = runTest(dispatcher) {
         // Arrange
         val tag = tagFixture(id = "tag-1", name = "Work")
         val viewModel = tagManageViewModel(
@@ -114,14 +171,13 @@ class TagManageViewModelTest {
         )
         val tagUiModel = viewModel.uiState.first { it.tags.isNotEmpty() }.tags.single()
 
-        // Act
-        viewModel.requestDelete(tagUiModel)
-        viewModel.confirmDelete()
-        advanceUntilIdle()
-        val event = viewModel.deleteErrorEvent.first()
-
-        // Assert
-        assertEquals(Unit to null, event to viewModel.uiState.value.showDeleteDialog)
+        // Act & Assert
+        viewModel.deleteErrorEvent.test {
+            viewModel.requestDelete(tagUiModel)
+            viewModel.confirmDelete()
+            advanceUntilIdle()
+            assertEquals(Unit to null, awaitItem() to viewModel.uiState.value.showDeleteDialog)
+        }
     }
 
     private fun tagManageViewModel(tagRepository: TagRepository = FakeTagRepository()) =

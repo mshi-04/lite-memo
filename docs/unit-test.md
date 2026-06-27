@@ -63,6 +63,71 @@ class MemoTitleTest {
 - 基本は `// Arrange`、`// Act`、`// Assert` コメントを入れる
 - 各ブロックの責務を混ぜない
 - Arrange が不要な場合（準備するものがない）は `// Arrange` を省略してよい
+- `// Arrange` / `// Act` / `// Assert` のラベルは置き換えず、常に残す
+- 検証観点（後述）は、`// Act` の直下に `// 観点: 意図` の形で1行添える
+- Turbine の `.test {}` のように操作と検証が交錯する場合は、ラベルを `// Act & Assert` にする
+
+## テスト観点（命名とコメント）
+
+テストが「何を検証しているか」を、関数名の接頭辞とコメントで明示します。
+観点を明示することで、テストの意図と網羅状況が読み取りやすくなります。
+
+### 観点の種類
+
+| 観点 | 意味 |
+|------|------|
+| `Normal` | 正常系。期待どおりの入力で期待どおりの結果になる |
+| `Boundary` | 境界・特殊入力（空リスト、重複、空白のみ、no-op など） |
+| `Error` | 失敗系。例外の送出やエラーイベントの発火 |
+| `Interaction` | 依存（Repository / Provider など）の呼び出し有無・回数・順序の検証（MockK の `verify` 系） |
+| `Flow` | `StateFlow` / `Channel` event の発火を検証（Turbine の `.test {}` を使う） |
+| `Coroutine` | 仮想時間・debounce・キャンセルなど coroutine の挙動 |
+| `StateTransition` | 操作前後の UI state の遷移 |
+
+### 適用ルール
+
+- 関数名は観点を接頭辞に付ける（camelCase）。例: `normalUiStateLoadsExistingMemo`、`boundaryEmptyTagIdsSkipsTagValidation`、`flowSaveEmitsOperationErrorWhenMemoSaveFails`
+- AAA ラベルは残したまま、`// Act`（または `// Act & Assert`）の直下に `// 観点: 意図` を1行置く。複数観点が絡む場合は `/` で連結する
+- 観点は検証の主目的に合わせて選び、無理に増やさない
+
+例:
+
+```kotlin
+@Test
+fun boundaryEmptyTagIdsSkipsTagValidation() = runTest {
+    // Arrange
+    val tagRepository = mockk<TagRepository>()
+    // ...
+
+    // Act
+    // Boundary/Interaction: empty tag ids do not touch TagRepository
+    useCase(SaveMemoCommand(title = MemoTitle("Title"), body = MemoBody("Body")))
+
+    // Assert
+    coVerify(exactly = 0) { tagRepository.getTagsByIds(any()) }
+    confirmVerified(tagRepository)
+}
+```
+
+Turbine で操作と検証が交錯する場合:
+
+```kotlin
+@Test
+fun flowSaveEmitsOperationErrorWhenMemoSaveFails() = runTest(dispatcher) {
+    // Arrange
+    val viewModel = memoEditViewModel(memoRepository = SaveFailingMemoRepository())
+    advanceUntilIdle()
+
+    // Act & Assert
+    // Flow/Error: save failure emits SaveFailed
+    viewModel.operationErrorEvent.test {
+        viewModel.updateTitle("Title")
+        viewModel.save()
+        advanceUntilIdle()
+        assertEquals(MemoEditOperationErrorEvent.SaveFailed, awaitItem())
+    }
+}
+```
 
 ## Coroutine Test
 
