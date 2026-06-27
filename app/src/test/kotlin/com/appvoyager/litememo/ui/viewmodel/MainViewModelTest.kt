@@ -69,11 +69,9 @@ class MainViewModelTest {
         repository.setAppLockEnabled(true)
         val viewModel = mainViewModel(repository)
 
-        // Act
-        advanceUntilIdle()
-
-        // Assert
+        // Act & Assert
         viewModel.authenticationRequestEvent.test {
+            advanceUntilIdle()
             assertEquals(Unit, awaitItem())
             expectNoEvents()
         }
@@ -85,10 +83,10 @@ class MainViewModelTest {
         val repository = FakeUserSettingsRepository()
         repository.setAppLockEnabled(true)
         val viewModel = mainViewModel(repository)
-        advanceUntilIdle()
 
         // Act & Assert
         viewModel.authenticationRequestEvent.test {
+            advanceUntilIdle()
             assertEquals(Unit, awaitItem())
             viewModel.requestUnlock()
             advanceUntilIdle()
