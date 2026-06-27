@@ -364,6 +364,7 @@ class SaveMemoUseCaseTest {
             currentTimeProvider = timeProvider
         )
 
+        // Act
         // Boundary/Interaction: empty tag ids do not touch TagRepository.
         useCase(SaveMemoCommand(title = MemoTitle("Title"), body = MemoBody("Body")))
 
@@ -390,6 +391,7 @@ class SaveMemoUseCaseTest {
             currentTimeProvider = timeProvider
         )
 
+        // Act
         // Interaction: existing memo update preserves id and skips id generation.
         val memo = useCase(
             SaveMemoCommand(
@@ -421,6 +423,7 @@ class SaveMemoUseCaseTest {
             currentTimeProvider = timeProvider
         )
 
+        // Act
         // Error/Interaction: missing existing memo stops before downstream validation or writes.
         val error = runCatching {
             useCase(

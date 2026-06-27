@@ -238,6 +238,7 @@ class HomeViewModelTest {
         )
         advanceUntilIdle()
 
+        // Act & Assert
         // Flow/Error: favorite update failure emits exactly one action error event.
         viewModel.actionErrorEvent.test {
             viewModel.setMemoFavorite("memo-1", true)
@@ -309,6 +310,7 @@ class HomeViewModelTest {
             viewModel.startSelection(MemoId("memo-1"))
             viewModel.uiState.first { it.selection.isActive }
 
+            // Act & Assert
             // Flow/Error/StateTransition: bulk failure emits an error and keeps selection.
             viewModel.actionErrorEvent.test {
                 viewModel.setSelectedMemosFavorite(true)

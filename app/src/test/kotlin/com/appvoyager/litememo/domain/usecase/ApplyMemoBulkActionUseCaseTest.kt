@@ -344,6 +344,7 @@ class ApplyMemoBulkActionUseCaseTest {
         )
         val tagRepository = FakeTagRepository(listOf(tagFixture(id = tagId.value)))
 
+        // Act
         // Boundary/Normal: no-op favorite/tag changes should not produce changed memos.
         applyMemoBulkActionUseCase(
             memoRepository = alreadyFavoriteRepository
@@ -446,6 +447,7 @@ class ApplyMemoBulkActionUseCaseTest {
             currentTimeProvider = timeProvider
         )
 
+        // Act
         // Boundary/Interaction: empty input is a pure no-op.
         useCase(
             ApplyMemoBulkActionCommand(

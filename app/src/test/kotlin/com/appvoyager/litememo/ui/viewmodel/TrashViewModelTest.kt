@@ -182,6 +182,7 @@ class TrashViewModelTest {
         viewModel.requestEmptyTrash()
         viewModel.uiState.first { it.showEmptyTrashDialog }
 
+        // Act & Assert
         // Flow/Error/StateTransition: empty-trash failure emits an event and closes the dialog.
         viewModel.actionErrorEvent.test {
             viewModel.confirmEmptyTrash()

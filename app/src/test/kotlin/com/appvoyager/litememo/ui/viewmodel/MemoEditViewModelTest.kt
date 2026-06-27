@@ -144,7 +144,7 @@ class MemoEditViewModelTest {
 
         // Act
         viewModel.updateTitle("Draft")
-        advanceTimeBy(1_000L)
+        advanceTimeBy(1_000L.milliseconds)
         advanceUntilIdle()
 
         // Assert
@@ -161,11 +161,12 @@ class MemoEditViewModelTest {
         val viewModel = memoEditViewModel(draftRepository = draftRepository)
         advanceUntilIdle()
 
+        // Act
         // Coroutine/Boundary: a new edit before debounce cancels the previous autosave.
         viewModel.updateTitle("First")
-        advanceTimeBy(500L)
+        advanceTimeBy(500L.milliseconds)
         viewModel.updateTitle("Second")
-        advanceTimeBy(1_000L)
+        advanceTimeBy(1_000L.milliseconds)
         advanceUntilIdle()
 
         // Assert
@@ -375,6 +376,7 @@ class MemoEditViewModelTest {
         )
         advanceUntilIdle()
 
+        // Act & Assert
         // Flow/Error: save repository failure emits a SaveFailed operation event.
         viewModel.operationErrorEvent.test {
             viewModel.updateTitle("Title")
@@ -394,6 +396,7 @@ class MemoEditViewModelTest {
         )
         advanceUntilIdle()
 
+        // Act & Assert
         // Flow/Error/StateTransition: delete failure emits an event and clears pending state.
         viewModel.operationErrorEvent.test {
             viewModel.delete()

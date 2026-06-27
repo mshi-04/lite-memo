@@ -102,6 +102,7 @@ class SettingsViewModelTest {
         val exportFileRepository = ImmediateExportFileRepository()
         val viewModel = settingsViewModel(exportFileRepository)
 
+        // Act & Assert
         // Flow/Normal: export success is emitted as a snackbar event.
         viewModel.snackbarEvent.test {
             viewModel.exportMemos(ExportFileReference("content://export"))
@@ -121,6 +122,7 @@ class SettingsViewModelTest {
             ImmediateExportFileRepository(writeError = IllegalStateException("write failed"))
         )
 
+        // Act & Assert
         // Flow/Error: failed export is converted to an error snackbar.
         viewModel.snackbarEvent.test {
             viewModel.exportMemos(ExportFileReference("content://export"))
@@ -137,6 +139,7 @@ class SettingsViewModelTest {
         viewModel.onImportFileSelected(ExportFileReference("content://import"))
         advanceUntilIdle()
 
+        // Act & Assert
         // Flow/Normal/StateTransition: import confirmation closes the dialog and emits success.
         viewModel.snackbarEvent.test {
             viewModel.confirmImport()
@@ -159,6 +162,7 @@ class SettingsViewModelTest {
         viewModel.onImportFileSelected(ExportFileReference("content://import"))
         advanceUntilIdle()
 
+        // Act & Assert
         // Flow/Error: failed import is converted to an error snackbar.
         viewModel.snackbarEvent.test {
             viewModel.confirmImport()
@@ -174,6 +178,7 @@ class SettingsViewModelTest {
         val exportFileRepository = ImmediateExportFileRepository()
         val viewModel = settingsViewModel(exportFileRepository)
 
+        // Act & Assert
         // Flow/Boundary: confirming without a selected file is a no-op and emits no snackbar.
         viewModel.snackbarEvent.test {
             viewModel.confirmImport()
@@ -194,6 +199,7 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         viewModel.uiState.first { it.showImportConfirmDialog }
 
+        // Act & Assert
         // Flow/Boundary/Interaction: dismissed import selection cannot be confirmed later.
         viewModel.snackbarEvent.test {
             viewModel.dismissImportConfirmDialog()
