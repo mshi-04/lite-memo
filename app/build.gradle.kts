@@ -46,7 +46,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.appvoyager.litememo.HiltTestRunner"
     }
 
     signingConfigs {
@@ -239,13 +239,20 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // Instrumented test
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(platform(libs.kotlinx.serialization.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    kspAndroidTest(libs.hilt.compiler)
 
     // Debug tooling
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Static analysis

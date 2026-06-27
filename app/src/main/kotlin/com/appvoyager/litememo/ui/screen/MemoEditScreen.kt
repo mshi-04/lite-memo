@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -151,7 +152,9 @@ fun MemoEditScreen(
                     BasicTextField(
                         value = uiState.title,
                         onValueChange = onTitleChanged,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("memoEditTitleInput"),
                         textStyle = TextStyle(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
@@ -201,7 +204,8 @@ fun MemoEditScreen(
                         onValueChange = onBodyChanged,
                         modifier = Modifier
                             .fillMaxSize()
-                            .focusRequester(bodyFocusRequester),
+                            .focusRequester(bodyFocusRequester)
+                            .testTag("memoEditBodyInput"),
                         textStyle = TextStyle(
                             fontSize = 14.sp,
                             color = colorScheme.onSurface
