@@ -9,7 +9,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
-class LiteMemoApplication : Application() {
+class LiteMemoApplication : BaseLiteMemoApplication()
+
+open class BaseLiteMemoApplication : Application() {
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -17,7 +19,7 @@ class LiteMemoApplication : Application() {
         super.onCreate()
         // Mobile Ads SDK の初期化は I/O を伴うためバックグラウンドで行う。
         applicationScope.launch {
-            MobileAds.initialize(this@LiteMemoApplication)
+            MobileAds.initialize(this@BaseLiteMemoApplication)
         }
     }
 }
