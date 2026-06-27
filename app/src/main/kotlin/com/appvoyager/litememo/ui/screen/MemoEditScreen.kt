@@ -154,7 +154,7 @@ fun MemoEditScreen(
                         onValueChange = onTitleChanged,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag("memoEditTitleInput"),
+                            .testTag(MemoEditTestTags.TITLE_INPUT),
                         textStyle = TextStyle(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
@@ -205,7 +205,7 @@ fun MemoEditScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .focusRequester(bodyFocusRequester)
-                            .testTag("memoEditBodyInput"),
+                            .testTag(MemoEditTestTags.BODY_INPUT),
                         textStyle = TextStyle(
                             fontSize = 14.sp,
                             color = colorScheme.onSurface

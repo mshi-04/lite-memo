@@ -3,7 +3,6 @@ package com.appvoyager.litememo
 import android.app.Application
 import android.content.Context
 import androidx.test.runner.AndroidJUnitRunner
-import dagger.hilt.android.testing.HiltTestApplication
 
 class HiltTestRunner : AndroidJUnitRunner() {
 
@@ -13,7 +12,7 @@ class HiltTestRunner : AndroidJUnitRunner() {
         context: Context?
     ): Application = super.newApplication(
         cl,
-        HiltTestApplication::class.java.name,
+        LiteMemoHiltTestApplication_Application::class.java.name,
         context
     )
 }

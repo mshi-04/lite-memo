@@ -46,10 +46,10 @@ class MemoEditScreenComposeTest {
         // Act
         // Normal: title and body edits are reflected through callbacks.
         composeRule
-            .onNodeWithTag("memoEditTitleInput")
+            .onNodeWithTag(MemoEditTestTags.TITLE_INPUT)
             .performTextInput("Shopping")
         composeRule
-            .onNodeWithTag("memoEditBodyInput")
+            .onNodeWithTag(MemoEditTestTags.BODY_INPUT)
             .performTextInput("Milk")
 
         // Assert
