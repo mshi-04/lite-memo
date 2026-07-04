@@ -136,6 +136,22 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun selectDateFromPickerUsesUtcSoDeviceEastOfUtcKeepsSameDay() = runTest(dispatcher) {
+        // Arrange
+        // DatePicker は日付を UTC midnight で符号化する。端末が UTC より東でも翌日にずれない。
+        val viewModel = calendarViewModel(zone = ZoneId.of("Asia/Tokyo"))
+        advanceUntilIdle()
+
+        // Act
+        viewModel.selectDateFromPicker(epochMillis("2026-07-03T00:00:00Z"))
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(LocalDate.of(2026, 7, 3), state.selectedDate)
+    }
+
+    @Test
     fun closeSearchClearsSearchState() = runTest(dispatcher) {
         // Arrange
         val viewModel = calendarViewModel()

@@ -234,7 +234,7 @@ fun LiteMemoApp(
                 )
             ) {
                 MemoEditRoute(
-                    onNavigateBack = { navController.popBackStackIfResumed() },
+                    onNavigateBack = { navController.popBackStack() },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
                     },
@@ -248,7 +248,7 @@ fun LiteMemoApp(
                         showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
-                        navController.popBackStackIfResumed()
+                        navController.popBackStack()
                         coroutineScope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 message = memoDeletedMessage,

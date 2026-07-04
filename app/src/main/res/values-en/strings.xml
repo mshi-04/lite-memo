@@ -54,6 +54,7 @@
     <string name="selected_date_title_format">Memos for MMMM d</string>
     <string name="calendar_day_cell_date_format">MMMM d, yyyy</string>
     <string name="calendar_day_has_memo_description">Has memo</string>
+    <string name="calendar_day_cell_description_with_memo">%1$s, %2$s</string>
     <string-array name="week_day_labels">
         <item>Sun</item>
         <item>Mon</item>

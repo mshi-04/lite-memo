@@ -179,6 +179,7 @@ class MemoEditViewModel @Inject constructor(
                 }
                 clearSavedState()
                 shouldPersistDraft = false
+                _uiState.update { it.copy(isSaving = false) }
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             }
             return
@@ -200,6 +201,7 @@ class MemoEditViewModel @Inject constructor(
                 clearDraftAfterCompletedOperation()
                 clearSavedState()
                 shouldPersistDraft = false
+                _uiState.update { it.copy(isSaving = false) }
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             } catch (e: CancellationException) {
                 throw e
@@ -221,6 +223,7 @@ class MemoEditViewModel @Inject constructor(
                 clearDraftAfterCompletedOperation()
                 clearSavedState()
                 shouldPersistDraft = false
+                _uiState.update { state -> state.copy(isDeletePending = false) }
                 _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memoId))
             } catch (e: CancellationException) {
                 throw e

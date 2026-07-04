@@ -214,6 +214,22 @@ class MemoEditViewModelTest {
     }
 
     @Test
+    fun stateTransitionSaveClearsSavingStateWhenMemoIsSaved() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = memoEditViewModel()
+        advanceUntilIdle()
+
+        // Act
+        // StateTransition: saved memo completion does not leave the editor disabled.
+        viewModel.updateTitle("Title")
+        viewModel.save()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(false, viewModel.uiState.value.isSaving)
+    }
+
+    @Test
     fun coroutineRapidSaveCreatesMemoOnlyOnce() = runTest(dispatcher) {
         // Arrange
         val memoRepository = FakeMemoRepository()
@@ -272,6 +288,22 @@ class MemoEditViewModelTest {
         // Assert
         assertEquals(listOf(target), draftRepository.clearedTargets)
         assertEquals(emptyList<MemoEditDraft>(), draftRepository.currentDrafts())
+    }
+
+    @Test
+    fun stateTransitionDeleteClearsPendingStateWhenMemoIsDeleted() = runTest(dispatcher) {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+        val viewModel = memoEditViewModel(memo = memo)
+        advanceUntilIdle()
+
+        // Act
+        // StateTransition: deleted memo completion does not leave the editor disabled.
+        viewModel.delete()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(false, viewModel.uiState.value.isDeletePending)
     }
 
     @Test

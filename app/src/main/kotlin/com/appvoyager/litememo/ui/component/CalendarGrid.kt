@@ -150,17 +150,24 @@ private fun CalendarDayCell(
     val dateText = remember(datePattern, day.date) {
         day.date.format(DateTimeFormatter.ofPattern(datePattern))
     }
-    val cellDescription = if (day.hasMemo) "$dateText, $hasMemoDescription" else dateText
+    val cellDescription = if (day.hasMemo) {
+        stringResource(
+            R.string.calendar_day_cell_description_with_memo,
+            dateText,
+            hasMemoDescription
+        )
+    } else {
+        dateText
+    }
 
     Box(
         modifier = modifier
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(containerColor)
-            .clickable { onDateSelected(day.date) }
+            .clickable(role = Role.Button) { onDateSelected(day.date) }
             .semantics(mergeDescendants = true) {
                 contentDescription = cellDescription
-                role = Role.Button
                 selected = day.isSelected
             },
         contentAlignment = Alignment.Center

@@ -53,6 +53,7 @@
     <string name="selected_date_title_format">M月d日のメモ</string>
     <string name="calendar_day_cell_date_format">yyyy年M月d日</string>
     <string name="calendar_day_has_memo_description">メモあり</string>
+    <string name="calendar_day_cell_description_with_memo">%1$s、%2$s</string>
     <string-array name="week_day_labels">
         <item>日</item>
         <item>月</item>

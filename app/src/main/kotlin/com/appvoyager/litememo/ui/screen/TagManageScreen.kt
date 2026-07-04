@@ -329,7 +329,7 @@ private fun TagEditDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismiss, enabled = !state.isSaving) {
                 Text(text = stringResource(R.string.cancel_label))
             }
         }
