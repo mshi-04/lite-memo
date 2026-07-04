@@ -26,6 +26,7 @@ class ExportFileWriterInstrumentedTest {
 
     private lateinit var context: Context
     private lateinit var file: File
+    private var providerUriToDelete: Uri? = null
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -40,6 +41,7 @@ class ExportFileWriterInstrumentedTest {
 
     @After
     fun tearDown() {
+        providerUriToDelete?.let { uri -> context.contentResolver.delete(uri, null, null) }
         file.delete()
     }
 
@@ -57,6 +59,24 @@ class ExportFileWriterInstrumentedTest {
 
         // Assert
         assertEquals(data, restored)
+    }
+
+    @Test
+    fun normalWriteTruncatesExistingContentWhenOverwritingShorterJson() = runTest {
+        // Arrange
+        val writer = ExportFileWriter(context, json, UnconfinedTestDispatcher())
+        val uri = Uri.parse("content://$NON_TRUNCATING_AUTHORITY/export-${System.nanoTime()}.json")
+        providerUriToDelete = uri
+        val shorterData = emptyExportDto()
+        val expectedJson = json.encodeToString(shorterData)
+
+        // Act
+        // Normal: overwriting with shorter JSON truncates the previous content.
+        writer.write(uri, exportDto())
+        writer.write(uri, shorterData)
+
+        // Assert
+        assertEquals(expectedJson, readRawJson(uri))
     }
 
     @Test
@@ -96,7 +116,22 @@ class ExportFileWriterInstrumentedTest {
         )
     )
 
+    private fun emptyExportDto() = LiteMemoExportDto(
+        version = 1,
+        exportedAt = 6000L,
+        tags = emptyList(),
+        memos = emptyList()
+    )
+
+    private fun readRawJson(uri: Uri): String =
+        requireNotNull(context.contentResolver.openInputStream(uri)) {
+            "Failed to open input stream for URI: $uri"
+        }.use { inputStream ->
+            inputStream.bufferedReader(Charsets.UTF_8).readText()
+        }
+
     private companion object {
         const val DEFAULT_MAX_SIZE = 5L * 1024 * 1024
+        const val NON_TRUNCATING_AUTHORITY = "com.appvoyager.litememo.test.nontruncating"
     }
 }
