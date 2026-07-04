@@ -31,7 +31,7 @@ class SaveMemoUseCase @Inject constructor(
         val updatedAt = existingMemo?.updatedAtFrom(now)
             ?: TimestampMillis(maxOf(now.value, createdAt.value))
         val memo = Memo(
-            id = existingMemo?.id ?: command.id ?: memoIdProvider.newMemoId(),
+            id = command.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
             createdAt = createdAt,
