@@ -67,12 +67,10 @@
     <!-- Memo Edit -->
     <string name="memo_edit_title_hint">タイトル</string>
     <string name="memo_edit_body_hint">メモ</string>
-    <string name="save_memo">保存</string>
     <string name="delete_memo">削除</string>
     <string name="navigate_back">戻る</string>
     <string name="memo_deleted_message">メモを削除しました</string>
     <string name="memo_restore_failed_message">メモを復元できませんでした</string>
-    <string name="memo_edit_draft_error_message">下書きの操作に失敗しました</string>
     <string name="memo_save_error_message">メモを保存できませんでした</string>
     <string name="memo_delete_error_message">メモを削除できませんでした</string>
     <string name="undo_label">元に戻す</string>

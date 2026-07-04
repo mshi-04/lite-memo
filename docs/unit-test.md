@@ -122,7 +122,7 @@ fun flowSaveEmitsOperationErrorWhenMemoSaveFails() = runTest(dispatcher) {
     // Flow/Error: save failure emits SaveFailed
     viewModel.operationErrorEvent.test {
         viewModel.updateTitle("Title")
-        viewModel.save()
+        advanceTimeBy(1_000L)
         advanceUntilIdle()
         assertEquals(MemoEditOperationErrorEvent.SaveFailed, awaitItem())
     }

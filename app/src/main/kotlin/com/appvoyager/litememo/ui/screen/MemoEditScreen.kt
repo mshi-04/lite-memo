@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -60,12 +59,12 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
+@Suppress("LongParameterList", "LongMethod")
 fun MemoEditScreen(
     uiState: MemoEditUiState,
     onTitleChanged: (String) -> Unit,
     onBodyChanged: (String) -> Unit,
     onTagToggled: (String) -> Unit,
-    onSave: () -> Unit,
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
     onRetry: () -> Unit,
@@ -112,19 +111,10 @@ fun MemoEditScreen(
                         }
                     }
                     if (uiState.memoId != null && !uiState.isDeletePending) {
-                        IconButton(onClick = onDelete, enabled = !uiState.isSaving) {
+                        IconButton(onClick = onDelete) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = stringResource(R.string.delete_memo)
-                            )
-                        }
-                    }
-                    if (!uiState.isDeletePending) {
-                        IconButton(onClick = onSave, enabled = !uiState.isSaving) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = stringResource(R.string.save_memo),
-                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -252,7 +242,6 @@ private fun MemoEditScreenPreview() {
             onTitleChanged = {},
             onBodyChanged = {},
             onTagToggled = {},
-            onSave = {},
             onDelete = {},
             onBackRequest = {},
             onRetry = {},
