@@ -105,7 +105,7 @@ fun LiteMemoApp(
         }
     }
 
-    LaunchedEffect(currentDestination?.route) {
+    LaunchedEffect(backStackEntry) {
         memoEditPopInFlight = false
     }
 

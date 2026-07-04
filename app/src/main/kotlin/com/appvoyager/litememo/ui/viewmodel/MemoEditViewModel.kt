@@ -98,26 +98,27 @@ class MemoEditViewModel @Inject constructor(
     }
 
     private fun loadInitialState() {
-        if (memoId != null) {
+        val memoIdAtStart = memoId
+        if (memoIdAtStart != null) {
             _uiState.update { it.copy(isLoading = true, hasError = false) }
         }
         viewModelScope.launch {
-            val savedDraft = savedStateDraft()
+            val savedDraft = savedStateDraft(memoIdAtStart)
             if (savedDraft != null) {
-                applyDraft(savedDraft)
+                applyDraft(savedDraft, memoIdAtStart)
                 return@launch
             }
 
-            val storedDraft = loadStoredDraft()
+            val storedDraft = loadStoredDraft(memoIdAtStart)
             if (storedDraft != null) {
                 // 非同期の下書きロード中にユーザーが入力済みなら上書きしない。
                 if (_uiState.value.isModified) return@launch
-                applyDraft(storedDraft)
-                persistSavedState(storedDraft.toUiState())
+                applyDraft(storedDraft, memoIdAtStart)
+                persistSavedState(storedDraft.toUiState(memoIdAtStart))
                 return@launch
             }
 
-            val currentMemoId = memoId ?: return@launch
+            val currentMemoId = memoIdAtStart ?: return@launch
             try {
                 val memo = getMemoUseCase(MemoId(currentMemoId))
                 if (memo == null) {
@@ -270,8 +271,8 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadStoredDraft(): MemoEditDraft? = try {
-        getMemoEditDraftUseCase(currentDraftTarget())
+    private suspend fun loadStoredDraft(targetMemoId: String?): MemoEditDraft? = try {
+        getMemoEditDraftUseCase(draftTargetFor(targetMemoId))
     } catch (e: CancellationException) {
         throw e
     } catch (_: Throwable) {
@@ -313,9 +314,9 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    private fun applyDraft(draft: MemoEditDraft) {
+    private fun applyDraft(draft: MemoEditDraft, targetMemoId: String?) {
         _uiState.update { current ->
-            draft.toUiState().copy(availableTags = current.availableTags)
+            draft.toUiState(targetMemoId).copy(availableTags = current.availableTags)
         }
     }
 
@@ -325,12 +326,14 @@ class MemoEditViewModel @Inject constructor(
         _uiState.update { it.copy(memoId = memo.id.value) }
     }
 
-    private fun currentDraftTarget(): MemoEditDraftTarget = memoId
+    private fun currentDraftTarget(): MemoEditDraftTarget = draftTargetFor(memoId)
+
+    private fun draftTargetFor(targetMemoId: String?): MemoEditDraftTarget = targetMemoId
         ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
         ?: MemoEditDraftTarget.newMemo(createdAt)
 
-    private fun savedStateDraft(): MemoEditDraft? {
-        val title = savedStateHandle.get<String>(DRAFT_TITLE_KEY) ?: return null
+    private fun savedStateDraft(targetMemoId: String?): MemoEditDraft? {
+        val title = savedStateHandle.get<String>(DRAFT_TITLE_KEY)
         val body = savedStateHandle.get<String>(DRAFT_BODY_KEY).orEmpty()
         val tagIds = savedStateHandle
             .get<ArrayList<String>>(DRAFT_TAG_IDS_KEY)
@@ -339,16 +342,20 @@ class MemoEditViewModel @Inject constructor(
         val isFavorite = savedStateHandle.get<Boolean>(DRAFT_IS_FAVORITE_KEY) ?: false
         val savedCreatedAt = savedStateHandle.get<Long>(DRAFT_CREATED_AT_KEY)
 
-        if (title.isBlank() && body.isBlank() && tagIds.isEmpty() && !isFavorite) return null
-
-        return MemoEditDraft(
-            target = currentDraftTarget(),
-            title = MemoTitle(title),
-            body = MemoBody(body),
-            createdAt = savedCreatedAt?.let { TimestampMillis(it) },
-            tagIds = tagIds,
-            isFavorite = isFavorite
-        )
+        return if (title == null) {
+            null
+        } else if (title.isBlank() && body.isBlank() && tagIds.isEmpty() && !isFavorite) {
+            null
+        } else {
+            MemoEditDraft(
+                target = draftTargetFor(targetMemoId),
+                title = MemoTitle(title),
+                body = MemoBody(body),
+                createdAt = savedCreatedAt?.let { TimestampMillis(it) },
+                tagIds = tagIds,
+                isFavorite = isFavorite
+            )
+        }
     }
 
     private fun persistSavedState(state: MemoEditUiState) {
@@ -384,9 +391,9 @@ class MemoEditViewModel @Inject constructor(
         selectedTagIds = tagIds.map { it.value }.toSet()
     )
 
-    private fun MemoEditDraft.toUiState() = MemoEditUiState(
+    private fun MemoEditDraft.toUiState(targetMemoId: String?) = MemoEditUiState(
         isLoading = false,
-        memoId = this@MemoEditViewModel.memoId,
+        memoId = targetMemoId,
         title = title.value,
         body = body.value,
         isFavorite = isFavorite,
