@@ -23,11 +23,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,6 +42,7 @@ import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun AnimatedCalendarGrid(
@@ -137,12 +145,24 @@ private fun CalendarDayCell(
         MaterialTheme.colorScheme.onSurface
     }
 
+    val datePattern = stringResource(R.string.calendar_day_cell_date_format)
+    val hasMemoDescription = stringResource(R.string.calendar_day_has_memo_description)
+    val dateText = remember(datePattern, day.date) {
+        day.date.format(DateTimeFormatter.ofPattern(datePattern))
+    }
+    val cellDescription = if (day.hasMemo) "$dateText, $hasMemoDescription" else dateText
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(containerColor)
-            .clickable { onDateSelected(day.date) },
+            .clickable { onDateSelected(day.date) }
+            .semantics(mergeDescendants = true) {
+                contentDescription = cellDescription
+                role = Role.Button
+                selected = day.isSelected
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(

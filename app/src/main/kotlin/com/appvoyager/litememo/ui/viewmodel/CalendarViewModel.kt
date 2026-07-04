@@ -17,11 +17,13 @@ import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -31,9 +33,12 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZoneOffset
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
+private const val SEARCH_DEBOUNCE_MILLIS = 250L
+
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val observeCalendarMonthSummaryUseCase: ObserveCalendarMonthSummaryUseCase,
@@ -76,6 +81,9 @@ class CalendarViewModel @Inject constructor(
     }
 
     private val searchResults = searchQuery
+        // searchQuery は StateFlow なので連続する同一値は既に除去される。
+        // 空クエリは即時、入力中のみデバウンスして 1 文字ごとの LIKE 検索を抑える。
+        .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
         .flatMapLatest { query ->
             if (query.isBlank()) {
                 flowOf(emptyList<Memo>())
@@ -191,7 +199,9 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun selectDateFromPicker(millis: Long) {
-        val date = Instant.ofEpochMilli(millis).atZone(zoneId).toLocalDate()
+        // DatePicker の millis は UTC midnight エンコード（CalendarScreen 側も UTC で符号化）。
+        // 端末 zoneId でデコードすると UTC より西の端末で前日にずれるため UTC で戻す。
+        val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
         selectDate(date)
         dismissDatePicker()
     }

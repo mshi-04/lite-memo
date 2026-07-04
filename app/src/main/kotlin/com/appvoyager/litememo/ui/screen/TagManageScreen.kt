@@ -324,7 +324,7 @@ private fun TagEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onSave) {
+            TextButton(onClick = onSave, enabled = !state.isSaving) {
                 Text(text = stringResource(R.string.save_label))
             }
         },

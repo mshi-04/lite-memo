@@ -110,6 +110,8 @@ class MemoEditViewModel @Inject constructor(
 
             val storedDraft = loadStoredDraft()
             if (storedDraft != null) {
+                // 非同期の下書きロード中にユーザーが入力済みなら上書きしない。
+                if (_uiState.value.isModified) return@launch
                 applyDraft(storedDraft)
                 persistSavedState(storedDraft.toUiState())
                 return@launch
@@ -158,10 +160,12 @@ class MemoEditViewModel @Inject constructor(
     }
 
     fun save() {
+        if (_uiState.value.isSaving) return
         val state = _uiState.value
         val title = state.title
         val body = state.body
         if (title.isBlank() && body.isBlank()) {
+            _uiState.update { it.copy(isSaving = true) }
             viewModelScope.launch {
                 autosaveJob?.cancel()
                 try {
@@ -169,6 +173,8 @@ class MemoEditViewModel @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Throwable) {
+                    // 空メモ save は draft 破棄なので、失敗時は画面に留めて再試行させる。
+                    _uiState.update { it.copy(isSaving = false) }
                     return@launch
                 }
                 clearSavedState()
@@ -177,6 +183,7 @@ class MemoEditViewModel @Inject constructor(
             }
             return
         }
+        _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
                 saveMemoUseCase(
@@ -197,6 +204,7 @@ class MemoEditViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
+                _uiState.update { it.copy(isSaving = false) }
                 _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
             }
         }
@@ -204,8 +212,9 @@ class MemoEditViewModel @Inject constructor(
 
     fun delete() {
         val id = memoId ?: return
+        if (_uiState.value.isDeletePending) return
+        _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
         viewModelScope.launch {
-            _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
             try {
                 val memoId = moveMemoToTrashUseCase(MemoId(id))
                 autosaveJob?.cancel()

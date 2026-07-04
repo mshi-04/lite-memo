@@ -28,7 +28,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -74,6 +76,7 @@ fun LiteMemoApp(
     val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
     val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
+    val browserNotFoundMessage = stringResource(R.string.settings_browser_not_found)
     val showErrorSnackbar: (String) -> Unit = remember(coroutineScope, snackbarHostState) {
         { message ->
             coroutineScope.launch {
@@ -148,10 +151,10 @@ fun LiteMemoApp(
             ) {
                 HomeRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate(memoEditRouteWithId(memoId))
+                        navController.navigateOnce(memoEditRouteWithId(memoId))
                     },
                     onCreateMemoClick = {
-                        navController.navigate(MEMO_EDIT_BASE)
+                        navController.navigateOnce(MEMO_EDIT_BASE)
                     },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
@@ -168,10 +171,10 @@ fun LiteMemoApp(
             ) {
                 CalendarRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate(memoEditRouteWithId(memoId))
+                        navController.navigateOnce(memoEditRouteWithId(memoId))
                     },
                     onCreateMemoClick = { createdAt ->
-                        navController.navigate(memoEditRouteWithCreatedAt(createdAt))
+                        navController.navigateOnce(memoEditRouteWithCreatedAt(createdAt))
                     }
                 )
             }
@@ -186,31 +189,34 @@ fun LiteMemoApp(
                     snackbarHostState = snackbarHostState,
                     onRequestAppLockAuthentication = onRequestAppLockAuthentication,
                     onOpenSourceLicenseClick = {
-                        navController.navigate(OSS_LICENSES_ROUTE)
+                        navController.navigateOnce(OSS_LICENSES_ROUTE)
                     },
                     onTagManageClick = {
-                        navController.navigate(TAG_MANAGE_ROUTE)
+                        navController.navigateOnce(TAG_MANAGE_ROUTE)
                     },
                     onTrashClick = {
-                        navController.navigate(TRASH_ROUTE)
+                        navController.navigateOnce(TRASH_ROUTE)
                     }
                 )
             }
             composable(TRASH_ROUTE) {
                 TrashRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStackIfResumed() },
                     snackbarHostState = snackbarHostState
                 )
             }
             composable(TAG_MANAGE_ROUTE) {
                 TagManageRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStackIfResumed() },
                     snackbarHostState = snackbarHostState
                 )
             }
             composable(OSS_LICENSES_ROUTE) {
                 OssLicensesRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStackIfResumed() },
+                    onOpenUrlError = {
+                        showErrorSnackbar(browserNotFoundMessage)
+                    }
                 )
             }
             composable(
@@ -228,7 +234,7 @@ fun LiteMemoApp(
                 )
             ) {
                 MemoEditRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStackIfResumed() },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
                     },
@@ -242,7 +248,7 @@ fun LiteMemoApp(
                         showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
-                        navController.popBackStack()
+                        navController.popBackStackIfResumed()
                         coroutineScope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 message = memoDeletedMessage,
@@ -258,6 +264,23 @@ fun LiteMemoApp(
                 )
             }
         }
+    }
+}
+
+// 連打対策: 遷移アニメーション中の多重 pop / navigate を一元的に抑止する。
+// 現在の画面が RESUMED（遷移完了・最前面）のときだけ操作を実行する。
+private fun NavController.isCurrentEntryResumed(): Boolean =
+    currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true
+
+private fun NavController.popBackStackIfResumed() {
+    if (isCurrentEntryResumed()) {
+        popBackStack()
+    }
+}
+
+private fun NavController.navigateOnce(route: String) {
+    if (isCurrentEntryResumed()) {
+        navigate(route) { launchSingleTop = true }
     }
 }
 

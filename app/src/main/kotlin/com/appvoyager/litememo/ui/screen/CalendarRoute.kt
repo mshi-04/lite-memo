@@ -1,7 +1,6 @@
 package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -17,9 +16,7 @@ fun CalendarRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    DisposableEffect(viewModel) {
-        onDispose { viewModel.closeSearch() }
-    }
+    // 詳細画面へ遷移して戻ったときに検索状態を復帰できるよう、離脱時に検索は閉じない。
 
     CalendarScreen(
         uiState = uiState,

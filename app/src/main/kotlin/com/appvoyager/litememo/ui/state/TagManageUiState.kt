@@ -14,5 +14,6 @@ data class TagEditState(
     val colorArgb: Long = DEFAULT_TAG_COLORS.first(),
     val nameError: Boolean = false,
     val duplicateNameError: Boolean = false,
-    val saveError: Boolean = false
+    val saveError: Boolean = false,
+    val isSaving: Boolean = false
 )

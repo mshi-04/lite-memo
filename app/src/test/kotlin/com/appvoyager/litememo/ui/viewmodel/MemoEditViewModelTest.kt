@@ -16,6 +16,7 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.MemoEditDraftRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ClearMemoEditDraftUseCase
@@ -26,6 +27,7 @@ import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -209,6 +211,45 @@ class MemoEditViewModelTest {
         // Assert
         assertEquals(listOf(target), draftRepository.clearedTargets)
         assertEquals(emptyList<MemoEditDraft>(), draftRepository.currentDrafts())
+    }
+
+    @Test
+    fun coroutineRapidSaveCreatesMemoOnlyOnce() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = FakeMemoRepository()
+        val viewModel = memoEditViewModel(memoRepository = memoRepository)
+        advanceUntilIdle()
+
+        // Act
+        // Coroutine/Boundary: an in-flight save blocks the second rapid call.
+        viewModel.updateTitle("Title")
+        viewModel.save()
+        viewModel.save()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(1, memoRepository.savedMemos.size)
+    }
+
+    @Test
+    fun coroutineStoredDraftDoesNotOverwriteUserInputWhenModified() = runTest(dispatcher) {
+        // Arrange
+        val gate = CompletableDeferred<Unit>()
+        val storedDraft = memoEditDraft(title = "Stored", body = "Stored body")
+        val viewModel = memoEditViewModel(
+            draftRepository = GatedDraftRepository(gate = gate, draft = storedDraft)
+        )
+        // loadInitialState suspends while reading the stored draft.
+        advanceUntilIdle()
+
+        // Act
+        // Coroutine/Boundary: user input arrives before the stored draft resolves.
+        viewModel.updateTitle("User typed")
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals("User typed", viewModel.uiState.value.title)
     }
 
     @Test
@@ -418,7 +459,7 @@ class MemoEditViewModelTest {
                 )
             )
         } ?: SavedStateHandle(),
-        draftRepository: FakeMemoEditDraftRepository = FakeMemoEditDraftRepository(),
+        draftRepository: MemoEditDraftRepository = FakeMemoEditDraftRepository(),
         memoRepository: MemoRepository = FakeMemoRepository(listOfNotNull(memo))
     ): MemoEditViewModel {
         val tagRepository = FakeTagRepository(
@@ -469,6 +510,21 @@ class MemoEditViewModelTest {
         MemoRepository by FakeMemoRepository(listOf(memo)) {
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis): Unit =
             error("Failed to move memo to trash.")
+    }
+
+    // getDraft を gate まで中断させ、下書きロードとユーザー入力の競合を再現するための Fake。
+    private class GatedDraftRepository(
+        private val gate: CompletableDeferred<Unit>,
+        private val draft: MemoEditDraft
+    ) : MemoEditDraftRepository {
+        override suspend fun getDraft(target: MemoEditDraftTarget): MemoEditDraft? {
+            gate.await()
+            return draft.takeIf { it.target == target }
+        }
+
+        override suspend fun saveDraft(draft: MemoEditDraft) = Unit
+
+        override suspend fun clearDraft(target: MemoEditDraftTarget) = Unit
     }
 }
 
