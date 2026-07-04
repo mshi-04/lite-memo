@@ -131,17 +131,19 @@ class MemoEditViewModel @Inject constructor(
         autosaveJob?.cancel()
         _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
         viewModelScope.launch {
-            try {
-                val deletedMemoId = moveMemoToTrashUseCase(targetMemoId)
-                clearSavedState()
-                _uiState.update { state -> state.copy(isDeletePending = false) }
-                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                isFinishing = false
-                _uiState.update { state -> state.copy(isDeletePending = false) }
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
+            persistMutex.withLock {
+                try {
+                    val deletedMemoId = moveMemoToTrashUseCase(targetMemoId)
+                    clearSavedState()
+                    _uiState.update { state -> state.copy(isDeletePending = false) }
+                    _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Throwable) {
+                    isFinishing = false
+                    _uiState.update { state -> state.copy(isDeletePending = false) }
+                    _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
+                }
             }
         }
     }
@@ -156,9 +158,13 @@ class MemoEditViewModel @Inject constructor(
                 finishBlankEditing()
                 return@launch
             }
-            tryPersistForFinish()
-            clearSavedState()
-            _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+            if (persist()) {
+                clearSavedState()
+                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+            } else {
+                // 保存失敗時は下書きを消さず画面に留め、再試行できるようにする。
+                isFinishing = false
+            }
         }
     }
 
@@ -166,7 +172,7 @@ class MemoEditViewModel @Inject constructor(
         if (_uiState.value.isDeletePending || isFinishing) return
         viewModelScope.launch {
             autosaveJob?.cancel()
-            persistIfNeeded()
+            persist()
         }
     }
 
@@ -212,74 +218,58 @@ class MemoEditViewModel @Inject constructor(
         autosaveJob?.cancel()
         autosaveJob = viewModelScope.launch {
             delay(AUTOSAVE_DEBOUNCE_MILLIS)
-            persistIfNeeded()
+            persist()
         }
     }
 
-    private suspend fun persistIfNeeded() {
-        persistMutex.withLock {
-            val state = _uiState.value
-            if (state.isContentBlank()) return
-            try {
-                val memo = saveMemoUseCase(
-                    SaveMemoCommand(
-                        id = memoId,
-                        title = MemoTitle(state.title),
-                        body = MemoBody(state.body),
-                        createdAt = createdAt,
-                        tagIds = state.selectedTagIds.map { TagId(it) },
-                        isFavorite = state.isFavorite
-                    )
+    /**
+     * 現在の編集内容を保存する。保存成功、または保存対象なし（空内容）なら true、保存失敗なら false。
+     *
+     * 保存・破棄・ゴミ箱送りは同一の [persistMutex] で直列化し、
+     * 進行中の保存が完了した後に破棄／ゴミ箱送りが走ることを保証する。
+     */
+    private suspend fun persist(): Boolean = persistMutex.withLock {
+        val state = _uiState.value
+        if (state.isContentBlank()) return@withLock true
+        try {
+            val memo = saveMemoUseCase(
+                SaveMemoCommand(
+                    id = memoId,
+                    title = MemoTitle(state.title),
+                    body = MemoBody(state.body),
+                    createdAt = createdAt,
+                    tagIds = state.selectedTagIds.map { TagId(it) },
+                    isFavorite = state.isFavorite
                 )
-                applySavedMemo(memo)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
-            }
-        }
-    }
-
-    private suspend fun tryPersistForFinish() {
-        persistMutex.withLock {
-            val state = _uiState.value
-            if (state.isContentBlank()) return
-            try {
-                val memo = saveMemoUseCase(
-                    SaveMemoCommand(
-                        id = memoId,
-                        title = MemoTitle(state.title),
-                        body = MemoBody(state.body),
-                        createdAt = createdAt,
-                        tagIds = state.selectedTagIds.map { TagId(it) },
-                        isFavorite = state.isFavorite
-                    )
-                )
-                applySavedMemo(memo)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
-            }
+            )
+            applySavedMemo(memo)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
+            false
         }
     }
 
     private suspend fun finishBlankEditing() {
-        try {
-            if (isNewMemoSession) {
-                discardMemoUseCase(memoId)
-                clearSavedState()
-                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
-            } else {
-                val deletedMemoId = moveMemoToTrashUseCase(memoId)
-                clearSavedState()
-                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+        persistMutex.withLock {
+            try {
+                if (isNewMemoSession) {
+                    discardMemoUseCase(memoId)
+                    clearSavedState()
+                    _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+                } else {
+                    val deletedMemoId = moveMemoToTrashUseCase(memoId)
+                    clearSavedState()
+                    _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                isFinishing = false
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Throwable) {
-            isFinishing = false
-            _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
         }
     }
 

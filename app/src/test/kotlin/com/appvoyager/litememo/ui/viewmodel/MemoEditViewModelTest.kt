@@ -284,6 +284,29 @@ class MemoEditViewModelTest {
     }
 
     @Test
+    fun flowFinishSaveFailureKeepsDraftWithoutNavigating() = runTest(dispatcher) {
+        // Arrange
+        val savedStateHandle = SavedStateHandle()
+        val viewModel = memoEditViewModel(
+            savedStateHandle = savedStateHandle,
+            memoRepository = SaveFailingMemoRepository()
+        )
+        advanceUntilIdle()
+
+        // Act & Assert
+        // Flow/Error: finish-time save failure keeps the draft and does not navigate away.
+        viewModel.navigationEvent.test {
+            viewModel.updateTitle("Unsaved")
+            viewModel.finishEditing()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+
+        // Assert: the edited draft survives in SavedStateHandle for a later retry.
+        assertEquals("Unsaved", savedStateHandle.get<String>("editTitle"))
+    }
+
+    @Test
     fun coroutineFlushEditsPersistsWithoutNavigation() = runTest(dispatcher) {
         // Arrange
         val memoRepository = FakeMemoRepository()
