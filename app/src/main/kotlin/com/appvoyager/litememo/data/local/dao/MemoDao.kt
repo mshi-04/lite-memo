@@ -70,6 +70,7 @@ interface MemoDao {
     @Query("DELETE FROM memos WHERE id = :id AND deletedAt IS NOT NULL")
     suspend fun deleteMemoPermanently(id: String): Int
 
+    // 放棄された新規編集行の破棄専用。deletedAt を問わず物理削除する（MemoRepository.discardMemo 参照）。
     @Query("DELETE FROM memos WHERE id = :id")
     suspend fun discardMemo(id: String): Int
 

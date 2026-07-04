@@ -30,6 +30,13 @@ interface MemoRepository {
 
     suspend fun deleteMemoPermanently(id: MemoId)
 
+    /**
+     * [id] のメモをゴミ箱状態に関わらず物理削除する。
+     *
+     * 放棄された未保存の新規編集行を破棄する用途に限定する。
+     * 該当メモが存在しなくても no-op（例外は投げない）。
+     * ゴミ箱経由の完全削除には [deleteMemoPermanently] を使うこと。
+     */
     suspend fun discardMemo(id: MemoId)
 
     suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis)
