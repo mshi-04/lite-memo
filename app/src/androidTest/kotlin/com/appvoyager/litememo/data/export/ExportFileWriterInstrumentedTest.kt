@@ -10,6 +10,7 @@ import com.appvoyager.litememo.data.model.export.TagExportDto
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -77,6 +78,24 @@ class ExportFileWriterInstrumentedTest {
 
         // Assert
         assertEquals(expectedJson, readRawJson(uri))
+    }
+
+    @Test
+    fun normalWriteFallsBackWhenProviderUriHasUnsafeFileName() = runTest {
+        // Arrange
+        val writer = ExportFileWriter(context, json, UnconfinedTestDispatcher())
+        val unsafeUri = Uri.parse("content://$NON_TRUNCATING_AUTHORITY/unsafe%2Fexport.json")
+        val fallbackUri = Uri.parse("content://$NON_TRUNCATING_AUTHORITY/export.json")
+        providerUriToDelete = fallbackUri
+        val data = emptyExportDto()
+        val expectedJson = json.encodeToString(data)
+
+        // Act
+        // Normal: unsafe path segments are redirected to the provider fallback file.
+        writer.write(unsafeUri, data)
+
+        // Assert
+        assertEquals(expectedJson, readRawJson(fallbackUri))
     }
 
     @Test

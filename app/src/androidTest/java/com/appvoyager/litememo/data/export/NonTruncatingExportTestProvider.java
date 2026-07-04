@@ -8,6 +8,7 @@ import android.os.ParcelFileDescriptor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.regex.Pattern;
 
 /**
  * mode "w" では truncate しない DocumentsProvider（DownloadsProvider 等）を模したテスト用 provider。
@@ -19,6 +20,9 @@ import java.io.FileNotFoundException;
  * NoClassDefFoundError: kotlin.jvm.internal.Intrinsics でクラッシュする（再現確認済み）。
  */
 public final class NonTruncatingExportTestProvider extends ContentProvider {
+
+    private static final String DEFAULT_FILE_NAME = "export.json";
+    private static final Pattern SAFE_FILE_NAME = Pattern.compile("[A-Za-z0-9._-]+");
 
     @Override
     public boolean onCreate() {
@@ -80,9 +84,17 @@ public final class NonTruncatingExportTestProvider extends ContentProvider {
 
     private File fileFor(Uri uri) {
         String fileName = uri.getLastPathSegment();
-        if (fileName == null) {
-            fileName = "export.json";
+        if (!isSafeFileName(fileName)) {
+            fileName = DEFAULT_FILE_NAME;
         }
         return new File(getContext().getCacheDir(), fileName);
+    }
+
+    private boolean isSafeFileName(String fileName) {
+        return fileName != null
+                && !fileName.contains("..")
+                && !fileName.contains("/")
+                && !fileName.contains("\\")
+                && SAFE_FILE_NAME.matcher(fileName).matches();
     }
 }
