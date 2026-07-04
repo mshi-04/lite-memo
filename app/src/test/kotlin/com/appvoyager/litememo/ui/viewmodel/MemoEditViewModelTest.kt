@@ -245,6 +245,43 @@ class MemoEditViewModelTest {
     }
 
     @Test
+    fun flowRestoredNewMemoEmptiedOnFinishIsStillHardDeleted() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = FakeMemoRepository(listOf(memoFixture(id = "generated-id")))
+        val viewModel = memoEditViewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "memoId" to "generated-id",
+                    "generatedMemoId" to "generated-id",
+                    "editTitle" to "",
+                    "editBody" to ""
+                )
+            ),
+            memoRepository = memoRepository
+        )
+        advanceUntilIdle()
+
+        // Act & Assert
+        // Flow: restored sessions that started as new still discard instead of trashing.
+        viewModel.navigationEvent.test {
+            viewModel.finishEditing()
+            advanceUntilIdle()
+            assertEquals(
+                RestoredNewMemoFinishSnapshot(
+                    navigationEvent = MemoEditNavigationEvent.NavigateBack,
+                    remainingMemoIds = emptyList(),
+                    movedToTrashIds = emptyList()
+                ),
+                RestoredNewMemoFinishSnapshot(
+                    navigationEvent = awaitItem(),
+                    remainingMemoIds = memoRepository.currentMemos().map { it.id },
+                    movedToTrashIds = memoRepository.movedToTrash.map { it.memoId }
+                )
+            )
+        }
+    }
+
+    @Test
     fun flowExistingMemoEmptiedOnFinishMovesToTrash() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1")
@@ -281,6 +318,35 @@ class MemoEditViewModelTest {
                 awaitItem() to memoRepository.savedMemos.single().title.value
             )
         }
+    }
+
+    @Test
+    fun coroutineFinishEditingIgnoresLaterTextChanges() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = FakeMemoRepository()
+        val viewModel = memoEditViewModel(memoRepository = memoRepository)
+        advanceUntilIdle()
+
+        // Act
+        // Coroutine: once finish starts, late UI updates must not re-arm autosave.
+        viewModel.updateTitle("Pending")
+        viewModel.finishEditing()
+        viewModel.updateBody("Late body")
+        advanceTimeBy(1_000L.milliseconds)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(
+            MemoEditSnapshot("Pending", "", emptySet(), false),
+            memoRepository.savedMemos.single().let { memo ->
+                MemoEditSnapshot(
+                    title = memo.title.value,
+                    body = memo.body.value,
+                    selectedTagIds = memo.tagIds.map { it.value }.toSet(),
+                    isFavorite = memo.isFavorite
+                )
+            }
+        )
     }
 
     @Test
@@ -335,6 +401,7 @@ class MemoEditViewModelTest {
         // Coroutine: delete prevents delayed autosave from recreating the memo.
         viewModel.updateTitle("Pending")
         viewModel.delete()
+        viewModel.updateBody("Late body")
         advanceTimeBy(1_000L.milliseconds)
         advanceUntilIdle()
 
@@ -463,4 +530,10 @@ private data class MemoEditSnapshot(
     val body: String,
     val selectedTagIds: Set<String>,
     val isFavorite: Boolean
+)
+
+private data class RestoredNewMemoFinishSnapshot(
+    val navigationEvent: MemoEditNavigationEvent,
+    val remainingMemoIds: List<MemoId>,
+    val movedToTrashIds: List<MemoId>
 )

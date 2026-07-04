@@ -50,7 +50,11 @@ class MemoEditViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val initialMemoId: String? = savedStateHandle["memoId"]
-    private val isNewMemoSession: Boolean = initialMemoId == null
+    private val isNewMemoSession: Boolean = savedStateHandle
+        .get<Boolean>(SESSION_STARTED_AS_NEW_KEY)
+        ?: isRestoredNewMemoSession().also { startedAsNew ->
+            savedStateHandle[SESSION_STARTED_AS_NEW_KEY] = startedAsNew
+        }
     private var memoId: MemoId = initialMemoId
         ?.let { MemoId(it) }
         ?: savedStateHandle.get<String>(GENERATED_MEMO_ID_KEY)
@@ -73,7 +77,7 @@ class MemoEditViewModel @Inject constructor(
     private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.CONFLATED)
+    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.BUFFERED)
     val operationErrorEvent = _operationErrorEvent.receiveAsFlow()
 
     private val persistMutex = Mutex()
@@ -208,6 +212,7 @@ class MemoEditViewModel @Inject constructor(
     }
 
     private fun updateEditState(transform: (MemoEditUiState) -> MemoEditUiState) {
+        if (isFinishing || _uiState.value.isDeletePending) return
         val nextState = transform(_uiState.value)
         _uiState.value = nextState
         persistSavedState(nextState)
@@ -317,6 +322,11 @@ class MemoEditViewModel @Inject constructor(
         savedStateHandle.remove<Boolean>(EDIT_IS_FAVORITE_KEY)
     }
 
+    private fun isRestoredNewMemoSession(): Boolean {
+        if (initialMemoId == null) return true
+        return savedStateHandle.get<String>(GENERATED_MEMO_ID_KEY) == initialMemoId
+    }
+
     private fun Memo.toUiState() = MemoEditUiState(
         isLoading = false,
         memoId = id.value,
@@ -335,6 +345,7 @@ class MemoEditViewModel @Inject constructor(
         const val EDIT_TAG_IDS_KEY = "editTagIds"
         const val EDIT_IS_FAVORITE_KEY = "editIsFavorite"
         const val GENERATED_MEMO_ID_KEY = "generatedMemoId"
+        const val SESSION_STARTED_AS_NEW_KEY = "sessionStartedAsNew"
     }
 }
 
