@@ -16,12 +16,12 @@ import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
+@Suppress("LongParameterList")
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (MemoId) -> Unit,
     onSaveError: () -> Unit,
     onDeleteError: () -> Unit,
-    onDraftError: () -> Unit,
     onShareError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MemoEditViewModel = hiltViewModel()
@@ -39,12 +39,6 @@ fun MemoEditRoute(
     }
 
     LaunchedEffect(viewModel) {
-        viewModel.draftErrorEvent.collect {
-            onDraftError()
-        }
-    }
-
-    LaunchedEffect(viewModel) {
         viewModel.operationErrorEvent.collect { event ->
             when (event) {
                 MemoEditOperationErrorEvent.SaveFailed -> onSaveError()
@@ -54,11 +48,11 @@ fun MemoEditRoute(
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        viewModel.flushDraft()
+        viewModel.flushEdits()
     }
 
     BackHandler(enabled = !uiState.isDeletePending) {
-        viewModel.requestBack()
+        viewModel.finishEditing()
     }
 
     MemoEditScreen(
@@ -66,9 +60,8 @@ fun MemoEditRoute(
         onTitleChanged = { viewModel.updateTitle(it) },
         onBodyChanged = { viewModel.updateBody(it) },
         onTagToggled = { viewModel.toggleTag(it) },
-        onSave = { viewModel.save() },
         onDelete = { viewModel.delete() },
-        onBackRequest = { viewModel.requestBack() },
+        onBackRequest = { viewModel.finishEditing() },
         onRetry = { viewModel.reload() },
         onShareMemo = {
             val text = viewModel.formatMemoText() ?: return@MemoEditScreen

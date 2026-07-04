@@ -76,7 +76,6 @@ fun LiteMemoApp(
     val memoDeletedMessage = stringResource(R.string.memo_deleted_message)
     val undoLabel = stringResource(R.string.undo_label)
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
-    val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
     val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
     val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
@@ -251,9 +250,6 @@ fun LiteMemoApp(
                     },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
-                    },
-                    onDraftError = {
-                        showErrorSnackbar(draftErrorMessage)
                     },
                     onSaveError = {
                         showErrorSnackbar(saveMemoErrorMessage)

@@ -4,13 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
-import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -34,7 +30,6 @@ class MemoEditScreenComposeTest {
                     onTitleChanged = { title -> uiState = uiState.copy(title = title) },
                     onBodyChanged = { body -> uiState = uiState.copy(body = body) },
                     onTagToggled = {},
-                    onSave = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -58,39 +53,6 @@ class MemoEditScreenComposeTest {
             MemoEditInputSnapshot(title = uiState.title, body = uiState.body)
         )
     }
-
-    @Test
-    fun interactionSaveInvokesCallback() {
-        // Arrange
-        var saveCount = 0
-        composeRule.setContent {
-            TestScreenContent {
-                MemoEditScreen(
-                    uiState = MemoEditUiState(),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
-                    onSave = { saveCount += 1 },
-                    onDelete = {},
-                    onBackRequest = {},
-                    onRetry = {},
-                    onShareMemo = {}
-                )
-            }
-        }
-
-        // Act
-        // Interaction: save action delegates to the provided callback.
-        composeRule
-            .onNodeWithContentDescription(string(R.string.save_memo))
-            .performClick()
-
-        // Assert
-        assertEquals(1, saveCount)
-    }
-
-    private fun string(id: Int): String =
-        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
 
     private data class MemoEditInputSnapshot(val title: String, val body: String)
 }

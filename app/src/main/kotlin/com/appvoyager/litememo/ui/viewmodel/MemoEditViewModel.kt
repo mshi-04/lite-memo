@@ -4,21 +4,18 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.Memo
-import com.appvoyager.litememo.domain.model.MemoEditDraft
-import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import com.appvoyager.litememo.domain.usecase.ClearMemoEditDraftUseCase
+import com.appvoyager.litememo.domain.usecase.DiscardMemoUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
-import com.appvoyager.litememo.domain.usecase.GetMemoEditDraftUseCase
+import com.appvoyager.litememo.domain.usecase.GenerateMemoIdUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
-import com.appvoyager.litememo.domain.usecase.SaveMemoEditDraftUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
@@ -35,46 +32,53 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class MemoEditViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getMemoUseCase: GetMemoUseCase,
     private val saveMemoUseCase: SaveMemoUseCase,
     private val moveMemoToTrashUseCase: MoveMemoToTrashUseCase,
+    private val discardMemoUseCase: DiscardMemoUseCase,
+    private val generateMemoIdUseCase: GenerateMemoIdUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
-    private val getMemoEditDraftUseCase: GetMemoEditDraftUseCase,
-    private val saveMemoEditDraftUseCase: SaveMemoEditDraftUseCase,
-    private val clearMemoEditDraftUseCase: ClearMemoEditDraftUseCase,
     private val formatMemoTextUseCase: FormatMemoTextUseCase
 ) : ViewModel() {
 
-    private var memoId: String? = savedStateHandle["memoId"]
+    private val initialMemoId: String? = savedStateHandle["memoId"]
+    private val isNewMemoSession: Boolean = initialMemoId == null
+    private var memoId: MemoId = initialMemoId
+        ?.let { MemoId(it) }
+        ?: savedStateHandle.get<String>(GENERATED_MEMO_ID_KEY)
+            ?.let { MemoId(it) }
+        ?: generateMemoIdUseCase().also { generatedId ->
+            savedStateHandle[GENERATED_MEMO_ID_KEY] = generatedId.value
+        }
     private val createdAtMillis: Long = savedStateHandle["createdAt"] ?: -1L
     private val createdAt: TimestampMillis? = if (createdAtMillis >= 0) {
         TimestampMillis(createdAtMillis)
     } else {
         null
     }
-    private val initialDraftTarget: MemoEditDraftTarget = memoId
-        ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
-        ?: MemoEditDraftTarget.newMemo(createdAt)
 
-    private val _uiState = MutableStateFlow(MemoEditUiState(memoId = memoId))
+    private val _uiState = MutableStateFlow(
+        MemoEditUiState(isLoading = initialMemoId != null, memoId = initialMemoId)
+    )
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
     private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    private val _draftErrorEvent = Channel<Unit>(Channel.CONFLATED)
-    val draftErrorEvent = _draftErrorEvent.receiveAsFlow()
-
-    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.BUFFERED)
+    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.CONFLATED)
     val operationErrorEvent = _operationErrorEvent.receiveAsFlow()
 
+    private val persistMutex = Mutex()
     private var autosaveJob: Job? = null
-    private var shouldPersistDraft = false
+    private var isFinishing = false
 
     init {
         loadInitialState()
@@ -82,10 +86,9 @@ class MemoEditViewModel @Inject constructor(
             .onEach { tags ->
                 _uiState.update { state ->
                     val validTagIds = tags.map { it.id.value }.toSet()
-                    val selectedTagIds = state.selectedTagIds.intersect(validTagIds)
                     state.copy(
                         availableTags = tags.map { TagUiModel.fromDomain(it) },
-                        selectedTagIds = selectedTagIds
+                        selectedTagIds = state.selectedTagIds.intersect(validTagIds)
                     )
                 }
             }
@@ -97,28 +100,90 @@ class MemoEditViewModel @Inject constructor(
         loadInitialState()
     }
 
-    private fun loadInitialState() {
-        val memoIdAtStart = memoId
-        if (memoIdAtStart != null) {
-            _uiState.update { it.copy(isLoading = true, hasError = false) }
+    fun formatMemoText(): String? {
+        val state = _uiState.value
+        return formatMemoTextUseCase(state.title, state.body)
+    }
+
+    fun updateTitle(title: String) {
+        updateEditState { it.copy(title = title, isModified = true) }
+    }
+
+    fun updateBody(body: String) {
+        updateEditState { it.copy(body = body, isModified = true) }
+    }
+
+    fun toggleTag(tagId: String) {
+        updateEditState { state ->
+            val selectedTagIds = if (tagId in state.selectedTagIds) {
+                state.selectedTagIds - tagId
+            } else {
+                state.selectedTagIds + tagId
+            }
+            state.copy(selectedTagIds = selectedTagIds, isModified = true)
         }
+    }
+
+    fun delete() {
+        val targetMemoId = _uiState.value.memoId?.let { MemoId(it) } ?: return
+        if (_uiState.value.isDeletePending || isFinishing) return
+        isFinishing = true
+        autosaveJob?.cancel()
+        _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
         viewModelScope.launch {
-            val savedDraft = savedStateDraft(memoIdAtStart)
-            if (savedDraft != null) {
-                applyDraft(savedDraft, memoIdAtStart)
+            try {
+                val deletedMemoId = moveMemoToTrashUseCase(targetMemoId)
+                clearSavedState()
+                _uiState.update { state -> state.copy(isDeletePending = false) }
+                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                isFinishing = false
+                _uiState.update { state -> state.copy(isDeletePending = false) }
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
+            }
+        }
+    }
+
+    fun finishEditing() {
+        if (_uiState.value.isDeletePending || isFinishing) return
+        isFinishing = true
+        autosaveJob?.cancel()
+        viewModelScope.launch {
+            val state = _uiState.value
+            if (state.isContentBlank()) {
+                finishBlankEditing()
+                return@launch
+            }
+            tryPersistForFinish()
+            clearSavedState()
+            _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+        }
+    }
+
+    fun flushEdits() {
+        if (_uiState.value.isDeletePending || isFinishing) return
+        viewModelScope.launch {
+            autosaveJob?.cancel()
+            persistIfNeeded()
+        }
+    }
+
+    private fun loadInitialState() {
+        viewModelScope.launch {
+            val savedState = savedStateEdit()
+            if (savedState != null) {
+                _uiState.update { current ->
+                    savedState.copy(availableTags = current.availableTags)
+                }
                 return@launch
             }
 
-            val storedDraft = loadStoredDraft(memoIdAtStart)
-            if (storedDraft != null) {
-                // 非同期の下書きロード中にユーザーが入力済みなら上書きしない。
-                if (_uiState.value.isModified) return@launch
-                applyDraft(storedDraft, memoIdAtStart)
-                persistSavedState(storedDraft.toUiState(memoIdAtStart))
+            val currentMemoId = initialMemoId ?: run {
+                _uiState.update { it.copy(isLoading = false, hasError = false) }
                 return@launch
             }
-
-            val currentMemoId = memoIdAtStart ?: return@launch
             try {
                 val memo = getMemoUseCase(MemoId(currentMemoId))
                 if (memo == null) {
@@ -136,128 +201,8 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    fun formatMemoText(): String? {
-        val state = _uiState.value
-        return formatMemoTextUseCase(state.title, state.body)
-    }
-
-    fun updateTitle(title: String) {
-        updateDraftState { it.copy(title = title, isModified = true) }
-    }
-
-    fun updateBody(body: String) {
-        updateDraftState { it.copy(body = body, isModified = true) }
-    }
-
-    fun toggleTag(tagId: String) {
-        updateDraftState { state ->
-            val newIds = if (tagId in state.selectedTagIds) {
-                state.selectedTagIds - tagId
-            } else {
-                state.selectedTagIds + tagId
-            }
-            state.copy(selectedTagIds = newIds, isModified = true)
-        }
-    }
-
-    fun save() {
-        if (_uiState.value.isSaving) return
-        val state = _uiState.value
-        val title = state.title
-        val body = state.body
-        if (title.isBlank() && body.isBlank()) {
-            _uiState.update { it.copy(isSaving = true) }
-            viewModelScope.launch {
-                autosaveJob?.cancel()
-                try {
-                    clearDraft()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Throwable) {
-                    // 空メモ save は draft 破棄なので、失敗時は画面に留めて再試行させる。
-                    _uiState.update { it.copy(isSaving = false) }
-                    return@launch
-                }
-                clearSavedState()
-                shouldPersistDraft = false
-                _uiState.update { it.copy(isSaving = false) }
-                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
-            }
-            return
-        }
-        _uiState.update { it.copy(isSaving = true) }
-        viewModelScope.launch {
-            try {
-                val savedMemo = saveMemoUseCase(
-                    SaveMemoCommand(
-                        id = memoId?.let { MemoId(it) },
-                        title = MemoTitle(title),
-                        body = MemoBody(body),
-                        createdAt = createdAt,
-                        tagIds = state.selectedTagIds.map { TagId(it) },
-                        isFavorite = state.isFavorite
-                    )
-                )
-                applySavedMemo(savedMemo)
-                autosaveJob?.cancel()
-                clearDraftAfterCompletedOperation()
-                clearSavedState()
-                shouldPersistDraft = false
-                _uiState.update { it.copy(isSaving = false) }
-                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                _uiState.update { it.copy(isSaving = false) }
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
-            }
-        }
-    }
-
-    fun delete() {
-        val id = memoId ?: return
-        if (_uiState.value.isDeletePending) return
-        _uiState.update { state -> state.copy(isDeletePending = true, hasError = false) }
-        viewModelScope.launch {
-            try {
-                val memoId = moveMemoToTrashUseCase(MemoId(id))
-                autosaveJob?.cancel()
-                clearDraftAfterCompletedOperation()
-                clearSavedState()
-                shouldPersistDraft = false
-                _uiState.update { state -> state.copy(isDeletePending = false) }
-                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(memoId))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                _uiState.update { state ->
-                    state.copy(isDeletePending = false)
-                }
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
-            }
-        }
-    }
-
-    fun requestBack() {
-        if (_uiState.value.isDeletePending) return
-        viewModelScope.launch {
-            autosaveJob?.cancel()
-            saveDraft(_uiState.value)
-            _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
-        }
-    }
-
-    fun flushDraft() {
-        if (_uiState.value.isDeletePending) return
-        viewModelScope.launch {
-            autosaveJob?.cancel()
-            saveDraft(_uiState.value)
-        }
-    }
-
-    private fun updateDraftState(transform: (MemoEditUiState) -> MemoEditUiState) {
+    private fun updateEditState(transform: (MemoEditUiState) -> MemoEditUiState) {
         val nextState = transform(_uiState.value)
-        shouldPersistDraft = true
         _uiState.value = nextState
         persistSavedState(nextState)
         scheduleAutosave()
@@ -266,120 +211,120 @@ class MemoEditViewModel @Inject constructor(
     private fun scheduleAutosave() {
         autosaveJob?.cancel()
         autosaveJob = viewModelScope.launch {
-            delay(DRAFT_SAVE_DEBOUNCE_MILLIS)
-            saveDraft(_uiState.value)
+            delay(AUTOSAVE_DEBOUNCE_MILLIS)
+            persistIfNeeded()
         }
     }
 
-    private suspend fun loadStoredDraft(targetMemoId: String?): MemoEditDraft? = try {
-        getMemoEditDraftUseCase(draftTargetFor(targetMemoId))
-    } catch (e: CancellationException) {
-        throw e
-    } catch (_: Throwable) {
-        _draftErrorEvent.trySend(Unit)
-        null
-    }
-
-    private suspend fun saveDraft(state: MemoEditUiState) {
-        if (!shouldPersistDraft) return
-        try {
-            saveMemoEditDraftUseCase(state.toDraft())
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Throwable) {
-            _draftErrorEvent.trySend(Unit)
-        }
-    }
-
-    private suspend fun clearDraft(notifyOnFailure: Boolean = true) {
-        try {
-            clearMemoEditDraftUseCase(initialDraftTarget)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            if (notifyOnFailure) {
-                _draftErrorEvent.trySend(Unit)
+    private suspend fun persistIfNeeded() {
+        persistMutex.withLock {
+            val state = _uiState.value
+            if (state.isContentBlank()) return
+            try {
+                val memo = saveMemoUseCase(
+                    SaveMemoCommand(
+                        id = memoId,
+                        title = MemoTitle(state.title),
+                        body = MemoBody(state.body),
+                        createdAt = createdAt,
+                        tagIds = state.selectedTagIds.map { TagId(it) },
+                        isFavorite = state.isFavorite
+                    )
+                )
+                applySavedMemo(memo)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
             }
-            throw e
         }
     }
 
-    private suspend fun clearDraftAfterCompletedOperation() {
+    private suspend fun tryPersistForFinish() {
+        persistMutex.withLock {
+            val state = _uiState.value
+            if (state.isContentBlank()) return
+            try {
+                val memo = saveMemoUseCase(
+                    SaveMemoCommand(
+                        id = memoId,
+                        title = MemoTitle(state.title),
+                        body = MemoBody(state.body),
+                        createdAt = createdAt,
+                        tagIds = state.selectedTagIds.map { TagId(it) },
+                        isFavorite = state.isFavorite
+                    )
+                )
+                applySavedMemo(memo)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
+            }
+        }
+    }
+
+    private suspend fun finishBlankEditing() {
         try {
-            clearDraft()
+            if (isNewMemoSession) {
+                discardMemoUseCase(memoId)
+                clearSavedState()
+                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+            } else {
+                val deletedMemoId = moveMemoToTrashUseCase(memoId)
+                clearSavedState()
+                _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            // clearDraft already emitted draftErrorEvent.
-        }
-    }
-
-    private fun applyDraft(draft: MemoEditDraft, targetMemoId: String?) {
-        _uiState.update { current ->
-            draft.toUiState(targetMemoId).copy(availableTags = current.availableTags)
+            isFinishing = false
+            _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
         }
     }
 
     private fun applySavedMemo(memo: Memo) {
-        memoId = memo.id.value
+        memoId = memo.id
         savedStateHandle["memoId"] = memo.id.value
-        _uiState.update { it.copy(memoId = memo.id.value) }
-    }
-
-    private fun currentDraftTarget(): MemoEditDraftTarget = draftTargetFor(memoId)
-
-    private fun draftTargetFor(targetMemoId: String?): MemoEditDraftTarget = targetMemoId
-        ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
-        ?: MemoEditDraftTarget.newMemo(createdAt)
-
-    private fun savedStateDraft(targetMemoId: String?): MemoEditDraft? {
-        val title = savedStateHandle.get<String>(DRAFT_TITLE_KEY)
-        val body = savedStateHandle.get<String>(DRAFT_BODY_KEY).orEmpty()
-        val tagIds = savedStateHandle
-            .get<ArrayList<String>>(DRAFT_TAG_IDS_KEY)
-            .orEmpty()
-            .map { TagId(it) }
-        val isFavorite = savedStateHandle.get<Boolean>(DRAFT_IS_FAVORITE_KEY) ?: false
-        val savedCreatedAt = savedStateHandle.get<Long>(DRAFT_CREATED_AT_KEY)
-
-        return if (title == null) {
-            null
-        } else if (title.isBlank() && body.isBlank() && tagIds.isEmpty() && !isFavorite) {
-            null
-        } else {
-            MemoEditDraft(
-                target = draftTargetFor(targetMemoId),
-                title = MemoTitle(title),
-                body = MemoBody(body),
-                createdAt = savedCreatedAt?.let { TimestampMillis(it) },
-                tagIds = tagIds,
-                isFavorite = isFavorite
+        _uiState.update { state ->
+            state.copy(
+                memoId = memo.id.value,
+                isLoading = false,
+                hasError = false
             )
         }
     }
 
+    private fun savedStateEdit(): MemoEditUiState? {
+        if (!savedStateHandle.contains(EDIT_TITLE_KEY)) return null
+        val title = savedStateHandle.get<String>(EDIT_TITLE_KEY).orEmpty()
+        val body = savedStateHandle.get<String>(EDIT_BODY_KEY).orEmpty()
+        val tagIds = savedStateHandle.get<ArrayList<String>>(EDIT_TAG_IDS_KEY).orEmpty().toSet()
+        val isFavorite = savedStateHandle.get<Boolean>(EDIT_IS_FAVORITE_KEY) ?: false
+
+        return MemoEditUiState(
+            isLoading = false,
+            memoId = initialMemoId,
+            title = title,
+            body = body,
+            isFavorite = isFavorite,
+            isModified = true,
+            selectedTagIds = tagIds
+        )
+    }
+
     private fun persistSavedState(state: MemoEditUiState) {
-        val draft = state.toDraft()
-        if (draft.title.value.isBlank() && draft.body.value.isBlank() &&
-            draft.tagIds.isEmpty() && !draft.isFavorite
-        ) {
-            clearSavedState()
-            return
-        }
-        savedStateHandle[DRAFT_TITLE_KEY] = draft.title.value
-        savedStateHandle[DRAFT_BODY_KEY] = draft.body.value
-        savedStateHandle[DRAFT_TAG_IDS_KEY] = ArrayList(draft.tagIds.map { it.value })
-        savedStateHandle[DRAFT_IS_FAVORITE_KEY] = draft.isFavorite
-        draft.createdAt?.let { savedStateHandle[DRAFT_CREATED_AT_KEY] = it.value }
-            ?: savedStateHandle.remove<Long>(DRAFT_CREATED_AT_KEY)
+        savedStateHandle[EDIT_TITLE_KEY] = state.title
+        savedStateHandle[EDIT_BODY_KEY] = state.body
+        savedStateHandle[EDIT_TAG_IDS_KEY] = ArrayList(state.selectedTagIds)
+        savedStateHandle[EDIT_IS_FAVORITE_KEY] = state.isFavorite
     }
 
     private fun clearSavedState() {
-        savedStateHandle.remove<String>(DRAFT_TITLE_KEY)
-        savedStateHandle.remove<String>(DRAFT_BODY_KEY)
-        savedStateHandle.remove<ArrayList<String>>(DRAFT_TAG_IDS_KEY)
-        savedStateHandle.remove<Boolean>(DRAFT_IS_FAVORITE_KEY)
-        savedStateHandle.remove<Long>(DRAFT_CREATED_AT_KEY)
+        savedStateHandle.remove<String>(EDIT_TITLE_KEY)
+        savedStateHandle.remove<String>(EDIT_BODY_KEY)
+        savedStateHandle.remove<ArrayList<String>>(EDIT_TAG_IDS_KEY)
+        savedStateHandle.remove<Boolean>(EDIT_IS_FAVORITE_KEY)
     }
 
     private fun Memo.toUiState() = MemoEditUiState(
@@ -391,32 +336,15 @@ class MemoEditViewModel @Inject constructor(
         selectedTagIds = tagIds.map { it.value }.toSet()
     )
 
-    private fun MemoEditDraft.toUiState(targetMemoId: String?) = MemoEditUiState(
-        isLoading = false,
-        memoId = targetMemoId,
-        title = title.value,
-        body = body.value,
-        isFavorite = isFavorite,
-        isModified = true,
-        selectedTagIds = tagIds.map { it.value }.toSet()
-    )
-
-    private fun MemoEditUiState.toDraft() = MemoEditDraft(
-        target = currentDraftTarget(),
-        title = MemoTitle(title),
-        body = MemoBody(body),
-        createdAt = createdAt,
-        tagIds = selectedTagIds.map { TagId(it) },
-        isFavorite = isFavorite
-    )
+    private fun MemoEditUiState.isContentBlank(): Boolean = title.isBlank() && body.isBlank()
 
     private companion object {
-        const val DRAFT_SAVE_DEBOUNCE_MILLIS = 1_000L
-        const val DRAFT_TITLE_KEY = "draftTitle"
-        const val DRAFT_BODY_KEY = "draftBody"
-        const val DRAFT_TAG_IDS_KEY = "draftTagIds"
-        const val DRAFT_IS_FAVORITE_KEY = "draftIsFavorite"
-        const val DRAFT_CREATED_AT_KEY = "draftCreatedAt"
+        const val AUTOSAVE_DEBOUNCE_MILLIS = 1_000L
+        const val EDIT_TITLE_KEY = "editTitle"
+        const val EDIT_BODY_KEY = "editBody"
+        const val EDIT_TAG_IDS_KEY = "editTagIds"
+        const val EDIT_IS_FAVORITE_KEY = "editIsFavorite"
+        const val GENERATED_MEMO_ID_KEY = "generatedMemoId"
     }
 }
 

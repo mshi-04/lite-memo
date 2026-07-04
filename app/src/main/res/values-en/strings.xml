@@ -68,12 +68,10 @@
     <!-- Memo Edit -->
     <string name="memo_edit_title_hint">Title</string>
     <string name="memo_edit_body_hint">Memo</string>
-    <string name="save_memo">Save</string>
     <string name="delete_memo">Delete</string>
     <string name="navigate_back">Back</string>
     <string name="memo_deleted_message">Memo deleted</string>
     <string name="memo_restore_failed_message">Could not restore memo</string>
-    <string name="memo_edit_draft_error_message">Draft operation failed</string>
     <string name="memo_save_error_message">Could not save memo</string>
     <string name="memo_delete_error_message">Could not delete memo</string>
     <string name="undo_label">Undo</string>
