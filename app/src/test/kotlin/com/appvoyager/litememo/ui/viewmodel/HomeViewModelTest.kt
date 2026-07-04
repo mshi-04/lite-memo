@@ -771,6 +771,8 @@ class HomeViewModelTest {
 
         override suspend fun deleteMemoPermanently(id: MemoId) = Unit
 
+        override suspend fun discardMemo(id: MemoId) = Unit
+
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
 
         override suspend fun getAllActiveMemos(): List<Memo> = emptyList()
@@ -804,6 +806,8 @@ class HomeViewModelTest {
         override suspend fun restoreMemoFromTrash(id: MemoId) = Unit
 
         override suspend fun deleteMemoPermanently(id: MemoId) = Unit
+
+        override suspend fun discardMemo(id: MemoId) = Unit
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) = Unit
 

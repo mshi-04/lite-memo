@@ -24,16 +24,14 @@ class SaveMemoUseCase @Inject constructor(
             "Memo title or body must not be blank."
         }
         val now = currentTimeProvider.now()
-        val existingMemo = command.id?.let { id ->
-            requireNotNull(memoRepository.getActiveMemo(id)) { "Memo not found: ${id.value}" }
-        }
+        val existingMemo = command.id?.let { id -> memoRepository.getActiveMemo(id) }
         val tagIds = command.tagIds.distinct()
         validateTagIds(tagIds)
         val createdAt = existingMemo?.createdAt ?: command.createdAt ?: now
         val updatedAt = existingMemo?.updatedAtFrom(now)
             ?: TimestampMillis(maxOf(now.value, createdAt.value))
         val memo = Memo(
-            id = existingMemo?.id ?: memoIdProvider.newMemoId(),
+            id = existingMemo?.id ?: command.id ?: memoIdProvider.newMemoId(),
             title = command.title,
             body = command.body,
             createdAt = createdAt,

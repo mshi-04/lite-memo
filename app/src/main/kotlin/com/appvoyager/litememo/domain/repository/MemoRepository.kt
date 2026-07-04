@@ -30,6 +30,8 @@ interface MemoRepository {
 
     suspend fun deleteMemoPermanently(id: MemoId)
 
+    suspend fun discardMemo(id: MemoId)
+
     suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis)
 
     suspend fun getAllActiveMemos(): List<Memo>

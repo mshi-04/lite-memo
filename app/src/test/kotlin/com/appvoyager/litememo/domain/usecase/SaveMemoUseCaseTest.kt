@@ -124,22 +124,22 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun invokeThrowsWhenMemoIdDoesNotExist() {
+    fun normalInvokeCreatesMemoWithCommandIdWhenMemoIdDoesNotExist() = runTest {
         // Arrange
         val useCase = saveMemoUseCase()
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException::class.java) {
-            runTest {
-                useCase(
-                    SaveMemoCommand(
-                        id = MemoId("missing-id"),
-                        title = MemoTitle("Title"),
-                        body = MemoBody("Body")
-                    )
-                )
-            }
-        }
+        // Act
+        // Normal: a missing command id is treated as a stable new memo id.
+        val memo = useCase(
+            SaveMemoCommand(
+                id = MemoId("missing-id"),
+                title = MemoTitle("Title"),
+                body = MemoBody("Body")
+            )
+        )
+
+        // Assert
+        assertEquals(MemoId("missing-id"), memo.id)
     }
 
     @Test
@@ -408,7 +408,7 @@ class SaveMemoUseCaseTest {
     }
 
     @Test
-    fun interactionMissingExistingMemoFailsBeforeTagValidationIdGenerationOrSave() = runTest {
+    fun interactionMissingCommandIdValidatesTagsAndSavesWithoutGeneratingId() = runTest {
         // Arrange
         val memoRepository = mockk<MemoRepository>()
         val tagRepository = mockk<TagRepository>()
@@ -416,6 +416,9 @@ class SaveMemoUseCaseTest {
         val timeProvider = mockk<CurrentTimeProvider>()
         every { timeProvider.now() } returns TimestampMillis(1000L)
         coEvery { memoRepository.getActiveMemo(MemoId("missing")) } returns null
+        coEvery { tagRepository.getTagsByIds(listOf(TagId("tag-1"))) } returns
+            listOf(tagFixture(id = "tag-1"))
+        coEvery { memoRepository.saveMemo(any()) } returns Unit
         val useCase = SaveMemoUseCase(
             memoRepository = memoRepository,
             tagRepository = tagRepository,
@@ -424,24 +427,22 @@ class SaveMemoUseCaseTest {
         )
 
         // Act
-        // Error/Interaction: missing existing memo stops before downstream validation or writes.
-        val error = runCatching {
-            useCase(
-                SaveMemoCommand(
-                    id = MemoId("missing"),
-                    title = MemoTitle("Title"),
-                    body = MemoBody("Body"),
-                    tagIds = listOf(TagId("tag-1"))
-                )
+        // Interaction: a stable command id skips id generation even when no active memo exists.
+        val memo = useCase(
+            SaveMemoCommand(
+                id = MemoId("missing"),
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                tagIds = listOf(TagId("tag-1"))
             )
-        }.exceptionOrNull()
+        )
 
         // Assert
-        assertEquals(IllegalArgumentException::class.java, error?.javaClass)
-        coVerify(exactly = 0) { tagRepository.getTagsByIds(any()) }
-        coVerify(exactly = 0) { memoRepository.saveMemo(any()) }
+        assertEquals(MemoId("missing"), memo.id)
+        coVerify(exactly = 1) { tagRepository.getTagsByIds(listOf(TagId("tag-1"))) }
+        coVerify(exactly = 1) { memoRepository.saveMemo(any()) }
         verify(exactly = 0) { memoIdProvider.newMemoId() }
-        confirmVerified(tagRepository, memoIdProvider)
+        confirmVerified(memoIdProvider)
     }
 
     @Test

@@ -70,6 +70,9 @@ interface MemoDao {
     @Query("DELETE FROM memos WHERE id = :id AND deletedAt IS NOT NULL")
     suspend fun deleteMemoPermanently(id: String): Int
 
+    @Query("DELETE FROM memos WHERE id = :id")
+    suspend fun discardMemo(id: String): Int
+
     @Query("DELETE FROM memos WHERE deletedAt IS NOT NULL AND deletedAt <= :cutoff")
     suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long)
 
