@@ -230,6 +230,29 @@ class MemoEditViewModelTest {
     }
 
     @Test
+    fun stateTransitionSaveReusesGeneratedMemoIdAfterNewMemoIsSaved() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = FakeMemoRepository()
+        val viewModel = memoEditViewModel(memoRepository = memoRepository)
+        advanceUntilIdle()
+
+        // Act
+        // StateTransition: post-success saves update the generated memo instead of creating another.
+        viewModel.updateTitle("Title")
+        viewModel.save()
+        advanceUntilIdle()
+        viewModel.updateBody("Updated body")
+        viewModel.save()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(
+            listOf(MemoId("generated-id"), MemoId("generated-id")),
+            memoRepository.savedMemos.map { it.id }
+        )
+    }
+
+    @Test
     fun coroutineRapidSaveCreatesMemoOnlyOnce() = runTest(dispatcher) {
         // Arrange
         val memoRepository = FakeMemoRepository()

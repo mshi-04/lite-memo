@@ -23,12 +23,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -67,6 +70,7 @@ fun LiteMemoApp(
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
+    var memoEditPopInFlight by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val memoDeletedMessage = stringResource(R.string.memo_deleted_message)
@@ -99,6 +103,10 @@ fun LiteMemoApp(
                 withDismissAction = true
             )
         }
+    }
+
+    LaunchedEffect(currentDestination?.route) {
+        memoEditPopInFlight = false
     }
 
     Scaffold(
@@ -234,7 +242,13 @@ fun LiteMemoApp(
                 )
             ) {
                 MemoEditRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = {
+                        navController.popBackStackIfResumed(
+                            isPopInFlight = { memoEditPopInFlight },
+                            setPopInFlight = { memoEditPopInFlight = it },
+                            deferUntilResumed = true
+                        )
+                    },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
                     },
@@ -248,7 +262,11 @@ fun LiteMemoApp(
                         showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
-                        navController.popBackStack()
+                        navController.popBackStackIfResumed(
+                            isPopInFlight = { memoEditPopInFlight },
+                            setPopInFlight = { memoEditPopInFlight = it },
+                            deferUntilResumed = true
+                        )
                         coroutineScope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 message = memoDeletedMessage,
@@ -272,9 +290,35 @@ fun LiteMemoApp(
 private fun NavController.isCurrentEntryResumed(): Boolean =
     currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true
 
-private fun NavController.popBackStackIfResumed() {
+private fun NavController.popBackStackIfResumed(
+    isPopInFlight: () -> Boolean = { false },
+    setPopInFlight: (Boolean) -> Unit = {},
+    deferUntilResumed: Boolean = false
+) {
+    val entry = currentBackStackEntry
+    if (isPopInFlight() || entry == null) return
     if (isCurrentEntryResumed()) {
-        popBackStack()
+        setPopInFlight(true)
+        if (!popBackStack()) setPopInFlight(false)
+    } else if (deferUntilResumed) {
+        setPopInFlight(true)
+        lateinit var observer: LifecycleEventObserver
+        observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    entry.lifecycle.removeObserver(observer)
+                    if (!popBackStack()) setPopInFlight(false)
+                }
+
+                Lifecycle.Event.ON_DESTROY -> {
+                    entry.lifecycle.removeObserver(observer)
+                    setPopInFlight(false)
+                }
+
+                else -> Unit
+            }
+        }
+        entry.lifecycle.addObserver(observer)
     }
 }
 

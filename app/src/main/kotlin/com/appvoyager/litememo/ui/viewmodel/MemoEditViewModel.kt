@@ -50,14 +50,14 @@ class MemoEditViewModel @Inject constructor(
     private val formatMemoTextUseCase: FormatMemoTextUseCase
 ) : ViewModel() {
 
-    private val memoId: String? = savedStateHandle["memoId"]
+    private var memoId: String? = savedStateHandle["memoId"]
     private val createdAtMillis: Long = savedStateHandle["createdAt"] ?: -1L
     private val createdAt: TimestampMillis? = if (createdAtMillis >= 0) {
         TimestampMillis(createdAtMillis)
     } else {
         null
     }
-    private val draftTarget: MemoEditDraftTarget = memoId
+    private val initialDraftTarget: MemoEditDraftTarget = memoId
         ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
         ?: MemoEditDraftTarget.newMemo(createdAt)
 
@@ -117,9 +117,9 @@ class MemoEditViewModel @Inject constructor(
                 return@launch
             }
 
-            if (memoId == null) return@launch
+            val currentMemoId = memoId ?: return@launch
             try {
-                val memo = getMemoUseCase(MemoId(memoId))
+                val memo = getMemoUseCase(MemoId(currentMemoId))
                 if (memo == null) {
                     _uiState.update { it.copy(isLoading = false, hasError = true) }
                     return@launch
@@ -187,7 +187,7 @@ class MemoEditViewModel @Inject constructor(
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
-                saveMemoUseCase(
+                val savedMemo = saveMemoUseCase(
                     SaveMemoCommand(
                         id = memoId?.let { MemoId(it) },
                         title = MemoTitle(title),
@@ -197,6 +197,7 @@ class MemoEditViewModel @Inject constructor(
                         isFavorite = state.isFavorite
                     )
                 )
+                applySavedMemo(savedMemo)
                 autosaveJob?.cancel()
                 clearDraftAfterCompletedOperation()
                 clearSavedState()
@@ -270,7 +271,7 @@ class MemoEditViewModel @Inject constructor(
     }
 
     private suspend fun loadStoredDraft(): MemoEditDraft? = try {
-        getMemoEditDraftUseCase(draftTarget)
+        getMemoEditDraftUseCase(currentDraftTarget())
     } catch (e: CancellationException) {
         throw e
     } catch (_: Throwable) {
@@ -291,7 +292,7 @@ class MemoEditViewModel @Inject constructor(
 
     private suspend fun clearDraft(notifyOnFailure: Boolean = true) {
         try {
-            clearMemoEditDraftUseCase(draftTarget)
+            clearMemoEditDraftUseCase(initialDraftTarget)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -318,6 +319,16 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
+    private fun applySavedMemo(memo: Memo) {
+        memoId = memo.id.value
+        savedStateHandle["memoId"] = memo.id.value
+        _uiState.update { it.copy(memoId = memo.id.value) }
+    }
+
+    private fun currentDraftTarget(): MemoEditDraftTarget = memoId
+        ?.let { MemoEditDraftTarget.existingMemo(MemoId(it)) }
+        ?: MemoEditDraftTarget.newMemo(createdAt)
+
     private fun savedStateDraft(): MemoEditDraft? {
         val title = savedStateHandle.get<String>(DRAFT_TITLE_KEY) ?: return null
         val body = savedStateHandle.get<String>(DRAFT_BODY_KEY).orEmpty()
@@ -331,7 +342,7 @@ class MemoEditViewModel @Inject constructor(
         if (title.isBlank() && body.isBlank() && tagIds.isEmpty() && !isFavorite) return null
 
         return MemoEditDraft(
-            target = draftTarget,
+            target = currentDraftTarget(),
             title = MemoTitle(title),
             body = MemoBody(body),
             createdAt = savedCreatedAt?.let { TimestampMillis(it) },
@@ -384,7 +395,7 @@ class MemoEditViewModel @Inject constructor(
     )
 
     private fun MemoEditUiState.toDraft() = MemoEditDraft(
-        target = draftTarget,
+        target = currentDraftTarget(),
         title = MemoTitle(title),
         body = MemoBody(body),
         createdAt = createdAt,

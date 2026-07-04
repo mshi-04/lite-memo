@@ -233,7 +233,9 @@ private fun TagEditDialog(
     val isNew = state.id == null
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (!state.isSaving) onDismiss()
+        },
         title = {
             Text(
                 text = stringResource(
