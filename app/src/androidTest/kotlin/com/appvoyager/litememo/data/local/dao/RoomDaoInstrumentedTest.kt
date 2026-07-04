@@ -269,6 +269,48 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
+    fun discardMemoDeletesActiveMemo() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1"))
+
+        // Act
+        val deletedCount = memoDao.discardMemo("memo-1")
+
+        // Assert
+        assertEquals(1, deletedCount)
+    }
+
+    @Test
+    fun discardMemoCascadesDeleteToMemoTagRefs() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1"))
+        tagDao.upsertTag(tagEntity(id = "tag-1"))
+        memoDao.insertTagRefs(
+            listOf(MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0))
+        )
+
+        // Act
+        memoDao.discardMemo("memo-1")
+        memoDao.upsertMemo(memoEntity(id = "memo-1"))
+        val memo = memoDao.observeActiveMemosWithTagRefs().first().single()
+
+        // Assert
+        assertEquals(emptyList<String>(), memo.tagRefs.map { it.tagId })
+    }
+
+    @Test
+    fun discardMemoReturnsZeroWhenMemoDoesNotExist() = runTest {
+        // Arrange
+        val missingId = "missing"
+
+        // Act
+        val deletedCount = memoDao.discardMemo(missingId)
+
+        // Assert
+        assertEquals(0, deletedCount)
+    }
+
+    @Test
     fun deleteTrashedMemosDeletedAtOrBeforeUsesInclusiveCutoff() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-old", deletedAt = 1_000L))

@@ -67,6 +67,7 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
+    val discardedIds = mutableListOf<MemoId>()
     val purgeCutoffs = mutableListOf<TimestampMillis>()
 
     override fun observeActiveMemos(): Flow<List<Memo>> =
@@ -127,6 +128,11 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         }
         permanentlyDeletedIds += id
         memos.value = memos.value.filterNot { it.id == memo.id }
+    }
+
+    override suspend fun discardMemo(id: MemoId) {
+        discardedIds += id
+        memos.value = memos.value.filterNot { it.id == id }
     }
 
     override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {

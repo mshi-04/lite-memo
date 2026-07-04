@@ -318,6 +318,8 @@ class CalendarViewModelTest {
 
         override suspend fun deleteMemoPermanently(id: MemoId) = delegate.deleteMemoPermanently(id)
 
+        override suspend fun discardMemo(id: MemoId) = delegate.discardMemo(id)
+
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) =
             delegate.deleteTrashedMemosDeletedAtOrBefore(cutoff)
 

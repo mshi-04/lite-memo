@@ -324,6 +324,8 @@ class TrashViewModelTest {
         override suspend fun deleteMemoPermanently(id: MemoId) =
             repository.deleteMemoPermanently(id)
 
+        override suspend fun discardMemo(id: MemoId) = repository.discardMemo(id)
+
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) =
             repository.deleteTrashedMemosDeletedAtOrBefore(cutoff)
 
