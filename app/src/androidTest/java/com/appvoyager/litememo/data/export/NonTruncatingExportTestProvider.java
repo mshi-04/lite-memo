@@ -9,6 +9,15 @@ import android.os.ParcelFileDescriptor;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+/**
+ * mode "w" では truncate しない DocumentsProvider（DownloadsProvider 等）を模したテスト用 provider。
+ *
+ * 意図的に Java で実装している。この provider はテスト APK 側のプロセス
+ * （com.appvoyager.litememo.dev.test）で単独インスタンス化されるが、そのプロセスの
+ * classpath には kotlin-stdlib が含まれない（アプリ APK 側と重複するため除外される）。
+ * Kotlin で書くと openFile() で
+ * NoClassDefFoundError: kotlin.jvm.internal.Intrinsics でクラッシュする（再現確認済み）。
+ */
 public final class NonTruncatingExportTestProvider extends ContentProvider {
 
     @Override
