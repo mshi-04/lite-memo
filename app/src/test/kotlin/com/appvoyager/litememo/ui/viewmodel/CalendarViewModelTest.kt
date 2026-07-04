@@ -120,6 +120,38 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun selectDateFromPickerUsesUtcSoDeviceWestOfUtcKeepsSameDay() = runTest(dispatcher) {
+        // Arrange
+        // DatePicker は日付を UTC midnight で符号化する。端末が UTC より西でも前日にずれない。
+        val viewModel = calendarViewModel(zone = ZoneId.of("America/Los_Angeles"))
+        advanceUntilIdle()
+
+        // Act
+        viewModel.selectDateFromPicker(epochMillis("2026-07-03T00:00:00Z"))
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(LocalDate.of(2026, 7, 3), state.selectedDate)
+    }
+
+    @Test
+    fun selectDateFromPickerUsesUtcSoDeviceEastOfUtcDoesNotShiftToNextDay() = runTest(dispatcher) {
+        // Arrange
+        // UTC 日付として解釈するため、端末タイムゾーンでは翌日になる時刻でもずれない。
+        val viewModel = calendarViewModel(zone = ZoneId.of("Asia/Tokyo"))
+        advanceUntilIdle()
+
+        // Act
+        viewModel.selectDateFromPicker(epochMillis("2026-07-03T23:00:00Z"))
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals(LocalDate.of(2026, 7, 3), state.selectedDate)
+    }
+
+    @Test
     fun closeSearchClearsSearchState() = runTest(dispatcher) {
         // Arrange
         val viewModel = calendarViewModel()
@@ -225,19 +257,20 @@ class CalendarViewModelTest {
 
     private fun calendarViewModel(
         memoRepository: MemoRepository = FakeMemoRepository(),
-        tags: List<Tag> = emptyList()
+        tags: List<Tag> = emptyList(),
+        zone: ZoneId = zoneId
     ): CalendarViewModel {
         val tagRepository = FakeTagRepository(tags)
         val userSettingsRepository = FakeUserSettingsRepository()
         return CalendarViewModel(
             observeCalendarMonthSummaryUseCase = ObserveCalendarMonthSummaryUseCase(
                 memoRepository = memoRepository,
-                zoneId = zoneId
+                zoneId = zone
             ),
             observeMemosByCalendarDateUseCase = ObserveMemosByCalendarDateUseCase(
                 memoRepository = memoRepository,
                 userSettingsRepository = userSettingsRepository,
-                zoneId = zoneId
+                zoneId = zone
             ),
             observeTagsUseCase = ObserveTagsUseCase(tagRepository),
             searchMemosUseCase = SearchMemosUseCase(
@@ -245,7 +278,7 @@ class CalendarViewModelTest {
                 userSettingsRepository = userSettingsRepository
             ),
             currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
-            zoneId = zoneId
+            zoneId = zone
         )
     }
 

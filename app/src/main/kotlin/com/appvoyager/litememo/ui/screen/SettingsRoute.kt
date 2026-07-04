@@ -70,31 +70,40 @@ fun SettingsRoute(
         stringResource(R.string.settings_app_lock_no_device_credential)
     val appLockUnavailableMessage = stringResource(R.string.settings_app_lock_unavailable)
     val browserNotFoundMessage = stringResource(R.string.settings_browser_not_found)
+    val filePickerNotFoundMessage = stringResource(R.string.settings_file_picker_not_found)
+
+    fun launchWithActivityNotFoundSnackbar(launch: () -> Unit, message: String) {
+        try {
+            launch()
+        } catch (_: ActivityNotFoundException) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    withDismissAction = true
+                )
+            }
+        }
+    }
+
+    val launchFilePicker: (() -> Unit) -> Unit = { launch ->
+        launchWithActivityNotFoundSnackbar(launch, filePickerNotFoundMessage)
+    }
+
+    val snackbarMessages = SettingsSnackbarMessages(
+        exportSuccess = exportSuccessMessage,
+        exportError = exportErrorMessage,
+        importSuccess = importSuccessMessage,
+        importError = importErrorMessage,
+        appLockAuthFailed = appLockAuthenticationFailedMessage,
+        appLockAuthCanceled = appLockAuthenticationCanceledMessage,
+        appLockNoDeviceCredential = appLockNoDeviceCredentialMessage,
+        appLockUnavailable = appLockUnavailableMessage
+    )
 
     LaunchedEffect(viewModel) {
         viewModel.snackbarEvent.collect { event ->
-            val message = when (event) {
-                SettingsSnackbarEvent.ExportSuccess -> exportSuccessMessage
-
-                SettingsSnackbarEvent.ExportError -> exportErrorMessage
-
-                SettingsSnackbarEvent.ImportSuccess -> importSuccessMessage
-
-                SettingsSnackbarEvent.ImportError -> importErrorMessage
-
-                SettingsSnackbarEvent.AppLockAuthenticationFailed ->
-                    appLockAuthenticationFailedMessage
-
-                SettingsSnackbarEvent.AppLockAuthenticationCanceled ->
-                    appLockAuthenticationCanceledMessage
-
-                SettingsSnackbarEvent.AppLockNoDeviceCredential ->
-                    appLockNoDeviceCredentialMessage
-
-                SettingsSnackbarEvent.AppLockUnavailable -> appLockUnavailableMessage
-            }
             snackbarHostState.showSnackbar(
-                message = message,
+                message = event.toMessage(snackbarMessages),
                 withDismissAction = true
             )
         }
@@ -106,8 +115,10 @@ fun SettingsRoute(
         onMemoSortOrderSelected = { viewModel.setMemoSortOrder(it) },
         onAppLockEnabledChange = { enabled ->
             if (enabled) {
-                onRequestAppLockAuthentication { result ->
-                    viewModel.onAppLockEnableAuthenticationResult(result)
+                if (viewModel.beginAppLockAuthentication()) {
+                    onRequestAppLockAuthentication { result ->
+                        viewModel.onAppLockEnableAuthenticationResult(result)
+                    }
                 }
             } else {
                 viewModel.setAppLockEnabled(false)
@@ -119,22 +130,18 @@ fun SettingsRoute(
         onCollapseSortOrder = { viewModel.collapseSortOrder() },
         onTagManageClick = onTagManageClick,
         onTrashClick = onTrashClick,
-        onExportClick = { exportLauncher.launch(defaultExportFileName()) },
-        onImportClick = { importLauncher.launch(arrayOf("application/json")) },
+        onExportClick = { launchFilePicker { exportLauncher.launch(defaultExportFileName()) } },
+        onImportClick = { launchFilePicker { importLauncher.launch(arrayOf("application/json")) } },
         onConfirmImport = { viewModel.confirmImport() },
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
         onPrivacyPolicyClick = {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri())
-                context.startActivity(intent)
-            } catch (_: ActivityNotFoundException) {
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = browserNotFoundMessage,
-                        withDismissAction = true
-                    )
-                }
-            }
+            launchWithActivityNotFoundSnackbar(
+                launch = {
+                    val intent = Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri())
+                    context.startActivity(intent)
+                },
+                message = browserNotFoundMessage
+            )
         },
         onOpenSourceLicenseClick = onOpenSourceLicenseClick,
         modifier = modifier
@@ -142,3 +149,26 @@ fun SettingsRoute(
 }
 
 private fun Uri.toExportFileReference(): ExportFileReference = ExportFileReference(toString())
+
+private data class SettingsSnackbarMessages(
+    val exportSuccess: String,
+    val exportError: String,
+    val importSuccess: String,
+    val importError: String,
+    val appLockAuthFailed: String,
+    val appLockAuthCanceled: String,
+    val appLockNoDeviceCredential: String,
+    val appLockUnavailable: String
+)
+
+private fun SettingsSnackbarEvent.toMessage(messages: SettingsSnackbarMessages): String =
+    when (this) {
+        SettingsSnackbarEvent.ExportSuccess -> messages.exportSuccess
+        SettingsSnackbarEvent.ExportError -> messages.exportError
+        SettingsSnackbarEvent.ImportSuccess -> messages.importSuccess
+        SettingsSnackbarEvent.ImportError -> messages.importError
+        SettingsSnackbarEvent.AppLockAuthenticationFailed -> messages.appLockAuthFailed
+        SettingsSnackbarEvent.AppLockAuthenticationCanceled -> messages.appLockAuthCanceled
+        SettingsSnackbarEvent.AppLockNoDeviceCredential -> messages.appLockNoDeviceCredential
+        SettingsSnackbarEvent.AppLockUnavailable -> messages.appLockUnavailable
+    }

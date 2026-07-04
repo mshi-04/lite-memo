@@ -51,6 +51,9 @@
     <string name="empty_calendar_body">別の日付を選ぶと、その日に作成したメモを確認できます。</string>
     <string name="month_title_format">yyyy年M月</string>
     <string name="selected_date_title_format">M月d日のメモ</string>
+    <string name="calendar_day_cell_date_format">yyyy年M月d日</string>
+    <string name="calendar_day_has_memo_description">メモあり</string>
+    <string name="calendar_day_cell_description_with_memo">%1$s、%2$s</string>
     <string-array name="week_day_labels">
         <item>日</item>
         <item>月</item>
@@ -147,5 +150,6 @@
     <string name="settings_version">バージョン</string>
     <string name="settings_privacy_policy">プライバシーポリシー</string>
     <string name="settings_browser_not_found">ブラウザが見つかりませんでした。</string>
+    <string name="settings_file_picker_not_found">ファイルを開けるアプリが見つかりませんでした。</string>
     <string name="settings_open_source_licenses">オープンソースライセンス</string>
 </resources>

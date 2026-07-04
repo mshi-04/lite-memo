@@ -93,6 +93,7 @@ class TagManageViewModel @Inject constructor(
 
     fun saveEdit() {
         val state = editingTag.value ?: return
+        if (state.isSaving) return
         val trimmedName = state.name.trim()
         if (trimmedName.isEmpty()) {
             editingTag.update { it?.copy(nameError = true) }
@@ -102,6 +103,7 @@ class TagManageViewModel @Inject constructor(
             editingTag.update { it?.copy(duplicateNameError = true) }
             return
         }
+        editingTag.update { it?.copy(isSaving = true) }
         viewModelScope.launch {
             runCatching {
                 saveTagUseCase(
@@ -118,10 +120,11 @@ class TagManageViewModel @Inject constructor(
                     when (error) {
                         is DuplicateTagNameException -> current?.copy(
                             duplicateNameError = true,
-                            saveError = false
+                            saveError = false,
+                            isSaving = false
                         )
 
-                        else -> current?.copy(saveError = true)
+                        else -> current?.copy(saveError = true, isSaving = false)
                     }
                 }
             }

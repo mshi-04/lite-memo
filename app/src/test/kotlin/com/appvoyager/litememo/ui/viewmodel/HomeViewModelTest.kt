@@ -299,6 +299,25 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun coroutineRapidBulkTrashDoesNotEmitErrorFromReentrancy() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(memos = listOf(memoFixture(id = "memo-1")))
+        advanceUntilIdle()
+        viewModel.startSelection(MemoId("memo-1"))
+        viewModel.uiState.first { it.selection.isActive }
+
+        // Act & Assert
+        // Coroutine/Boundary: the in-flight guard blocks the second rapid bulk action so the
+        // already-trashed memo is not re-processed (which would emit a spurious error).
+        viewModel.actionErrorEvent.test {
+            viewModel.moveSelectedMemosToTrash()
+            viewModel.moveSelectedMemosToTrash()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun setSelectedMemosFavoriteKeepsSelectionAndEmitsActionErrorWhenBulkActionFails() =
         runTest(dispatcher) {
             // Arrange
