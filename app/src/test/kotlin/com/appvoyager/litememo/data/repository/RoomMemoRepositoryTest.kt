@@ -320,6 +320,34 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun discardMemoDelegatesMemoIdValueToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = createRepository(dao)
+
+        // Act
+        // Interaction: discard uses the unconditional DAO delete path.
+        repository.discardMemo(MemoId("memo-1"))
+
+        // Assert
+        assertEquals("memo-1", dao.discardedMemoId)
+    }
+
+    @Test
+    fun discardMemoDoesNotThrowWhenDaoDoesNotDeleteMemo() = runTest {
+        // Arrange
+        val dao = FakeMemoDao().apply { discardedCount = 0 }
+        val repository = createRepository(dao)
+
+        // Act
+        // Boundary: missing abandoned rows are treated as no-op.
+        val error = runCatching { repository.discardMemo(MemoId("missing")) }.exceptionOrNull()
+
+        // Assert
+        assertNull(error)
+    }
+
+    @Test
     fun deleteTrashedMemosDeletedAtOrBeforeDelegatesCutoffValueToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
@@ -535,6 +563,8 @@ class RoomMemoRepositoryTest {
         var movedToTrash: MovedToTrashRecord? = null
         var restoredMemoId: String? = null
         var permanentlyDeletedMemoId: String? = null
+        var discardedMemoId: String? = null
+        var discardedCount: Int = 1
         var purgeCutoff: Long? = null
         var observedRange: ObservedRange? = null
         var observedSearchPattern: String? = null
@@ -607,6 +637,11 @@ class RoomMemoRepositoryTest {
         override suspend fun deleteMemoPermanently(id: String): Int {
             permanentlyDeletedMemoId = id
             return deletedPermanentlyCount
+        }
+
+        override suspend fun discardMemo(id: String): Int {
+            discardedMemoId = id
+            return discardedCount
         }
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) {

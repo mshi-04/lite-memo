@@ -80,6 +80,10 @@ class RoomMemoRepository @Inject constructor(
         check(affected > 0) { "Memo not found or not in trash: ${id.value}" }
     }
 
+    override suspend fun discardMemo(id: MemoId) {
+        memoDao.discardMemo(id.value)
+    }
+
     override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
         memoDao.deleteTrashedMemosDeletedAtOrBefore(cutoff.value)
     }

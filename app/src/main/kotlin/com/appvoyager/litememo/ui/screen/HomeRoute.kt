@@ -27,9 +27,10 @@ fun HomeRoute(
     val context = LocalContext.current
     val actionErrorMessage = stringResource(R.string.home_bulk_action_error_body)
 
+    // 詳細画面へ遷移して戻ったときに検索状態を復帰できるよう、離脱時に検索は閉じない。
+    // 選択モードだけは離脱時に解除する。
     DisposableEffect(viewModel) {
         onDispose {
-            viewModel.closeSearch()
             viewModel.clearSelection()
         }
     }

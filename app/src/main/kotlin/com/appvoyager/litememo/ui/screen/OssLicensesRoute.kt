@@ -13,7 +13,11 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 @Composable
-fun OssLicensesRoute(onNavigateBack: () -> Unit, modifier: Modifier = Modifier) {
+fun OssLicensesRoute(
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    onOpenUrlError: () -> Unit = {}
+) {
     val context = LocalContext.current
 
     val licenses by produceState<List<OssLicense>>(initialValue = emptyList(), context) {
@@ -34,6 +38,7 @@ fun OssLicensesRoute(onNavigateBack: () -> Unit, modifier: Modifier = Modifier) 
                 val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                 context.startActivity(intent)
             } catch (_: ActivityNotFoundException) {
+                onOpenUrlError()
             }
         },
         onNavigateBack = onNavigateBack,

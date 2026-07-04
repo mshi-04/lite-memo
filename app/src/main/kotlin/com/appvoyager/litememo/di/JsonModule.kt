@@ -20,12 +20,4 @@ object JsonModule {
         encodeDefaults = true
     }
 
-    @Provides
-    @Singleton
-    @InternalJson
-    fun provideInternalJson(): Json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
-
 }

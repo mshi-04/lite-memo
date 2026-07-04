@@ -49,6 +49,7 @@ class TrashViewModel @Inject constructor(
     private val hasPurgeError = MutableStateFlow(false)
     private val selection = MutableStateFlow(TrashSelectionUiState())
     private val showEmptyTrashDialog = MutableStateFlow(false)
+    private var isActionInFlight = false
 
     // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
@@ -120,6 +121,8 @@ class TrashViewModel @Inject constructor(
     fun restoreSelectedMemos() {
         val memoIds = uiState.value.selection.selectedMemoIds.toList()
         if (memoIds.isEmpty()) return
+        if (isActionInFlight) return
+        isActionInFlight = true
 
         viewModelScope.launch {
             try {
@@ -129,6 +132,8 @@ class TrashViewModel @Inject constructor(
                 throw e
             } catch (_: Throwable) {
                 _actionErrorEvent.trySend(Unit)
+            } finally {
+                isActionInFlight = false
             }
         }
     }
@@ -148,6 +153,8 @@ class TrashViewModel @Inject constructor(
             showEmptyTrashDialog.value = false
             return
         }
+        if (isActionInFlight) return
+        isActionInFlight = true
 
         viewModelScope.launch {
             try {
@@ -158,6 +165,8 @@ class TrashViewModel @Inject constructor(
             } catch (_: Throwable) {
                 showEmptyTrashDialog.value = false
                 _actionErrorEvent.trySend(Unit)
+            } finally {
+                isActionInFlight = false
             }
         }
     }

@@ -30,7 +30,7 @@
 - kotlinx.serialization（JSON。Export / Import に使用）
 
 Room はメモ・タグなどの構造化データに使います。
-DataStore はテーマ、表示設定、メモ編集の下書きなどの軽量な設定値に使います。
+DataStore はテーマ、表示設定などの軽量な設定値に使います。
 
 ## Security
 

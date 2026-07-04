@@ -23,12 +23,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -65,15 +70,16 @@ fun LiteMemoApp(
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
+    var memoEditPopInFlight by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val memoDeletedMessage = stringResource(R.string.memo_deleted_message)
     val undoLabel = stringResource(R.string.undo_label)
     val restoreMemoErrorMessage = stringResource(R.string.memo_restore_failed_message)
-    val draftErrorMessage = stringResource(R.string.memo_edit_draft_error_message)
     val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
     val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
+    val browserNotFoundMessage = stringResource(R.string.settings_browser_not_found)
     val showErrorSnackbar: (String) -> Unit = remember(coroutineScope, snackbarHostState) {
         { message ->
             coroutineScope.launch {
@@ -96,6 +102,10 @@ fun LiteMemoApp(
                 withDismissAction = true
             )
         }
+    }
+
+    LaunchedEffect(backStackEntry) {
+        memoEditPopInFlight = false
     }
 
     Scaffold(
@@ -148,10 +158,10 @@ fun LiteMemoApp(
             ) {
                 HomeRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate(memoEditRouteWithId(memoId))
+                        navController.navigateOnce(memoEditRouteWithId(memoId))
                     },
                     onCreateMemoClick = {
-                        navController.navigate(MEMO_EDIT_BASE)
+                        navController.navigateOnce(MEMO_EDIT_BASE)
                     },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
@@ -168,10 +178,10 @@ fun LiteMemoApp(
             ) {
                 CalendarRoute(
                     onMemoClick = { memoId ->
-                        navController.navigate(memoEditRouteWithId(memoId))
+                        navController.navigateOnce(memoEditRouteWithId(memoId))
                     },
                     onCreateMemoClick = { createdAt ->
-                        navController.navigate(memoEditRouteWithCreatedAt(createdAt))
+                        navController.navigateOnce(memoEditRouteWithCreatedAt(createdAt))
                     }
                 )
             }
@@ -186,31 +196,34 @@ fun LiteMemoApp(
                     snackbarHostState = snackbarHostState,
                     onRequestAppLockAuthentication = onRequestAppLockAuthentication,
                     onOpenSourceLicenseClick = {
-                        navController.navigate(OSS_LICENSES_ROUTE)
+                        navController.navigateOnce(OSS_LICENSES_ROUTE)
                     },
                     onTagManageClick = {
-                        navController.navigate(TAG_MANAGE_ROUTE)
+                        navController.navigateOnce(TAG_MANAGE_ROUTE)
                     },
                     onTrashClick = {
-                        navController.navigate(TRASH_ROUTE)
+                        navController.navigateOnce(TRASH_ROUTE)
                     }
                 )
             }
             composable(TRASH_ROUTE) {
                 TrashRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStackIfResumed() },
                     snackbarHostState = snackbarHostState
                 )
             }
             composable(TAG_MANAGE_ROUTE) {
                 TagManageRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStackIfResumed() },
                     snackbarHostState = snackbarHostState
                 )
             }
             composable(OSS_LICENSES_ROUTE) {
                 OssLicensesRoute(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStackIfResumed() },
+                    onOpenUrlError = {
+                        showErrorSnackbar(browserNotFoundMessage)
+                    }
                 )
             }
             composable(
@@ -228,12 +241,15 @@ fun LiteMemoApp(
                 )
             ) {
                 MemoEditRoute(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = {
+                        navController.popBackStackIfResumed(
+                            isPopInFlight = { memoEditPopInFlight },
+                            setPopInFlight = { memoEditPopInFlight = it },
+                            deferUntilResumed = true
+                        )
+                    },
                     onShareError = {
                         showErrorSnackbar(shareErrorMessage)
-                    },
-                    onDraftError = {
-                        showErrorSnackbar(draftErrorMessage)
                     },
                     onSaveError = {
                         showErrorSnackbar(saveMemoErrorMessage)
@@ -242,7 +258,11 @@ fun LiteMemoApp(
                         showErrorSnackbar(deleteMemoErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
-                        navController.popBackStack()
+                        navController.popBackStackIfResumed(
+                            isPopInFlight = { memoEditPopInFlight },
+                            setPopInFlight = { memoEditPopInFlight = it },
+                            deferUntilResumed = true
+                        )
                         coroutineScope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 message = memoDeletedMessage,
@@ -258,6 +278,49 @@ fun LiteMemoApp(
                 )
             }
         }
+    }
+}
+
+// 連打対策: 遷移アニメーション中の多重 pop / navigate を一元的に抑止する。
+// 現在の画面が RESUMED（遷移完了・最前面）のときだけ操作を実行する。
+private fun NavController.isCurrentEntryResumed(): Boolean =
+    currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true
+
+private fun NavController.popBackStackIfResumed(
+    isPopInFlight: () -> Boolean = { false },
+    setPopInFlight: (Boolean) -> Unit = {},
+    deferUntilResumed: Boolean = false
+) {
+    val entry = currentBackStackEntry
+    if (isPopInFlight() || entry == null) return
+    if (isCurrentEntryResumed()) {
+        setPopInFlight(true)
+        if (!popBackStack()) setPopInFlight(false)
+    } else if (deferUntilResumed) {
+        setPopInFlight(true)
+        lateinit var observer: LifecycleEventObserver
+        observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    entry.lifecycle.removeObserver(observer)
+                    if (!popBackStack()) setPopInFlight(false)
+                }
+
+                Lifecycle.Event.ON_DESTROY -> {
+                    entry.lifecycle.removeObserver(observer)
+                    setPopInFlight(false)
+                }
+
+                else -> Unit
+            }
+        }
+        entry.lifecycle.addObserver(observer)
+    }
+}
+
+private fun NavController.navigateOnce(route: String) {
+    if (isCurrentEntryResumed()) {
+        navigate(route) { launchSingleTop = true }
     }
 }
 

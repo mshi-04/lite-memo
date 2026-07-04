@@ -25,12 +25,14 @@ import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -40,7 +42,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
+private const val SEARCH_DEBOUNCE_MILLIS = 250L
+
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
@@ -58,12 +62,16 @@ class HomeViewModel @Inject constructor(
     private val selection = MutableStateFlow(HomeSelectionUiState())
     private val bulkTagDialog = MutableStateFlow(HomeBulkTagDialogUiState())
     private val retryTrigger = MutableStateFlow(false)
+    private var isBulkActionInFlight = false
 
     // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
     private val searchResults = searchQuery
+        // searchQuery は StateFlow なので連続する同一値は既に除去される。
+        // 空クエリは即時、入力中のみデバウンスして 1 文字ごとの LIKE 検索を抑える。
+        .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
         .flatMapLatest { query ->
             if (query.isBlank()) {
                 flowOf(emptyList())
@@ -244,6 +252,8 @@ class HomeViewModel @Inject constructor(
     private fun applySelectedMemoAction(action: MemoBulkAction) {
         val memoIds = selection.value.selectedMemoIds.toList()
         if (memoIds.isEmpty()) return
+        if (isBulkActionInFlight) return
+        isBulkActionInFlight = true
 
         viewModelScope.launch {
             try {
@@ -259,6 +269,8 @@ class HomeViewModel @Inject constructor(
             } catch (_: Throwable) {
                 bulkTagDialog.value = HomeBulkTagDialogUiState()
                 _actionErrorEvent.trySend(Unit)
+            } finally {
+                isBulkActionInFlight = false
             }
         }
     }

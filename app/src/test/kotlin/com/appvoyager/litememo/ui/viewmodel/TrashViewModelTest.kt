@@ -171,6 +171,29 @@ class TrashViewModelTest {
     }
 
     @Test
+    fun coroutineRapidConfirmEmptyTrashDoesNotEmitErrorFromReentrancy() = runTest(dispatcher) {
+        // Arrange
+        val memo1 = memoFixture(id = "memo-1", deletedAt = 2_000L)
+        val memo2 = memoFixture(id = "memo-2", deletedAt = 3_000L)
+        val repository = FakeMemoRepository(listOf(memo1, memo2))
+        val viewModel = trashViewModel(memoRepository = repository)
+        advanceUntilIdle()
+        viewModel.uiState.first { it.memos.isNotEmpty() }
+        viewModel.requestEmptyTrash()
+
+        // Act & Assert
+        // Coroutine/Boundary: the in-flight guard blocks the second rapid confirm so the
+        // already-deleted memos are not re-deleted (which would emit a spurious error).
+        viewModel.actionErrorEvent.test {
+            viewModel.confirmEmptyTrash()
+            viewModel.confirmEmptyTrash()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+        assertEquals(listOf(memo2.id, memo1.id), repository.permanentlyDeletedIds)
+    }
+
+    @Test
     fun flowConfirmEmptyTrashEmitsActionErrorAndHidesDialogWhenDeleteFails() = runTest(dispatcher) {
         // Arrange
         val memo = memoFixture(id = "memo-1", deletedAt = 2_000L)
@@ -300,6 +323,8 @@ class TrashViewModelTest {
 
         override suspend fun deleteMemoPermanently(id: MemoId) =
             repository.deleteMemoPermanently(id)
+
+        override suspend fun discardMemo(id: MemoId) = repository.discardMemo(id)
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) =
             repository.deleteTrashedMemosDeletedAtOrBefore(cutoff)

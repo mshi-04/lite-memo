@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.QueueTagIdProvider
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
@@ -59,6 +60,28 @@ class TagManageViewModelTest {
 
         // Assert
         assertEquals(true to "", state.hasError to state.editingTag?.name)
+    }
+
+    @Test
+    fun coroutineRapidSaveEditCreatesTagOnlyOnce() = runTest(dispatcher) {
+        // Arrange
+        val tagRepository = FakeTagRepository()
+        val viewModel = tagManageViewModel(
+            tagRepository = tagRepository,
+            tagIdProvider = QueueTagIdProvider(listOf(TagId("tag-1"), TagId("tag-2")))
+        )
+        viewModel.uiState.first { !it.isLoading }
+        viewModel.startCreate()
+        viewModel.updateEditName("New tag")
+
+        // Act
+        // Coroutine/Boundary: an in-flight save blocks the second rapid call.
+        viewModel.saveEdit()
+        viewModel.saveEdit()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(1, tagRepository.savedTags.size)
     }
 
     @Test
@@ -180,16 +203,18 @@ class TagManageViewModelTest {
         }
     }
 
-    private fun tagManageViewModel(tagRepository: TagRepository = FakeTagRepository()) =
-        TagManageViewModel(
-            observeTagsUseCase = ObserveTagsUseCase(tagRepository),
-            saveTagUseCase = SaveTagUseCase(
-                tagRepository = tagRepository,
-                tagIdProvider = QueueTagIdProvider(),
-                currentTimeProvider = MutableTimeProvider()
-            ),
-            deleteTagUseCase = DeleteTagUseCase(tagRepository)
-        )
+    private fun tagManageViewModel(
+        tagRepository: TagRepository = FakeTagRepository(),
+        tagIdProvider: TagIdProvider = QueueTagIdProvider()
+    ) = TagManageViewModel(
+        observeTagsUseCase = ObserveTagsUseCase(tagRepository),
+        saveTagUseCase = SaveTagUseCase(
+            tagRepository = tagRepository,
+            tagIdProvider = tagIdProvider,
+            currentTimeProvider = MutableTimeProvider()
+        ),
+        deleteTagUseCase = DeleteTagUseCase(tagRepository)
+    )
 
     private class ObserveFailingTagRepository(initialTags: List<Tag>) : TagRepository {
 

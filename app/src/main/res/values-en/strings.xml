@@ -52,6 +52,9 @@
     <string name="empty_calendar_body">Choose another date to view memos created on that day.</string>
     <string name="month_title_format">MMMM yyyy</string>
     <string name="selected_date_title_format">Memos for MMMM d</string>
+    <string name="calendar_day_cell_date_format">MMMM d, yyyy</string>
+    <string name="calendar_day_has_memo_description">Has memo</string>
+    <string name="calendar_day_cell_description_with_memo">%1$s, %2$s</string>
     <string-array name="week_day_labels">
         <item>Sun</item>
         <item>Mon</item>
@@ -65,12 +68,10 @@
     <!-- Memo Edit -->
     <string name="memo_edit_title_hint">Title</string>
     <string name="memo_edit_body_hint">Memo</string>
-    <string name="save_memo">Save</string>
     <string name="delete_memo">Delete</string>
     <string name="navigate_back">Back</string>
     <string name="memo_deleted_message">Memo deleted</string>
     <string name="memo_restore_failed_message">Could not restore memo</string>
-    <string name="memo_edit_draft_error_message">Draft operation failed</string>
     <string name="memo_save_error_message">Could not save memo</string>
     <string name="memo_delete_error_message">Could not delete memo</string>
     <string name="undo_label">Undo</string>
@@ -148,5 +149,6 @@
     <string name="settings_version">Version</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_browser_not_found">No browser app was found.</string>
+    <string name="settings_file_picker_not_found">No app was found to open files.</string>
     <string name="settings_open_source_licenses">Open source licenses</string>
 </resources>

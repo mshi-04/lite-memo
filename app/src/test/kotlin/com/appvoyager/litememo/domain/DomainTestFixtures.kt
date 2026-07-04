@@ -1,8 +1,6 @@
 package com.appvoyager.litememo.domain
 
 import com.appvoyager.litememo.domain.model.Memo
-import com.appvoyager.litememo.domain.model.MemoEditDraft
-import com.appvoyager.litememo.domain.model.MemoEditDraftTarget
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -15,7 +13,6 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
-import com.appvoyager.litememo.domain.repository.MemoEditDraftRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
@@ -67,6 +64,7 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
+    val discardedIds = mutableListOf<MemoId>()
     val purgeCutoffs = mutableListOf<TimestampMillis>()
 
     override fun observeActiveMemos(): Flow<List<Memo>> =
@@ -129,6 +127,11 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         memos.value = memos.value.filterNot { it.id == memo.id }
     }
 
+    override suspend fun discardMemo(id: MemoId) {
+        discardedIds += id
+        memos.value = memos.value.filterNot { it.id == id }
+    }
+
     override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: TimestampMillis) {
         purgeCutoffs += cutoff
         memos.value = memos.value.filterNot { memo ->
@@ -150,32 +153,6 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     }
 
     fun currentMemos(): List<Memo> = memos.value
-
-}
-
-class FakeMemoEditDraftRepository(
-    initialDrafts: List<MemoEditDraft> = emptyList(),
-    private val clearDraftError: Throwable? = null
-) : MemoEditDraftRepository {
-
-    private val drafts = initialDrafts.associateBy { it.target }.toMutableMap()
-    val savedDrafts = mutableListOf<MemoEditDraft>()
-    val clearedTargets = mutableListOf<MemoEditDraftTarget>()
-
-    override suspend fun getDraft(target: MemoEditDraftTarget): MemoEditDraft? = drafts[target]
-
-    override suspend fun saveDraft(draft: MemoEditDraft) {
-        savedDrafts += draft
-        drafts[draft.target] = draft
-    }
-
-    override suspend fun clearDraft(target: MemoEditDraftTarget) {
-        clearDraftError?.let { throw it }
-        clearedTargets += target
-        drafts.remove(target)
-    }
-
-    fun currentDrafts(): List<MemoEditDraft> = drafts.values.toList()
 
 }
 

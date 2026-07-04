@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -43,6 +43,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,12 +59,12 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
+@Suppress("LongParameterList", "LongMethod")
 fun MemoEditScreen(
     uiState: MemoEditUiState,
     onTitleChanged: (String) -> Unit,
     onBodyChanged: (String) -> Unit,
     onTagToggled: (String) -> Unit,
-    onSave: () -> Unit,
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
     onRetry: () -> Unit,
@@ -116,15 +118,6 @@ fun MemoEditScreen(
                             )
                         }
                     }
-                    if (!uiState.isDeletePending) {
-                        IconButton(onClick = onSave) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = stringResource(R.string.save_memo),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
                 }
             )
         }
@@ -143,10 +136,13 @@ fun MemoEditScreen(
                         runCatching { bodyFocusRequester.requestFocus() }
                     }
                 }
+                val titleLabel = stringResource(R.string.memo_edit_title_hint)
+                val bodyLabel = stringResource(R.string.memo_edit_body_hint)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
+                        .imePadding()
                         .padding(horizontal = 20.dp, vertical = 12.dp)
                 ) {
                     BasicTextField(
@@ -154,6 +150,7 @@ fun MemoEditScreen(
                         onValueChange = onTitleChanged,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .semantics { contentDescription = titleLabel }
                             .testTag(MemoEditTestTags.TITLE_INPUT),
                         textStyle = TextStyle(
                             fontSize = 22.sp,
@@ -205,6 +202,7 @@ fun MemoEditScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .focusRequester(bodyFocusRequester)
+                            .semantics { contentDescription = bodyLabel }
                             .testTag(MemoEditTestTags.BODY_INPUT),
                         textStyle = TextStyle(
                             fontSize = 14.sp,
@@ -244,7 +242,6 @@ private fun MemoEditScreenPreview() {
             onTitleChanged = {},
             onBodyChanged = {},
             onTagToggled = {},
-            onSave = {},
             onDelete = {},
             onBackRequest = {},
             onRetry = {},

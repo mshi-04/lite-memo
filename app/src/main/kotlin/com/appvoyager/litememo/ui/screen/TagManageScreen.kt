@@ -233,7 +233,9 @@ private fun TagEditDialog(
     val isNew = state.id == null
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (!state.isSaving) onDismiss()
+        },
         title = {
             Text(
                 text = stringResource(
@@ -324,12 +326,12 @@ private fun TagEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onSave) {
+            TextButton(onClick = onSave, enabled = !state.isSaving) {
                 Text(text = stringResource(R.string.save_label))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismiss, enabled = !state.isSaving) {
                 Text(text = stringResource(R.string.cancel_label))
             }
         }

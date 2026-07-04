@@ -51,7 +51,12 @@ class SettingsViewModel @Inject constructor(
 
     private var pendingImportReference: ExportFileReference? = null
 
-    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.CONFLATED)
+    // AppLock 有効化の認証中に再度トグルされると Authenticator が UNAVAILABLE を返し、
+    // 実態と違う失敗表示になるため、認証要求中は再要求を無視する。
+    private var isAppLockAuthenticating = false
+
+    // 異なる文言（Export/Import/AppLock）の通知が最新1件に潰れないよう BUFFERED を使う。
+    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
     internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
@@ -97,7 +102,15 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { runCatching { setAppLockEnabledUseCase(enabled) } }
     }
 
+    /** 認証要求が受け付けられたら true。認証中の重複要求は false を返して無視させる。 */
+    fun beginAppLockAuthentication(): Boolean {
+        if (isAppLockAuthenticating) return false
+        isAppLockAuthenticating = true
+        return true
+    }
+
     fun onAppLockEnableAuthenticationResult(result: AppLockAuthenticationResult) {
+        isAppLockAuthenticating = false
         when (result) {
             AppLockAuthenticationResult.SUCCEEDED -> setAppLockEnabled(true)
 
