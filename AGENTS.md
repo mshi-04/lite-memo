@@ -6,15 +6,18 @@ Lite Memo で AI エージェントが最初に読む入口です。
 ## 技術文書
 
 - [`docs/project-overview.md`](docs/project-overview.md): プロジェクト概要と主要な確認先
-- [`docs/tech-stack.md`](docs/tech-stack.md): 導入予定の技術スタック
+- [`docs/tech-stack.md`](docs/tech-stack.md): 採用している技術スタック
 - [`docs/architecture.md`](docs/architecture.md): Clean Architecture / MVVM の構造方針
 - [`docs/implementation-guidelines.md`](docs/implementation-guidelines.md): 実装時の基本方針
+- [`docs/development-setup.md`](docs/development-setup.md): 開発環境セットアップ / Git フック / 静的解析 / CI 相当チェック
 - [`docs/unit-test.md`](docs/unit-test.md): Unit Test の方針
 - [`docs/review.md`](docs/review.md): コードレビューの形式
+- [`docs/claude-code.md`](docs/claude-code.md): Claude Code 固有の運用（skill 同期 / CLAUDE.md import）
 
 ## AI作業用 Skill
 
 作業の種類に応じて、必要な Skill を最初に確認します。
+skill の正本は `.agents/skills/`。`.claude/skills/` は同期生成物なので直接編集しない（詳細: [`docs/claude-code.md`](docs/claude-code.md)）。
 
 - [`.agents/skills/ui-implementation/SKILL.md`](.agents/skills/ui-implementation/SKILL.md): Compose / ViewModel / UI state / 画面テスト
 - [`.agents/skills/domain-implementation/SKILL.md`](.agents/skills/domain-implementation/SKILL.md): model / value object / UseCase / Repository interface
