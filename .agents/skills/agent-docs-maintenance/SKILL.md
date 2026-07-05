@@ -25,7 +25,8 @@ Lite Memo の AI 作業導線を、薄い入口文書と詳細 docs / skills の
 3. skill は作業種類ごとの入口にし、長い規約本文を重複させず参照先を明記する。
 4. `.agents/skills/` を正本として編集する。
 5. skill を追加・変更・削除したら `scripts/sync-claude-skills.ps1` で `.claude/skills/` を生成する。
-6. `scripts/sync-claude-skills.ps1 -Check` で同期漏れを確認する。
+6. skill を増減した場合は `AGENTS.md` の skill 一覧も更新する。
+7. `scripts/sync-claude-skills.ps1 -Check` で同期漏れと AGENTS.md 一覧のずれを確認する。
 
 # 注意事項
 

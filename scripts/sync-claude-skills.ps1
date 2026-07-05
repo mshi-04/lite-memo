@@ -84,6 +84,30 @@ foreach ($sourceSkill in $sourceSkills) {
     }
 }
 
+# AGENTS.md は skill 一覧を地図として手動で持つため、`.agents/skills/` との増減ずれを検出する。
+# AGENTS.md の説明文は人手で書くので自動生成せず、-Check で不一致を報告するだけに留める。
+$agentsMdPath = Join-Path $repositoryRoot 'AGENTS.md'
+if (Test-Path -LiteralPath $agentsMdPath -PathType Leaf) {
+    $agentsMdContent = Get-Content -LiteralPath $agentsMdPath -Raw
+    $listedSkillNames = @(
+        [regex]::Matches($agentsMdContent, '\.agents/skills/([^/]+)/SKILL\.md') |
+            ForEach-Object { $_.Groups[1].Value } |
+            Sort-Object -Unique
+    )
+
+    foreach ($listedName in $listedSkillNames) {
+        if ($listedName -notin $sourceSkillNames) {
+            $differences.Add("AGENTS.md references a missing skill: $listedName")
+        }
+    }
+
+    foreach ($sourceName in $sourceSkillNames) {
+        if ($sourceName -notin $listedSkillNames) {
+            $differences.Add("AGENTS.md does not list skill: $sourceName")
+        }
+    }
+}
+
 if ($Check) {
     if ($differences.Count -gt 0) {
         $differences | ForEach-Object { Write-Error $_ }

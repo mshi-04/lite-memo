@@ -5,7 +5,7 @@
 ## 概要
 
 Lite Memo は Android 向けの軽量メモアプリです。
-永続化（Room）、設定（DataStore）、Crashlytics、CI（GitHub Actions）は導入済みで、残る主な予定は広告（AdMob）と Google Play 公開フローです。
+永続化（Room）、設定（DataStore）、Crashlytics、CI（GitHub Actions）、広告（AdMob バナー）は導入済みで、残る主な予定は広告のインタースティシャルと Google Play 公開フローです。
 
 現在の基本情報:
 
