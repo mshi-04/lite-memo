@@ -207,6 +207,7 @@ class FakeMemoImageStore : MemoImageStore {
     val savedSources = mutableListOf<ImageSourceReference>()
     val deletedFileNames = mutableListOf<MemoImageFileName>()
     var saveError: Throwable? = null
+    var deleteError: Throwable? = null
     private var nextImageNumber = 1
 
     override suspend fun saveImage(source: ImageSourceReference): MemoImage {
@@ -217,6 +218,7 @@ class FakeMemoImageStore : MemoImageStore {
     }
 
     override suspend fun deleteImages(fileNames: List<MemoImageFileName>) {
+        deleteError?.let { throw it }
         deletedFileNames += fileNames
     }
 

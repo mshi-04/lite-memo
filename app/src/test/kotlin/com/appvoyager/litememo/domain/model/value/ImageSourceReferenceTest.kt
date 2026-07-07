@@ -9,14 +9,14 @@ class ImageSourceReferenceTest {
     @Test
     fun normalInvokeReturnsValueWhenInputIsAbsoluteUri() {
         // Arrange
-        val input = "content://memo/image.jpg"
+        val input = " content://memo/image.jpg "
 
         // Act
         // 観点: Normal - picker results are represented as absolute URI strings.
         val reference = ImageSourceReference(input)
 
         // Assert
-        assertEquals(input, reference.value)
+        assertEquals("content://memo/image.jpg", reference.value)
     }
 
     @Test
