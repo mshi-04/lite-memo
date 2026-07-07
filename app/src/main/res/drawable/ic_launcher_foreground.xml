@@ -11,17 +11,17 @@
         android:pathData="M202,136 H278 L346,204 V340 Q346,376 310,376 H202 Q166,376 166,340 V172 Q166,136 202,136 Z" />
     <!-- folded corner -->
     <path
-        android:fillColor="#EADDFF"
+        android:fillColor="#FFE9A8"
         android:pathData="M278,136 L346,204 H290 Q278,204 278,192 Z" />
-    <!-- written lines -->
+    <!-- written lines (black ink) -->
     <path
-        android:fillColor="#D0BCFF"
+        android:fillColor="#2F2B36"
         android:pathData="M209,244 h66 a9,9 0 0 1 9,9 a9,9 0 0 1 -9,9 h-66 a9,9 0 0 1 -9,-9 a9,9 0 0 1 9,-9 z" />
     <path
-        android:fillColor="#D0BCFF"
+        android:fillColor="#2F2B36"
         android:pathData="M209,288 h34 a9,9 0 0 1 9,9 a9,9 0 0 1 -9,9 h-34 a9,9 0 0 1 -9,-9 a9,9 0 0 1 9,-9 z" />
 
-    <!-- quill (translate 350,160 -> rotate 35 -> scale 0.68) -->
+    <!-- quill: white feather with black outline (translate 350,160 -> rotate 35 -> scale 0.68) -->
     <group
         android:name="quill"
         android:pivotX="0"
@@ -31,32 +31,29 @@
         android:rotation="35"
         android:translateX="350"
         android:translateY="160">
-        <!-- white halo behind the feather -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:strokeColor="#FFFFFF"
-            android:strokeWidth="18"
-            android:strokeLineJoin="round"
-            android:pathData="M0,-4 Q30,60 32,130 Q32,175 12,200 L2,206 L-2,206 Q-30,200 -44,172 L-10,160 L-48,140 Q-54,110 -50,92 L-12,84 L-46,62 Q-36,26 0,-4 Z" />
-        <path
-            android:strokeColor="#FFFFFF"
-            android:strokeWidth="30"
-            android:strokeLineCap="round"
-            android:pathData="M0,14 L0,255" />
         <!-- feather blade -->
         <path
-            android:fillColor="#21005D"
+            android:fillColor="#FFFFFF"
+            android:strokeColor="#1C1B1F"
+            android:strokeWidth="14"
+            android:strokeLineJoin="round"
             android:pathData="M0,-4 Q30,60 32,130 Q32,175 12,200 L2,206 L-2,206 Q-30,200 -44,172 L-10,160 L-48,140 Q-54,110 -50,92 L-12,84 L-46,62 Q-36,26 0,-4 Z" />
-        <!-- rachis highlight + bare tip (nib) -->
+        <!-- rachis -->
         <path
-            android:strokeColor="#D0BCFF"
-            android:strokeWidth="10"
+            android:strokeColor="#1C1B1F"
+            android:strokeWidth="8"
             android:strokeLineCap="round"
             android:pathData="M0,14 L0,196" />
+        <!-- bare shaft: black outline with white core, ink-dipped tip -->
         <path
-            android:strokeColor="#21005D"
-            android:strokeWidth="13"
+            android:strokeColor="#1C1B1F"
+            android:strokeWidth="24"
             android:strokeLineCap="round"
             android:pathData="M0,196 L0,255" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="11"
+            android:strokeLineCap="round"
+            android:pathData="M0,199 L0,249" />
     </group>
 </vector>
