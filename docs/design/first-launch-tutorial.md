@@ -144,8 +144,12 @@ fun TutorialScreen(
 - レイアウト(上から順に):
   1. 右上に「スキップ」`TextButton`(全ページで表示、タップで `onCompleteTutorial`)
   2. `HorizontalPager`(`androidx.compose.foundation.pager`、`weight(1f)`)。各ページは中央揃えの Column(アイコン 64dp / タイトル `headlineSmall` / 本文 `bodyMedium`、横 padding 32dp)
-  3. ページインジケータ(8dp の丸ドット、現在ページは `primary`、他は `surfaceVariant`)
-  4. 下部ボタン(`fillMaxWidth`、横 padding 32dp): 最終ページ以外は「次へ」で `animateScrollToPage(current + 1)`、最終ページは「はじめる」で `onCompleteTutorial`
+  3. 下部ナビゲーション行(`Row`、`fillMaxWidth`、横 padding 16dp / 下 padding 24dp、`verticalAlignment = CenterVertically`):
+     - **左**: 戻る矢印 `IconButton`(`Icons.AutoMirrored.Filled.ArrowBack`)。タップで `animateScrollToPage(current - 1)`。**1 ページ目では `enabled = false`**(位置ずれを避けるため非表示ではなく無効化。alpha はデフォルトの disabled 表現に任せる)
+     - **中央**: ページインジケータ(3 点。8dp の丸ドット、間隔 8dp、現在ページは `primary`、他は `surfaceVariant`)。`Modifier.weight(1f)` + 中央寄せで矢印の有無に関わらず常に画面中央に置く
+     - **右**: 進む矢印 `IconButton`(`Icons.AutoMirrored.Filled.ArrowForward`)。タップで `animateScrollToPage(current + 1)`。**最終ページでは矢印の代わりに「はじめる」`Button`** を表示し、タップで `onCompleteTutorial`
+  - 最終ページで右側が矢印(48dp)からテキストボタンに切り替わり幅が変わるため、中央インジケータがずれないよう左右を同じ `weight` で組むか、右側領域に最小幅を確保すること
+- 矢印はアイコンのみのため `contentDescription` を必ず設定する(下記 strings 参照)
 - ルートは `Surface(color = MaterialTheme.colorScheme.background)`。`MainActivity` は edge-to-edge なので Column に `safeDrawingPadding()` を付ける
 - 色は固定値を使わず Material 3 テーマから取る(ライト / ダーク両対応)
 - `@Preview` を付けた private な Preview 関数を追加する
@@ -190,17 +194,18 @@ LiteMemoTheme(darkTheme = darkTheme) {
 
 `values/strings.xml`(日本語)と `values-en/strings.xml`(英語)の両方に、`<!-- Tutorial -->` セクションとして Common セクションの直後に追加する。長い英語文字列でもレイアウトが崩れないことを確認する。
 
-| key | ja | en |
-|---|---|---|
-| `tutorial_skip` | スキップ | Skip |
-| `tutorial_next` | 次へ | Next |
-| `tutorial_start` | はじめる | Get started |
-| `tutorial_page_welcome_title` | LiteMemo へようこそ | Welcome to LiteMemo |
-| `tutorial_page_welcome_body` | 思いついたことをすぐに書き残せる、軽量メモアプリです。ホーム画面の作成ボタンからメモを追加できます。 | A lightweight memo app for quickly capturing your thoughts. Add memos with the create button on the home screen. |
-| `tutorial_page_organize_title` | タグと検索で整理 | Organize with tags and search |
-| `tutorial_page_organize_body` | メモにタグを付けて分類したり、キーワード検索で目的のメモをすぐに見つけられます。 | Categorize memos with tags and find the one you need instantly with keyword search. |
-| `tutorial_page_calendar_title` | カレンダーで振り返り | Look back with the calendar |
-| `tutorial_page_calendar_body` | カレンダーから日付ごとのメモを確認できます。準備ができたら、さっそく始めましょう。 | Review your memos by date on the calendar. When you are ready, let\'s get started. |
+| key | ja | en | 用途 |
+|---|---|---|---|
+| `tutorial_skip` | スキップ | Skip | スキップボタン |
+| `tutorial_previous_page` | 前のページ | Previous page | 戻る矢印の contentDescription |
+| `tutorial_next_page` | 次のページ | Next page | 進む矢印の contentDescription |
+| `tutorial_start` | はじめる | Get started | 最終ページのボタン |
+| `tutorial_page_welcome_title` | LiteMemo へようこそ | Welcome to LiteMemo | 1 ページ目 |
+| `tutorial_page_welcome_body` | 思いついたことをすぐに書き残せる、軽量メモアプリです。ホーム画面の作成ボタンからメモを追加できます。 | A lightweight memo app for quickly capturing your thoughts. Add memos with the create button on the home screen. | 1 ページ目 |
+| `tutorial_page_organize_title` | タグと検索で整理 | Organize with tags and search | 2 ページ目 |
+| `tutorial_page_organize_body` | メモにタグを付けて分類したり、キーワード検索で目的のメモをすぐに見つけられます。 | Categorize memos with tags and find the one you need instantly with keyword search. | 2 ページ目 |
+| `tutorial_page_calendar_title` | カレンダーで振り返り | Look back with the calendar | 3 ページ目 |
+| `tutorial_page_calendar_body` | カレンダーから日付ごとのメモを確認できます。準備ができたら、さっそく始めましょう。 | Review your memos by date on the calendar. When you are ready, let\'s get started. | 3 ページ目 |
 
 英語の `let\'s` のようにアポストロフィはエスケープすること。
 
@@ -223,11 +228,18 @@ LiteMemoTheme(darkTheme = darkTheme) {
    - `stateTransition`: `completeTutorial()` 呼び出しで即座に `HIDDEN`
    - `normal`: `completeTutorial()` で repository に完了が永続化される
 
-Compose UI Test(androidTest)は必須としない(`docs/unit-test.md` の優先度に従い後回し可)。追加する場合は「スキップタップで `onCompleteTutorial` が呼ばれる」「最終ページのボタン文言が『はじめる』になる」の 2 点。
+Compose UI Test(androidTest)は必須としない(`docs/unit-test.md` の優先度に従い後回し可)。追加する場合は以下の観点。
+
+- スキップタップで `onCompleteTutorial` が呼ばれる
+- 進む矢印タップでページが進み、インジケータが更新される
+- 1 ページ目で戻る矢印が無効(disabled)になっている
+- 最終ページで進む矢印の代わりに「はじめる」ボタンが表示される
 
 ## 受け入れ条件
 
 - [ ] 初回起動(フラグ未保存)でチュートリアルが表示される
+- [ ] スワイプに加えて、進む / 戻る矢印ボタンでページを移動できる(1 ページ目では戻るが無効)
+- [ ] 下部中央に 3 点のページインジケータが表示され、現在ページに追従する
 - [ ] スキップまたは最終ページの「はじめる」でホーム画面に遷移し、フラグが保存される
 - [ ] 2 回目以降の起動ではチュートリアルが表示されない(ちらつきもしない)
 - [ ] アプリロック有効時はロック解除が先に表示される
