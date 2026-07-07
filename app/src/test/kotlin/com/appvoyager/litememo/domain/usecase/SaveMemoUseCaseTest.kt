@@ -5,6 +5,7 @@ import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.QueueMemoIdProvider
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -169,6 +170,92 @@ class SaveMemoUseCaseTest {
 
         // Assert
         assertEquals(emptyList<Any>(), repository.savedMemos)
+    }
+
+    @Test
+    fun normalInvokeSavesMemoWithCommandImages() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository()
+        val images = listOf(memoImageFixture())
+        val useCase = saveMemoUseCase(memoRepository = repository)
+
+        // Act
+        // 観点: Normal - command images are preserved on the saved memo.
+        useCase(
+            SaveMemoCommand(
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                images = images
+            )
+        )
+
+        // Assert
+        assertEquals(images, repository.savedMemos.single().images)
+    }
+
+    @Test
+    fun normalInvokeSavesImageOnlyMemoWhenTitleAndBodyAreBlank() = runTest {
+        // Arrange
+        val repository = FakeMemoRepository()
+        val images = listOf(memoImageFixture())
+        val useCase = saveMemoUseCase(memoRepository = repository)
+
+        // Act
+        // 観点: Normal - an attached image counts as memo content.
+        useCase(
+            SaveMemoCommand(
+                title = MemoTitle(" "),
+                body = MemoBody(" "),
+                images = images
+            )
+        )
+
+        // Assert
+        assertEquals(images, repository.savedMemos.single().images)
+    }
+
+    @Test
+    fun normalInvokeSavesMemoWithDistinctImagesWhenDuplicateImageIdsAreProvided() = runTest {
+        // Arrange
+        val image = memoImageFixture()
+        val useCase = saveMemoUseCase()
+
+        // Act
+        // 観点: Normal - duplicate image ids are normalized like duplicate tag ids.
+        val memo = useCase(
+            SaveMemoCommand(
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                images = listOf(image, image)
+            )
+        )
+
+        // Assert
+        assertEquals(listOf(image), memo.images)
+    }
+
+    @Test
+    fun normalInvokeReplacesExistingImagesWithCommandImagesWhenUpdatingMemo() = runTest {
+        // Arrange
+        val oldImage = memoImageFixture(id = "image-old", fileName = "old.jpg")
+        val newImage = memoImageFixture(id = "image-new", fileName = "new.jpg")
+        val existing = memoFixture(id = "memo-1", images = listOf(oldImage))
+        val repository = FakeMemoRepository(listOf(existing))
+        val useCase = saveMemoUseCase(memoRepository = repository)
+
+        // Act
+        // 観点: Normal - update commands fully replace memo images.
+        useCase(
+            SaveMemoCommand(
+                id = existing.id,
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                images = listOf(newImage)
+            )
+        )
+
+        // Assert
+        assertEquals(listOf(newImage), repository.savedMemos.single().images)
     }
 
     @Test

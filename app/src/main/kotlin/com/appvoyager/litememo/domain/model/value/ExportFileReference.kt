@@ -1,7 +1,5 @@
 package com.appvoyager.litememo.domain.model.value
 
-import java.net.URI
-
 @JvmInline
 value class ExportFileReference private constructor(val value: String) {
 
@@ -13,8 +11,3 @@ value class ExportFileReference private constructor(val value: String) {
         }
     }
 }
-
-private fun String.isAbsoluteUri(): Boolean = runCatching { URI(this) }
-    .getOrNull()
-    ?.let { uri -> uri.isAbsolute && !uri.rawSchemeSpecificPart.isNullOrBlank() }
-    ?: false
