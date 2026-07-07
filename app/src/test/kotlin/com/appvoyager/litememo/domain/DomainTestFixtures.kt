@@ -1,9 +1,13 @@
 package com.appvoyager.litememo.domain
 
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoImage
 import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.ImageSourceReference
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoImageFileName
+import com.appvoyager.litememo.domain.model.value.MemoImageId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagColor
@@ -13,6 +17,7 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
+import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
+@Suppress("LongParameterList")
 fun memoFixture(
     id: String = "memo-1",
     title: String = "Title",
@@ -27,6 +33,7 @@ fun memoFixture(
     createdAt: Long = 1000L,
     updatedAt: Long = createdAt,
     tagIds: List<TagId> = emptyList(),
+    images: List<MemoImage> = emptyList(),
     isFavorite: Boolean = false,
     deletedAt: Long? = null
 ) = Memo(
@@ -36,8 +43,14 @@ fun memoFixture(
     createdAt = TimestampMillis(createdAt),
     updatedAt = TimestampMillis(updatedAt),
     tagIds = tagIds,
+    images = images,
     isFavorite = isFavorite,
     deletedAt = deletedAt?.let { TimestampMillis(it) }
+)
+
+fun memoImageFixture(id: String = "image-1", fileName: String = "image-1.jpg") = MemoImage(
+    id = MemoImageId(id),
+    fileName = MemoImageFileName(fileName)
 )
 
 fun tagFixture(
@@ -186,6 +199,28 @@ class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
     }
 
     fun currentTags(): List<Tag> = tags.value
+
+}
+
+class FakeMemoImageStore : MemoImageStore {
+
+    val savedSources = mutableListOf<ImageSourceReference>()
+    val deletedFileNames = mutableListOf<MemoImageFileName>()
+    var saveError: Throwable? = null
+    private var nextImageNumber = 1
+
+    override suspend fun saveImage(source: ImageSourceReference): MemoImage {
+        saveError?.let { throw it }
+        savedSources += source
+        val number = nextImageNumber++
+        return memoImageFixture(id = "image-$number", fileName = "image-$number.jpg")
+    }
+
+    override suspend fun deleteImages(fileNames: List<MemoImageFileName>) {
+        deletedFileNames += fileNames
+    }
+
+    override fun resolveImagePath(fileName: MemoImageFileName): String = "/images/${fileName.value}"
 
 }
 

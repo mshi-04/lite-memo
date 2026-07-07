@@ -13,6 +13,7 @@ data class Memo(
     val createdAt: TimestampMillis,
     val updatedAt: TimestampMillis,
     val tagIds: List<TagId> = emptyList(),
+    val images: List<MemoImage> = emptyList(),
     val isFavorite: Boolean = false,
     val deletedAt: TimestampMillis? = null
 ) {
@@ -23,6 +24,9 @@ data class Memo(
         }
         require(deletedAt == null || deletedAt.value >= updatedAt.value) {
             "Memo deletedAt must be greater than or equal to updatedAt."
+        }
+        require(images.distinctBy { it.id }.size == images.size) {
+            "Memo images must not contain duplicated ids."
         }
     }
 
