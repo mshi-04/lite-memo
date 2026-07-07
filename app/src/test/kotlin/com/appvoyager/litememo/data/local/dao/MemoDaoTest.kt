@@ -1,8 +1,9 @@
 package com.appvoyager.litememo.data.local.dao
 
 import com.appvoyager.litememo.data.local.entity.MemoEntity
+import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
-import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
+import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Test
 class MemoDaoTest {
 
     @Test
-    fun upsertMemoWithTagsThrowsBeforeWritingWhenTagRefsReferenceAnotherMemo() {
+    fun upsertMemoWithRefsThrowsBeforeWritingWhenTagRefsReferenceAnotherMemo() {
         // Arrange
         val dao = RecordingMemoDao(failOnWrite = true)
         val memo = memoEntity(id = "memo-1")
@@ -22,12 +23,32 @@ class MemoDaoTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            runTest { dao.upsertMemoWithTags(memo, tagRefs) }
+            runTest { dao.upsertMemoWithRefs(memo, tagRefs, emptyList()) }
         }
     }
 
     @Test
-    fun upsertMemoWithTagsReplacesTagRefsAfterWritingMemo() = runTest {
+    fun upsertMemoWithRefsThrowsBeforeWritingWhenImageRefsReferenceAnotherMemo() {
+        // Arrange
+        val dao = RecordingMemoDao(failOnWrite = true)
+        val memo = memoEntity(id = "memo-1")
+        val imageRefs = listOf(
+            MemoImageEntity(
+                id = "image-1",
+                memoId = "memo-2",
+                fileName = "image-1.jpg",
+                position = 0
+            )
+        )
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest { dao.upsertMemoWithRefs(memo, emptyList(), imageRefs) }
+        }
+    }
+
+    @Test
+    fun upsertMemoWithRefsReplacesRefsAfterWritingMemo() = runTest {
         // Arrange
         val dao = RecordingMemoDao()
         val memo = memoEntity(id = "memo-1")
@@ -35,35 +56,46 @@ class MemoDaoTest {
             MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0),
             MemoTagRefEntity(memoId = "memo-1", tagId = "tag-2", position = 1)
         )
+        val imageRefs = listOf(
+            MemoImageEntity(
+                id = "image-1",
+                memoId = "memo-1",
+                fileName = "image-1.jpg",
+                position = 0
+            )
+        )
 
         // Act
-        dao.upsertMemoWithTags(memo, tagRefs)
+        dao.upsertMemoWithRefs(memo, tagRefs, imageRefs)
 
         // Assert
         assertEquals(
             listOf(
                 "upsertMemo:memo-1",
                 "deleteTagRefsForMemo:memo-1",
-                "insertTagRefs:memo-1:tag-1:0,memo-1:tag-2:1"
+                "insertTagRefs:memo-1:tag-1:0,memo-1:tag-2:1",
+                "deleteImageRefsForMemo:memo-1",
+                "insertImageRefs:image-1:memo-1:image-1.jpg:0"
             ),
             dao.calls
         )
     }
 
     @Test
-    fun upsertMemoWithTagsSkipsInsertWhenTagRefsAreEmpty() = runTest {
+    fun upsertMemoWithRefsSkipsInsertWhenRefsAreEmpty() = runTest {
         // Arrange
         val dao = RecordingMemoDao()
         val memo = memoEntity(id = "memo-1")
 
         // Act
-        dao.upsertMemoWithTags(memo, emptyList())
+        dao.upsertMemoWithRefs(memo, emptyList(), emptyList())
 
         // Assert
         assertEquals(
             listOf(
                 "upsertMemo:memo-1",
-                "deleteTagRefsForMemo:memo-1"
+                "deleteTagRefsForMemo:memo-1",
+                "deleteImageRefsForMemo:memo-1"
             ),
             dao.calls
         )
@@ -82,23 +114,18 @@ class MemoDaoTest {
     private class RecordingMemoDao(private val failOnWrite: Boolean = false) : MemoDao {
 
         val calls = mutableListOf<String>()
+        private val emptyMemoFlow = flowOf(emptyList<MemoWithRefs>())
 
-        override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
-            flowOf(emptyList())
+        override fun observeActiveMemosWithRefs() = emptyMemoFlow
 
-        override fun observeActiveMemosWithTagRefsBySearchPattern(
-            pattern: String
-        ): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
+        override fun observeActiveMemosWithRefsBySearchPattern(pattern: String) = emptyMemoFlow
 
-        override fun observeActiveMemosWithTagRefsCreatedBetween(
-            fromMillis: Long,
-            toMillis: Long
-        ): Flow<List<MemoWithTagRefs>> = flowOf(emptyList())
+        override fun observeActiveMemosWithRefsCreatedBetween(fromMillis: Long, toMillis: Long) =
+            emptyMemoFlow
 
-        override suspend fun getActiveMemoWithTagRefs(id: String): MemoWithTagRefs? = null
+        override suspend fun getActiveMemoWithRefs(id: String): MemoWithRefs? = null
 
-        override fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
-            flowOf(emptyList())
+        override fun observeTrashedMemosWithRefs() = emptyMemoFlow
 
         override suspend fun upsertMemo(memo: MemoEntity) {
             if (failOnWrite) {
@@ -115,12 +142,38 @@ class MemoDaoTest {
             calls += "insertTagRefs:$refs"
         }
 
+        override suspend fun insertImageRefs(imageRefs: List<MemoImageEntity>) {
+            if (failOnWrite) {
+                fail<Nothing>("insertImageRefs should not be called.")
+            }
+            val refs = imageRefs.joinToString(",") {
+                "${it.id}:${it.memoId}:${it.fileName}:${it.position}"
+            }
+            calls += "insertImageRefs:$refs"
+        }
+
         override suspend fun deleteTagRefsForMemo(memoId: String) {
             if (failOnWrite) {
                 fail<Nothing>("deleteTagRefsForMemo should not be called.")
             }
             calls += "deleteTagRefsForMemo:$memoId"
         }
+
+        override suspend fun deleteImageRefsForMemo(memoId: String) {
+            if (failOnWrite) {
+                fail<Nothing>("deleteImageRefsForMemo should not be called.")
+            }
+            calls += "deleteImageRefsForMemo:$memoId"
+        }
+
+        override suspend fun getImageFileNamesForMemo(memoId: String): List<String> = emptyList()
+
+        override suspend fun getImageFileNamesForMemos(memoIds: List<String>): List<String> =
+            emptyList()
+
+        override suspend fun getImageFileNamesForTrashedMemosDeletedAtOrBefore(
+            cutoff: Long
+        ): List<String> = emptyList()
 
         override suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int {
             if (failOnWrite) {
@@ -138,27 +191,7 @@ class MemoDaoTest {
 
         override suspend fun deleteTrashedMemosDeletedAtOrBefore(cutoff: Long) = Unit
 
-        override suspend fun getAllActiveMemosWithTagRefs(): List<MemoWithTagRefs> = emptyList()
-
-        override suspend fun upsertAllMemosWithTags(
-            memos: List<MemoEntity>,
-            tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>
-        ) {
-            if (failOnWrite) {
-                fail<Nothing>("upsertAllMemosWithTags should not be called.")
-            }
-            memos.forEach { memo ->
-                calls += "upsertMemo:${memo.id}"
-                calls += "deleteTagRefsForMemo:${memo.id}"
-                val refs = tagRefsByMemoId[memo.id].orEmpty()
-                if (refs.isNotEmpty()) {
-                    val joined = refs.joinToString(",") {
-                        "${it.memoId}:${it.tagId}:${it.position}"
-                    }
-                    calls += "insertTagRefs:$joined"
-                }
-            }
-        }
+        override suspend fun getAllActiveMemosWithRefs(): List<MemoWithRefs> = emptyList()
     }
 
 }

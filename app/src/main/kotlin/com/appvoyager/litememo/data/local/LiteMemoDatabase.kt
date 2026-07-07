@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
 import com.appvoyager.litememo.data.local.dao.TagDao
 import com.appvoyager.litememo.data.local.entity.MemoEntity
+import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.entity.TagEntity
 
@@ -12,7 +13,8 @@ import com.appvoyager.litememo.data.local.entity.TagEntity
     entities = [
         MemoEntity::class,
         TagEntity::class,
-        MemoTagRefEntity::class
+        MemoTagRefEntity::class,
+        MemoImageEntity::class
     ],
     version = 1
 )
