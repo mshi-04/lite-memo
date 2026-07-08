@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -47,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -57,14 +55,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
+import com.appvoyager.litememo.ui.component.MemoImageThumbnail
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -229,15 +226,10 @@ fun MemoEditScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(80.dp)
-                                        .clip(RoundedCornerShape(8.dp))
                                         .testTag(MemoEditTestTags.imageItem(image.id))
                                 ) {
-                                    AsyncImage(
-                                        model = File(image.filePath),
-                                        contentDescription = stringResource(
-                                            R.string.attached_image_description
-                                        ),
-                                        contentScale = ContentScale.Crop,
+                                    MemoImageThumbnail(
+                                        imagePath = image.filePath,
                                         modifier = Modifier.fillMaxSize()
                                     )
                                     IconButton(

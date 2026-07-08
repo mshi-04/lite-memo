@@ -27,6 +27,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoImageUiModel
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -246,6 +247,62 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(true, viewModel.uiState.value.images.single().isPersisted)
+    }
+
+    @Test
+    fun coroutineSavingSnapshotMarksOnlySavedImagesAsPersisted() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = BlockingSaveMemoRepository()
+        val viewModel = memoEditViewModel(memoRepository = memoRepository)
+        advanceUntilIdle()
+        viewModel.attachImages(listOf("content://images/1"))
+        runCurrent()
+
+        // Act
+        // Coroutine: images attached while a save is suspended are not part of that save.
+        viewModel.flushEdits()
+        runCurrent()
+        memoRepository.saveStarted.await()
+        viewModel.attachImages(listOf("content://images/2"))
+        runCurrent()
+        memoRepository.releaseSave.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertEquals(
+            listOf(
+                MemoEditImageSnapshot("image-1", "image-1.jpg", "/images/image-1.jpg", true),
+                MemoEditImageSnapshot("image-2", "image-2.jpg", "/images/image-2.jpg", false)
+            ),
+            viewModel.uiState.value.images.map { it.toSnapshot() }
+        )
+    }
+
+    @Test
+    fun coroutineRemoveImageDoesNotDeleteFileWhileSnapshotSaveIsRunning() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = BlockingSaveMemoRepository()
+        val imageStore = FakeMemoImageStore()
+        val viewModel = memoEditViewModel(
+            memoRepository = memoRepository,
+            memoImageStore = imageStore
+        )
+        advanceUntilIdle()
+        viewModel.attachImages(listOf("content://images/1"))
+        runCurrent()
+
+        // Act
+        // Coroutine: snapshot-owned files are kept for repository diff cleanup.
+        viewModel.flushEdits()
+        runCurrent()
+        memoRepository.saveStarted.await()
+        viewModel.removeImage("image-1")
+        runCurrent()
+        memoRepository.releaseSave.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertEquals(emptyList<MemoImageFileName>(), imageStore.deletedFileNames)
     }
 
     @Test
@@ -720,6 +777,20 @@ class MemoEditViewModelTest {
         MemoRepository by FakeMemoRepository(listOf(memo)) {
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis): Unit =
             error("Failed to move memo to trash.")
+    }
+
+    private class BlockingSaveMemoRepository(
+        private val delegate: FakeMemoRepository = FakeMemoRepository()
+    ) : MemoRepository by delegate {
+
+        val saveStarted = CompletableDeferred<Unit>()
+        val releaseSave = CompletableDeferred<Unit>()
+
+        override suspend fun saveMemo(memo: Memo) {
+            saveStarted.complete(Unit)
+            releaseSave.await()
+            delegate.saveMemo(memo)
+        }
     }
 }
 

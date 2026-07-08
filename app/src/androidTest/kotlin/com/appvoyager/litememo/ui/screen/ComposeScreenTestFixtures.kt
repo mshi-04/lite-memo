@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.runtime.Composable
+import com.appvoyager.litememo.ui.state.MemoImageUiModel
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
@@ -32,4 +33,16 @@ internal fun testTagUiModel(id: String = "tag-1", name: String = "Tag") = TagUiM
     id = id,
     name = name,
     colorArgb = 0xFF4CAF50
+)
+
+internal fun testMemoImageUiModel(
+    id: String = "image-1",
+    fileName: String = "image-1.jpg",
+    filePath: String = "/missing/image-1.jpg",
+    isPersisted: Boolean = true
+) = MemoImageUiModel(
+    id = id,
+    fileName = fileName,
+    filePath = filePath,
+    isPersisted = isPersisted
 )

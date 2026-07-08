@@ -20,7 +20,7 @@ import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongMethod", "LongParameterList")
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (MemoId) -> Unit,
@@ -33,6 +33,10 @@ fun MemoEditRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
+    val currentOnMemoDeleted by rememberUpdatedState(onMemoDeleted)
+    val currentOnSaveError by rememberUpdatedState(onSaveError)
+    val currentOnDeleteError by rememberUpdatedState(onDeleteError)
     val currentOnImageAttachError by rememberUpdatedState(onImageAttachError)
     val pickImagesLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia()
@@ -43,8 +47,8 @@ fun MemoEditRoute(
     LaunchedEffect(viewModel) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                MemoEditNavigationEvent.NavigateBack -> onNavigateBack()
-                is MemoEditNavigationEvent.MemoDeleted -> onMemoDeleted(event.memoId)
+                MemoEditNavigationEvent.NavigateBack -> currentOnNavigateBack()
+                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDeleted(event.memoId)
             }
         }
     }
@@ -52,8 +56,8 @@ fun MemoEditRoute(
     LaunchedEffect(viewModel) {
         viewModel.operationErrorEvent.collect { event ->
             when (event) {
-                MemoEditOperationErrorEvent.SaveFailed -> onSaveError()
-                MemoEditOperationErrorEvent.DeleteFailed -> onDeleteError()
+                MemoEditOperationErrorEvent.SaveFailed -> currentOnSaveError()
+                MemoEditOperationErrorEvent.DeleteFailed -> currentOnDeleteError()
                 MemoEditOperationErrorEvent.ImageAttachFailed -> currentOnImageAttachError()
             }
         }

@@ -94,6 +94,7 @@ class MemoEditViewModel @Inject constructor(
     private val persistMutex = Mutex()
     private var autosaveJob: Job? = null
     private var isFinishing = false
+    private var activePersistImageIds: Set<String> = emptySet()
 
     init {
         loadInitialState()
@@ -177,13 +178,15 @@ class MemoEditViewModel @Inject constructor(
 
     fun removeImage(imageId: String) {
         if (isFinishing || _uiState.value.isDeletePending) return
-        val removed = _uiState.value.images.firstOrNull { it.id == imageId } ?: return
-        updateEditState { state ->
-            state.copy(images = state.images.filterNot { it.id == imageId }, isModified = true)
-        }
-        if (!removed.isPersisted) {
-            viewModelScope.launch {
-                deleteCopiedImagesQuietly(listOf(removed))
+        val removed = _uiState.value.images.firstOrNull { it.id == imageId }
+        if (removed != null) {
+            updateEditState { state ->
+                state.copy(images = state.images.filterNot { it.id == imageId }, isModified = true)
+            }
+            if (!removed.isPersisted && imageId !in activePersistImageIds) {
+                viewModelScope.launch {
+                    deleteCopiedImagesQuietly(listOf(removed))
+                }
             }
         }
     }
@@ -296,6 +299,14 @@ class MemoEditViewModel @Inject constructor(
     private suspend fun persist(): Boolean = persistMutex.withLock {
         val state = _uiState.value
         if (state.isContentBlank()) return@withLock true
+        val savingImageIds = state.images.map { it.id }.toSet()
+        val savingImages = state.images.map {
+            MemoImage(
+                id = MemoImageId(it.id),
+                fileName = MemoImageFileName(it.fileName)
+            )
+        }
+        activePersistImageIds = savingImageIds
         try {
             val memo = saveMemoUseCase(
                 SaveMemoCommand(
@@ -304,22 +315,19 @@ class MemoEditViewModel @Inject constructor(
                     body = MemoBody(state.body),
                     createdAt = createdAt,
                     tagIds = state.selectedTagIds.map { TagId(it) },
-                    images = state.images.map {
-                        MemoImage(
-                            id = MemoImageId(it.id),
-                            fileName = MemoImageFileName(it.fileName)
-                        )
-                    },
+                    images = savingImages,
                     isFavorite = state.isFavorite
                 )
             )
-            applySavedMemo(memo)
+            applySavedMemo(memo, savingImageIds)
             true
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
             _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
             false
+        } finally {
+            activePersistImageIds = emptySet()
         }
     }
 
@@ -344,16 +352,17 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    private fun applySavedMemo(memo: Memo) {
+    private fun applySavedMemo(memo: Memo, savedImageIds: Set<String>) {
         memoId = memo.id
         savedStateHandle["memoId"] = memo.id.value
-        val persistedImages = _uiState.value.images.map { it.copy(isPersisted = true) }
         _uiState.update { state ->
             val nextState = state.copy(
                 memoId = memo.id.value,
                 isLoading = false,
                 hasError = false,
-                images = persistedImages
+                images = state.images.map { image ->
+                    if (image.id in savedImageIds) image.copy(isPersisted = true) else image
+                }
             )
             persistSavedState(nextState)
             nextState

@@ -12,7 +12,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.appvoyager.litememo.ui.state.MemoEditUiState
-import com.appvoyager.litememo.ui.state.MemoImageUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -158,7 +157,7 @@ class MemoEditScreenComposeTest {
 
     @Test
     fun normalDeletePendingHidesAttachImageButton() {
-        // Arrange
+        // Act
         composeRule.setContent {
             TestScreenContent {
                 MemoEditScreen(
@@ -183,11 +182,4 @@ class MemoEditScreenComposeTest {
     }
 
     private data class MemoEditInputSnapshot(val title: String, val body: String)
-
-    private fun testMemoImageUiModel() = MemoImageUiModel(
-        id = "image-1",
-        fileName = "image-1.jpg",
-        filePath = "/missing/image-1.jpg",
-        isPersisted = true
-    )
 }
