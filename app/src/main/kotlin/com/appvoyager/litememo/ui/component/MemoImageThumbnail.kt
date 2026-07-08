@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
 import com.appvoyager.litememo.R
 import java.io.File
 
@@ -47,10 +46,8 @@ fun MemoImageThumbnail(imagePath: String, modifier: Modifier = Modifier, testTag
                 model = File(imagePath),
                 contentDescription = stringResource(R.string.attached_image_description),
                 contentScale = ContentScale.Crop,
-                onState = { state ->
-                    if (state is AsyncImagePainter.State.Error) {
-                        isThumbnailError = true
-                    }
+                onError = {
+                    isThumbnailError = true
                 },
                 modifier = Modifier.fillMaxSize()
             )
