@@ -121,7 +121,9 @@ interface MemoDao {
         tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>,
         imageRefsByMemoId: Map<String, List<MemoImageEntity>>
     ): List<String> {
-        val before = getImageFileNamesForMemos(memos.map { it.id })
+        val before = memos.map { it.id }
+            .chunked(SQLITE_QUERY_PARAMETER_BATCH_SIZE)
+            .flatMap { memoIds -> getImageFileNamesForMemos(memoIds) }
         upsertAllMemosWithRefs(memos, tagRefsByMemoId, imageRefsByMemoId)
         val after = imageRefsByMemoId.values.flatten().map { it.fileName }.toSet()
         return before - after
@@ -184,6 +186,10 @@ interface MemoDao {
         val fileNames = getImageFileNamesForTrashedMemosDeletedAtOrBefore(cutoff)
         deleteTrashedMemosDeletedAtOrBefore(cutoff)
         return fileNames
+    }
+
+    private companion object {
+        const val SQLITE_QUERY_PARAMETER_BATCH_SIZE = 900
     }
 
 }

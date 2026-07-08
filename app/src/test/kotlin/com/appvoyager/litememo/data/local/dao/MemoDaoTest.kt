@@ -101,6 +101,23 @@ class MemoDaoTest {
         )
     }
 
+    @Test
+    fun upsertAllMemosWithRefsCollectsImageFileNamesInBatches() = runTest {
+        // Arrange
+        val dao = RecordingMemoDao()
+        val memos = List(901) { index -> memoEntity(id = "memo-$index") }
+
+        // Act
+        dao.upsertAllMemosWithRefsAndCollectRemovedFileNames(
+            memos = memos,
+            tagRefsByMemoId = emptyMap(),
+            imageRefsByMemoId = emptyMap()
+        )
+
+        // Assert
+        assertEquals(listOf(900, 1), dao.imageFileNameBatchSizes)
+    }
+
     private fun memoEntity(id: String) = MemoEntity(
         id = id,
         title = "Title",
@@ -114,6 +131,7 @@ class MemoDaoTest {
     private class RecordingMemoDao(private val failOnWrite: Boolean = false) : MemoDao {
 
         val calls = mutableListOf<String>()
+        val imageFileNameBatchSizes = mutableListOf<Int>()
         private val emptyMemoFlow = flowOf(emptyList<MemoWithRefs>())
 
         override fun observeActiveMemosWithRefs() = emptyMemoFlow
@@ -168,8 +186,10 @@ class MemoDaoTest {
 
         override suspend fun getImageFileNamesForMemo(memoId: String): List<String> = emptyList()
 
-        override suspend fun getImageFileNamesForMemos(memoIds: List<String>): List<String> =
-            emptyList()
+        override suspend fun getImageFileNamesForMemos(memoIds: List<String>): List<String> {
+            imageFileNameBatchSizes += memoIds.size
+            return emptyList()
+        }
 
         override suspend fun getImageFileNamesForTrashedMemosDeletedAtOrBefore(
             cutoff: Long

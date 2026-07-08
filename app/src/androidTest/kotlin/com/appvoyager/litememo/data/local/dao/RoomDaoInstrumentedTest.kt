@@ -393,6 +393,30 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
+    fun discardMemoCascadesDeleteToMemoImageRefs() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-1"))
+        memoDao.insertImageRefs(
+            listOf(
+                MemoImageEntity(
+                    id = "image-1",
+                    memoId = "memo-1",
+                    fileName = "image-1.jpg",
+                    position = 0
+                )
+            )
+        )
+
+        // Act
+        memoDao.discardMemo("memo-1")
+        memoDao.upsertMemo(memoEntity(id = "memo-1"))
+        val memo = memoDao.observeActiveMemosWithRefs().first().single()
+
+        // Assert
+        assertEquals(emptyList<String>(), memo.imageRefs.map { it.fileName })
+    }
+
+    @Test
     fun discardMemoReturnsZeroWhenMemoDoesNotExist() = runTest {
         // Arrange
         val missingId = "missing"
