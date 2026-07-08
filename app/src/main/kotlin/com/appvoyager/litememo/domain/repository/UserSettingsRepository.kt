@@ -12,9 +12,13 @@ interface UserSettingsRepository {
 
     fun observeAppLockEnabled(): Flow<Boolean>
 
+    fun observeTutorialCompleted(): Flow<Boolean>
+
     suspend fun setThemeMode(mode: ThemeMode)
 
     suspend fun setMemoSortOrder(order: MemoSortOrder)
 
     suspend fun setAppLockEnabled(enabled: Boolean)
+
+    suspend fun completeTutorial()
 }

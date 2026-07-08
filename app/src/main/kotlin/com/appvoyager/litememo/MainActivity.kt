@@ -8,8 +8,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -20,6 +24,8 @@ import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticator
 import com.appvoyager.litememo.ui.navigation.LiteMemoApp
 import com.appvoyager.litememo.ui.screen.AppLockScreen
+import com.appvoyager.litememo.ui.screen.TutorialScreen
+import com.appvoyager.litememo.ui.state.TutorialStatus
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import com.appvoyager.litememo.ui.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,6 +47,7 @@ class MainActivity : FragmentActivity() {
             val themeMode by mainViewModel.themeMode
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
             val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
+            val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
             val darkTheme = when (themeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
@@ -54,11 +61,29 @@ class MainActivity : FragmentActivity() {
             }
             LiteMemoTheme(darkTheme = darkTheme) {
                 if (appLockUiState.canShowAppContent) {
-                    LiteMemoApp(
-                        onRequestAppLockAuthentication = { onResult ->
-                            appLockAuthenticator.authenticate(onResult)
+                    when (tutorialUiState.status) {
+                        TutorialStatus.LOADING -> {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.background
+                            ) {
+                            }
                         }
-                    )
+
+                        TutorialStatus.VISIBLE -> {
+                            TutorialScreen(
+                                onCompleteTutorial = { mainViewModel.completeTutorial() }
+                            )
+                        }
+
+                        TutorialStatus.HIDDEN -> {
+                            LiteMemoApp(
+                                onRequestAppLockAuthentication = { onResult ->
+                                    appLockAuthenticator.authenticate(onResult)
+                                }
+                            )
+                        }
+                    }
                 } else {
                     AppLockScreen(
                         uiState = appLockUiState,

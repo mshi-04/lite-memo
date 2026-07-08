@@ -128,6 +128,33 @@ class DataStoreUserSettingsRepositoryTest {
         assertEquals(true, result)
     }
 
+    @Test
+    fun observeTutorialCompletedReturnsDefaultValue() = runTest {
+        // Arrange
+        val repository = repository(backgroundScope)
+
+        // Act
+        // Normal: tutorial is incomplete by default
+        val result = repository.observeTutorialCompleted().first()
+
+        // Assert
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun observeTutorialCompletedReturnsSavedValue() = runTest {
+        // Arrange
+        val repository = repository(backgroundScope)
+
+        // Act
+        // Normal: completed tutorial flag is saved
+        repository.completeTutorial()
+        val result = repository.observeTutorialCompleted().first()
+
+        // Assert
+        assertEquals(true, result)
+    }
+
     private fun repository(scope: CoroutineScope): DataStoreUserSettingsRepository =
         DataStoreUserSettingsRepository(dataStore(scope))
 
