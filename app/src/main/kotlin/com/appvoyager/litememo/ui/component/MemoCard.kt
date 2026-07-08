@@ -2,34 +2,50 @@ package com.appvoyager.litememo.ui.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.state.TagUiModel
+import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -121,6 +137,47 @@ fun MemoCard(
                     )
                 }
             }
+            memo.thumbnailPath?.let { thumbnailPath ->
+                MemoThumbnail(
+                    thumbnailPath = thumbnailPath,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .padding(end = 14.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemoThumbnail(thumbnailPath: String, modifier: Modifier = Modifier) {
+    var isThumbnailError by remember(thumbnailPath) { mutableStateOf(false) }
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .testTag(MemoCardTestTags.THUMBNAIL),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isThumbnailError) {
+            Icon(
+                imageVector = Icons.Outlined.Image,
+                contentDescription = stringResource(R.string.attached_image_description),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            AsyncImage(
+                model = File(thumbnailPath),
+                contentDescription = stringResource(R.string.attached_image_description),
+                contentScale = ContentScale.Crop,
+                onState = { state ->
+                    if (state is AsyncImagePainter.State.Error) {
+                        isThumbnailError = true
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }

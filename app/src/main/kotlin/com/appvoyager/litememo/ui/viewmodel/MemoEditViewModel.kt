@@ -4,20 +4,28 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoImage
 import com.appvoyager.litememo.domain.model.SaveMemoCommand
+import com.appvoyager.litememo.domain.model.value.ImageSourceReference
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoImageFileName
+import com.appvoyager.litememo.domain.model.value.MemoImageId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.usecase.AttachMemoImageUseCase
+import com.appvoyager.litememo.domain.usecase.DeleteMemoImagesUseCase
 import com.appvoyager.litememo.domain.usecase.DiscardMemoUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.GenerateMemoIdUseCase
 import com.appvoyager.litememo.domain.usecase.GetMemoUseCase
 import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
 import com.appvoyager.litememo.ui.state.MemoEditUiState
+import com.appvoyager.litememo.ui.state.MemoImageUiModel
 import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -46,7 +54,10 @@ class MemoEditViewModel @Inject constructor(
     private val discardMemoUseCase: DiscardMemoUseCase,
     private val generateMemoIdUseCase: GenerateMemoIdUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
-    private val formatMemoTextUseCase: FormatMemoTextUseCase
+    private val formatMemoTextUseCase: FormatMemoTextUseCase,
+    private val attachMemoImageUseCase: AttachMemoImageUseCase,
+    private val deleteMemoImagesUseCase: DeleteMemoImagesUseCase,
+    private val resolveMemoImagePathUseCase: ResolveMemoImagePathUseCase
 ) : ViewModel() {
 
     private val initialMemoId: String? = savedStateHandle["memoId"]
@@ -125,6 +136,55 @@ class MemoEditViewModel @Inject constructor(
                 state.selectedTagIds + tagId
             }
             state.copy(selectedTagIds = selectedTagIds, isModified = true)
+        }
+    }
+
+    fun attachImages(sourceUris: List<String>) {
+        if (sourceUris.isEmpty()) return
+        if (isFinishing || _uiState.value.isDeletePending) return
+        viewModelScope.launch {
+            val attached = mutableListOf<MemoImageUiModel>()
+            var hasFailure = false
+            sourceUris.forEach { uri ->
+                try {
+                    val image = attachMemoImageUseCase(ImageSourceReference(uri))
+                    attached += MemoImageUiModel.fromDomain(
+                        image = image,
+                        resolveImagePath = resolveMemoImagePathUseCase::invoke,
+                        isPersisted = false
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Throwable) {
+                    hasFailure = true
+                }
+            }
+
+            if (isFinishing || _uiState.value.isDeletePending) {
+                deleteCopiedImagesQuietly(attached)
+                return@launch
+            }
+            if (attached.isNotEmpty()) {
+                updateEditState { state ->
+                    state.copy(images = state.images + attached, isModified = true)
+                }
+            }
+            if (hasFailure) {
+                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.ImageAttachFailed)
+            }
+        }
+    }
+
+    fun removeImage(imageId: String) {
+        if (isFinishing || _uiState.value.isDeletePending) return
+        val removed = _uiState.value.images.firstOrNull { it.id == imageId } ?: return
+        updateEditState { state ->
+            state.copy(images = state.images.filterNot { it.id == imageId }, isModified = true)
+        }
+        if (!removed.isPersisted) {
+            viewModelScope.launch {
+                deleteCopiedImagesQuietly(listOf(removed))
+            }
         }
     }
 
@@ -244,6 +304,12 @@ class MemoEditViewModel @Inject constructor(
                     body = MemoBody(state.body),
                     createdAt = createdAt,
                     tagIds = state.selectedTagIds.map { TagId(it) },
+                    images = state.images.map {
+                        MemoImage(
+                            id = MemoImageId(it.id),
+                            fileName = MemoImageFileName(it.fileName)
+                        )
+                    },
                     isFavorite = state.isFavorite
                 )
             )
@@ -281,12 +347,16 @@ class MemoEditViewModel @Inject constructor(
     private fun applySavedMemo(memo: Memo) {
         memoId = memo.id
         savedStateHandle["memoId"] = memo.id.value
+        val persistedImages = _uiState.value.images.map { it.copy(isPersisted = true) }
         _uiState.update { state ->
-            state.copy(
+            val nextState = state.copy(
                 memoId = memo.id.value,
                 isLoading = false,
-                hasError = false
+                hasError = false,
+                images = persistedImages
             )
+            persistSavedState(nextState)
+            nextState
         }
     }
 
@@ -296,6 +366,22 @@ class MemoEditViewModel @Inject constructor(
         val body = savedStateHandle.get<String>(EDIT_BODY_KEY).orEmpty()
         val tagIds = savedStateHandle.get<ArrayList<String>>(EDIT_TAG_IDS_KEY).orEmpty().toSet()
         val isFavorite = savedStateHandle.get<Boolean>(EDIT_IS_FAVORITE_KEY) ?: false
+        val imageIds = savedStateHandle.get<ArrayList<String>>(EDIT_IMAGE_IDS_KEY).orEmpty()
+        val imageFileNames = savedStateHandle
+            .get<ArrayList<String>>(EDIT_IMAGE_FILE_NAMES_KEY)
+            .orEmpty()
+        val imagePersistedFlags = savedStateHandle
+            .get<ArrayList<Boolean>>(EDIT_IMAGE_PERSISTED_FLAGS_KEY)
+            .orEmpty()
+        val images = imageIds.mapIndexedNotNull { index, id ->
+            val fileName = imageFileNames.getOrNull(index) ?: return@mapIndexedNotNull null
+            MemoImageUiModel(
+                id = id,
+                fileName = fileName,
+                filePath = resolveMemoImagePathUseCase(MemoImageFileName(fileName)),
+                isPersisted = imagePersistedFlags.getOrNull(index) ?: false
+            )
+        }
 
         return MemoEditUiState(
             isLoading = false,
@@ -304,7 +390,8 @@ class MemoEditViewModel @Inject constructor(
             body = body,
             isFavorite = isFavorite,
             isModified = true,
-            selectedTagIds = tagIds
+            selectedTagIds = tagIds,
+            images = images
         )
     }
 
@@ -313,6 +400,11 @@ class MemoEditViewModel @Inject constructor(
         savedStateHandle[EDIT_BODY_KEY] = state.body
         savedStateHandle[EDIT_TAG_IDS_KEY] = ArrayList(state.selectedTagIds)
         savedStateHandle[EDIT_IS_FAVORITE_KEY] = state.isFavorite
+        savedStateHandle[EDIT_IMAGE_IDS_KEY] = ArrayList(state.images.map { it.id })
+        savedStateHandle[EDIT_IMAGE_FILE_NAMES_KEY] = ArrayList(state.images.map { it.fileName })
+        savedStateHandle[EDIT_IMAGE_PERSISTED_FLAGS_KEY] = ArrayList(
+            state.images.map { it.isPersisted }
+        )
     }
 
     private fun clearSavedState() {
@@ -320,6 +412,9 @@ class MemoEditViewModel @Inject constructor(
         savedStateHandle.remove<String>(EDIT_BODY_KEY)
         savedStateHandle.remove<ArrayList<String>>(EDIT_TAG_IDS_KEY)
         savedStateHandle.remove<Boolean>(EDIT_IS_FAVORITE_KEY)
+        savedStateHandle.remove<ArrayList<String>>(EDIT_IMAGE_IDS_KEY)
+        savedStateHandle.remove<ArrayList<String>>(EDIT_IMAGE_FILE_NAMES_KEY)
+        savedStateHandle.remove<ArrayList<Boolean>>(EDIT_IMAGE_PERSISTED_FLAGS_KEY)
     }
 
     private fun isRestoredNewMemoSession(): Boolean {
@@ -333,10 +428,29 @@ class MemoEditViewModel @Inject constructor(
         title = title.value,
         body = body.value,
         isFavorite = isFavorite,
-        selectedTagIds = tagIds.map { it.value }.toSet()
+        selectedTagIds = tagIds.map { it.value }.toSet(),
+        images = images.map { image ->
+            MemoImageUiModel.fromDomain(
+                image = image,
+                resolveImagePath = resolveMemoImagePathUseCase::invoke,
+                isPersisted = true
+            )
+        }
     )
 
-    private fun MemoEditUiState.isContentBlank(): Boolean = title.isBlank() && body.isBlank()
+    private suspend fun deleteCopiedImagesQuietly(images: List<MemoImageUiModel>) {
+        if (images.isEmpty()) return
+        try {
+            deleteMemoImagesUseCase(images.map { MemoImageFileName(it.fileName) })
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // Cleanup is best-effort; user-facing save/delete errors are reported elsewhere.
+        }
+    }
+
+    private fun MemoEditUiState.isContentBlank(): Boolean =
+        title.isBlank() && body.isBlank() && images.isEmpty()
 
     private companion object {
         const val AUTOSAVE_DEBOUNCE_MILLIS = 1_000L
@@ -344,6 +458,9 @@ class MemoEditViewModel @Inject constructor(
         const val EDIT_BODY_KEY = "editBody"
         const val EDIT_TAG_IDS_KEY = "editTagIds"
         const val EDIT_IS_FAVORITE_KEY = "editIsFavorite"
+        const val EDIT_IMAGE_IDS_KEY = "editImageIds"
+        const val EDIT_IMAGE_FILE_NAMES_KEY = "editImageFileNames"
+        const val EDIT_IMAGE_PERSISTED_FLAGS_KEY = "editImagePersistedFlags"
         const val GENERATED_MEMO_ID_KEY = "generatedMemoId"
         const val SESSION_STARTED_AS_NEW_KEY = "sessionStartedAsNew"
     }
@@ -357,4 +474,5 @@ sealed interface MemoEditNavigationEvent {
 sealed interface MemoEditOperationErrorEvent {
     data object SaveFailed : MemoEditOperationErrorEvent
     data object DeleteFailed : MemoEditOperationErrorEvent
+    data object ImageAttachFailed : MemoEditOperationErrorEvent
 }

@@ -1,10 +1,12 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import app.cash.turbine.test
+import com.appvoyager.litememo.domain.FakeMemoImageStore
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -19,6 +21,7 @@ import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
@@ -80,6 +83,27 @@ class HomeViewModelTest {
 
         // Assert
         assertEquals("買い物リスト", state.memos.single().title)
+    }
+
+    @Test
+    fun normalUiStateMapsThumbnailPathFromFirstImage() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(
+                    id = "memo-1",
+                    images = listOf(memoImageFixture(fileName = "image-1.jpg"))
+                )
+            )
+        )
+
+        // Act
+        // Normal: home memo cards resolve the first memo image into a thumbnail path.
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals("/images/image-1.jpg", state.memos.single().thumbnailPath)
     }
 
     @Test
@@ -740,7 +764,8 @@ class HomeViewModelTest {
                 tagRepository = tagRepository,
                 currentTimeProvider = MutableTimeProvider(TimestampMillis(today + 1))
             ),
-            formatMemoTextUseCase = FormatMemoTextUseCase()
+            formatMemoTextUseCase = FormatMemoTextUseCase(),
+            resolveMemoImagePathUseCase = ResolveMemoImagePathUseCase(FakeMemoImageStore())
         )
     }
 

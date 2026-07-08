@@ -14,12 +14,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,10 +42,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -50,12 +57,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.state.MemoEditUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -68,6 +77,8 @@ fun MemoEditScreen(
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
     onRetry: () -> Unit,
+    onAttachImageRequest: () -> Unit,
+    onImageRemove: (String) -> Unit,
     onShareMemo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -88,6 +99,17 @@ fun MemoEditScreen(
                 title = {},
                 actions = {
                     if (!uiState.isDeletePending) {
+                        IconButton(
+                            onClick = onAttachImageRequest,
+                            modifier = Modifier.testTag(MemoEditTestTags.ATTACH_IMAGE_BUTTON)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AddPhotoAlternate,
+                                contentDescription = stringResource(
+                                    R.string.memo_edit_attach_image
+                                )
+                            )
+                        }
                         var menuExpanded by remember { mutableStateOf(false) }
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
@@ -196,6 +218,47 @@ fun MemoEditScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
+                    if (uiState.images.isNotEmpty()) {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(MemoEditTestTags.IMAGE_LIST),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(uiState.images, key = { it.id }) { image ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .testTag(MemoEditTestTags.imageItem(image.id))
+                                ) {
+                                    AsyncImage(
+                                        model = File(image.filePath),
+                                        contentDescription = stringResource(
+                                            R.string.attached_image_description
+                                        ),
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    IconButton(
+                                        onClick = { onImageRemove(image.id) },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .size(32.dp)
+                                            .testTag(MemoEditTestTags.removeImageButton(image.id))
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = stringResource(
+                                                R.string.memo_edit_remove_image
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                     BasicTextField(
                         value = uiState.body,
                         onValueChange = onBodyChanged,
@@ -245,6 +308,8 @@ private fun MemoEditScreenPreview() {
             onDelete = {},
             onBackRequest = {},
             onRetry = {},
+            onAttachImageRequest = {},
+            onImageRemove = {},
             onShareMemo = {}
         )
     }

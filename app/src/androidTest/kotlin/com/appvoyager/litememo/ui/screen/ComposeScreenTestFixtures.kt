@@ -16,14 +16,16 @@ internal fun testMemoUiModel(
     id: String = "memo-1",
     title: String = "Title",
     body: String = "Body",
-    tags: List<TagUiModel> = emptyList()
+    tags: List<TagUiModel> = emptyList(),
+    thumbnailPath: String? = null
 ) = MemoUiModel(
     id = id,
     title = title,
     body = body,
     tags = tags,
     updatedAtMillis = 1_000L,
-    isFavorite = false
+    isFavorite = false,
+    thumbnailPath = thumbnailPath
 )
 
 internal fun testTagUiModel(id: String = "tag-1", name: String = "Tag") = TagUiModel(
