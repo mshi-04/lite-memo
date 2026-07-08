@@ -7,11 +7,13 @@ import com.appvoyager.litememo.domain.usecase.CompleteTutorialUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
+import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
 import com.appvoyager.litememo.ui.state.AppLockUiState
 import com.appvoyager.litememo.ui.state.TutorialStatus
+import com.appvoyager.litememo.ui.state.TutorialUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -29,7 +31,8 @@ class MainViewModel @Inject constructor(
     private val observeThemeModeUseCase: ObserveThemeModeUseCase,
     private val observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
     private val observeTutorialCompletedUseCase: ObserveTutorialCompletedUseCase,
-    private val completeTutorialUseCase: CompleteTutorialUseCase
+    private val completeTutorialUseCase: CompleteTutorialUseCase,
+    private val purgeExpiredTrashedMemosUseCase: PurgeExpiredTrashedMemosUseCase
 ) : ViewModel() {
 
     val themeMode: Flow<ThemeMode> = observeThemeModeUseCase()
@@ -43,10 +46,11 @@ class MainViewModel @Inject constructor(
     private val _secureScreenEnabled = MutableStateFlow(false)
     val secureScreenEnabled: StateFlow<Boolean> = _secureScreenEnabled.asStateFlow()
 
-    private val _tutorialStatus = MutableStateFlow(TutorialStatus.LOADING)
-    val tutorialStatus: StateFlow<TutorialStatus> = _tutorialStatus.asStateFlow()
+    private val _tutorialUiState = MutableStateFlow(TutorialUiState())
+    val tutorialUiState: StateFlow<TutorialUiState> = _tutorialUiState.asStateFlow()
 
     private var appLockEnabled: Boolean? = null
+    private var expiredTrashedMemosPurged = false
 
     init {
         observeAppLockEnabled()
@@ -104,10 +108,13 @@ class MainViewModel @Inject constructor(
                 message = AppLockMessage.AUTHENTICATION_UNAVAILABLE
             )
         }
+        if (result == AppLockAuthenticationResult.SUCCEEDED) {
+            purgeExpiredTrashedMemosOnce()
+        }
     }
 
     fun completeTutorial() {
-        _tutorialStatus.value = TutorialStatus.HIDDEN
+        _tutorialUiState.value = TutorialUiState(status = TutorialStatus.HIDDEN)
         viewModelScope.launch {
             try {
                 completeTutorialUseCase()
@@ -128,6 +135,7 @@ class MainViewModel @Inject constructor(
                 when {
                     !enabled -> {
                         _appLockUiState.value = AppLockUiState(status = AppLockStatus.UNLOCKED)
+                        purgeExpiredTrashedMemosOnce()
                     }
 
                     previous == null -> {
@@ -138,6 +146,7 @@ class MainViewModel @Inject constructor(
                         _appLockUiState.update { state ->
                             state.copy(status = AppLockStatus.UNLOCKED, message = null)
                         }
+                        purgeExpiredTrashedMemosOnce()
                     }
                 }
             }
@@ -147,11 +156,20 @@ class MainViewModel @Inject constructor(
     private fun observeTutorialCompleted() {
         viewModelScope.launch {
             observeTutorialCompletedUseCase().collect { completed ->
-                _tutorialStatus.value = when {
-                    completed -> TutorialStatus.HIDDEN
-                    _tutorialStatus.value == TutorialStatus.LOADING -> TutorialStatus.VISIBLE
-                    else -> _tutorialStatus.value
-                }
+                _tutorialUiState.update { state -> state.next(completed) }
+            }
+        }
+    }
+
+    private fun purgeExpiredTrashedMemosOnce() {
+        if (expiredTrashedMemosPurged) return
+        expiredTrashedMemosPurged = true
+        viewModelScope.launch {
+            try {
+                purgeExpiredTrashedMemosUseCase()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
             }
         }
     }

@@ -47,7 +47,7 @@ class MainActivity : FragmentActivity() {
             val themeMode by mainViewModel.themeMode
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
             val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
-            val tutorialStatus by mainViewModel.tutorialStatus.collectAsStateWithLifecycle()
+            val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
             val darkTheme = when (themeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
@@ -61,7 +61,7 @@ class MainActivity : FragmentActivity() {
             }
             LiteMemoTheme(darkTheme = darkTheme) {
                 if (appLockUiState.canShowAppContent) {
-                    when (tutorialStatus) {
+                    when (tutorialUiState.status) {
                         TutorialStatus.LOADING -> {
                             Surface(
                                 modifier = Modifier.fillMaxSize(),

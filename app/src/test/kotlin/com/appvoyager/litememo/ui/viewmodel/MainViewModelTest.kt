@@ -1,11 +1,15 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import app.cash.turbine.test
+import com.appvoyager.litememo.domain.FakeMemoRepository
+import com.appvoyager.litememo.domain.MutableTimeProvider
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.CompleteTutorialUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
+import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
@@ -286,7 +290,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(TutorialStatus.VISIBLE, viewModel.tutorialStatus.value)
+        assertEquals(TutorialStatus.VISIBLE, viewModel.tutorialUiState.value.status)
     }
 
     @Test
@@ -301,7 +305,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialStatus.value)
+        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialUiState.value.status)
     }
 
     @Test
@@ -314,7 +318,7 @@ class MainViewModelTest {
         viewModel.completeTutorial()
 
         // Assert
-        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialStatus.value)
+        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialUiState.value.status)
     }
 
     @Test
@@ -332,10 +336,57 @@ class MainViewModelTest {
         assertEquals(true, repository.observeTutorialCompleted().first())
     }
 
-    private fun mainViewModel(repository: FakeUserSettingsRepository) = MainViewModel(
+    @Test
+    fun normalIncompleteTutorialDoesNotBlockExpiredTrashPurge() = runTest(dispatcher) {
+        // Arrange
+        val memoRepository = FakeMemoRepository()
+        mainViewModel(
+            repository = FakeUserSettingsRepository(),
+            memoRepository = memoRepository
+        )
+
+        // Act
+        // Normal: startup purge runs even while tutorial is visible
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(1, memoRepository.purgeCutoffs.size)
+    }
+
+    @Test
+    fun normalAppLockEnabledPurgesExpiredTrashAfterAuthenticationSuccess() = runTest(dispatcher) {
+        // Arrange
+        val settingsRepository = FakeUserSettingsRepository()
+        settingsRepository.setAppLockEnabled(true)
+        val memoRepository = FakeMemoRepository()
+        val viewModel = mainViewModel(
+            repository = settingsRepository,
+            memoRepository = memoRepository
+        )
+        advanceUntilIdle()
+
+        // Act
+        // Normal: startup purge waits until locked content can be shown
+        viewModel.onAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(1, memoRepository.purgeCutoffs.size)
+    }
+
+    private fun mainViewModel(
+        repository: FakeUserSettingsRepository,
+        memoRepository: FakeMemoRepository = FakeMemoRepository()
+    ) = MainViewModel(
         observeThemeModeUseCase = ObserveThemeModeUseCase(repository),
         observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(repository),
         observeTutorialCompletedUseCase = ObserveTutorialCompletedUseCase(repository),
-        completeTutorialUseCase = CompleteTutorialUseCase(repository)
+        completeTutorialUseCase = CompleteTutorialUseCase(repository),
+        purgeExpiredTrashedMemosUseCase = PurgeExpiredTrashedMemosUseCase(
+            memoRepository = memoRepository,
+            currentTimeProvider = MutableTimeProvider(
+                TimestampMillis(31L * 24L * 60L * 60L * 1_000L)
+            )
+        )
     )
 }

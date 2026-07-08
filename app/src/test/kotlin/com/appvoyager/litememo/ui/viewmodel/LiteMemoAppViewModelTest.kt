@@ -5,9 +5,7 @@ import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.repository.MemoRepository
-import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -51,11 +49,7 @@ class LiteMemoAppViewModelTest {
             IllegalStateException("Restore failed.")
         )
         val viewModel = LiteMemoAppViewModel(
-            restoreMemoFromTrashUseCase = RestoreMemoFromTrashUseCase(repository),
-            purgeExpiredTrashedMemosUseCase = PurgeExpiredTrashedMemosUseCase(
-                memoRepository = repository,
-                currentTimeProvider = FixedTimeProvider()
-            )
+            restoreMemoFromTrashUseCase = RestoreMemoFromTrashUseCase(repository)
         )
 
         // Act
@@ -74,11 +68,7 @@ class LiteMemoAppViewModelTest {
             CancellationException("Cancelled.")
         )
         val viewModel = LiteMemoAppViewModel(
-            restoreMemoFromTrashUseCase = RestoreMemoFromTrashUseCase(repository),
-            purgeExpiredTrashedMemosUseCase = PurgeExpiredTrashedMemosUseCase(
-                memoRepository = repository,
-                currentTimeProvider = FixedTimeProvider()
-            )
+            restoreMemoFromTrashUseCase = RestoreMemoFromTrashUseCase(repository)
         )
 
         // Act
@@ -126,9 +116,5 @@ class LiteMemoAppViewModelTest {
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
 
         override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
-    }
-
-    private class FixedTimeProvider : CurrentTimeProvider {
-        override fun now(): TimestampMillis = TimestampMillis(30L * 24L * 60L * 60L * 1_000L)
     }
 }

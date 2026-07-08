@@ -44,8 +44,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun TutorialScreen(onCompleteTutorial: () -> Unit, modifier: Modifier = Modifier) {
-    val pagerState = rememberPagerState(pageCount = { tutorialPages.size })
+    val pagerState = rememberPagerState(pageCount = { tutorialPageItems.size })
     val coroutineScope = rememberCoroutineScope()
+    val settledPage = pagerState.settledPage
+    val navigationEnabled = !pagerState.isScrollInProgress
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -71,30 +73,35 @@ fun TutorialScreen(onCompleteTutorial: () -> Unit, modifier: Modifier = Modifier
                 state = pagerState,
                 modifier = Modifier.weight(1f)
             ) { page ->
-                TutorialPage(page = tutorialPages[page])
+                TutorialPageContent(page = tutorialPageItems[page])
             }
 
             TutorialNavigation(
-                currentPage = pagerState.currentPage,
-                pageCount = tutorialPages.size,
-                onPreviousClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                    }
-                },
-                onNextClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    }
-                },
-                onCompleteTutorial = onCompleteTutorial
+                state = TutorialNavigationState(
+                    currentPage = settledPage,
+                    pageCount = tutorialPageItems.size,
+                    enabled = navigationEnabled
+                ),
+                actions = TutorialNavigationActions(
+                    onPreviousClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(settledPage - 1)
+                        }
+                    },
+                    onNextClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(settledPage + 1)
+                        }
+                    },
+                    onCompleteTutorial = onCompleteTutorial
+                )
             )
         }
     }
 }
 
 @Composable
-private fun TutorialPage(page: TutorialPage) {
+private fun TutorialPageContent(page: TutorialPageItem) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -126,13 +133,7 @@ private fun TutorialPage(page: TutorialPage) {
 }
 
 @Composable
-private fun TutorialNavigation(
-    currentPage: Int,
-    pageCount: Int,
-    onPreviousClick: () -> Unit,
-    onNextClick: () -> Unit,
-    onCompleteTutorial: () -> Unit
-) {
+private fun TutorialNavigation(state: TutorialNavigationState, actions: TutorialNavigationActions) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -144,8 +145,8 @@ private fun TutorialNavigation(
             contentAlignment = Alignment.CenterStart
         ) {
             IconButton(
-                onClick = onPreviousClick,
-                enabled = currentPage > 0
+                onClick = actions.onPreviousClick,
+                enabled = state.enabled && state.currentPage > 0
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -155,20 +156,26 @@ private fun TutorialNavigation(
         }
 
         PageIndicator(
-            currentPage = currentPage,
-            pageCount = pageCount
+            currentPage = state.currentPage,
+            pageCount = state.pageCount
         )
 
         Box(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.CenterEnd
         ) {
-            if (currentPage == pageCount - 1) {
-                Button(onClick = onCompleteTutorial) {
+            if (state.currentPage == state.pageCount - 1) {
+                Button(
+                    onClick = actions.onCompleteTutorial,
+                    enabled = state.enabled
+                ) {
                     Text(text = stringResource(R.string.tutorial_start))
                 }
             } else {
-                IconButton(onClick = onNextClick) {
+                IconButton(
+                    onClick = actions.onNextClick,
+                    enabled = state.enabled
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = stringResource(R.string.tutorial_next_page)
@@ -178,6 +185,18 @@ private fun TutorialNavigation(
         }
     }
 }
+
+private data class TutorialNavigationState(
+    val currentPage: Int,
+    val pageCount: Int,
+    val enabled: Boolean
+)
+
+private data class TutorialNavigationActions(
+    val onPreviousClick: () -> Unit,
+    val onNextClick: () -> Unit,
+    val onCompleteTutorial: () -> Unit
+)
 
 @Composable
 private fun PageIndicator(currentPage: Int, pageCount: Int) {
@@ -200,24 +219,24 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
     }
 }
 
-private data class TutorialPage(
+private data class TutorialPageItem(
     val icon: ImageVector,
     @get:StringRes val titleResId: Int,
     @get:StringRes val bodyResId: Int
 )
 
-private val tutorialPages = listOf(
-    TutorialPage(
+private val tutorialPageItems = listOf(
+    TutorialPageItem(
         icon = Icons.Default.Edit,
         titleResId = R.string.tutorial_page_welcome_title,
         bodyResId = R.string.tutorial_page_welcome_body
     ),
-    TutorialPage(
+    TutorialPageItem(
         icon = Icons.Default.Search,
         titleResId = R.string.tutorial_page_organize_title,
         bodyResId = R.string.tutorial_page_organize_body
     ),
-    TutorialPage(
+    TutorialPageItem(
         icon = Icons.Default.DateRange,
         titleResId = R.string.tutorial_page_calendar_title,
         bodyResId = R.string.tutorial_page_calendar_body
