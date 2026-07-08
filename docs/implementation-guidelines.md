@@ -36,6 +36,8 @@
 - ViewModel から UI へは StateFlow を中心に状態を公開する
 - 非同期処理は Coroutines を使い、UI スレッドをブロックしない
 - 構造化データは Room、軽量な設定値は DataStore に分ける
+- 画像添付などの Android 依存 URI / ContentResolver は ViewModel に直接持ち込まず、UseCase と data 層の境界に閉じる
+- メモ画像の export/import は現時点では対象外。import で同一 ID のメモを上書きすると既存の添付画像は失われる前提で扱う
 
 ## UI Event / Error
 

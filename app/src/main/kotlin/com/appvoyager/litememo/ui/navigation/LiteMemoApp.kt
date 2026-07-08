@@ -79,6 +79,7 @@ fun LiteMemoApp(
     val saveMemoErrorMessage = stringResource(R.string.memo_save_error_message)
     val deleteMemoErrorMessage = stringResource(R.string.memo_delete_error_message)
     val shareErrorMessage = stringResource(R.string.share_memo_error)
+    val imageAttachErrorMessage = stringResource(R.string.memo_edit_image_attach_error)
     val browserNotFoundMessage = stringResource(R.string.settings_browser_not_found)
     val showErrorSnackbar: (String) -> Unit = remember(coroutineScope, snackbarHostState) {
         { message ->
@@ -256,6 +257,9 @@ fun LiteMemoApp(
                     },
                     onDeleteError = {
                         showErrorSnackbar(deleteMemoErrorMessage)
+                    },
+                    onImageAttachError = {
+                        showErrorSnackbar(imageAttachErrorMessage)
                     },
                     onMemoDeleted = { memoId ->
                         navController.popBackStackIfResumed(

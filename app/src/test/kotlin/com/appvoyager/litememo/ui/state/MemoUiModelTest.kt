@@ -1,6 +1,8 @@
 package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoImageFixture
+import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.tagFixture
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,7 +18,11 @@ class MemoUiModelTest {
         val memo = memoFixture(tagIds = listOf(TagId("tag-2"), TagId("tag-1")))
 
         // Act
-        val uiModel = MemoUiModel.fromDomain(listOf(memo), listOf(firstTag, secondTag)).single()
+        val uiModel = MemoUiModel.fromDomain(
+            listOf(memo),
+            listOf(firstTag, secondTag),
+            ::resolveImagePath
+        ).single()
 
         // Assert
         assertEquals(listOf("生活", "仕事"), uiModel.tags.map { it.name })
@@ -29,10 +35,49 @@ class MemoUiModelTest {
         val memo = memoFixture(tagIds = listOf(TagId("missing"), TagId("tag-1")))
 
         // Act
-        val uiModel = MemoUiModel.fromDomain(listOf(memo), listOf(tag)).single()
+        val uiModel = MemoUiModel.fromDomain(
+            listOf(memo),
+            listOf(tag),
+            ::resolveImagePath
+        ).single()
 
         // Assert
         assertEquals(listOf("仕事"), uiModel.tags.map { it.name })
     }
+
+    @Test
+    fun normalFromDomainResolvesThumbnailPathFromFirstImage() {
+        // Arrange
+        val memo = memoFixture(
+            images = listOf(
+                memoImageFixture(id = "image-1", fileName = "first.jpg"),
+                memoImageFixture(id = "image-2", fileName = "second.jpg")
+            )
+        )
+
+        // Act
+        // Normal: memo cards use only the first image as the thumbnail.
+        val uiModel = MemoUiModel.fromDomain(listOf(memo), emptyList(), ::resolveImagePath)
+            .single()
+
+        // Assert
+        assertEquals("/images/first.jpg", uiModel.thumbnailPath)
+    }
+
+    @Test
+    fun normalFromDomainLeavesThumbnailPathNullWhenNoImages() {
+        // Arrange
+        val memo = memoFixture(images = emptyList())
+
+        // Act
+        // Normal: memos without images do not allocate a thumbnail slot.
+        val uiModel = MemoUiModel.fromDomain(listOf(memo), emptyList(), ::resolveImagePath)
+            .single()
+
+        // Assert
+        assertEquals(null, uiModel.thumbnailPath)
+    }
+
+    private fun resolveImagePath(fileName: MemoImageFileName) = "/images/${fileName.value}"
 
 }

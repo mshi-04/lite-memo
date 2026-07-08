@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -120,6 +121,16 @@ fun MemoCard(
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
+            }
+            memo.thumbnailPath?.let { thumbnailPath ->
+                MemoImageThumbnail(
+                    imagePath = thumbnailPath,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .padding(end = 14.dp)
+                        .size(56.dp),
+                    testTag = MemoCardTestTags.THUMBNAIL
+                )
             }
         }
     }

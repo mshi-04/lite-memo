@@ -7,15 +7,19 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.ui.component.MemoCardTestTags
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
@@ -121,6 +125,77 @@ class HomeScreenComposeTest {
             .assertIsDisplayed()
         composeRule
             .onAllNodesWithText(tripMemo.title)
+            .assertCountEquals(0)
+    }
+
+    @Test
+    fun normalThumbnailPathShowsMemoCardThumbnail() {
+        // Arrange
+        val memo = testMemoUiModel(thumbnailPath = "/missing/image-1.jpg")
+
+        // Act
+        composeRule.setContent {
+            TestScreenContent {
+                HomeScreen(
+                    uiState = HomeUiState(isLoading = false, memos = listOf(memo)),
+                    onFilterSelected = {},
+                    onSearchToggle = {},
+                    onSearchQueryChanged = {},
+                    onMemoLongClick = {},
+                    onMemoSelectionToggle = {},
+                    onClearSelection = {},
+                    onMoveSelectedMemosToTrash = {},
+                    onSetSelectedMemosFavorite = {},
+                    onRequestToggleTagForSelectedMemos = {},
+                    onToggleSelectedMemosTag = {},
+                    onDismissBulkTagDialog = {},
+                    onShareSelectedMemo = {},
+                    onMemoClick = {},
+                    onCreateMemoClick = {},
+                    onRetry = {}
+                )
+            }
+        }
+
+        // Assert
+        composeRule
+            .onNodeWithTag(MemoCardTestTags.THUMBNAIL, useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun normalNullThumbnailPathHidesMemoCardThumbnail() {
+        // Arrange
+        val memo = testMemoUiModel(thumbnailPath = null)
+
+        // Act
+        composeRule.setContent {
+            TestScreenContent {
+                HomeScreen(
+                    uiState = HomeUiState(isLoading = false, memos = listOf(memo)),
+                    onFilterSelected = {},
+                    onSearchToggle = {},
+                    onSearchQueryChanged = {},
+                    onMemoLongClick = {},
+                    onMemoSelectionToggle = {},
+                    onClearSelection = {},
+                    onMoveSelectedMemosToTrash = {},
+                    onSetSelectedMemosFavorite = {},
+                    onRequestToggleTagForSelectedMemos = {},
+                    onToggleSelectedMemosTag = {},
+                    onDismissBulkTagDialog = {},
+                    onShareSelectedMemo = {},
+                    onMemoClick = {},
+                    onCreateMemoClick = {},
+                    onRetry = {}
+                )
+            }
+        }
+
+        // Assert
+        composeRule
+            .onAllNodesWithTag(MemoCardTestTags.THUMBNAIL)
             .assertCountEquals(0)
     }
 

@@ -11,6 +11,7 @@
 - Material 3 `NavigationBar` / Bottom Navigation
 - Material Icons（Core）
 - Navigation Compose
+- Coil Compose（メモ画像サムネイル表示）
 - ライト / ダークモード
 
 ## DI

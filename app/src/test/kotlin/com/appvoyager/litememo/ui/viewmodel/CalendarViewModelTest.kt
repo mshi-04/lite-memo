@@ -1,10 +1,12 @@
 package com.appvoyager.litememo.ui.viewmodel
 
+import com.appvoyager.litememo.domain.FakeMemoImageStore
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -17,6 +19,7 @@ import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -222,6 +225,30 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun normalUiStateMapsThumbnailPathFromFirstImage() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = calendarViewModel(
+            memoRepository = FakeMemoRepository(
+                listOf(
+                    memoFixture(
+                        id = "memo-1",
+                        createdAt = epochMillis("2026-05-15T10:00:00Z"),
+                        images = listOf(memoImageFixture(fileName = "image-1.jpg"))
+                    )
+                )
+            )
+        )
+
+        // Act
+        // Normal: calendar memo cards resolve the first memo image into a thumbnail path.
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        // Assert
+        assertEquals("/images/image-1.jpg", state.memos.single().thumbnailPath)
+    }
+
+    @Test
     fun retryReloadsSearchResultsAfterSearchError() = runTest(dispatcher) {
         // Arrange
         val memoRepository = RetryableSearchMemoRepository(
@@ -277,6 +304,7 @@ class CalendarViewModelTest {
                 memoRepository = memoRepository,
                 userSettingsRepository = userSettingsRepository
             ),
+            resolveMemoImagePathUseCase = ResolveMemoImagePathUseCase(FakeMemoImageStore()),
             currentTimeProvider = MutableTimeProvider(TimestampMillis(today)),
             zoneId = zone
         )
