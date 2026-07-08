@@ -45,6 +45,19 @@ class TutorialUiStateTest {
     }
 
     @Test
+    fun stateTransitionKeepsVisibleWhenIncompleteObservedFromVisible() {
+        // Arrange
+        val state = TutorialUiState(status = TutorialStatus.VISIBLE)
+
+        // Act
+        // StateTransition: incomplete flag from visible keeps tutorial visible
+        val result = state.next(completed = false)
+
+        // Assert
+        assertEquals(TutorialUiState(status = TutorialStatus.VISIBLE), result)
+    }
+
+    @Test
     fun stateTransitionKeepsHiddenWhenIncompleteIsObservedAfterHidden() {
         // Arrange
         val state = TutorialUiState(status = TutorialStatus.HIDDEN)
