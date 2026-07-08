@@ -127,7 +127,7 @@ enum class TutorialStatus {
   - `completed == true` → `HIDDEN`
   - `completed == false` かつ現在 `LOADING` → `VISIBLE`
   - それ以外 → 現状維持(一度 `HIDDEN` にした後、保存失敗などで false が再通知されても同一起動中は再表示しない)
-- `completeTutorial()`: 先に `_tutorialStatus.value = HIDDEN` にしてから `viewModelScope.launch` で `completeTutorialUseCase()` を呼ぶ(保存を待たずに閉じる)。例外は `CancellationException` を再 throw し、それ以外は握りつぶす(既存 `LiteMemoAppViewModel.restoreMemo` と同じ形式)。保存に失敗した場合は次回起動時に再表示されるだけなので許容する
+- `completeTutorial()`: 先に `_tutorialUiState.value = TutorialUiState(status = HIDDEN)` にしてから `viewModelScope.launch` で `completeTutorialUseCase()` を呼ぶ(保存を待たずに閉じる)。例外は `CancellationException` を再 throw し、それ以外は UI へ戻さない。保存に失敗した場合は次回起動時に再表示されるだけなので許容するが、原因追跡のためログ出力や Crashlytics 等のメトリクス送信を行える導線がある場合は失敗を記録する方針にする
 
 ### TutorialScreen(`ui/screen/TutorialScreen.kt`)
 

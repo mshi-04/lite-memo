@@ -30,6 +30,7 @@
     <string name="tutorial_skip">Skip</string>
     <string name="tutorial_previous_page">Previous page</string>
     <string name="tutorial_next_page">Next page</string>
+    <string name="tutorial_page_indicator">Page %1$d of %2$d</string>
     <string name="tutorial_start">Get started</string>
     <string name="tutorial_page_welcome_title">Welcome to LiteMemo</string>
     <string name="tutorial_page_welcome_body">A lightweight memo app for quickly capturing your thoughts. Add memos with the create button on the home screen.</string>
