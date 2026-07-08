@@ -26,6 +26,18 @@
     <string name="app_lock_no_device_credential">Set a device screen lock, then try again.</string>
     <string name="app_lock_auth_unavailable">Device authentication is currently unavailable.</string>
 
+    <!-- Tutorial -->
+    <string name="tutorial_skip">Skip</string>
+    <string name="tutorial_previous_page">Previous page</string>
+    <string name="tutorial_next_page">Next page</string>
+    <string name="tutorial_start">Get started</string>
+    <string name="tutorial_page_welcome_title">Welcome to LiteMemo</string>
+    <string name="tutorial_page_welcome_body">A lightweight memo app for quickly capturing your thoughts. Add memos with the create button on the home screen.</string>
+    <string name="tutorial_page_organize_title">Organize with tags and search</string>
+    <string name="tutorial_page_organize_body">Categorize memos with tags and find the one you need instantly with keyword search.</string>
+    <string name="tutorial_page_calendar_title">Look back with the calendar</string>
+    <string name="tutorial_page_calendar_body">Review your memos by date on the calendar. When you are ready, let\'s get started.</string>
+
     <!-- Home -->
     <string name="filter_all">All</string>
     <string name="filter_favorite">Favorites</string>

@@ -3,13 +3,17 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.ThemeMode
+import com.appvoyager.litememo.domain.usecase.CompleteTutorialUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
 import com.appvoyager.litememo.ui.state.AppLockUiState
+import com.appvoyager.litememo.ui.state.TutorialStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +27,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val observeThemeModeUseCase: ObserveThemeModeUseCase,
-    private val observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase
+    private val observeAppLockEnabledUseCase: ObserveAppLockEnabledUseCase,
+    private val observeTutorialCompletedUseCase: ObserveTutorialCompletedUseCase,
+    private val completeTutorialUseCase: CompleteTutorialUseCase
 ) : ViewModel() {
 
     val themeMode: Flow<ThemeMode> = observeThemeModeUseCase()
@@ -37,10 +43,14 @@ class MainViewModel @Inject constructor(
     private val _secureScreenEnabled = MutableStateFlow(false)
     val secureScreenEnabled: StateFlow<Boolean> = _secureScreenEnabled.asStateFlow()
 
+    private val _tutorialStatus = MutableStateFlow(TutorialStatus.LOADING)
+    val tutorialStatus: StateFlow<TutorialStatus> = _tutorialStatus.asStateFlow()
+
     private var appLockEnabled: Boolean? = null
 
     init {
         observeAppLockEnabled()
+        observeTutorialCompleted()
     }
 
     fun onAppStarted() {
@@ -96,6 +106,18 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun completeTutorial() {
+        _tutorialStatus.value = TutorialStatus.HIDDEN
+        viewModelScope.launch {
+            try {
+                completeTutorialUseCase()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+            }
+        }
+    }
+
     private fun observeAppLockEnabled() {
         viewModelScope.launch {
             observeAppLockEnabledUseCase().collect { enabled ->
@@ -117,6 +139,18 @@ class MainViewModel @Inject constructor(
                             state.copy(status = AppLockStatus.UNLOCKED, message = null)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun observeTutorialCompleted() {
+        viewModelScope.launch {
+            observeTutorialCompletedUseCase().collect { completed ->
+                _tutorialStatus.value = when {
+                    completed -> TutorialStatus.HIDDEN
+                    _tutorialStatus.value == TutorialStatus.LOADING -> TutorialStatus.VISIBLE
+                    else -> _tutorialStatus.value
                 }
             }
         }

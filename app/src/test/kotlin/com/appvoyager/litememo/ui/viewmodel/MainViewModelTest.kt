@@ -2,13 +2,17 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import app.cash.turbine.test
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
+import com.appvoyager.litememo.domain.usecase.CompleteTutorialUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
+import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
+import com.appvoyager.litememo.ui.state.TutorialStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -272,8 +276,66 @@ class MainViewModelTest {
             assertEquals(AppLockStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
         }
 
+    @Test
+    fun stateTransitionTutorialStartsVisibleWhenNotCompleted() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+
+        // Act
+        // StateTransition: incomplete tutorial becomes visible after loading settings
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(TutorialStatus.VISIBLE, viewModel.tutorialStatus.value)
+    }
+
+    @Test
+    fun stateTransitionTutorialStartsHiddenWhenCompleted() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        repository.completeTutorial()
+        val viewModel = mainViewModel(repository)
+
+        // Act
+        // StateTransition: completed tutorial stays hidden after loading settings
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialStatus.value)
+    }
+
+    @Test
+    fun stateTransitionCompleteTutorialHidesImmediately() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+
+        // Act
+        // StateTransition: completion hides tutorial before persistence finishes
+        viewModel.completeTutorial()
+
+        // Assert
+        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialStatus.value)
+    }
+
+    @Test
+    fun normalCompleteTutorialPersistsCompletedValue() = runTest(dispatcher) {
+        // Arrange
+        val repository = FakeUserSettingsRepository()
+        val viewModel = mainViewModel(repository)
+
+        // Act
+        // Normal: completing tutorial persists the completion flag
+        viewModel.completeTutorial()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(true, repository.observeTutorialCompleted().first())
+    }
+
     private fun mainViewModel(repository: FakeUserSettingsRepository) = MainViewModel(
         observeThemeModeUseCase = ObserveThemeModeUseCase(repository),
-        observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(repository)
+        observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(repository),
+        observeTutorialCompletedUseCase = ObserveTutorialCompletedUseCase(repository),
+        completeTutorialUseCase = CompleteTutorialUseCase(repository)
     )
 }

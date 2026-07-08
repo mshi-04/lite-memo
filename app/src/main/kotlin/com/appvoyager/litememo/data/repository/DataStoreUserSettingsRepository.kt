@@ -36,6 +36,10 @@ class DataStoreUserSettingsRepository @Inject constructor(
         prefs[APP_LOCK_ENABLED_KEY] ?: false
     }
 
+    override fun observeTutorialCompleted(): Flow<Boolean> = preferencesFlow.map { prefs ->
+        prefs[TUTORIAL_COMPLETED_KEY] ?: false
+    }
+
     override suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { prefs -> prefs[THEME_MODE_KEY] = mode.name }
     }
@@ -48,9 +52,14 @@ class DataStoreUserSettingsRepository @Inject constructor(
         dataStore.edit { prefs -> prefs[APP_LOCK_ENABLED_KEY] = enabled }
     }
 
+    override suspend fun completeTutorial() {
+        dataStore.edit { prefs -> prefs[TUTORIAL_COMPLETED_KEY] = true }
+    }
+
     internal companion object {
         val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         val MEMO_SORT_ORDER_KEY = stringPreferencesKey("memo_sort_order")
         val APP_LOCK_ENABLED_KEY = booleanPreferencesKey("app_lock_enabled")
+        val TUTORIAL_COMPLETED_KEY = booleanPreferencesKey("tutorial_completed")
     }
 }
