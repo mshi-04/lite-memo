@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 
 data class MemoUiModel(
     val id: String,
@@ -9,10 +10,15 @@ data class MemoUiModel(
     val body: String,
     val tags: List<TagUiModel>,
     val updatedAtMillis: Long,
-    val isFavorite: Boolean
+    val isFavorite: Boolean,
+    val thumbnailPath: String? = null
 ) {
     companion object {
-        fun fromDomain(memos: List<Memo>, tags: List<Tag>): List<MemoUiModel> {
+        fun fromDomain(
+            memos: List<Memo>,
+            tags: List<Tag>,
+            resolveImagePath: (MemoImageFileName) -> String
+        ): List<MemoUiModel> {
             val tagsById = tags.associateBy { it.id }
             return memos.map { memo ->
                 MemoUiModel(
@@ -23,7 +29,10 @@ data class MemoUiModel(
                         tagsById[id]?.let { TagUiModel.fromDomain(it) }
                     },
                     updatedAtMillis = memo.updatedAt.value,
-                    isFavorite = memo.isFavorite
+                    isFavorite = memo.isFavorite,
+                    thumbnailPath = memo.images.firstOrNull()?.let { image ->
+                        resolveImagePath(image.fileName)
+                    }
                 )
             }
         }

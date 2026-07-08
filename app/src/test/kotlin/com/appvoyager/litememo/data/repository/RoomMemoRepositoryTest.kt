@@ -5,14 +5,18 @@ import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
 import com.appvoyager.litememo.data.local.dao.TagDao
 import com.appvoyager.litememo.data.local.entity.MemoEntity
+import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.entity.TagEntity
-import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
+import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,8 +35,8 @@ class RoomMemoRepositoryTest {
     fun observeActiveMemosReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
-            memosWithTagRefs = listOf(
-                memoWithTagRefs(
+            memosWithRefs = listOf(
+                memoWithRefs(
                     memoId = "memo-1",
                     tagRefs = listOf(
                         MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0)
@@ -66,8 +70,8 @@ class RoomMemoRepositoryTest {
     fun observeActiveMemosBySearchQueryReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
-            memosWithTagRefs = listOf(
-                memoWithTagRefs(
+            memosWithRefs = listOf(
+                memoWithRefs(
                     memoId = "memo-1",
                     tagRefs = listOf(
                         MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0)
@@ -104,7 +108,7 @@ class RoomMemoRepositoryTest {
     fun observeActiveMemosCreatedBetweenReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
-            memosWithTagRefs = listOf(memoWithTagRefs(memoId = "memo-1"))
+            memosWithRefs = listOf(memoWithRefs(memoId = "memo-1"))
         )
         val repository = createRepository(dao)
 
@@ -122,11 +126,11 @@ class RoomMemoRepositoryTest {
     fun observeActiveMemosCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
         // Arrange
         val dao = FakeMemoDao(
-            memosWithTagRefs = listOf(
-                memoWithTagRefs(memoId = "memo-before", createdAt = 999L),
-                memoWithTagRefs(memoId = "memo-start", createdAt = 1000L),
-                memoWithTagRefs(memoId = "memo-end", createdAt = 2000L),
-                memoWithTagRefs(memoId = "memo-after", createdAt = 2001L)
+            memosWithRefs = listOf(
+                memoWithRefs(memoId = "memo-before", createdAt = 999L),
+                memoWithRefs(memoId = "memo-start", createdAt = 1000L),
+                memoWithRefs(memoId = "memo-end", createdAt = 2000L),
+                memoWithRefs(memoId = "memo-after", createdAt = 2001L)
             )
         )
         val repository = createRepository(dao)
@@ -145,7 +149,7 @@ class RoomMemoRepositoryTest {
     fun observeActiveMemosCreatedBetweenWithEqualRangeReturnsEmpty() = runTest {
         // Arrange
         val dao = FakeMemoDao(
-            memosWithTagRefs = listOf(memoWithTagRefs(memoId = "memo-1", createdAt = 1_000L))
+            memosWithRefs = listOf(memoWithRefs(memoId = "memo-1", createdAt = 1_000L))
         )
         val repository = createRepository(dao)
 
@@ -224,13 +228,95 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun interactionSaveMemoWritesImageRefsToDao() = runTest {
+        // Arrange
+        val dao = FakeMemoDao()
+        val repository = createRepository(dao)
+
+        // Act
+        // Interaction: image order is delegated to DAO refs.
+        repository.saveMemo(
+            memoFixture(
+                id = "memo-1",
+                images = listOf(
+                    memoImageFixture(id = "image-1", fileName = "image-1.jpg"),
+                    memoImageFixture(id = "image-2", fileName = "image-2.png")
+                )
+            )
+        )
+
+        // Assert
+        assertEquals(
+            listOf(
+                MemoImageEntity(
+                    id = "image-1",
+                    memoId = "memo-1",
+                    fileName = "image-1.jpg",
+                    position = 0
+                ),
+                MemoImageEntity(
+                    id = "image-2",
+                    memoId = "memo-1",
+                    fileName = "image-2.png",
+                    position = 1
+                )
+            ),
+            dao.savedImageRefs
+        )
+    }
+
+    @Test
+    fun interactionSaveMemoDeletesRemovedImageFilesAfterUpsert() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            imageFileNamesByMemoId = mutableMapOf("memo-1" to listOf("old.jpg", "keep.jpg"))
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Interaction: files removed from DB refs are deleted after memo upsert.
+        repository.saveMemo(
+            memoFixture(
+                id = "memo-1",
+                images = listOf(memoImageFixture(id = "image-keep", fileName = "keep.jpg"))
+            )
+        )
+
+        // Assert
+        assertEquals(listOf(MemoImageFileName("old.jpg")), imageStore.deletedFileNames)
+    }
+
+    @Test
+    fun interactionSaveMemoDoesNotDeleteFilesWhenImagesUnchanged() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            imageFileNamesByMemoId = mutableMapOf("memo-1" to listOf("keep.jpg"))
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Interaction: unchanged image refs do not touch file storage.
+        repository.saveMemo(
+            memoFixture(
+                id = "memo-1",
+                images = listOf(memoImageFixture(id = "image-keep", fileName = "keep.jpg"))
+            )
+        )
+
+        // Assert
+        assertEquals(emptyList<MemoImageFileName>(), imageStore.deletedFileNames)
+    }
+
+    @Test
     fun observeTrashedMemosReturnsOnlyTrashedMemosOrderedByDeletedAtDescending() = runTest {
         // Arrange
         val dao = FakeMemoDao(
-            memosWithTagRefs = listOf(
-                memoWithTagRefs(memoId = "memo-active"),
-                memoWithTagRefs(memoId = "memo-old", deletedAt = 1_000L),
-                memoWithTagRefs(memoId = "memo-new", deletedAt = 2_000L)
+            memosWithRefs = listOf(
+                memoWithRefs(memoId = "memo-active"),
+                memoWithRefs(memoId = "memo-old", deletedAt = 1_000L),
+                memoWithRefs(memoId = "memo-new", deletedAt = 2_000L)
             )
         )
         val repository = createRepository(dao)
@@ -320,6 +406,43 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun interactionDeleteMemoPermanentlyDeletesImageFiles() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            imageFileNamesByMemoId = mutableMapOf("memo-1" to listOf("image-1.jpg"))
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Interaction: permanent delete removes files after deleting DB rows.
+        repository.deleteMemoPermanently(MemoId("memo-1"))
+
+        // Assert
+        assertEquals(listOf(MemoImageFileName("image-1.jpg")), imageStore.deletedFileNames)
+    }
+
+    @Test
+    fun errorDeleteMemoPermanentlyDoesNotDeleteFilesWhenMemoMissing() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            deletedPermanentlyCount = 0,
+            imageFileNamesByMemoId = mutableMapOf("memo-1" to listOf("image-1.jpg"))
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Error: failed DB delete must not remove files.
+        val error = runCatching { repository.deleteMemoPermanently(MemoId("memo-1")) }
+            .exceptionOrNull()
+
+        // Assert
+        assertEquals(IllegalStateException::class.java, error?.javaClass)
+        assertEquals(emptyList<MemoImageFileName>(), imageStore.deletedFileNames)
+    }
+
+    @Test
     fun discardMemoDelegatesMemoIdValueToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
@@ -348,6 +471,23 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
+    fun interactionDiscardMemoDeletesImageFiles() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            imageFileNamesByMemoId = mutableMapOf("memo-1" to listOf("image-1.jpg"))
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Interaction: discard removes files after deleting DB rows.
+        repository.discardMemo(MemoId("memo-1"))
+
+        // Assert
+        assertEquals(listOf(MemoImageFileName("image-1.jpg")), imageStore.deletedFileNames)
+    }
+
+    @Test
     fun deleteTrashedMemosDeletedAtOrBeforeDelegatesCutoffValueToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
@@ -358,6 +498,50 @@ class RoomMemoRepositoryTest {
 
         // Assert
         assertEquals(2_000L, dao.purgeCutoff)
+    }
+
+    @Test
+    fun interactionPurgeDeletesImageFilesOfExpiredTrashedMemos() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            imageFileNamesForPurge = listOf("old-1.jpg", "old-2.jpg")
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Interaction: purge uses the DAO-provided file list after the transaction.
+        repository.deleteTrashedMemosDeletedAtOrBefore(TimestampMillis(2_000L))
+
+        // Assert
+        assertEquals(
+            listOf(MemoImageFileName("old-1.jpg"), MemoImageFileName("old-2.jpg")),
+            imageStore.deletedFileNames
+        )
+    }
+
+    @Test
+    fun interactionSaveAllMemosDeletesRemovedImageFilesAfterUpsert() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            imageFileNamesByMemoId = mutableMapOf("memo-1" to listOf("old.jpg", "keep.jpg"))
+        )
+        val imageStore = FakeMemoImageStore()
+        val repository = createRepository(dao, imageStore)
+
+        // Act
+        // Interaction: bulk save deletes files dropped from DB refs after upsert.
+        repository.saveAllMemos(
+            listOf(
+                memoFixture(
+                    id = "memo-1",
+                    images = listOf(memoImageFixture(id = "image-keep", fileName = "keep.jpg"))
+                )
+            )
+        )
+
+        // Assert
+        assertEquals(listOf(MemoImageFileName("old.jpg")), imageStore.deletedFileNames)
     }
 
     @Test
@@ -394,6 +578,24 @@ class RoomMemoRepositoryTest {
             listOf("t1", "t2"),
             memoDao.savedMemoBatches[0].tagRefs.map { it.tagId }
         )
+    }
+
+    @Test
+    fun interactionExecuteImportReturnsImageFilesOfOverwrittenMemos() = runTest {
+        // Arrange
+        val memoDao = FakeMemoDao(
+            imageFileNamesByMemoId = mutableMapOf("m1" to listOf("old.jpg"))
+        )
+        val tagDao = FakeTagDao()
+        val repository = createRepositoryForImport(memoDao, tagDao)
+        val memo = memoFixture(id = "m1")
+
+        // Act
+        // Interaction: import overwrites memos without images and reports removed files.
+        val removedFileNames = repository.executeImport(tags = emptyList(), memos = listOf(memo))
+
+        // Assert
+        assertEquals(listOf("old.jpg"), removedFileNames)
     }
 
     @Test
@@ -472,7 +674,7 @@ class RoomMemoRepositoryTest {
     fun executeImportCallsTagDaoBeforeMemoDao() = runTest {
         // Arrange
         val callOrder = mutableListOf<String>()
-        val memoDao = FakeMemoDao(onUpsertAllMemosWithTags = { callOrder += "memos" })
+        val memoDao = FakeMemoDao(onUpsertAllMemosWithRefs = { callOrder += "memos" })
         val tagDao = FakeTagDao(onUpsertAllTags = { callOrder += "tags" })
         val repository = createRepositoryForImport(memoDao, tagDao)
         val tag = tagFixture(id = "t1")
@@ -496,10 +698,13 @@ class RoomMemoRepositoryTest {
                 throw UnsupportedOperationException()
             override fun clearAllTables() = throw UnsupportedOperationException()
         }
-        return RoomMemoRepository(memoDao, tagDao, dummyDatabase)
+        return RoomMemoRepository(memoDao, tagDao, dummyDatabase, FakeMemoImageStore())
     }
 
-    private fun createRepository(dao: FakeMemoDao): RoomMemoRepository {
+    private fun createRepository(
+        dao: FakeMemoDao,
+        imageStore: FakeMemoImageStore = FakeMemoImageStore()
+    ): RoomMemoRepository {
         // database is only used by importAll(), which is not tested in this unit test.
         val dummyDatabase = object : LiteMemoDatabase() {
             override fun memoDao(): MemoDao = dao
@@ -508,16 +713,16 @@ class RoomMemoRepositoryTest {
                 throw UnsupportedOperationException()
             override fun clearAllTables() = throw UnsupportedOperationException()
         }
-        return RoomMemoRepository(dao, FakeTagDao(), dummyDatabase)
+        return RoomMemoRepository(dao, FakeTagDao(), dummyDatabase, imageStore)
     }
 
-    private fun memoWithTagRefs(
+    private fun memoWithRefs(
         memoId: String,
         createdAt: Long = 1000L,
         updatedAt: Long = 1000L,
         tagRefs: List<MemoTagRefEntity> = emptyList(),
         deletedAt: Long? = null
-    ) = MemoWithTagRefs(
+    ) = MemoWithRefs(
         memo = MemoEntity(
             id = memoId,
             title = "Title",
@@ -527,14 +732,19 @@ class RoomMemoRepositoryTest {
             isFavorite = false,
             deletedAt = deletedAt
         ),
-        tagRefs = tagRefs
+        tagRefs = tagRefs,
+        imageRefs = emptyList()
     )
 
     private data class MovedToTrashRecord(val memoId: String, val deletedAt: Long)
 
     private data class ObservedRange(val fromMillis: Long, val toMillis: Long)
 
-    private data class SavedMemoBatch(val memo: MemoEntity, val tagRefs: List<MemoTagRefEntity>)
+    private data class SavedMemoBatch(
+        val memo: MemoEntity,
+        val tagRefs: List<MemoTagRefEntity>,
+        val imageRefs: List<MemoImageEntity>
+    )
 
     private data class NoImportWritesSnapshot(
         val upsertedTagCount: Int = 0,
@@ -547,18 +757,22 @@ class RoomMemoRepositoryTest {
             savedMemoBatchCount = memoDao.savedMemoBatches.size
         )
 
+    @Suppress("LongParameterList")
     private class FakeMemoDao(
-        memosWithTagRefs: List<MemoWithTagRefs> = emptyList(),
+        memosWithRefs: List<MemoWithRefs> = emptyList(),
+        private val imageFileNamesByMemoId: MutableMap<String, List<String>> = mutableMapOf(),
+        private val imageFileNamesForPurge: List<String> = emptyList(),
         private val failOnObserveMemosBetween: Boolean = false,
         private val movedToTrashCount: Int = 1,
         private val restoredCount: Int = 1,
         private val deletedPermanentlyCount: Int = 1,
-        private val onUpsertAllMemosWithTags: (() -> Unit)? = null
+        private val onUpsertAllMemosWithRefs: (() -> Unit)? = null
     ) : MemoDao {
 
-        private val memosWithTagRefs = MutableStateFlow(memosWithTagRefs)
+        private val memosWithRefs = MutableStateFlow(memosWithRefs)
         var savedMemo: MemoEntity? = null
         var savedTagRefs: List<MemoTagRefEntity> = emptyList()
+        var savedImageRefs: List<MemoImageEntity> = emptyList()
         val savedMemoBatches = mutableListOf<SavedMemoBatch>()
         var movedToTrash: MovedToTrashRecord? = null
         var restoredMemoId: String? = null
@@ -569,25 +783,25 @@ class RoomMemoRepositoryTest {
         var observedRange: ObservedRange? = null
         var observedSearchPattern: String? = null
 
-        override fun observeActiveMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
-            memosWithTagRefs.map { list -> list.filter { it.memo.deletedAt == null } }
+        override fun observeActiveMemosWithRefs(): Flow<List<MemoWithRefs>> =
+            memosWithRefs.map { list -> list.filter { it.memo.deletedAt == null } }
 
-        override fun observeActiveMemosWithTagRefsBySearchPattern(
+        override fun observeActiveMemosWithRefsBySearchPattern(
             pattern: String
-        ): Flow<List<MemoWithTagRefs>> {
+        ): Flow<List<MemoWithRefs>> {
             observedSearchPattern = pattern
-            return memosWithTagRefs.map { list -> list.filter { it.memo.deletedAt == null } }
+            return memosWithRefs.map { list -> list.filter { it.memo.deletedAt == null } }
         }
 
-        override fun observeActiveMemosWithTagRefsCreatedBetween(
+        override fun observeActiveMemosWithRefsCreatedBetween(
             fromMillis: Long,
             toMillis: Long
-        ): Flow<List<MemoWithTagRefs>> {
+        ): Flow<List<MemoWithRefs>> {
             if (failOnObserveMemosBetween) {
-                fail<Nothing>("observeActiveMemosWithTagRefsCreatedBetween should not be called.")
+                fail<Nothing>("observeActiveMemosWithRefsCreatedBetween should not be called.")
             }
             observedRange = ObservedRange(fromMillis = fromMillis, toMillis = toMillis)
-            return memosWithTagRefs.map { list ->
+            return memosWithRefs.map { list ->
                 list.filter {
                     it.memo.deletedAt == null &&
                         it.memo.createdAt >= fromMillis &&
@@ -596,20 +810,26 @@ class RoomMemoRepositoryTest {
             }
         }
 
-        override suspend fun getActiveMemoWithTagRefs(id: String): MemoWithTagRefs? =
-            memosWithTagRefs.value.firstOrNull { it.memo.id == id && it.memo.deletedAt == null }
+        override suspend fun getActiveMemoWithRefs(id: String): MemoWithRefs? =
+            memosWithRefs.value.firstOrNull { it.memo.id == id && it.memo.deletedAt == null }
 
-        override fun observeTrashedMemosWithTagRefs(): Flow<List<MemoWithTagRefs>> =
-            memosWithTagRefs.map { list ->
+        override fun observeTrashedMemosWithRefs(): Flow<List<MemoWithRefs>> =
+            memosWithRefs.map { list ->
                 list
                     .filter { it.memo.deletedAt != null }
                     .sortedByDescending { it.memo.deletedAt }
             }
 
-        override suspend fun upsertMemoWithTags(memo: MemoEntity, tagRefs: List<MemoTagRefEntity>) {
+        override suspend fun upsertMemoWithRefs(
+            memo: MemoEntity,
+            tagRefs: List<MemoTagRefEntity>,
+            imageRefs: List<MemoImageEntity>
+        ) {
             savedMemo = memo
             savedTagRefs = tagRefs
-            savedMemoBatches += SavedMemoBatch(memo, tagRefs)
+            savedImageRefs = imageRefs
+            savedMemoBatches += SavedMemoBatch(memo, tagRefs, imageRefs)
+            imageFileNamesByMemoId[memo.id] = imageRefs.map { it.fileName }
         }
 
         override suspend fun upsertMemo(memo: MemoEntity) {
@@ -620,9 +840,28 @@ class RoomMemoRepositoryTest {
             savedTagRefs = tagRefs
         }
 
+        override suspend fun insertImageRefs(imageRefs: List<MemoImageEntity>) {
+            savedImageRefs = imageRefs
+        }
+
         override suspend fun deleteTagRefsForMemo(memoId: String) {
             savedTagRefs = emptyList()
         }
+
+        override suspend fun deleteImageRefsForMemo(memoId: String) {
+            savedImageRefs = emptyList()
+            imageFileNamesByMemoId[memoId] = emptyList()
+        }
+
+        override suspend fun getImageFileNamesForMemo(memoId: String): List<String> =
+            imageFileNamesByMemoId[memoId].orEmpty()
+
+        override suspend fun getImageFileNamesForMemos(memoIds: List<String>): List<String> =
+            memoIds.flatMap { imageFileNamesByMemoId[it].orEmpty() }
+
+        override suspend fun getImageFileNamesForTrashedMemosDeletedAtOrBefore(
+            cutoff: Long
+        ): List<String> = imageFileNamesForPurge
 
         override suspend fun moveMemoToTrash(id: String, deletedAt: Long): Int {
             movedToTrash = MovedToTrashRecord(memoId = id, deletedAt = deletedAt)
@@ -636,11 +875,17 @@ class RoomMemoRepositoryTest {
 
         override suspend fun deleteMemoPermanently(id: String): Int {
             permanentlyDeletedMemoId = id
+            if (deletedPermanentlyCount > 0) {
+                imageFileNamesByMemoId.remove(id)
+            }
             return deletedPermanentlyCount
         }
 
         override suspend fun discardMemo(id: String): Int {
             discardedMemoId = id
+            if (discardedCount > 0) {
+                imageFileNamesByMemoId.remove(id)
+            }
             return discardedCount
         }
 
@@ -648,19 +893,33 @@ class RoomMemoRepositoryTest {
             purgeCutoff = cutoff
         }
 
-        override suspend fun getAllActiveMemosWithTagRefs(): List<MemoWithTagRefs> =
-            memosWithTagRefs.value.filter { it.memo.deletedAt == null }
+        override suspend fun getAllActiveMemosWithRefs(): List<MemoWithRefs> =
+            memosWithRefs.value.filter { it.memo.deletedAt == null }
 
-        override suspend fun upsertAllMemosWithTags(
+        override suspend fun upsertAllMemosWithRefs(
             memos: List<MemoEntity>,
-            tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>
+            tagRefsByMemoId: Map<String, List<MemoTagRefEntity>>,
+            imageRefsByMemoId: Map<String, List<MemoImageEntity>>
         ) {
-            onUpsertAllMemosWithTags?.invoke()
-            memos.forEach { memo ->
-                val refs = tagRefsByMemoId[memo.id] ?: emptyList()
-                upsertMemoWithTags(memo, refs)
-            }
+            onUpsertAllMemosWithRefs?.invoke()
+            super.upsertAllMemosWithRefs(memos, tagRefsByMemoId, imageRefsByMemoId)
         }
+    }
+
+    private class FakeMemoImageStore : MemoImageStore {
+
+        val deletedFileNames = mutableListOf<MemoImageFileName>()
+
+        override suspend fun saveImage(
+            source: com.appvoyager.litememo.domain.model.value.ImageSourceReference
+        ) = error("saveImage is not used by RoomMemoRepositoryTest.")
+
+        override suspend fun deleteImages(fileNames: List<MemoImageFileName>) {
+            deletedFileNames += fileNames
+        }
+
+        override fun resolveImagePath(fileName: MemoImageFileName): String =
+            error("resolveImagePath is not used by RoomMemoRepositoryTest.")
     }
 
     private class FakeTagDao(private val onUpsertAllTags: (() -> Unit)? = null) : TagDao {

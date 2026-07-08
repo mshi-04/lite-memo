@@ -14,6 +14,7 @@ import com.appvoyager.litememo.domain.usecase.FilterMemosUseCase
 import com.appvoyager.litememo.domain.usecase.FormatMemoTextUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
@@ -46,6 +47,7 @@ private const val SEARCH_DEBOUNCE_MILLIS = 250L
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
+@Suppress("LongParameterList")
 class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
@@ -53,7 +55,8 @@ class HomeViewModel @Inject constructor(
     private val searchMemosUseCase: SearchMemosUseCase,
     private val setMemoFavoriteUseCase: SetMemoFavoriteUseCase,
     private val applyMemoBulkActionUseCase: ApplyMemoBulkActionUseCase,
-    private val formatMemoTextUseCase: FormatMemoTextUseCase
+    private val formatMemoTextUseCase: FormatMemoTextUseCase,
+    private val resolveMemoImagePathUseCase: ResolveMemoImagePathUseCase
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
@@ -131,8 +134,16 @@ class HomeViewModel @Inject constructor(
                 allSelectedTagIds = allSelectedTagIds,
                 bulkTagDialog = controls.tagDialog,
                 tags = tagUiModels,
-                memos = MemoUiModel.fromDomain(filteredMemos, tags),
-                searchResults = MemoUiModel.fromDomain(searchHits ?: emptyList(), tags)
+                memos = MemoUiModel.fromDomain(
+                    filteredMemos,
+                    tags,
+                    resolveMemoImagePathUseCase::invoke
+                ),
+                searchResults = MemoUiModel.fromDomain(
+                    searchHits ?: emptyList(),
+                    tags,
+                    resolveMemoImagePathUseCase::invoke
+                )
             )
         }.catch {
             emit(

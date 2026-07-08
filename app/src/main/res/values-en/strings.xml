@@ -81,6 +81,10 @@
     <!-- Memo Edit -->
     <string name="memo_edit_title_hint">Title</string>
     <string name="memo_edit_body_hint">Memo</string>
+    <string name="memo_edit_attach_image">Attach image</string>
+    <string name="memo_edit_remove_image">Remove image</string>
+    <string name="memo_edit_image_attach_error">Couldn\'t attach the image</string>
+    <string name="attached_image_description">Attached image</string>
     <string name="delete_memo">Delete</string>
     <string name="navigate_back">Back</string>
     <string name="memo_deleted_message">Memo deleted</string>
@@ -156,7 +160,7 @@
     <string name="settings_import_success">Import completed</string>
     <string name="settings_import_error">Could not read the file</string>
     <string name="settings_import_confirm_title">Import data</string>
-    <string name="settings_import_confirm_message">Import data from the file. Memos and tags with the same IDs will be overwritten. Continue?</string>
+    <string name="settings_import_confirm_message">Import data from the file. Memos and tags with the same IDs will be overwritten. Images are not included in export or import, so attached images will be lost when memos with the same IDs are overwritten. Continue?</string>
     <string name="settings_import_confirm_ok">Import</string>
     <string name="settings_section_app_info">App information</string>
     <string name="settings_version">Version</string>

@@ -11,6 +11,7 @@ import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.usecase.ObserveCalendarMonthSummaryUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
+import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
@@ -40,11 +41,13 @@ private const val SEARCH_DEBOUNCE_MILLIS = 250L
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
+@Suppress("LongParameterList")
 class CalendarViewModel @Inject constructor(
     private val observeCalendarMonthSummaryUseCase: ObserveCalendarMonthSummaryUseCase,
     private val observeMemosByCalendarDateUseCase: ObserveMemosByCalendarDateUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,
     private val searchMemosUseCase: SearchMemosUseCase,
+    private val resolveMemoImagePathUseCase: ResolveMemoImagePathUseCase,
     currentTimeProvider: CurrentTimeProvider,
     private val zoneId: ZoneId
 ) : ViewModel() {
@@ -126,13 +129,21 @@ class CalendarViewModel @Inject constructor(
                 searchQuery = controls.query,
                 days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
                 memos = if (observed.memos != null && observed.tags != null) {
-                    MemoUiModel.fromDomain(observed.memos, observed.tags)
+                    MemoUiModel.fromDomain(
+                        observed.memos,
+                        observed.tags,
+                        resolveMemoImagePathUseCase::invoke
+                    )
                 } else {
                     emptyList()
                 },
                 hasSearchError = searchHits == null,
                 searchResults = if (searchHits != null && observed.tags != null) {
-                    MemoUiModel.fromDomain(searchHits, observed.tags)
+                    MemoUiModel.fromDomain(
+                        searchHits,
+                        observed.tags,
+                        resolveMemoImagePathUseCase::invoke
+                    )
                 } else {
                     emptyList()
                 }

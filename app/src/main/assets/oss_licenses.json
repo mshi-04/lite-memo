@@ -5,6 +5,11 @@
     "url": "https://developer.android.com/jetpack/androidx/releases/activity"
   },
   {
+    "name": "Coil",
+    "license": "Apache License 2.0",
+    "url": "https://github.com/coil-kt/coil"
+  },
+  {
     "name": "Core KTX",
     "license": "Apache License 2.0",
     "url": "https://developer.android.com/jetpack/androidx/releases/core"
