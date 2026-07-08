@@ -2,9 +2,11 @@ package com.appvoyager.litememo.data.di
 
 import com.appvoyager.litememo.data.repository.ContentResolverExportFileRepository
 import com.appvoyager.litememo.data.repository.DataStoreUserSettingsRepository
+import com.appvoyager.litememo.data.repository.FileSystemMemoImageStore
 import com.appvoyager.litememo.data.repository.RoomMemoRepository
 import com.appvoyager.litememo.data.repository.RoomTagRepository
 import com.appvoyager.litememo.domain.repository.ExportFileRepository
+import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.repository.UserSettingsRepository
@@ -21,6 +23,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMemoRepository(repository: RoomMemoRepository): MemoRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMemoImageStore(store: FileSystemMemoImageStore): MemoImageStore
 
     @Binds
     @Singleton
