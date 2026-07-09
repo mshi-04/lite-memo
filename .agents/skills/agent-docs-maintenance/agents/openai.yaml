@@ -1,0 +1,6 @@
+interface:
+  display_name: AI 文書メンテナンス
+  short_description: AGENTS.md / docs / .agents/skills / skill 同期運用を更新する。
+  default_prompt: 入口文書と docs / skill の分担を保ち、.agents/skills を正本として更新し同期する。
+policy:
+  allow_implicit_invocation: true

@@ -9,21 +9,34 @@ Lite Memo の Room schema と migration を、既存 DB 構成とテストに沿
 
 # 最初に確認するもの
 
-- [`docs/architecture.md`](../../../docs/architecture.md)
-- [`docs/implementation-guidelines.md`](../../../docs/implementation-guidelines.md)
-- [`docs/unit-test.md`](../../../docs/unit-test.md)
-- [`app/src/main/kotlin/com/appvoyager/litememo/data/local/`](../../../app/src/main/kotlin/com/appvoyager/litememo/data/local/)
-- [`app/schemas/`](../../../app/schemas/)
-- [`app/src/androidTest/kotlin/com/appvoyager/litememo/data/local/`](../../../app/src/androidTest/kotlin/com/appvoyager/litememo/data/local/)
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/implementation-guidelines.md`](docs/implementation-guidelines.md)
+- [`docs/unit-test.md`](docs/unit-test.md)
+- [`app/src/main/kotlin/com/appvoyager/litememo/data/local/`](app/src/main/kotlin/com/appvoyager/litememo/data/local/)
+- [`app/schemas/`](app/schemas/)
+- [`app/src/androidTest/kotlin/com/appvoyager/litememo/data/local/`](app/src/androidTest/kotlin/com/appvoyager/litememo/data/local/)
+
+# 役割クラスと参照先
+
+変更対象の役割クラスを見分け、該当する reference だけを読んでから実装する。
+schema を変える場合は entity / DAO / mapper / Repository / migration / schema export を一体で計画する。
+
+| 役割クラス | 参照 |
+| --- | --- |
+| entity | [`references/entity.md`](references/entity.md) |
+| DAO | [`references/dao.md`](references/dao.md) |
+| migration | [`references/migration.md`](references/migration.md) |
+| schema（`app/schemas/`） | [`references/schema.md`](references/schema.md) |
+
+mapper / Repository への波及は [`data-implementation`](../data-implementation/SKILL.md) を併用する。
 
 # 手順
 
-1. 変更対象の entity、DAO、database version、migration、schema JSON を確認する。
-2. schema を変える場合は entity / DAO / mapper / Repository / migration / schema export を一体で計画する。
-3. `LiteMemoDatabase` の version を上げ、`LiteMemoMigrations.ALL` に migration を追加する。
-4. migration は既存データの保持、default 値、index、外部キー、削除済みデータの扱いを明確にする。
-5. DAO query は active / trash / search / calendar など既存の絞り込みと矛盾しないか確認する。
-6. migration instrumented test と DAO test の要否を判断し、schema JSON の更新漏れを確認する。
+1. 変更対象の役割クラスを判定し、該当 reference を読む。
+2. schema を変える場合は entity / DAO / mapper / Repository / migration / schema export の波及範囲を洗い出す。
+3. reference の観点に沿って実装する。
+4. migration instrumented test と DAO test の要否を判断し、`app/schemas/` の更新漏れを確認する。
+5. 変更内容・検証結果・未確認事項を簡潔に報告する。
 
 # 注意事項
 

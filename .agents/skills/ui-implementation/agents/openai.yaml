@@ -1,0 +1,6 @@
+interface:
+  display_name: UI 実装
+  short_description: Compose 画面 / ViewModel / UI state / one-shot event / 画面テストを扱う。
+  default_prompt: UI 層の変更対象の役割クラスを判定し、該当 reference に沿って実装する。
+policy:
+  allow_implicit_invocation: true

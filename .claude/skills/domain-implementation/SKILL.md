@@ -9,20 +9,31 @@ Lite Memo のビジネスルールと公開 contract を、Android Framework に
 
 # 最初に確認するもの
 
-- [`docs/architecture.md`](../../../docs/architecture.md)
-- [`docs/implementation-guidelines.md`](../../../docs/implementation-guidelines.md)
-- [`docs/unit-test.md`](../../../docs/unit-test.md)
-- [`app/src/main/kotlin/com/appvoyager/litememo/domain/`](../../../app/src/main/kotlin/com/appvoyager/litememo/domain/)
-- 関連する [`app/src/test/kotlin/com/appvoyager/litememo/domain/`](../../../app/src/test/kotlin/com/appvoyager/litememo/domain/)
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/implementation-guidelines.md`](docs/implementation-guidelines.md)
+- [`docs/unit-test.md`](docs/unit-test.md)
+- [`app/src/main/kotlin/com/appvoyager/litememo/domain/`](app/src/main/kotlin/com/appvoyager/litememo/domain/)
+- 関連する [`app/src/test/kotlin/com/appvoyager/litememo/domain/`](app/src/test/kotlin/com/appvoyager/litememo/domain/)
+
+# 役割クラスと参照先
+
+変更対象の役割クラスを見分け、該当する reference だけを読んでから実装する。
+薄い役割は reference を作らず docs に委ねる。
+
+| 役割クラス | 参照 |
+| --- | --- |
+| value object | [`references/value-object.md`](references/value-object.md) |
+| UseCase | [`references/usecase.md`](references/usecase.md) |
+| provider（時刻・ID 生成などの抽象） | [`references/provider.md`](references/provider.md) |
+| Repository interface / 単純な model | reference なし。`docs/architecture.md` の contract 方針に従う |
 
 # 手順
 
-1. 対象の model、value object、UseCase、Repository interface、provider を確認する。
-2. 既存 contract で足りるか、新しい Repository interface / UseCase / provider が必要か判断する。
-3. Domain の意味を持つ値は primitive のまま広げず、必要に応じて value object に寄せる。
-4. UseCase は 1 つの明確な操作を表し、validation と business rule を UI / data へ漏らさない。
-5. 外部依存が必要な場合は provider または Repository interface として domain に抽象だけを置く。
-6. 変更した rule は JVM Unit Test で押さえる。
+1. 変更対象の役割クラスを判定し、該当 reference を読む。
+2. 既存 contract で足りるか、新しい interface / UseCase / provider が必要か決める。
+3. reference の観点に沿って実装する。
+4. 変更した rule を JVM Unit Test で押さえる。
+5. 変更内容・検証結果・未確認事項を簡潔に報告する。
 
 # 注意事項
 

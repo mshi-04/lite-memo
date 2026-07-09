@@ -1,14 +1,19 @@
 # Claude Code
 
+この文書は Claude Code 固有の運用（skill 同期 / CLAUDE.md import）を扱う。
+
 ## Skill の正本と同期
 
 複数の AI ツールで同じ skill を使うため、正本は `.agents/skills/` に置く。
 Claude Code は `.claude/skills/<skill-name>/SKILL.md` を検出するため、この directory は
 `.agents/skills/` から生成する。`.claude/skills/` 配下の同期対象 skill は直接編集しない。
 
-```powershell
-.\scripts\sync-claude-skills.ps1
-.\scripts\sync-claude-skills.ps1 -Check
+`.agents/skills/<skill-name>/agents/` 配下（Codex 専用の `openai.yaml` など）は同期対象外で、
+`.claude/skills/` には生成されない。
+
+```sh
+./scripts/sync-claude-skills.ps1
+./scripts/sync-claude-skills.ps1 -Check
 ```
 
 skill を追加・変更・削除した場合は、同期後に生成された `.claude/skills/` の差分も同じ commit に含める。
