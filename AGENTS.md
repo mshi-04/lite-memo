@@ -25,7 +25,6 @@ skill の正本は `.agents/skills/`。`.claude/skills/` は同期生成物な�
 - [`.agents/skills/db-implementation/SKILL.md`](.agents/skills/db-implementation/SKILL.md): Room entity / DAO / migration / schema
 - [`.agents/skills/test-implementation/SKILL.md`](.agents/skills/test-implementation/SKILL.md): Unit Test / androidTest / coroutine / Flow 検証
 - [`.agents/skills/implementation-review/SKILL.md`](.agents/skills/implementation-review/SKILL.md): 実装後レビューと指摘整理
-- [`.agents/skills/agent-docs-maintenance/SKILL.md`](.agents/skills/agent-docs-maintenance/SKILL.md): AI 文書 / skill / Claude Code 同期運用
 
 ## 最低限の前提
 
