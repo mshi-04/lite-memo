@@ -18,8 +18,8 @@ Lite Memo の Room schema と migration を、既存 DB 構成とテストに沿
 
 # 役割クラスと参照先
 
-変更対象の役割クラスを見分け、該当する reference だけを読んでから実装する。
-schema を変える場合は entity / DAO / mapper / Repository / migration / schema export を一体で計画する。
+変更対象の役割クラスを見分け、該当する reference を読んでから実装する。
+schema を変える場合は entity / DAO / mapper / Repository / migration / schema export を一体で計画し、関連する reference を読む。
 
 | 役割クラス | 参照 |
 | --- | --- |
@@ -32,7 +32,7 @@ mapper / Repository への波及は [`data-implementation`](../data-implementati
 
 # 手順
 
-1. 変更対象の役割クラスを判定し、該当 reference を読む。
+1. 変更対象の役割クラスを判定し、該当する reference を読む。
 2. schema を変える場合は entity / DAO / mapper / Repository / migration / schema export の波及範囲を洗い出す。
 3. reference の観点に沿って実装する。
 4. migration instrumented test と DAO test の要否を判断し、`app/schemas/` の更新漏れを確認する。

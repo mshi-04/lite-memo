@@ -20,7 +20,7 @@ skill を追加・変更・削除した場合は、同期後に生成された `
 CI は `-Check` を実行し、未同期または削除漏れを検出する。
 
 `-Check` は `AGENTS.md` の skill 一覧が `.agents/skills/` と一致するかも検証する。
-skill を増減したら AGENTS.md の一覧も更新する。AGENTS.md の説明文は手書きのため自動生成されない。
+skill を増減したら AGENTS.md の一覧も更新する。AGENTS.md の説明文は手書きのため自動生成されず、説明文の drift は review で確認する。
 
 `.claude/skills/` は同期対象であり、手作業の skill を置かない。
 Claude Code 固有の手作業 skill を追加する場合は、`scripts/sync-claude-skills.ps1` の

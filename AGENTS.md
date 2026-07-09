@@ -5,8 +5,7 @@ Lite Memo で AI エージェントが最初に読む入口です。
 
 ## 技術文書
 
-- [`docs/project-overview.md`](docs/project-overview.md): プロジェクト概要と主要な確認先
-- [`docs/tech-stack.md`](docs/tech-stack.md): 採用している技術スタック
+- [`docs/project-overview.md`](docs/project-overview.md): プロジェクト概要 / 主要な確認先 / 技術スタック
 - [`docs/architecture.md`](docs/architecture.md): Clean Architecture / MVVM の構造方針
 - [`docs/implementation-guidelines.md`](docs/implementation-guidelines.md): 実装時の基本方針
 - [`docs/development-setup.md`](docs/development-setup.md): 開発環境セットアップ / Git フック / 静的解析 / CI 相当チェック
