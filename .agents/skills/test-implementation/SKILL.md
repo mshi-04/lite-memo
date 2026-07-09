@@ -9,10 +9,10 @@ Lite Memo の変更した振る舞いを、既存の Unit Test / instrumented te
 
 # 最初に確認するもの
 
-- [`docs/unit-test.md`](docs/unit-test.md)
-- [`docs/development-setup.md`](docs/development-setup.md)
-- 対象コードと対応する [`app/src/test/`](app/src/test/) または [`app/src/androidTest/`](app/src/androidTest/)
-- 必要に応じて [`app/build.gradle.kts`](app/build.gradle.kts)
+- [`docs/unit-test.md`](../../../docs/unit-test.md)
+- [`docs/development-setup.md`](../../../docs/development-setup.md)
+- 対象コードと対応する [`app/src/test/`](../../../app/src/test/) または [`app/src/androidTest/`](../../../app/src/androidTest/)
+- 必要に応じて [`app/build.gradle.kts`](../../../app/build.gradle.kts)
 
 # 手順
 

@@ -9,11 +9,11 @@ Lite Memo のビジネスルールと公開 contract を、Android Framework に
 
 # 最初に確認するもの
 
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/implementation-guidelines.md`](docs/implementation-guidelines.md)
-- [`docs/unit-test.md`](docs/unit-test.md)
-- [`app/src/main/kotlin/com/appvoyager/litememo/domain/`](app/src/main/kotlin/com/appvoyager/litememo/domain/)
-- 関連する [`app/src/test/kotlin/com/appvoyager/litememo/domain/`](app/src/test/kotlin/com/appvoyager/litememo/domain/)
+- [`docs/architecture.md`](../../../docs/architecture.md)
+- [`docs/implementation-guidelines.md`](../../../docs/implementation-guidelines.md)
+- [`docs/unit-test.md`](../../../docs/unit-test.md)
+- [`app/src/main/kotlin/com/appvoyager/litememo/domain/`](../../../app/src/main/kotlin/com/appvoyager/litememo/domain/)
+- 関連する [`app/src/test/kotlin/com/appvoyager/litememo/domain/`](../../../app/src/test/kotlin/com/appvoyager/litememo/domain/)
 
 # 役割クラスと参照先
 
