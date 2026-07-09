@@ -35,7 +35,7 @@
 
 - ViewModel から UI へは StateFlow を中心に状態を公開する
 - 非同期処理は Coroutines を使い、UI スレッドをブロックしない
-- 構造化データは Room、軽量な設定値は DataStore に分ける
+- 永続化の使い分けは [`docs/architecture.md`](architecture.md) の Data 方針を正本とする
 - 画像添付などの Android 依存 URI / ContentResolver は ViewModel に直接持ち込まず、UseCase と data 層の境界に閉じる
 - メモ画像の export/import は現時点では対象外。import で同一 ID のメモを上書きすると既存の添付画像は失われる前提で扱う
 
@@ -55,12 +55,3 @@
 - 表示文字列は `strings.xml` に寄せる
 - 日本語 / 英語対応を前提にする
 - UI 実装時は長い英語文字列でも崩れない余白を確保する
-
-## まだ固定しないこと
-
-以下は未確定で、必要になった時点で決めます。
-
-- 広告インタースティシャルの表示頻度やタイミング（バナーは導入済み）
-- Google Play 公開手順
-
-DB スキーマ、パッケージ分割、CI（GitHub Actions）のジョブ構成は既に確立しているため、変更時は既存構成に合わせます（スキーマ変更時は Room の migration を追加する）。

@@ -1,0 +1,6 @@
+interface:
+  display_name: DB 実装
+  short_description: Room entity / DAO / migration / schema を扱う。
+  default_prompt: DB の変更対象の役割クラスを判定し、entity / DAO / migration / schema を一体で計画する。
+policy:
+  allow_implicit_invocation: true
