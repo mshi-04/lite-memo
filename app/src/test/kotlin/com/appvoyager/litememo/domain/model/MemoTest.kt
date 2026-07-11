@@ -35,7 +35,7 @@ class MemoTest {
         )
 
         // Act & Assert
-        // 観点: Error - one memo cannot reference duplicated image ids.
+        // Error: one memo cannot reference duplicated image ids.
         assertThrows(IllegalArgumentException::class.java) {
             Memo(
                 id = MemoId("memo-1"),

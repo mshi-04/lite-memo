@@ -12,7 +12,7 @@ class ImageSourceReferenceTest {
         val input = " content://memo/image.jpg "
 
         // Act
-        // 観点: Normal - picker results are represented as absolute URI strings.
+        // Normal: picker results are represented as absolute URI strings.
         val reference = ImageSourceReference(input)
 
         // Assert
@@ -25,7 +25,7 @@ class ImageSourceReferenceTest {
         val input = " "
 
         // Act & Assert
-        // 観点: Error - blank source references cannot be copied.
+        // Error: blank source references cannot be copied.
         assertThrows(IllegalArgumentException::class.java) {
             ImageSourceReference(input)
         }
@@ -37,7 +37,7 @@ class ImageSourceReferenceTest {
         val input = "image.jpg"
 
         // Act & Assert
-        // 観点: Error - relative references do not identify a picker source.
+        // Error: relative references do not identify a picker source.
         assertThrows(IllegalArgumentException::class.java) {
             ImageSourceReference(input)
         }

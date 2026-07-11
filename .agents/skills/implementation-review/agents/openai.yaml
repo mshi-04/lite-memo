@@ -1,6 +1,6 @@
 interface:
   display_name: 実装レビュー
   short_description: 依存方向 / 責務分離 / 過剰 API / DB migration / テスト不足を確認する。
-  default_prompt: 差分を既存方針と照合し、指摘を Critical / Suggestion / Nitpick に整理する。
+  default_prompt: 比較基準を確定して差分を確認し、指摘を Critical / Suggestion / Nitpick に整理する。
 policy:
   allow_implicit_invocation: true

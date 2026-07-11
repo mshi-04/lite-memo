@@ -27,7 +27,7 @@ class FileSystemMemoImageStoreTest {
         val store = FileSystemMemoImageStore(dataSource, FixedMemoImageIdProvider("image-1"))
 
         // Act
-        // 観点: Normal - stored image metadata uses generated id and detected extension.
+        // Normal: stored image metadata uses generated id and detected extension.
         val image = store.saveImage(ImageSourceReference("content://memo/image"))
 
         // Assert
@@ -46,7 +46,7 @@ class FileSystemMemoImageStoreTest {
         val store = FileSystemMemoImageStore(dataSource, FixedMemoImageIdProvider("image-1"))
 
         // Act
-        // 観点: Boundary - unknown MIME type still creates a stable file name.
+        // Boundary: unknown MIME type still creates a stable file name.
         val image = store.saveImage(ImageSourceReference("content://memo/image"))
 
         // Assert
@@ -64,7 +64,7 @@ class FileSystemMemoImageStoreTest {
         val store = FileSystemMemoImageStore(dataSource, FixedMemoImageIdProvider("image-1"))
 
         // Act & Assert
-        // 観点: Error - copy failures are exposed to callers.
+        // Error: copy failures are exposed to callers.
         assertThrows(IOException::class.java) {
             runTest {
                 store.saveImage(ImageSourceReference("content://memo/image"))
@@ -80,7 +80,7 @@ class FileSystemMemoImageStoreTest {
         val store = FileSystemMemoImageStore(dataSource, FixedMemoImageIdProvider("image-1"))
 
         // Act
-        // 観点: Interaction - deletion keeps file-system details in the data source.
+        // Interaction: deletion keeps file-system details in the data source.
         store.deleteImages(
             listOf(MemoImageFileName("image-1.jpg"), MemoImageFileName("image-2.png"))
         )
@@ -98,7 +98,7 @@ class FileSystemMemoImageStoreTest {
         val store = FileSystemMemoImageStore(dataSource, FixedMemoImageIdProvider("image-1"))
 
         // Act
-        // 観点: Normal - path resolution stays behind the store abstraction.
+        // Normal: path resolution stays behind the store abstraction.
         val path = store.resolveImagePath(MemoImageFileName("image-1.jpg"))
 
         // Assert

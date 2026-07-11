@@ -17,7 +17,7 @@ class AttachMemoImageUseCaseTest {
         val useCase = AttachMemoImageUseCase(store)
 
         // Act
-        // 観点: Normal - the saved image metadata is returned to the caller.
+        // Normal: the saved image metadata is returned to the caller.
         val image = useCase(ImageSourceReference("content://memo/image.jpg"))
 
         // Assert
@@ -32,7 +32,7 @@ class AttachMemoImageUseCaseTest {
         val useCase = AttachMemoImageUseCase(store)
 
         // Act
-        // 観点: Interaction - the use case keeps source handling inside MemoImageStore.
+        // Interaction: the use case keeps source handling inside MemoImageStore.
         useCase(source)
 
         // Assert
@@ -47,7 +47,7 @@ class AttachMemoImageUseCaseTest {
         val useCase = AttachMemoImageUseCase(store)
 
         // Act & Assert
-        // 観点: Error - copy failures are not swallowed by the domain use case.
+        // Error: copy failures are not swallowed by the domain use case.
         assertThrows(IllegalStateException::class.java) {
             runTest {
                 useCase(ImageSourceReference("content://memo/image.jpg"))

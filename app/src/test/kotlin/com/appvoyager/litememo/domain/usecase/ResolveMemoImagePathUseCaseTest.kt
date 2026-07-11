@@ -13,7 +13,7 @@ class ResolveMemoImagePathUseCaseTest {
         val useCase = ResolveMemoImagePathUseCase(FakeMemoImageStore())
 
         // Act
-        // 観点: Normal - the store resolves display paths for saved image files.
+        // Normal: the store resolves display paths for saved image files.
         val path = useCase(MemoImageFileName("image-1.jpg"))
 
         // Assert

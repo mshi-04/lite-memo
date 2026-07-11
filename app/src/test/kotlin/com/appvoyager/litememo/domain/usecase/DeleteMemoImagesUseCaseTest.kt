@@ -17,7 +17,7 @@ class DeleteMemoImagesUseCaseTest {
         val useCase = DeleteMemoImagesUseCase(store)
 
         // Act
-        // 観点: Interaction - deletion policy stays behind MemoImageStore.
+        // Interaction: deletion policy stays behind MemoImageStore.
         useCase(fileNames)
 
         // Assert
@@ -32,7 +32,7 @@ class DeleteMemoImagesUseCaseTest {
         val useCase = DeleteMemoImagesUseCase(store)
 
         // Act & Assert
-        // 観点: Error - delete failures are not swallowed by the domain use case.
+        // Error: delete failures are not swallowed by the domain use case.
         assertThrows(IllegalStateException::class.java) {
             runTest {
                 useCase(listOf(MemoImageFileName("image-1.jpg")))

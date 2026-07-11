@@ -1,6 +1,6 @@
 ---
 name: db-implementation
-description: Lite Memo の Room DB 周りを設計、実装、修正するときに使う。Room entity、DAO、LiteMemoDatabase、migration、app/schemas、Room testing、DB schema 変更を扱う作業で使用する。
+description: Lite Memo の Room DB 周りの設計、実装、修正を扱う。Room entity、DAO、LiteMemoDatabase、migration、app/schemas、Room testing、DB schema 変更が対象。
 ---
 
 # 目的
@@ -36,7 +36,8 @@ mapper / Repository への波及は [`data-implementation`](../data-implementati
 2. schema を変える場合は entity / DAO / mapper / Repository / migration / schema export の波及範囲を洗い出す。
 3. reference の観点に沿って実装する。
 4. migration instrumented test と DAO test の要否を判断し、`app/schemas/` の更新漏れを確認する。
-5. 変更内容・検証結果・未確認事項を簡潔に報告する。
+5. `./gradlew :app:ktlintCheck :app:detekt :app:connectedDevDebugAndroidTest` を実行し、schema 変更では version、migration、`app/schemas/` の差分が対応することを確認する。
+6. 変更内容、実行した task と結果、未実施の検証と理由を簡潔に報告する。
 
 # 注意事項
 

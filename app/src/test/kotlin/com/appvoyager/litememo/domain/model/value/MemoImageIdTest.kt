@@ -12,7 +12,7 @@ class MemoImageIdTest {
         val input = " image-1 "
 
         // Act
-        // 観点: Normal - image ids use the trimmed identifier.
+        // Normal: image ids use the trimmed identifier.
         val id = MemoImageId(input)
 
         // Assert
@@ -25,7 +25,7 @@ class MemoImageIdTest {
         val input = " "
 
         // Act & Assert
-        // 観点: Error - blank image ids are invalid.
+        // Error: blank image ids are invalid.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageId(input)
         }
