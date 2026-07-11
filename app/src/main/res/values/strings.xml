@@ -167,4 +167,9 @@
     <string name="settings_browser_not_found">ブラウザが見つかりませんでした。</string>
     <string name="settings_file_picker_not_found">ファイルを開けるアプリが見つかりませんでした。</string>
     <string name="settings_open_source_licenses">オープンソースライセンス</string>
+
+    <!-- Home screen widgets -->
+    <string name="widget_new_memo_label">新規メモ</string>
+    <string name="widget_new_memo_button">メモ</string>
+    <string name="widget_new_memo_desc">ワンタップで新しいメモを作成します。</string>
 </resources>

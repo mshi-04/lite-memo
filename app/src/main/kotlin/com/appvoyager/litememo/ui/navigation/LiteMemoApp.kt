@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -65,6 +66,8 @@ private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?creat
 @Composable
 fun LiteMemoApp(
     onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    pendingWidgetNav: WidgetNavRequest? = null,
+    onConsumeWidgetNav: () -> Unit = {},
     viewModel: LiteMemoAppViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
@@ -107,6 +110,28 @@ fun LiteMemoApp(
 
     LaunchedEffect(backStackEntry) {
         memoEditPopInFlight = false
+    }
+
+    // ウィジェットのタップ要求は app-lock / tutorial ゲート通過後（＝この Composable が構成された後）に
+    // ここで消化する。navigateOnce の RESUMED ガードはコールド起動時に取りこぼすため通さず、
+    // launchSingleTop で重複遷移を防ぎつつ、消化後に onConsumeWidgetNav で再発火を止める。
+    val currentOnConsumeWidgetNav by rememberUpdatedState(onConsumeWidgetNav)
+    LaunchedEffect(pendingWidgetNav) {
+        when (val request = pendingWidgetNav) {
+            null -> Unit
+
+            WidgetNavRequest.NewMemo -> {
+                navController.navigate(MEMO_EDIT_BASE) { launchSingleTop = true }
+                currentOnConsumeWidgetNav()
+            }
+
+            is WidgetNavRequest.OpenMemo -> {
+                navController.navigate(memoEditRouteWithId(request.memoId)) {
+                    launchSingleTop = true
+                }
+                currentOnConsumeWidgetNav()
+            }
+        }
     }
 
     Scaffold(
