@@ -11,6 +11,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -46,56 +47,64 @@ class MainActivity : FragmentActivity() {
         observeSecureScreen()
         handleWidgetIntent(intent)
         setContent {
-            val themeMode by mainViewModel.themeMode
-                .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
-            val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
-            val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
-            val pendingWidgetNav by mainViewModel.pendingWidgetNav.collectAsStateWithLifecycle()
-            val darkTheme = when (themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
-            SideEffect {
-                WindowCompat.getInsetsController(window, window.decorView).apply {
-                    isAppearanceLightStatusBars = !darkTheme
-                    isAppearanceLightNavigationBars = !darkTheme
-                }
-            }
-            LiteMemoTheme(darkTheme = darkTheme) {
-                if (appLockUiState.canShowAppContent) {
-                    when (tutorialUiState.status) {
-                        TutorialStatus.LOADING -> {
-                            Surface(
-                                modifier = Modifier.fillMaxSize(),
-                                color = MaterialTheme.colorScheme.background
-                            ) {
-                            }
-                        }
+            LiteMemoContent()
+        }
+    }
 
-                        TutorialStatus.VISIBLE -> {
-                            TutorialScreen(
-                                onCompleteTutorial = { mainViewModel.completeTutorial() }
-                            )
-                        }
-
-                        TutorialStatus.HIDDEN -> {
-                            LiteMemoApp(
-                                onRequestAppLockAuthentication = { onResult ->
-                                    appLockAuthenticator.authenticate(onResult)
-                                },
-                                pendingWidgetNav = pendingWidgetNav,
-                                onConsumeWidgetNav = { mainViewModel.consumeWidgetNav() }
-                            )
+    @Composable
+    private fun LiteMemoContent() {
+        val themeMode by mainViewModel.themeMode
+            .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+        val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
+        val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
+        val pendingWidgetNav by mainViewModel.pendingWidgetNav.collectAsStateWithLifecycle()
+        val darkTheme = when (themeMode) {
+            ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
+        }
+        SideEffect {
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
+        LiteMemoTheme(
+            darkTheme = darkTheme,
+            dynamicColor = true
+        ) {
+            if (appLockUiState.canShowAppContent) {
+                when (tutorialUiState.status) {
+                    TutorialStatus.LOADING -> {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
                         }
                     }
-                } else {
-                    AppLockScreen(
-                        uiState = appLockUiState,
-                        onUnlockClick = { mainViewModel.requestUnlock() },
-                        onOpenSecuritySettings = { openSecuritySettings() }
-                    )
+
+                    TutorialStatus.VISIBLE -> {
+                        TutorialScreen(
+                            onCompleteTutorial = { mainViewModel.completeTutorial() }
+                        )
+                    }
+
+                    TutorialStatus.HIDDEN -> {
+                        LiteMemoApp(
+                            onRequestAppLockAuthentication = { onResult ->
+                                appLockAuthenticator.authenticate(onResult)
+                            },
+                            pendingWidgetNav = pendingWidgetNav,
+                            onConsumeWidgetNav = { mainViewModel.consumeWidgetNav() }
+                        )
+                    }
                 }
+            } else {
+                AppLockScreen(
+                    uiState = appLockUiState,
+                    onUnlockClick = { mainViewModel.requestUnlock() },
+                    onOpenSecuritySettings = { openSecuritySettings() }
+                )
             }
         }
     }
