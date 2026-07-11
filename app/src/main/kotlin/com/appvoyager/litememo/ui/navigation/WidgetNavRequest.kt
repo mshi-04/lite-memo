@@ -1,7 +1,7 @@
 package com.appvoyager.litememo.ui.navigation
 
-sealed interface WidgetNavRequest {
-    data object NewMemo : WidgetNavRequest
+sealed class WidgetNavRequest {
+    data object NewMemo : WidgetNavRequest()
 
-    data class OpenMemo(val memoId: String) : WidgetNavRequest
+    data class OpenMemo(val memoId: String) : WidgetNavRequest()
 }
