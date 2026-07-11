@@ -64,7 +64,7 @@ class MemoTitleTest {
 - 各ブロックの責務を混ぜない
 - Arrange が不要な場合（準備するものがない）は `// Arrange` を省略してよい
 - `// Arrange` / `// Act` / `// Assert` のラベルは置き換えず、常に残す
-- 検証観点（後述）は、`// Act` の直下に `// 観点: 意図` の形で1行添える
+- 検証観点（後述）は、`// Act` の直下に `// <観点>: <意図>` の形で1行添える
 - Turbine の `.test {}` のように操作と検証が交錯する場合は、ラベルを `// Act & Assert` にする
 
 ## テスト観点（命名とコメント）
@@ -87,7 +87,7 @@ class MemoTitleTest {
 ### 適用ルール
 
 - 関数名は観点を接頭辞に付ける（camelCase）。例: `normalUiStateLoadsExistingMemo`、`boundaryEmptyTagIdsSkipsTagValidation`、`flowSaveEmitsOperationErrorWhenMemoSaveFails`
-- AAA ラベルは残したまま、`// Act`（または `// Act & Assert`）の直下に `// 観点: 意図` を1行置く。複数観点が絡む場合は `/` で連結する
+- AAA ラベルは残したまま、`// Act`（または `// Act & Assert`）の直下に `// <観点>: <意図>` を1行置く。例: `// Boundary: blank input is rejected`。複数観点が絡む場合は `// Boundary/Interaction: ...` のように `/` で連結する
 - 観点は検証の主目的に合わせて選び、無理に増やさない
 
 例:

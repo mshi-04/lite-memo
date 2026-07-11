@@ -12,7 +12,7 @@ class MemoImageFileNameTest {
         val input = " image-1.jpg "
 
         // Act
-        // 観点: Normal - plain file names are trimmed and kept.
+        // Normal: plain file names are trimmed and kept.
         val fileName = MemoImageFileName(input)
 
         // Assert
@@ -25,7 +25,7 @@ class MemoImageFileNameTest {
         val input = "memo/image-1.jpg"
 
         // Act & Assert
-        // 観点: Error - forward slashes would escape the image directory.
+        // Error: forward slashes would escape the image directory.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageFileName(input)
         }
@@ -37,7 +37,7 @@ class MemoImageFileNameTest {
         val input = "memo\\image-1.jpg"
 
         // Act & Assert
-        // 観点: Error - backslashes would escape the image directory on Windows paths.
+        // Error: backslashes would escape the image directory on Windows paths.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageFileName(input)
         }
@@ -49,7 +49,7 @@ class MemoImageFileNameTest {
         val input = ".."
 
         // Act & Assert
-        // 観点: Error - relative path references are not valid file names.
+        // Error: relative path references are not valid file names.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageFileName(input)
         }
@@ -61,7 +61,7 @@ class MemoImageFileNameTest {
         val input = "."
 
         // Act & Assert
-        // 観点: Error - current directory references are not valid file names.
+        // Error: current directory references are not valid file names.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageFileName(input)
         }
@@ -73,7 +73,7 @@ class MemoImageFileNameTest {
         val input = "image\u0000.jpg"
 
         // Act & Assert
-        // 観点: Error - control characters are not valid file-name content.
+        // Error: control characters are not valid file-name content.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageFileName(input)
         }
@@ -85,7 +85,7 @@ class MemoImageFileNameTest {
         val input = " "
 
         // Act & Assert
-        // 観点: Error - blank file names cannot address an image.
+        // Error: blank file names cannot address an image.
         assertThrows(IllegalArgumentException::class.java) {
             MemoImageFileName(input)
         }

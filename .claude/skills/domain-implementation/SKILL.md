@@ -1,6 +1,6 @@
 ---
 name: domain-implementation
-description: Lite Memo の Domain 層を設計、実装、修正するときに使う。domain model、value object、UseCase、Repository interface、provider、Android 非依存のビジネスルールを扱う作業で使用する。
+description: Lite Memo の Domain 層の設計、実装、修正を扱う。domain model、value object、UseCase、Repository interface、provider、Android 非依存のビジネスルールが対象。
 ---
 
 # 目的
@@ -34,11 +34,13 @@ Lite Memo のビジネスルールと公開 contract を、Android Framework に
 2. 既存 contract で足りるか、新しい interface / UseCase / provider が必要か決める。
 3. reference の観点に沿って実装する。
 4. 変更した rule を JVM Unit Test で押さえる。
-5. 変更内容・検証結果・未確認事項を簡潔に報告する。
+5. `./gradlew :app:ktlintCheck :app:detekt :app:testProdDebugUnitTest` を実行する。
+6. 変更内容、実行した task と結果、未実施の検証と理由を簡潔に報告する。
 
 # 注意事項
 
 - Domain 層に Context、URI、Room、DataStore、Compose、Android resource を持ち込まない。
+- Domain contract の変更が UI、Data、DB へ波及するときは、変更対象に対応する Skill を併用する。
 - Repository implementation の都合で domain model を歪めない。
 - 新しい公開 API は、既存 contract で足りない理由がある場合だけ追加する。
 - 例外や require/check の意味が UI 表示と混ざらないようにする。

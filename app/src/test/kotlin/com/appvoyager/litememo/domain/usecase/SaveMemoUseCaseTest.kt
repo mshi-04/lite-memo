@@ -180,7 +180,7 @@ class SaveMemoUseCaseTest {
         val useCase = saveMemoUseCase(memoRepository = repository)
 
         // Act
-        // 観点: Normal - command images are preserved on the saved memo.
+        // Normal: command images are preserved on the saved memo.
         useCase(
             SaveMemoCommand(
                 title = MemoTitle("Title"),
@@ -201,7 +201,7 @@ class SaveMemoUseCaseTest {
         val useCase = saveMemoUseCase(memoRepository = repository)
 
         // Act
-        // 観点: Normal - an attached image counts as memo content.
+        // Normal: an attached image counts as memo content.
         useCase(
             SaveMemoCommand(
                 title = MemoTitle(" "),
@@ -221,7 +221,7 @@ class SaveMemoUseCaseTest {
         val useCase = saveMemoUseCase()
 
         // Act
-        // 観点: Normal - duplicate image ids are normalized like duplicate tag ids.
+        // Normal: duplicate image ids are normalized like duplicate tag ids.
         val memo = useCase(
             SaveMemoCommand(
                 title = MemoTitle("Title"),
@@ -244,7 +244,7 @@ class SaveMemoUseCaseTest {
         val useCase = saveMemoUseCase(memoRepository = repository)
 
         // Act
-        // 観点: Normal - update commands fully replace memo images.
+        // Normal: update commands fully replace memo images.
         useCase(
             SaveMemoCommand(
                 id = existing.id,

@@ -109,7 +109,7 @@ class MemoMapperTest {
         )
 
         // Act
-        // 観点: Normal - image order is persisted as positions.
+        // Normal: image order is persisted as positions.
         val imageRefs = memo.toImageRefs()
 
         // Assert
@@ -160,7 +160,7 @@ class MemoMapperTest {
         )
 
         // Act
-        // 観点: Normal - image refs round-trip in display order.
+        // Normal: image refs round-trip in display order.
         val memo = entity.toDomain(tagRefs = emptyList(), imageRefs = imageRefs)
 
         // Assert
@@ -250,7 +250,7 @@ class MemoMapperTest {
         )
 
         // Act & Assert
-        // 観点: Error - image refs cannot be mapped across memo boundaries.
+        // Error: image refs cannot be mapped across memo boundaries.
         assertThrows(IllegalArgumentException::class.java) {
             entity.toDomain(tagRefs = emptyList(), imageRefs = imageRefs)
         }
