@@ -11,9 +11,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
 
 private const val WIDGET_REFRESH_DEBOUNCE_MS = 500L
@@ -33,6 +35,8 @@ class LiteMemoApplication : BaseLiteMemoApplication() {
     // @CustomTestApplication が継承する BaseLiteMemoApplication では動かさない
     // （テスト用 App では onCreate 時点で component 未生成のため）。
     // 更新失敗で監視全体を止めないため Throwable を包括 catch する（Cancellation は再送出）。
+    // 上流 Flow（Room emit 等）の例外は collect を突き抜けて監視コルーチンを終了させるため、
+    // retryWhen で再購読して監視を継続する（Cancellation はそのまま伝播させる）。
     @Suppress("TooGenericExceptionCaught")
     private fun observeMemosForWidgetRefresh() {
         applicationScope.launch {
@@ -45,6 +49,16 @@ class LiteMemoApplication : BaseLiteMemoApplication() {
                 .distinctUntilChanged()
                 // 連続作成など短時間の大量変更をまとめ、バースト後に 1 度だけ最新状態で更新する。
                 .debounce(WIDGET_REFRESH_DEBOUNCE_MS)
+                .retryWhen { cause, _ ->
+                    if (cause is CancellationException) {
+                        false
+                    } else {
+                        // 上流失敗でも監視を止めず、少し待って再購読する。
+                        Log.w(WIDGET_REFRESH_TAG, "Memo observation failed; retrying", cause)
+                        delay(WIDGET_REFRESH_DEBOUNCE_MS)
+                        true
+                    }
+                }
                 .collect {
                     try {
                         WidgetRefresher.refreshLists(this@LiteMemoApplication)
