@@ -1,9 +1,11 @@
 package com.appvoyager.litememo.data.mapper
 
 import com.appvoyager.litememo.data.local.entity.MemoEntity
+import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
-import com.appvoyager.litememo.data.local.model.MemoWithTagRefs
+import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -71,7 +73,7 @@ class MemoMapperTest {
     @Test
     fun toDomainReturnsTagIdsOrderedByPosition() {
         // Arrange
-        val memoWithTagRefs = MemoWithTagRefs(
+        val memoWithRefs = MemoWithRefs(
             memo = MemoEntity(
                 id = "memo-1",
                 title = "Title",
@@ -84,14 +86,91 @@ class MemoMapperTest {
             tagRefs = listOf(
                 MemoTagRefEntity(memoId = "memo-1", tagId = "tag-2", position = 1),
                 MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0)
+            ),
+            imageRefs = emptyList()
+        )
+
+        // Act
+        val memo = memoWithRefs.toDomain()
+
+        // Assert
+        assertEquals(listOf(TagId("tag-1"), TagId("tag-2")), memo.tagIds)
+    }
+
+    @Test
+    fun normalToImageRefsAssignsPositionsInListOrder() {
+        // Arrange
+        val memo = memoFixture(
+            id = "memo-1",
+            images = listOf(
+                memoImageFixture(id = "image-1", fileName = "image-1.jpg"),
+                memoImageFixture(id = "image-2", fileName = "image-2.png")
             )
         )
 
         // Act
-        val memo = memoWithTagRefs.toDomain()
+        // Normal: image order is persisted as positions.
+        val imageRefs = memo.toImageRefs()
 
         // Assert
-        assertEquals(listOf(TagId("tag-1"), TagId("tag-2")), memo.tagIds)
+        assertEquals(
+            listOf(
+                MemoImageEntity(
+                    id = "image-1",
+                    memoId = "memo-1",
+                    fileName = "image-1.jpg",
+                    position = 0
+                ),
+                MemoImageEntity(
+                    id = "image-2",
+                    memoId = "memo-1",
+                    fileName = "image-2.png",
+                    position = 1
+                )
+            ),
+            imageRefs
+        )
+    }
+
+    @Test
+    fun normalToDomainSortsImagesByPosition() {
+        // Arrange
+        val entity = MemoEntity(
+            id = "memo-1",
+            title = "Title",
+            body = "Body",
+            createdAt = 1000L,
+            updatedAt = 2000L,
+            isFavorite = false,
+            deletedAt = null
+        )
+        val imageRefs = listOf(
+            MemoImageEntity(
+                id = "image-2",
+                memoId = "memo-1",
+                fileName = "image-2.png",
+                position = 1
+            ),
+            MemoImageEntity(
+                id = "image-1",
+                memoId = "memo-1",
+                fileName = "image-1.jpg",
+                position = 0
+            )
+        )
+
+        // Act
+        // Normal: image refs round-trip in display order.
+        val memo = entity.toDomain(tagRefs = emptyList(), imageRefs = imageRefs)
+
+        // Assert
+        assertEquals(
+            listOf(
+                memoImageFixture(id = "image-1", fileName = "image-1.jpg"),
+                memoImageFixture(id = "image-2", fileName = "image-2.png")
+            ),
+            memo.images
+        )
     }
 
     @Test
@@ -108,7 +187,7 @@ class MemoMapperTest {
         )
 
         // Act
-        val memo = entity.toDomain(emptyList())
+        val memo = entity.toDomain(tagRefs = emptyList(), imageRefs = emptyList())
 
         // Assert
         assertEquals(
@@ -119,6 +198,7 @@ class MemoMapperTest {
                 createdAt = TimestampMillis(1000L),
                 updatedAt = TimestampMillis(2000L),
                 tagIds = emptyList(),
+                images = emptyList(),
                 isFavorite = true,
                 deletedAt = TimestampMillis(3000L)
             ),
@@ -144,7 +224,35 @@ class MemoMapperTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            entity.toDomain(tagRefs)
+            entity.toDomain(tagRefs = tagRefs, imageRefs = emptyList())
+        }
+    }
+
+    @Test
+    fun errorToDomainThrowsWhenImageRefsReferenceAnotherMemo() {
+        // Arrange
+        val entity = MemoEntity(
+            id = "memo-1",
+            title = "Title",
+            body = "Body",
+            createdAt = 1000L,
+            updatedAt = 2000L,
+            isFavorite = false,
+            deletedAt = null
+        )
+        val imageRefs = listOf(
+            MemoImageEntity(
+                id = "image-1",
+                memoId = "memo-2",
+                fileName = "image-1.jpg",
+                position = 0
+            )
+        )
+
+        // Act & Assert
+        // Error: image refs cannot be mapped across memo boundaries.
+        assertThrows(IllegalArgumentException::class.java) {
+            entity.toDomain(tagRefs = emptyList(), imageRefs = imageRefs)
         }
     }
 
@@ -163,7 +271,7 @@ class MemoMapperTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            entity.toDomain(emptyList())
+            entity.toDomain(tagRefs = emptyList(), imageRefs = emptyList())
         }
     }
 

@@ -14,7 +14,7 @@ pr_compliances:
   - title: "データ層の構成とスキーマ管理"
     compliance_label: true
     objective: "Room / DataStore / mapper の役割分担とスキーマ管理を守る"
-    success_criteria: "構造化データは Room、軽量設定値（テーマ / 表示設定 / 下書き）は DataStore。data model と domain model のズレは data 層 mapper で吸収する。Room スキーマ変更時は app/schemas/ への export と migration を追加する。"
+    success_criteria: "構造化データは Room、軽量設定値（テーマ / 表示設定）は DataStore。data model と domain model のズレは data 層 mapper で吸収する。Room スキーマ変更時は app/schemas/ への export と migration を追加する。"
     failure_criteria: "構造化データと軽量設定の保存先が逆。mapper を介さず data model を domain にそのまま流す。スキーマ変更時に migration を追加していない。"
 
   - title: "UI 実装方針"

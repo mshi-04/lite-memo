@@ -1,9 +1,13 @@
 package com.appvoyager.litememo.ui.screen
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -16,24 +20,35 @@ import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongMethod", "LongParameterList")
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (MemoId) -> Unit,
     onSaveError: () -> Unit,
     onDeleteError: () -> Unit,
     onShareError: () -> Unit,
+    onImageAttachError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MemoEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
+    val currentOnMemoDeleted by rememberUpdatedState(onMemoDeleted)
+    val currentOnSaveError by rememberUpdatedState(onSaveError)
+    val currentOnDeleteError by rememberUpdatedState(onDeleteError)
+    val currentOnImageAttachError by rememberUpdatedState(onImageAttachError)
+    val pickImagesLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia()
+    ) { uris ->
+        viewModel.attachImages(uris.map { it.toString() })
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                MemoEditNavigationEvent.NavigateBack -> onNavigateBack()
-                is MemoEditNavigationEvent.MemoDeleted -> onMemoDeleted(event.memoId)
+                MemoEditNavigationEvent.NavigateBack -> currentOnNavigateBack()
+                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDeleted(event.memoId)
             }
         }
     }
@@ -41,8 +56,9 @@ fun MemoEditRoute(
     LaunchedEffect(viewModel) {
         viewModel.operationErrorEvent.collect { event ->
             when (event) {
-                MemoEditOperationErrorEvent.SaveFailed -> onSaveError()
-                MemoEditOperationErrorEvent.DeleteFailed -> onDeleteError()
+                MemoEditOperationErrorEvent.SaveFailed -> currentOnSaveError()
+                MemoEditOperationErrorEvent.DeleteFailed -> currentOnDeleteError()
+                MemoEditOperationErrorEvent.ImageAttachFailed -> currentOnImageAttachError()
             }
         }
     }
@@ -63,6 +79,12 @@ fun MemoEditRoute(
         onDelete = { viewModel.delete() },
         onBackRequest = { viewModel.finishEditing() },
         onRetry = { viewModel.reload() },
+        onAttachImageRequest = {
+            pickImagesLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
+        onImageRemove = { viewModel.removeImage(it) },
         onShareMemo = {
             val text = viewModel.formatMemoText() ?: return@MemoEditScreen
             context.launchShareMemo(

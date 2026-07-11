@@ -26,6 +26,19 @@
     <string name="app_lock_no_device_credential">端末の画面ロックを設定してから、もう一度お試しください。</string>
     <string name="app_lock_auth_unavailable">現在、端末認証を利用できません。</string>
 
+    <!-- Tutorial -->
+    <string name="tutorial_skip">スキップ</string>
+    <string name="tutorial_previous_page">前のページ</string>
+    <string name="tutorial_next_page">次のページ</string>
+    <string name="tutorial_page_indicator">%1$d / %2$d ページ</string>
+    <string name="tutorial_start">はじめる</string>
+    <string name="tutorial_page_welcome_title">LiteMemo へようこそ</string>
+    <string name="tutorial_page_welcome_body">思いついたことをすぐに書き残せる、軽量メモアプリです。ホーム画面の作成ボタンからメモを追加できます。</string>
+    <string name="tutorial_page_organize_title">タグと検索で整理</string>
+    <string name="tutorial_page_organize_body">メモにタグを付けて分類したり、キーワード検索で目的のメモをすぐに見つけられます。</string>
+    <string name="tutorial_page_calendar_title">カレンダーで振り返り</string>
+    <string name="tutorial_page_calendar_body">カレンダーから日付ごとのメモを確認できます。準備ができたら、さっそく始めましょう。</string>
+
     <!-- Home -->
     <string name="filter_all">すべて</string>
     <string name="filter_favorite">お気に入り</string>
@@ -67,6 +80,10 @@
     <!-- Memo Edit -->
     <string name="memo_edit_title_hint">タイトル</string>
     <string name="memo_edit_body_hint">メモ</string>
+    <string name="memo_edit_attach_image">画像を追加</string>
+    <string name="memo_edit_remove_image">画像を削除</string>
+    <string name="memo_edit_image_attach_error">画像を追加できませんでした</string>
+    <string name="attached_image_description">添付画像</string>
     <string name="delete_memo">削除</string>
     <string name="navigate_back">戻る</string>
     <string name="memo_deleted_message">メモを削除しました</string>
@@ -142,7 +159,7 @@
     <string name="settings_import_success">取り込みが完了しました</string>
     <string name="settings_import_error">ファイルの読み込みに失敗しました</string>
     <string name="settings_import_confirm_title">データの取り込み</string>
-    <string name="settings_import_confirm_message">ファイルからデータを取り込みます。同じIDのメモやタグは上書きされます。続けますか？</string>
+    <string name="settings_import_confirm_message">ファイルからデータを取り込みます。同じIDのメモやタグは上書きされます。画像はエクスポート/インポート対象外のため、同じIDのメモを上書きすると添付画像は失われます。続けますか？</string>
     <string name="settings_import_confirm_ok">取り込む</string>
     <string name="settings_section_app_info">アプリ情報</string>
     <string name="settings_version">バージョン</string>

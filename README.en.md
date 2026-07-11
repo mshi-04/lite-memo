@@ -106,8 +106,7 @@ bundle exec fastlane android ci
 
 See `docs/` for details.
 
-- [docs/project-overview.md](docs/project-overview.md) — Project overview
-- [docs/tech-stack.md](docs/tech-stack.md) — Tech stack
+- [docs/project-overview.md](docs/project-overview.md) — Project overview and tech stack
 - [docs/architecture.md](docs/architecture.md) — Architecture guidelines
 - [docs/development-setup.md](docs/development-setup.md) — Development setup
 - [Privacy Policy](docs/privacy/en.html)
