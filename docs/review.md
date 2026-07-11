@@ -26,7 +26,7 @@
 
 例:
 
-```
+```markdown
 1. [Critical] `app/src/main/.../Example.kt:20` — `MemoRepository` の実装が domain 層に漏れ、依存方向が逆転する。実装を data 層へ移動する。
 2. [Suggestion] `app/src/main/.../ExampleViewModel.kt:35` — `saveMemo` が Repository を直接呼び、UI と data が結合している。UseCase を経由させる。
 3. [Nitpick] `app/src/main/.../Example.kt:42` — 変数名 `d` から用途を判断できない。`dueDate` など意図を表す名前を検討する。

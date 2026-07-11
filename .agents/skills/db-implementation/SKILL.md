@@ -36,8 +36,8 @@ mapper / Repository への波及は [`data-implementation`](../data-implementati
 2. schema を変える場合は entity / DAO / mapper / Repository / migration / schema export の波及範囲を洗い出す。
 3. reference の観点に沿って実装する。
 4. migration instrumented test と DAO test の要否を判断し、`app/schemas/` の更新漏れを確認する。
-5. `./gradlew :app:ktlintCheck :app:detekt :app:connectedDevDebugAndroidTest` を実行し、schema 変更では version、migration、`app/schemas/` の差分が対応することを確認する。
-6. 変更内容、実行した task と結果、未実施の検証と理由を簡潔に報告する。
+5. `./gradlew :app:ktlintCheck :app:detekt :app:connectedDevDebugAndroidTest` を実行する。schema 変更では `./gradlew :app:kspDevDebugKotlin :app:copyRoomSchemas` で schema を export し、`git diff -- app/schemas` で変更対象 version の schema JSON が更新されたことを確認する。schema 差分がなければ未完了とする。
+6. 変更内容、実行した task と結果、schema export と schema 差分の確認結果、未実施の検証と理由を簡潔に報告する。
 
 # 注意事項
 
