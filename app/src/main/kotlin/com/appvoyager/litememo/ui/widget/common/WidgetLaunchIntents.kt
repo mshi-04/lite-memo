@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.widget.common
 
 import android.content.Context
 import android.content.Intent
+import androidx.core.net.toUri
 import com.appvoyager.litememo.MainActivity
 import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
 
@@ -24,6 +25,9 @@ object WidgetLaunchIntents {
             action = ACTION_WIDGET_OPEN
             putExtra(EXTRA_TARGET, TARGET_OPEN_MEMO)
             putExtra(EXTRA_MEMO_ID, memoId)
+            // リスト各行の PendingIntent は extra だけ異なると衝突するため、
+            // memoId を含む一意な data を付けて filterEquals を分離する。
+            data = "litememo://memo/$memoId".toUri()
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     }
