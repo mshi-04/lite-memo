@@ -17,6 +17,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.LiteMemo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +25,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Home screen widgets -->
+        <receiver
+            android:name=".ui.widget.newmemo.NewMemoWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_new_memo_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_new_memo_info" />
+        </receiver>
+        <receiver
+            android:name=".ui.widget.recent.RecentMemosWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_recent_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_recent_memos_info" />
+        </receiver>
     </application>
 
 </manifest>

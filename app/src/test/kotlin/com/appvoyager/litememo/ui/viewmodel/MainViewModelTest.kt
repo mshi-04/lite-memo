@@ -11,6 +11,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
 import com.appvoyager.litememo.ui.state.TutorialStatus
@@ -372,6 +373,33 @@ class MainViewModelTest {
 
         // Assert
         assertEquals(1, memoRepository.purgeCutoffs.size)
+    }
+
+    @Test
+    fun normalRequestWidgetNavExposesPendingRequest() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+
+        // Act
+        // Normal: a widget tap request becomes the pending navigation
+        viewModel.requestWidgetNav(WidgetNavRequest.NewMemo)
+
+        // Assert
+        assertEquals(WidgetNavRequest.NewMemo, viewModel.pendingWidgetNav.value)
+    }
+
+    @Test
+    fun stateTransitionConsumeWidgetNavClearsPendingRequest() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+        viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo("memo-1"))
+
+        // Act
+        // StateTransition: consuming the request clears it so it does not re-fire
+        viewModel.consumeWidgetNav()
+
+        // Assert
+        assertEquals(null, viewModel.pendingWidgetNav.value)
     }
 
     private fun mainViewModel(

@@ -9,6 +9,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
 import com.appvoyager.litememo.ui.state.AppLockMessage
 import com.appvoyager.litememo.ui.state.AppLockStatus
 import com.appvoyager.litememo.ui.state.AppLockUiState
@@ -48,6 +49,9 @@ class MainViewModel @Inject constructor(
 
     private val _tutorialUiState = MutableStateFlow(TutorialUiState())
     val tutorialUiState: StateFlow<TutorialUiState> = _tutorialUiState.asStateFlow()
+
+    private val _pendingWidgetNav = MutableStateFlow<WidgetNavRequest?>(null)
+    val pendingWidgetNav: StateFlow<WidgetNavRequest?> = _pendingWidgetNav.asStateFlow()
 
     private var appLockEnabled: Boolean? = null
     private var expiredTrashedMemosPurged = false
@@ -111,6 +115,14 @@ class MainViewModel @Inject constructor(
         if (result == AppLockAuthenticationResult.SUCCEEDED) {
             purgeExpiredTrashedMemosOnce()
         }
+    }
+
+    fun requestWidgetNav(request: WidgetNavRequest) {
+        _pendingWidgetNav.value = request
+    }
+
+    fun consumeWidgetNav() {
+        _pendingWidgetNav.value = null
     }
 
     fun completeTutorial() {
