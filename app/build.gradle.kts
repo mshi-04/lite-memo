@@ -202,6 +202,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
 
+    // Home screen widgets (Jetpack Glance)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     // AndroidX
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.biometric)

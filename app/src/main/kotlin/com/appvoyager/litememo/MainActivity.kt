@@ -28,6 +28,7 @@ import com.appvoyager.litememo.ui.screen.TutorialScreen
 import com.appvoyager.litememo.ui.state.TutorialStatus
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import com.appvoyager.litememo.ui.viewmodel.MainViewModel
+import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -43,11 +44,13 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         observeAuthenticationRequests()
         observeSecureScreen()
+        handleWidgetIntent(intent)
         setContent {
             val themeMode by mainViewModel.themeMode
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
             val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
             val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
+            val pendingWidgetNav by mainViewModel.pendingWidgetNav.collectAsStateWithLifecycle()
             val darkTheme = when (themeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
@@ -80,7 +83,9 @@ class MainActivity : FragmentActivity() {
                             LiteMemoApp(
                                 onRequestAppLockAuthentication = { onResult ->
                                     appLockAuthenticator.authenticate(onResult)
-                                }
+                                },
+                                pendingWidgetNav = pendingWidgetNav,
+                                onConsumeWidgetNav = { mainViewModel.consumeWidgetNav() }
                             )
                         }
                     }
@@ -95,9 +100,24 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleWidgetIntent(intent)
+    }
+
     override fun onStart() {
         super.onStart()
         mainViewModel.onAppStarted()
+    }
+
+    private fun handleWidgetIntent(intent: Intent?) {
+        val request = WidgetLaunchIntents.parseWidgetNav(
+            action = intent?.action,
+            target = intent?.getStringExtra(WidgetLaunchIntents.EXTRA_TARGET),
+            memoId = intent?.getStringExtra(WidgetLaunchIntents.EXTRA_MEMO_ID)
+        ) ?: return
+        mainViewModel.requestWidgetNav(request)
     }
 
     override fun onStop() {

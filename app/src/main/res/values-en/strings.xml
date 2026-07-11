@@ -168,4 +168,9 @@
     <string name="settings_browser_not_found">No browser app was found.</string>
     <string name="settings_file_picker_not_found">No app was found to open files.</string>
     <string name="settings_open_source_licenses">Open source licenses</string>
+
+    <!-- Home screen widgets -->
+    <string name="widget_new_memo_label">New memo</string>
+    <string name="widget_new_memo_button">Memo</string>
+    <string name="widget_new_memo_desc">Create a new memo with one tap.</string>
 </resources>
