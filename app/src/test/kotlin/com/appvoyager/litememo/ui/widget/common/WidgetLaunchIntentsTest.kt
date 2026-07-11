@@ -71,4 +71,17 @@ class WidgetLaunchIntentsTest {
         // Assert
         assertNull(request)
     }
+
+    @Test
+    fun boundaryOpenMemoWithNullIdParsesToNull() {
+        // Act
+        val request = WidgetLaunchIntents.parseWidgetNav(
+            action = WidgetLaunchIntents.ACTION_WIDGET_OPEN,
+            target = WidgetLaunchIntents.TARGET_OPEN_MEMO,
+            memoId = null
+        )
+
+        // Assert
+        assertNull(request)
+    }
 }

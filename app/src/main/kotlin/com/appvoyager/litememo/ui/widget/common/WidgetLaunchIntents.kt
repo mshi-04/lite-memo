@@ -18,13 +18,15 @@ object WidgetLaunchIntents {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
-    fun openMemoIntent(context: Context, memoId: String): Intent =
-        Intent(context, MainActivity::class.java).apply {
+    fun openMemoIntent(context: Context, memoId: String): Intent {
+        require(memoId.isNotBlank()) { "memoId must not be blank" }
+        return Intent(context, MainActivity::class.java).apply {
             action = ACTION_WIDGET_OPEN
             putExtra(EXTRA_TARGET, TARGET_OPEN_MEMO)
             putExtra(EXTRA_MEMO_ID, memoId)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
+    }
 
     fun parseWidgetNav(action: String?, target: String?, memoId: String?): WidgetNavRequest? {
         if (action != ACTION_WIDGET_OPEN) return null
