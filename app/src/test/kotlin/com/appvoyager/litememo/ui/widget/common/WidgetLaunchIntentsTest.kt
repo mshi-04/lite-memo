@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.widget.common
 
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -30,7 +31,21 @@ class WidgetLaunchIntentsTest {
         )
 
         // Assert
-        assertEquals(WidgetNavRequest.OpenMemo("memo-1"), request)
+        assertEquals(WidgetNavRequest.OpenMemo(MemoId("memo-1")), request)
+    }
+
+    @Test
+    fun boundaryOpenMemoTrimsIdAtIntentBoundary() {
+        // Act
+        // Boundary: raw intent extras are normalized when converted to MemoId
+        val request = WidgetLaunchIntents.parseWidgetNav(
+            action = WidgetLaunchIntents.ACTION_WIDGET_OPEN,
+            target = WidgetLaunchIntents.TARGET_OPEN_MEMO,
+            memoId = " memo-1 "
+        )
+
+        // Assert
+        assertEquals(WidgetNavRequest.OpenMemo(MemoId("memo-1")), request)
     }
 
     @Test

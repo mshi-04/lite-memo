@@ -65,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.component.AnimatedCalendarGrid
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
@@ -95,7 +96,7 @@ fun CalendarScreen(
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onRetry: () -> Unit,
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     onCreateMemoClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -154,7 +155,7 @@ private fun CalendarContent(
     onDatePickerRequested: () -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onMemoClick: (String) -> Unit
+    onMemoClick: (MemoId) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -558,7 +559,7 @@ private fun previewCalendarState(): CalendarUiState {
         },
         memos = listOf(
             MemoUiModel(
-                id = "memo-1",
+                id = MemoId("memo-1"),
                 title = "週次レビュー",
                 body = "完了したタスクと来週の優先度を整理する。",
                 tags = listOf(TagUiModel("tag-work", "仕事", 0xFF6750A4)),
@@ -566,7 +567,7 @@ private fun previewCalendarState(): CalendarUiState {
                 isFavorite = false
             ),
             MemoUiModel(
-                id = "memo-2",
+                id = MemoId("memo-2"),
                 title = "献立メモ",
                 body = "冷蔵庫の野菜を使い切る。買い足しは卵。",
                 tags = listOf(TagUiModel("tag-life", "生活", 0xFF006D3B)),

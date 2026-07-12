@@ -5,11 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.viewmodel.CalendarViewModel
 
 @Composable
 fun CalendarRoute(
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     onCreateMemoClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel()

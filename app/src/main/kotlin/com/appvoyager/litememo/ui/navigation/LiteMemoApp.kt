@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.ui.navigation
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -43,6 +42,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.component.BannerAd
 import com.appvoyager.litememo.ui.screen.CalendarRoute
@@ -60,7 +60,8 @@ private const val TAG_MANAGE_ROUTE = "tag_manage"
 private const val TRASH_ROUTE = "trash"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
-private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
+internal fun memoEditRouteWithId(memoId: MemoId) =
+    "$MEMO_EDIT_BASE?memoId=${encodeNavigationArgument(memoId.value)}"
 private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"
 
 @Composable

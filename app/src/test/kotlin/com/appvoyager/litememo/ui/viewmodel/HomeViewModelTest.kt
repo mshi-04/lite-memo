@@ -581,7 +581,7 @@ class HomeViewModelTest {
         }
 
         // Assert
-        assertEquals(setOf("memo-1", "memo-2"), state.memos.map { it.id }.toSet())
+        assertEquals(setOf(MemoId("memo-1"), MemoId("memo-2")), state.memos.map { it.id }.toSet())
     }
 
     @Test
@@ -674,7 +674,7 @@ class HomeViewModelTest {
         val selected = viewModel.getSelectedMemoForShare()
 
         // Assert
-        assertEquals("memo-1" to "共有対象", selected?.id to selected?.title)
+        assertEquals(MemoId("memo-1") to "共有対象", selected?.id to selected?.title)
     }
 
     @Test

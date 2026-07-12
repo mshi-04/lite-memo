@@ -80,8 +80,8 @@ fun HomeScreen(
     onFilterSelected: (HomeFilterUiState) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onMemoLongClick: (String) -> Unit,
-    onMemoSelectionToggle: (String) -> Unit,
+    onMemoLongClick: (MemoId) -> Unit,
+    onMemoSelectionToggle: (MemoId) -> Unit,
     onClearSelection: () -> Unit,
     onMoveSelectedMemosToTrash: () -> Unit,
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
@@ -89,7 +89,7 @@ fun HomeScreen(
     onToggleSelectedMemosTag: (TagId) -> Unit,
     onDismissBulkTagDialog: () -> Unit,
     onShareSelectedMemo: () -> Unit,
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -146,14 +146,14 @@ private fun HomeContent(
     onFilterSelected: (HomeFilterUiState) -> Unit,
     onSearchToggle: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onMemoLongClick: (String) -> Unit,
-    onMemoSelectionToggle: (String) -> Unit,
+    onMemoLongClick: (MemoId) -> Unit,
+    onMemoSelectionToggle: (MemoId) -> Unit,
     onClearSelection: () -> Unit,
     onMoveSelectedMemosToTrash: () -> Unit,
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
     onRequestToggleTagForSelectedMemos: () -> Unit,
     onShareSelectedMemo: () -> Unit,
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -218,7 +218,7 @@ private fun HomeContent(
                     SelectableMemoCard(
                         memo = memo,
                         isSelectionActive = uiState.selection.isActive,
-                        selected = uiState.selection.contains(MemoId(memo.id)),
+                        selected = uiState.selection.contains(memo.id),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
                         onMemoLongClick = onMemoLongClick
@@ -245,7 +245,7 @@ private fun HomeContent(
                     SelectableMemoCard(
                         memo = memo,
                         isSelectionActive = uiState.selection.isActive,
-                        selected = uiState.selection.contains(MemoId(memo.id)),
+                        selected = uiState.selection.contains(memo.id),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
                         onMemoLongClick = onMemoLongClick
@@ -261,9 +261,9 @@ private fun SelectableMemoCard(
     memo: MemoUiModel,
     isSelectionActive: Boolean,
     selected: Boolean,
-    onMemoClick: (String) -> Unit,
-    onMemoSelectionToggle: (String) -> Unit,
-    onMemoLongClick: (String) -> Unit
+    onMemoClick: (MemoId) -> Unit,
+    onMemoSelectionToggle: (MemoId) -> Unit,
+    onMemoLongClick: (MemoId) -> Unit
 ) {
     MemoCard(
         memo = memo,
@@ -627,7 +627,7 @@ private fun previewHomeState() = HomeUiState(
     ),
     memos = listOf(
         MemoUiModel(
-            id = "memo-1",
+            id = MemoId("memo-1"),
             title = "買い物リスト",
             body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
             tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
@@ -635,7 +635,7 @@ private fun previewHomeState() = HomeUiState(
             isFavorite = false
         ),
         MemoUiModel(
-            id = "memo-2",
+            id = MemoId("memo-2"),
             title = "会議メモ",
             body = "次回までに画面構成と保存方式を確認する。",
             tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),

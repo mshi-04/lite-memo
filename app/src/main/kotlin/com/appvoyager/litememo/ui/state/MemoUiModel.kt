@@ -2,10 +2,11 @@ package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 
 data class MemoUiModel(
-    val id: String,
+    val id: MemoId,
     val title: String,
     val body: String,
     val tags: List<TagUiModel>,
@@ -22,7 +23,7 @@ data class MemoUiModel(
             val tagsById = tags.associateBy { it.id }
             return memos.map { memo ->
                 MemoUiModel(
-                    id = memo.id.value,
+                    id = memo.id,
                     title = memo.title.value,
                     body = memo.body.value,
                     tags = memo.tagIds.mapNotNull { id ->

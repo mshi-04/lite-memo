@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.widget.data
 
 import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import io.mockk.every
 import io.mockk.mockk
@@ -31,7 +32,7 @@ class WidgetMemoLoaderTest {
         val items = loader.loadRecent(limit = 10)
 
         // Assert
-        assertEquals(listOf("a", "b", "c"), items.map { it.id })
+        assertEquals(listOf(MemoId("a"), MemoId("b"), MemoId("c")), items.map { it.id })
     }
 
     @Test
@@ -45,7 +46,7 @@ class WidgetMemoLoaderTest {
         val items = loader.loadRecent(limit = 2)
 
         // Assert
-        assertEquals(listOf("memo-1", "memo-2"), items.map { it.id })
+        assertEquals(listOf(MemoId("memo-1"), MemoId("memo-2")), items.map { it.id })
     }
 
     @Test
@@ -105,7 +106,7 @@ class WidgetMemoLoaderTest {
         val items = loader.observeRecent(limit = 2).first()
 
         // Assert
-        assertEquals(listOf("a", "b"), items.map { it.id })
+        assertEquals(listOf(MemoId("a"), MemoId("b")), items.map { it.id })
     }
 
     @Test

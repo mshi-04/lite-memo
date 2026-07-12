@@ -16,7 +16,7 @@ import com.appvoyager.litememo.ui.viewmodel.HomeViewModel
 
 @Composable
 fun HomeRoute(
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     onCreateMemoClick: () -> Unit,
     onShareError: () -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -49,8 +49,8 @@ fun HomeRoute(
         onFilterSelected = { filter -> viewModel.selectFilter(filter) },
         onSearchToggle = { viewModel.toggleSearch() },
         onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
-        onMemoLongClick = { memoId -> viewModel.startSelection(MemoId(memoId)) },
-        onMemoSelectionToggle = { memoId -> viewModel.toggleMemoSelection(MemoId(memoId)) },
+        onMemoLongClick = viewModel::startSelection,
+        onMemoSelectionToggle = viewModel::toggleMemoSelection,
         onClearSelection = { viewModel.clearSelection() },
         onMoveSelectedMemosToTrash = { viewModel.moveSelectedMemosToTrash() },
         onSetSelectedMemosFavorite = { isFavorite ->
