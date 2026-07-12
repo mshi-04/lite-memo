@@ -1,6 +1,25 @@
 build:
   maxIssues: 0
 
+complexity:
+  # 純粋なロジック関数にのみ効かせる。UI 宣言（Composable）とプレビューは構造上長くなるため対象外。
+  # 本番ロジックの最長メソッドは 38 行のため、60 行超は「責務過多」とみなして検出する。
+  LongMethod:
+    threshold: 60
+    ignoreAnnotated:
+      - "Composable"
+      - "Preview"
+  # DI によるコンストラクタ注入は引数が増えて当然なので、コンストラクタは関数より緩める。
+  # ViewModel は @HiltViewModel で除外、他の DI（Repository/UseCase）は最長 4 引数のため 7 で通る。
+  # デフォルト値付き引数（テストの Fixture 等）はカウントしない。
+  LongParameterList:
+    functionThreshold: 6
+    constructorThreshold: 7
+    ignoreDefaultParameters: true
+    ignoreAnnotated:
+      - "Composable"
+      - "HiltViewModel"
+
 naming:
   FunctionNaming:
     ignoreAnnotated:

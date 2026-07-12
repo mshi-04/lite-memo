@@ -47,7 +47,6 @@ private const val SEARCH_DEBOUNCE_MILLIS = 250L
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-@Suppress("LongParameterList")
 class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
     private val observeTagsUseCase: ObserveTagsUseCase,

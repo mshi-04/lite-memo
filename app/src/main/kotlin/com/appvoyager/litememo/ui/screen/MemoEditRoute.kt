@@ -20,7 +20,6 @@ import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
-@Suppress("LongMethod", "LongParameterList")
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
     onMemoDeleted: (MemoId) -> Unit,

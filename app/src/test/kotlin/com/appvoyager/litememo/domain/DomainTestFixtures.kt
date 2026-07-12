@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
-@Suppress("LongParameterList")
 fun memoFixture(
     id: String = "memo-1",
     title: String = "Title",
