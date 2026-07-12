@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -334,12 +335,7 @@ private fun HomeTopBar(
                 shape = RoundedCornerShape(12.dp)
             )
         } else {
-            Text(
-                text = stringResource(R.string.app_name),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = onSearchToggle) {
                 Icon(
                     imageVector = Icons.Default.Search,
