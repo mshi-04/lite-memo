@@ -33,7 +33,7 @@ internal fun Memo.toWidgetItem(): WidgetItem {
         snippet = bodyLines.drop(1).joinToString(" ")
     }
     return WidgetItem(
-        id = id.value,
+        id = id,
         title = primary.take(MAX_TITLE_LENGTH),
         snippet = snippet.take(MAX_SNIPPET_LENGTH),
         isFavorite = isFavorite

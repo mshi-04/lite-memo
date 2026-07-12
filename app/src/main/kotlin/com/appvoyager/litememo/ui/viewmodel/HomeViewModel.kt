@@ -184,10 +184,10 @@ class HomeViewModel @Inject constructor(
         searchQuery.value = ""
     }
 
-    fun setMemoFavorite(memoId: String, isFavorite: Boolean) {
+    fun setMemoFavorite(memoId: MemoId, isFavorite: Boolean) {
         viewModelScope.launch {
             try {
-                setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
+                setMemoFavoriteUseCase(memoId, isFavorite)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -252,7 +252,7 @@ class HomeViewModel @Inject constructor(
     fun getSelectedMemoForShare(): MemoUiModel? {
         val state = uiState.value
         val selectedId = state.selection.selectedMemoIds.singleOrNull() ?: return null
-        return (state.memos + state.searchResults).find { it.id == selectedId.value }
+        return (state.memos + state.searchResults).find { it.id == selectedId }
     }
 
     fun retry() {

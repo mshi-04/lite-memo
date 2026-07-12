@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.tagFixture
@@ -9,6 +10,20 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class MemoUiModelTest {
+
+    @Test
+    fun normalFromDomainPreservesMemoId() {
+        // Arrange
+        val memo = memoFixture(id = "memo-1")
+
+        // Act
+        // Normal: the domain identifier remains typed across the UI mapping boundary
+        val uiModel = MemoUiModel.fromDomain(listOf(memo), emptyList(), ::resolveImagePath)
+            .single()
+
+        // Assert
+        assertEquals(MemoId("memo-1"), uiModel.id)
+    }
 
     @Test
     fun fromDomainReturnsTagsInMemoTagIdOrder() {

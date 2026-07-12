@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.viewmodel
 import app.cash.turbine.test
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.CompleteTutorialUseCase
@@ -392,7 +393,7 @@ class MainViewModelTest {
     fun stateTransitionConsumeWidgetNavClearsPendingRequest() = runTest(dispatcher) {
         // Arrange
         val viewModel = mainViewModel(FakeUserSettingsRepository())
-        viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo("memo-1"))
+        viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo(MemoId("memo-1")))
 
         // Act
         // StateTransition: consuming the request clears it so it does not re-fire

@@ -209,7 +209,7 @@ class HomeScreenComposeTest {
                 isLoading = false,
                 memos = listOf(memo),
                 tags = listOf(tag),
-                selection = HomeSelectionUiState(setOf(MemoId(memo.id)))
+                selection = HomeSelectionUiState(setOf(memo.id))
             )
         )
         composeRule.setContent {
