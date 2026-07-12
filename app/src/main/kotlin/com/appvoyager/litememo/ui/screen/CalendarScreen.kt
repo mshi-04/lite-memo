@@ -195,7 +195,7 @@ private fun CalendarContent(
             } else {
                 items(
                     items = uiState.searchResults,
-                    key = { memo -> memo.id }
+                    key = { memo -> memo.id.value }
                 ) { memo ->
                     MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
                 }
@@ -228,7 +228,7 @@ private fun CalendarContent(
             } else {
                 items(
                     items = uiState.memos,
-                    key = { memo -> memo.id }
+                    key = { memo -> memo.id.value }
                 ) { memo ->
                     MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
                 }

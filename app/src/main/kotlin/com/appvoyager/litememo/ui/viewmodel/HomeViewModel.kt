@@ -184,10 +184,10 @@ class HomeViewModel @Inject constructor(
         searchQuery.value = ""
     }
 
-    fun setMemoFavorite(memoId: String, isFavorite: Boolean) {
+    fun setMemoFavorite(memoId: MemoId, isFavorite: Boolean) {
         viewModelScope.launch {
             try {
-                setMemoFavoriteUseCase(MemoId(memoId), isFavorite)
+                setMemoFavoriteUseCase(memoId, isFavorite)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {

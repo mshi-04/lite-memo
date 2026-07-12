@@ -245,7 +245,7 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.setMemoFavorite("memo-1", true)
+        viewModel.setMemoFavorite(MemoId("memo-1"), true)
         advanceUntilIdle()
         val state = viewModel.uiState.first { it.memos.singleOrNull()?.isFavorite == true }
 
@@ -265,7 +265,7 @@ class HomeViewModelTest {
         // Act & Assert
         // Flow/Error: favorite update failure emits exactly one action error event.
         viewModel.actionErrorEvent.test {
-            viewModel.setMemoFavorite("memo-1", true)
+            viewModel.setMemoFavorite(MemoId("memo-1"), true)
             advanceUntilIdle()
             assertEquals(Unit, awaitItem())
         }

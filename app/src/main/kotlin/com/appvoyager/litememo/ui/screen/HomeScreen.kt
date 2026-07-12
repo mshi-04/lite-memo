@@ -213,7 +213,7 @@ private fun HomeContent(
 
                 else -> items(
                     items = uiState.searchResults,
-                    key = { memo -> memo.id }
+                    key = { memo -> memo.id.value }
                 ) { memo ->
                     SelectableMemoCard(
                         memo = memo,
@@ -240,7 +240,7 @@ private fun HomeContent(
             } else {
                 items(
                     items = uiState.memos,
-                    key = { memo -> memo.id }
+                    key = { memo -> memo.id.value }
                 ) { memo ->
                     SelectableMemoCard(
                         memo = memo,
