@@ -45,7 +45,6 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 @HiltViewModel
-@Suppress("LongParameterList")
 class MemoEditViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getMemoUseCase: GetMemoUseCase,

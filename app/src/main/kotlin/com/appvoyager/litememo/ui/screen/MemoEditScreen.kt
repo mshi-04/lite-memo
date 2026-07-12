@@ -65,7 +65,6 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-@Suppress("LongParameterList", "LongMethod")
 fun MemoEditScreen(
     uiState: MemoEditUiState,
     onTitleChanged: (String) -> Unit,

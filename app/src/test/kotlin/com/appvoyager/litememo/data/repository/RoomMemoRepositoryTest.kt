@@ -757,7 +757,6 @@ class RoomMemoRepositoryTest {
             savedMemoBatchCount = memoDao.savedMemoBatches.size
         )
 
-    @Suppress("LongParameterList")
     private class FakeMemoDao(
         memosWithRefs: List<MemoWithRefs> = emptyList(),
         private val imageFileNamesByMemoId: MutableMap<String, List<String>> = mutableMapOf(),
