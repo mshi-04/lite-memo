@@ -5,12 +5,10 @@ complexity:
   # 純粋なロジック関数にのみ効かせる。UI 宣言（Composable）とプレビューは構造上長くなるため対象外。
   # 本番ロジックの最長メソッドは 38 行のため、60 行超は「責務過多」とみなして検出する。
   #
-  # 注意: detekt 1.23.8 の LongMethod ソースには ignoreAnnotated を処理するコードが無く、
-  # 公式には未サポート（config validation はキー自体を既知として通すため BUILD Fail はしない）。
-  # ただし実機検証では ignoreAnnotated の有無で Composable/Preview 関数の検知が確実に切り替わる
-  # ことを --rerun-tasks 付きで複数回再現しており、現状は意図通り機能している。
-  # 原理は特定できていないため、detekt バージョンアップ時は
-  # `./gradlew :app:detekt` で Composable 関数が誤検知されないか要再検証。
+  # ignoreAnnotated は LongMethod ルール自体の実装ではなく、detekt の Suppressor 機構
+  # （annotation suppressor）による横断的な抑制設定。ルールが検知した Issue を、対象要素の
+  # アノテーションを見て後段で抑制する仕組みのため、各ルールのソースに実装が無くても機能する。
+  # 公式ドキュメント https://detekt.dev/docs/introduction/suppressors 参照（Compose のユースケースとして明示的に例示されている）。
   LongMethod:
     threshold: 60
     ignoreAnnotated:
