@@ -9,17 +9,6 @@
     <ID>ReturnCount:LiteMemoApp.kt$private fun bottomTabTransitionDirection( scope: AnimatedContentTransitionScope&lt;NavBackStackEntry&gt; ): Int?</ID>
     <ID>ReturnCount:TagManageViewModel.kt$TagManageViewModel$fun saveEdit()</ID>
     <ID>SpreadOperator:DatabaseModule.kt$DatabaseModule$(*LiteMemoMigrations.ALL)</ID>
-    <ID>TooManyFunctions:CalendarScreen.kt$com.appvoyager.litememo.ui.screen.CalendarScreen.kt</ID>
-    <ID>TooManyFunctions:CalendarViewModel.kt$CalendarViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:HomeScreen.kt$com.appvoyager.litememo.ui.screen.HomeScreen.kt</ID>
-    <ID>TooManyFunctions:HomeViewModel.kt$HomeViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:MemoDao.kt$MemoDao</ID>
-    <ID>TooManyFunctions:MemoEditViewModel.kt$MemoEditViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:MemoRepository.kt$MemoRepository</ID>
-    <ID>TooManyFunctions:RoomMemoRepository.kt$RoomMemoRepository : MemoRepository</ID>
-    <ID>TooManyFunctions:SettingsScreen.kt$com.appvoyager.litememo.ui.screen.SettingsScreen.kt</ID>
-    <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:TagManageViewModel.kt$TagManageViewModel : ViewModel</ID>
     <ID>UseCheckOrError:ApplyMemoBulkActionUseCaseTest.kt$ApplyMemoBulkActionUseCaseTest.WriteFailingMemoRepository$throw IllegalStateException("Failed to move memo.")</ID>
     <ID>UseCheckOrError:ApplyMemoBulkActionUseCaseTest.kt$ApplyMemoBulkActionUseCaseTest.WriteFailingMemoRepository$throw IllegalStateException("Failed to save memo.")</ID>
     <ID>UseCheckOrError:DomainTestFixtures.kt$QueueMemoIdProvider$throw IllegalStateException("No more MemoId available in QueueMemoIdProvider.")</ID>
