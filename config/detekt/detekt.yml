@@ -24,8 +24,9 @@ complexity:
     ignoreAnnotated:
       - "Composable"
       - "HiltViewModel"
-  # Compose の画面ファイル、UI イベントを公開するクラス、DAO/Repository interface は
-  # 宣言の性質上関数が増えやすいため、対象ごとに上限を分ける。private helper は公開 API の
+  # 各閾値は、対応するすべてのファイル・クラス・interface に共通適用する。
+  # 現状で関数数が多い Compose の画面ファイル、UI イベントを公開するクラス、
+  # DAO/Repository interface の実測値を基準に上限を分ける。private helper は公開 API の
   # 肥大化を表さないためカウントしない。
   TooManyFunctions:
     thresholdInFiles: 15
