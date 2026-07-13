@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +42,10 @@ import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+
+private const val CALENDAR_GRID_SLIDE_DURATION_MILLIS = 220
+private const val CALENDAR_GRID_FADE_IN_DURATION_MILLIS = 160
+private const val CALENDAR_GRID_FADE_OUT_DURATION_MILLIS = 120
 
 @Composable
 fun AnimatedCalendarGrid(
@@ -60,14 +63,14 @@ fun AnimatedCalendarGrid(
             val direction = if (targetState.month.isAfter(initialState.month)) 1 else -1
             (
                 slideInHorizontally(
-                    animationSpec = tween(220),
+                    animationSpec = tween(CALENDAR_GRID_SLIDE_DURATION_MILLIS),
                     initialOffsetX = { width -> width / 4 * direction }
-                ) + fadeIn(animationSpec = tween(160))
+                ) + fadeIn(animationSpec = tween(CALENDAR_GRID_FADE_IN_DURATION_MILLIS))
                 ).togetherWith(
                 slideOutHorizontally(
-                    animationSpec = tween(220),
+                    animationSpec = tween(CALENDAR_GRID_SLIDE_DURATION_MILLIS),
                     targetOffsetX = { width -> -width / 4 * direction }
-                ) + fadeOut(animationSpec = tween(120))
+                ) + fadeOut(animationSpec = tween(CALENDAR_GRID_FADE_OUT_DURATION_MILLIS))
             ).using(SizeTransform(clip = false))
         },
         label = "calendar-month-grid"
