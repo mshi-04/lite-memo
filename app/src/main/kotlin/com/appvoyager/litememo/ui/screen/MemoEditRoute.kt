@@ -33,7 +33,7 @@ fun MemoEditRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
-    val currentOnMemoDeleted by rememberUpdatedState(onMemoDelete)
+    val currentOnMemoDelete by rememberUpdatedState(onMemoDelete)
     val currentOnSaveError by rememberUpdatedState(onSaveError)
     val currentOnDeleteError by rememberUpdatedState(onDeleteError)
     val currentOnImageAttachError by rememberUpdatedState(onImageAttachError)
@@ -47,7 +47,7 @@ fun MemoEditRoute(
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 MemoEditNavigationEvent.NavigateBack -> currentOnNavigateBack()
-                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDeleted(event.memoId)
+                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDelete(event.memoId)
             }
         }
     }
