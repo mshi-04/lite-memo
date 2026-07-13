@@ -22,7 +22,9 @@ object DatabaseModule {
             context,
             LiteMemoDatabase::class.java,
             LiteMemoDatabase.DATABASE_NAME
-        ).addMigrations(*LiteMemoMigrations.ALL)
+        ).apply {
+            LiteMemoMigrations.ALL.forEach { migration -> addMigrations(migration) }
+        }
             .build()
 
 }

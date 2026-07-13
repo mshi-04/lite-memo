@@ -222,7 +222,7 @@ class TagManageViewModelTest {
 
         override fun observeTags(): Flow<List<Tag>> = flow {
             emit(repository.currentTags())
-            throw IllegalStateException("Failed to observe tags.")
+            error("Failed to observe tags.")
         }
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
@@ -252,8 +252,7 @@ class TagManageViewModelTest {
 
         override suspend fun saveTag(tag: Tag) = repository.saveTag(tag)
 
-        override suspend fun deleteTag(id: TagId): Unit =
-            throw IllegalStateException("Failed to delete tag.")
+        override suspend fun deleteTag(id: TagId): Unit = error("Failed to delete tag.")
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
 

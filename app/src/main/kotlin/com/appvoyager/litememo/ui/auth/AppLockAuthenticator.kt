@@ -38,22 +38,18 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
         }
         pendingCallback = callback
 
-        if (!canAuthenticate()) {
-            dispatchResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
-            return
-        }
+        when {
+            !canAuthenticate() ->
+                dispatchResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            authenticateWithBiometricPrompt(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-            return
-        }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                authenticateWithBiometricPrompt(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
 
-        if (canAuthenticateWithBiometric(BIOMETRIC_WEAK)) {
-            authenticateWithLegacyBiometricPrompt()
-            return
-        }
+            canAuthenticateWithBiometric(BIOMETRIC_WEAK) ->
+                authenticateWithLegacyBiometricPrompt()
 
-        authenticateWithDeviceCredential()
+            else -> authenticateWithDeviceCredential()
+        }
     }
 
     private fun canAuthenticate(): Boolean {
