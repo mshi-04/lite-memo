@@ -67,6 +67,7 @@ private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?creat
 @Composable
 fun LiteMemoApp(
     onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    modifier: Modifier = Modifier,
     pendingWidgetNav: WidgetNavRequest? = null,
     onConsumeWidgetNav: () -> Unit = {},
     viewModel: LiteMemoAppViewModel = hiltViewModel()
@@ -136,6 +137,7 @@ fun LiteMemoApp(
     }
 
     Scaffold(
+        modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {

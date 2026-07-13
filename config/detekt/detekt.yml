@@ -40,6 +40,9 @@ naming:
       - "Composable"
 
 style:
+  # 入力検証や対象なしを表す早期 return はネストを減らすため、関数の複雑度として数えない。
+  ReturnCount:
+    excludeGuardClauses: true
   # Preview のサンプル値は実装ロジックではないため除外し、テーマ色は Color.kt の名前付き定数で管理する。
   # excludes はデフォルト値を上書きするため、detekt 1.23.8 のテスト除外一式も明示的に維持する。
   MagicNumber:

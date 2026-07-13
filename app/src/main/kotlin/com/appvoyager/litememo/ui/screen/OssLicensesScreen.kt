@@ -25,8 +25,6 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
-data class OssLicense(val name: String, val license: String, val url: String)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OssLicensesScreen(

@@ -823,8 +823,7 @@ class HomeViewModelTest {
 
         override suspend fun getActiveMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
 
-        override suspend fun saveMemo(memo: Memo): Unit =
-            throw IllegalStateException("Failed to save memo.")
+        override suspend fun saveMemo(memo: Memo): Unit = error("Failed to save memo.")
 
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
 
@@ -838,8 +837,7 @@ class HomeViewModelTest {
 
         override suspend fun getAllActiveMemos(): List<Memo> = emptyList()
 
-        override suspend fun saveAllMemos(memos: List<Memo>): Unit =
-            throw IllegalStateException("Failed to save memos.")
+        override suspend fun saveAllMemos(memos: List<Memo>): Unit = error("Failed to save memos.")
 
         override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }

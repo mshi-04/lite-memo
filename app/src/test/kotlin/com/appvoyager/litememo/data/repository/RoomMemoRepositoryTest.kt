@@ -928,8 +928,8 @@ class RoomMemoRepositoryTest {
         override fun observeTags(): Flow<List<TagEntity>> = MutableStateFlow(emptyList())
         override suspend fun getTag(id: String): TagEntity? = null
         override suspend fun getTagsByIds(ids: List<String>): List<TagEntity> = emptyList()
-        override suspend fun upsertTag(tag: TagEntity) {}
-        override suspend fun deleteTag(id: String) {}
+        override suspend fun upsertTag(tag: TagEntity) = Unit
+        override suspend fun deleteTag(id: String) = Unit
         override suspend fun getAllTags(): List<TagEntity> = emptyList()
 
         override suspend fun upsertAllTags(tags: List<TagEntity>) {
