@@ -25,6 +25,13 @@ platform :android do
     )
   end
 
+  desc "Run static analysis (KtLint + detekt + Android Lint)"
+  lane :static_analysis do
+    ktlint
+    detekt
+    lint
+  end
+
   # unit test は JVM 上で実行され R8/minify を通らないため debug variant のみで全テストをカバーする。
   # release:true のときは R8/minify ビルドが壊れていないかを assembleProdRelease で追加検証する。
   desc "Run unit tests (debug only by default; pass release:true to also verify the release build)"
@@ -37,11 +44,17 @@ platform :android do
     )
   end
 
+  desc "Generate Kover XML and HTML reports for prodDebug"
+  lane :coverage do
+    gradle(
+      tasks: ["app:koverXmlReportProdDebug", "app:koverHtmlReportProdDebug"],
+      flags: "--no-daemon"
+    )
+  end
+
   desc "Run CI checks (KtLint + detekt + Android Lint + Unit Test)"
   lane :ci do
-    ktlint
-    detekt
-    lint
+    static_analysis
     unit_test
   end
 
