@@ -37,8 +37,6 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import javax.inject.Inject
 
-private const val SEARCH_DEBOUNCE_MILLIS = 250L
-
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
@@ -150,7 +148,7 @@ class CalendarViewModel @Inject constructor(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = CalendarUiState(
             selectedMonth = selectedMonth.value.value,
             selectedDate = selectedDate.value.value
@@ -235,6 +233,10 @@ class CalendarViewModel @Inject constructor(
         )
     }
 
+    private companion object {
+        const val SEARCH_DEBOUNCE_MILLIS = 250L
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
 }
 
 private data class ObservedCalendarData(

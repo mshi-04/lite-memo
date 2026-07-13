@@ -86,7 +86,7 @@ class SettingsViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = SettingsUiState(appVersion = appVersion)
     )
 
@@ -198,6 +198,10 @@ class SettingsViewModel @Inject constructor(
     fun dismissImportConfirmDialog() {
         showImportConfirmDialog.value = false
         pendingImportReference = null
+    }
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
 

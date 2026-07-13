@@ -82,6 +82,12 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
+private const val MONTH_SWIPE_THRESHOLD_DP = 72
+private const val CALENDAR_EXPAND_DURATION_MILLIS = 220
+private const val CALENDAR_FADE_IN_DURATION_MILLIS = 160
+private const val CALENDAR_SHRINK_DURATION_MILLIS = 180
+private const val CALENDAR_FADE_OUT_DURATION_MILLIS = 120
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -341,14 +347,14 @@ private fun CalendarMonthCard(
             AnimatedVisibility(
                 visible = uiState.isCalendarExpanded,
                 enter = expandVertically(
-                    animationSpec = tween(220)
+                    animationSpec = tween(CALENDAR_EXPAND_DURATION_MILLIS)
                 ) + fadeIn(
-                    animationSpec = tween(160)
+                    animationSpec = tween(CALENDAR_FADE_IN_DURATION_MILLIS)
                 ),
                 exit = shrinkVertically(
-                    animationSpec = tween(180)
+                    animationSpec = tween(CALENDAR_SHRINK_DURATION_MILLIS)
                 ) + fadeOut(
-                    animationSpec = tween(120)
+                    animationSpec = tween(CALENDAR_FADE_OUT_DURATION_MILLIS)
                 )
             ) {
                 Column(
@@ -369,7 +375,9 @@ private fun CalendarMonthCard(
                                 onDragCancel = { dragAmount = 0f }
                             )
                         }
-                        .animateContentSize(animationSpec = tween(220))
+                        .animateContentSize(
+                            animationSpec = tween(CALENDAR_EXPAND_DURATION_MILLIS)
+                        )
                 ) {
                     Spacer(modifier = Modifier.height(18.dp))
                     AnimatedCalendarGrid(
@@ -382,8 +390,6 @@ private fun CalendarMonthCard(
         }
     }
 }
-
-private const val MONTH_SWIPE_THRESHOLD_DP = 72
 
 internal enum class MonthSwipeDirection { PREVIOUS, NEXT }
 
@@ -495,56 +501,15 @@ private fun monthTitle(month: YearMonth?): String {
 }
 
 @Preview(showBackground = true)
-@Composable
-private fun CalendarScreenPreview() {
-    LiteMemoTheme {
-        CalendarScreen(
-            uiState = previewCalendarState(),
-            onPreviousMonth = {},
-            onNextMonth = {},
-            onDateSelected = {},
-            onCalendarExpandedToggle = {},
-            onDatePickerRequested = {},
-            onDatePickerDismissed = {},
-            onDatePicked = {},
-            onSearchToggle = {},
-            onSearchQueryChanged = {},
-            onRetry = {},
-            onMemoClick = {},
-            onCreateMemoClick = {}
-        )
-    }
-}
-
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-private fun CalendarScreenDarkPreview() {
-    LiteMemoTheme {
-        CalendarScreen(
-            uiState = previewCalendarState(),
-            onPreviousMonth = {},
-            onNextMonth = {},
-            onDateSelected = {},
-            onCalendarExpandedToggle = {},
-            onDatePickerRequested = {},
-            onDatePickerDismissed = {},
-            onDatePicked = {},
-            onSearchToggle = {},
-            onSearchQueryChanged = {},
-            onRetry = {},
-            onMemoClick = {},
-            onCreateMemoClick = {}
-        )
-    }
-}
-
-private fun previewCalendarState(): CalendarUiState {
+private fun CalendarScreenPreview() {
     val month = YearMonth.of(2026, 5)
     val selectedDate = LocalDate.of(2026, 5, 15)
-    return CalendarUiState(
+    val uiState = CalendarUiState(
         isLoading = false,
         selectedMonth = month,
         selectedDate = selectedDate,
@@ -576,4 +541,22 @@ private fun previewCalendarState(): CalendarUiState {
             )
         )
     )
+
+    LiteMemoTheme {
+        CalendarScreen(
+            uiState = uiState,
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onDateSelected = {},
+            onCalendarExpandedToggle = {},
+            onDatePickerRequested = {},
+            onDatePickerDismissed = {},
+            onDatePicked = {},
+            onSearchToggle = {},
+            onSearchQueryChanged = {},
+            onRetry = {},
+            onMemoClick = {},
+            onCreateMemoClick = {}
+        )
+    }
 }

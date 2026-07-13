@@ -43,8 +43,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val SEARCH_DEBOUNCE_MILLIS = 250L
-
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -159,7 +157,7 @@ class HomeViewModel @Inject constructor(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = HomeUiState()
     )
 
@@ -298,6 +296,11 @@ class HomeViewModel @Inject constructor(
         } else {
             this
         }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MILLIS = 250L
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
 }
 
 private data class HomeUiControls(

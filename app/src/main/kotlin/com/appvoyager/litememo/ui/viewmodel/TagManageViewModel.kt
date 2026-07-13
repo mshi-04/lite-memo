@@ -64,7 +64,7 @@ class TagManageViewModel @Inject constructor(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = TagManageUiState()
     )
 
@@ -163,4 +163,8 @@ class TagManageViewModel @Inject constructor(
 
     private fun isDuplicateName(name: String, excludeId: String?): Boolean =
         uiState.value.tags.any { it.name == name && it.id != excludeId }
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
 }

@@ -95,7 +95,7 @@ class TrashViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = TrashUiState()
     )
 
@@ -203,6 +203,10 @@ class TrashViewModel @Inject constructor(
                 deletedAt = deletedAt
             )
         }
+    }
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
 

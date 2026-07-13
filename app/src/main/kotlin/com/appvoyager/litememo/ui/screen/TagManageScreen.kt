@@ -63,6 +63,9 @@ import com.appvoyager.litememo.ui.state.TagManageUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
+private const val HEX_RADIX = 16
+private const val ARGB_HEX_DIGIT_COUNT = 8
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagManageScreen(
@@ -282,7 +285,9 @@ private fun TagEditDialog(
                 ) {
                     DEFAULT_TAG_COLORS.forEach { colorArgb ->
                         val isSelected = colorArgb == state.colorArgb
-                        val colorCode = colorArgb.toString(16).uppercase().padStart(8, '0')
+                        val colorCode = colorArgb.toString(HEX_RADIX)
+                            .uppercase()
+                            .padStart(ARGB_HEX_DIGIT_COUNT, '0')
                         val colorDescription = stringResource(
                             R.string.tag_color_option_content_description,
                             colorCode

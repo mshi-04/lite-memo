@@ -567,39 +567,41 @@ private fun EmptyHomeContent() {
 }
 
 @Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    LiteMemoTheme {
-        HomeScreen(
-            uiState = previewHomeState(),
-            onFilterSelected = {},
-            onSearchToggle = {},
-            onSearchQueryChanged = {},
-            onMemoLongClick = {},
-            onMemoSelectionToggle = {},
-            onClearSelection = {},
-            onMoveSelectedMemosToTrash = {},
-            onSetSelectedMemosFavorite = {},
-            onRequestToggleTagForSelectedMemos = {},
-            onToggleSelectedMemosTag = {},
-            onDismissBulkTagDialog = {},
-            onShareSelectedMemo = {},
-            onMemoClick = {},
-            onCreateMemoClick = {},
-            onRetry = {}
-        )
-    }
-}
-
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-private fun HomeScreenDarkPreview() {
+private fun HomeScreenPreview() {
+    val uiState = HomeUiState(
+        isLoading = false,
+        tags = listOf(
+            TagUiModel("tag-life", "生活", 0xFF6750A4),
+            TagUiModel("tag-work", "仕事", 0xFFB3261E)
+        ),
+        memos = listOf(
+            MemoUiModel(
+                id = MemoId("memo-1"),
+                title = "買い物リスト",
+                body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
+                tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
+                updatedAtMillis = System.currentTimeMillis(),
+                isFavorite = false
+            ),
+            MemoUiModel(
+                id = MemoId("memo-2"),
+                title = "会議メモ",
+                body = "次回までに画面構成と保存方式を確認する。",
+                tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
+                updatedAtMillis = System.currentTimeMillis(),
+                isFavorite = true
+            )
+        )
+    )
+
     LiteMemoTheme {
         HomeScreen(
-            uiState = previewHomeState(),
+            uiState = uiState,
             onFilterSelected = {},
             onSearchToggle = {},
             onSearchQueryChanged = {},
@@ -618,29 +620,3 @@ private fun HomeScreenDarkPreview() {
         )
     }
 }
-
-private fun previewHomeState() = HomeUiState(
-    isLoading = false,
-    tags = listOf(
-        TagUiModel("tag-life", "生活", 0xFF6750A4),
-        TagUiModel("tag-work", "仕事", 0xFFB3261E)
-    ),
-    memos = listOf(
-        MemoUiModel(
-            id = MemoId("memo-1"),
-            title = "買い物リスト",
-            body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
-            tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
-            updatedAtMillis = System.currentTimeMillis(),
-            isFavorite = false
-        ),
-        MemoUiModel(
-            id = MemoId("memo-2"),
-            title = "会議メモ",
-            body = "次回までに画面構成と保存方式を確認する。",
-            tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
-            updatedAtMillis = System.currentTimeMillis(),
-            isFavorite = true
-        )
-    )
-)
