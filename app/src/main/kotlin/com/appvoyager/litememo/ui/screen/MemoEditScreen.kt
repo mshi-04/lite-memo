@@ -67,9 +67,9 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 @Composable
 fun MemoEditScreen(
     uiState: MemoEditUiState,
-    onTitleChanged: (String) -> Unit,
-    onBodyChanged: (String) -> Unit,
-    onTagToggled: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
+    onBodyChange: (String) -> Unit,
+    onTagToggle: (String) -> Unit,
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
     onRetry: () -> Unit,
@@ -165,7 +165,7 @@ fun MemoEditScreen(
                 ) {
                     BasicTextField(
                         value = uiState.title,
-                        onValueChange = onTitleChanged,
+                        onValueChange = onTitleChange,
                         modifier = Modifier
                             .fillMaxWidth()
                             .semantics { contentDescription = titleLabel }
@@ -199,7 +199,7 @@ fun MemoEditScreen(
                                 val selected = tag.id in uiState.selectedTagIds
                                 FilterChip(
                                     selected = selected,
-                                    onClick = { onTagToggled(tag.id) },
+                                    onClick = { onTagToggle(tag.id) },
                                     label = { Text(text = tag.name) },
                                     leadingIcon = {
                                         Box(
@@ -252,7 +252,7 @@ fun MemoEditScreen(
                     }
                     BasicTextField(
                         value = uiState.body,
-                        onValueChange = onBodyChanged,
+                        onValueChange = onBodyChange,
                         modifier = Modifier
                             .fillMaxSize()
                             .focusRequester(bodyFocusRequester)
@@ -293,9 +293,9 @@ private fun MemoEditScreenPreview() {
                 body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
                 isModified = true
             ),
-            onTitleChanged = {},
-            onBodyChanged = {},
-            onTagToggled = {},
+            onTitleChange = {},
+            onBodyChange = {},
+            onTagToggle = {},
             onDelete = {},
             onBackRequest = {},
             onRetry = {},

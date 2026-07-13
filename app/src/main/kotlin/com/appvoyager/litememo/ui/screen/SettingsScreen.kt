@@ -47,8 +47,8 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 @Composable
 fun SettingsScreen(
     uiState: SettingsUiState,
-    onThemeModeSelected: (ThemeMode) -> Unit,
-    onMemoSortOrderSelected: (MemoSortOrder) -> Unit,
+    onThemeModeSelect: (ThemeMode) -> Unit,
+    onMemoSortOrderSelect: (MemoSortOrder) -> Unit,
     onAppLockEnabledChange: (Boolean) -> Unit,
     onExpandThemeDropdown: () -> Unit,
     onCollapseThemeDropdown: () -> Unit,
@@ -88,7 +88,7 @@ fun SettingsScreen(
                     expanded = uiState.themeDropdownExpanded,
                     onExpand = onExpandThemeDropdown,
                     onCollapse = onCollapseThemeDropdown,
-                    onSelected = onThemeModeSelected
+                    onSelect = onThemeModeSelect
                 )
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -99,7 +99,7 @@ fun SettingsScreen(
                     expanded = uiState.sortOrderExpanded,
                     onExpand = onExpandSortOrder,
                     onCollapse = onCollapseSortOrder,
-                    onSelected = onMemoSortOrderSelected
+                    onSelect = onMemoSortOrderSelect
                 )
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -277,7 +277,7 @@ private fun ThemeRow(
     expanded: Boolean,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
-    onSelected: (ThemeMode) -> Unit
+    onSelect: (ThemeMode) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -313,7 +313,7 @@ private fun ThemeRow(
                     DropdownMenuItem(
                         text = { Text(text = mode.toDisplayString()) },
                         onClick = {
-                            onSelected(mode)
+                            onSelect(mode)
                             onCollapse()
                         }
                     )
@@ -329,7 +329,7 @@ private fun SortOrderRow(
     expanded: Boolean,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
-    onSelected: (MemoSortOrder) -> Unit
+    onSelect: (MemoSortOrder) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -365,7 +365,7 @@ private fun SortOrderRow(
                     DropdownMenuItem(
                         text = { Text(text = order.toDisplayString()) },
                         onClick = {
-                            onSelected(order)
+                            onSelect(order)
                             onCollapse()
                         }
                     )
@@ -489,8 +489,8 @@ private fun SettingsScreenPreview() {
     LiteMemoTheme {
         SettingsScreen(
             uiState = SettingsUiState(appVersion = "1.0.0"),
-            onThemeModeSelected = {},
-            onMemoSortOrderSelected = {},
+            onThemeModeSelect = {},
+            onMemoSortOrderSelect = {},
             onAppLockEnabledChange = {},
             onExpandThemeDropdown = {},
             onCollapseThemeDropdown = {},
@@ -519,14 +519,14 @@ private fun SettingsRowsPreview() {
                 expanded = false,
                 onExpand = {},
                 onCollapse = {},
-                onSelected = {}
+                onSelect = {}
             )
             SortOrderRow(
                 currentOrder = MemoSortOrder.UPDATED_NEWEST,
                 expanded = false,
                 onExpand = {},
                 onCollapse = {},
-                onSelected = {}
+                onSelect = {}
             )
             VersionRow(version = "1.0.0")
             SettingsSwitchRow(

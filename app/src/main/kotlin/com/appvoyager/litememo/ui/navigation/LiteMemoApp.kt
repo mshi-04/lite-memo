@@ -287,7 +287,7 @@ fun LiteMemoApp(
                     onImageAttachError = {
                         showErrorSnackbar(imageAttachErrorMessage)
                     },
-                    onMemoDeleted = { memoId ->
+                    onMemoDelete = { memoId ->
                         navController.popBackStackIfResumed(
                             isPopInFlight = { memoEditPopInFlight },
                             setPopInFlight = { memoEditPopInFlight = it },

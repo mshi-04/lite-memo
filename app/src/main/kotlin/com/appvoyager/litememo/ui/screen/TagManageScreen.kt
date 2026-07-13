@@ -76,8 +76,8 @@ fun TagManageScreen(
     onDeleteRequest: (TagUiModel) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
-    onEditNameChanged: (String) -> Unit,
-    onEditColorSelected: (Long) -> Unit,
+    onEditNameChange: (String) -> Unit,
+    onEditColorSelect: (Long) -> Unit,
     onSaveEdit: () -> Unit,
     onCancelEdit: () -> Unit,
     onRetry: () -> Unit,
@@ -152,8 +152,8 @@ fun TagManageScreen(
     uiState.editingTag?.let { editState ->
         TagEditDialog(
             state = editState,
-            onNameChanged = onEditNameChanged,
-            onColorSelected = onEditColorSelected,
+            onNameChange = onEditNameChange,
+            onColorSelect = onEditColorSelect,
             onSave = onSaveEdit,
             onDismiss = onCancelEdit
         )
@@ -228,8 +228,8 @@ private fun TagRow(tag: TagUiModel, onEditClick: () -> Unit, onDeleteClick: () -
 @Composable
 private fun TagEditDialog(
     state: TagEditState,
-    onNameChanged: (String) -> Unit,
-    onColorSelected: (Long) -> Unit,
+    onNameChange: (String) -> Unit,
+    onColorSelect: (Long) -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -250,7 +250,7 @@ private fun TagEditDialog(
             Column {
                 OutlinedTextField(
                     value = state.name,
-                    onValueChange = onNameChanged,
+                    onValueChange = onNameChange,
                     label = { Text(text = stringResource(R.string.tag_name_hint)) },
                     isError = state.nameError || state.duplicateNameError,
                     singleLine = true,
@@ -313,7 +313,7 @@ private fun TagEditDialog(
                                         Modifier
                                     }
                                 )
-                                .clickable { onColorSelected(colorArgb) },
+                                .clickable { onColorSelect(colorArgb) },
                             contentAlignment = Alignment.Center
                         ) {
                             if (isSelected) {
@@ -379,8 +379,8 @@ private fun TagManageScreenPreview() {
             onDeleteRequest = {},
             onConfirmDelete = {},
             onDismissDelete = {},
-            onEditNameChanged = {},
-            onEditColorSelected = {},
+            onEditNameChange = {},
+            onEditColorSelect = {},
             onSaveEdit = {},
             onCancelEdit = {},
             onRetry = {}

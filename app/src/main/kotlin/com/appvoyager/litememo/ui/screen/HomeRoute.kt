@@ -46,9 +46,9 @@ fun HomeRoute(
 
     HomeScreen(
         uiState = uiState,
-        onFilterSelected = { filter -> viewModel.selectFilter(filter) },
+        onFilterSelect = { filter -> viewModel.selectFilter(filter) },
         onSearchToggle = { viewModel.toggleSearch() },
-        onSearchQueryChanged = { query -> viewModel.updateSearchQuery(query) },
+        onSearchQueryChange = { query -> viewModel.updateSearchQuery(query) },
         onMemoLongClick = viewModel::startSelection,
         onMemoSelectionToggle = viewModel::toggleMemoSelection,
         onClearSelection = { viewModel.clearSelection() },

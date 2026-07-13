@@ -5,25 +5,6 @@
     <ID>EmptyFunctionBlock:RoomMemoRepositoryTest.kt$RoomMemoRepositoryTest.FakeTagDao${}</ID>
     <ID>MatchingDeclarationName:OssLicensesScreen.kt$OssLicense</ID>
     <ID>ModifierMissing:LiteMemoApp.kt$LiteMemoApp</ID>
-    <ID>ParameterNaming:CalendarGrid.kt$onDateSelected</ID>
-    <ID>ParameterNaming:CalendarScreen.kt$onDatePicked</ID>
-    <ID>ParameterNaming:CalendarScreen.kt$onDatePickerDismissed</ID>
-    <ID>ParameterNaming:CalendarScreen.kt$onDatePickerRequested</ID>
-    <ID>ParameterNaming:CalendarScreen.kt$onDateSelected</ID>
-    <ID>ParameterNaming:CalendarScreen.kt$onSearchQueryChanged</ID>
-    <ID>ParameterNaming:HomeScreen.kt$onFilterSelected</ID>
-    <ID>ParameterNaming:HomeScreen.kt$onSearchQueryChanged</ID>
-    <ID>ParameterNaming:MemoEditRoute.kt$onMemoDeleted</ID>
-    <ID>ParameterNaming:MemoEditScreen.kt$onBodyChanged</ID>
-    <ID>ParameterNaming:MemoEditScreen.kt$onTagToggled</ID>
-    <ID>ParameterNaming:MemoEditScreen.kt$onTitleChanged</ID>
-    <ID>ParameterNaming:SettingsScreen.kt$onMemoSortOrderSelected</ID>
-    <ID>ParameterNaming:SettingsScreen.kt$onSelected</ID>
-    <ID>ParameterNaming:SettingsScreen.kt$onThemeModeSelected</ID>
-    <ID>ParameterNaming:TagManageScreen.kt$onColorSelected</ID>
-    <ID>ParameterNaming:TagManageScreen.kt$onEditColorSelected</ID>
-    <ID>ParameterNaming:TagManageScreen.kt$onEditNameChanged</ID>
-    <ID>ParameterNaming:TagManageScreen.kt$onNameChanged</ID>
     <ID>ReturnCount:AppLockAuthenticator.kt$AppLockAuthenticator$fun authenticate(callback: (AppLockAuthenticationResult) -&gt; Unit)</ID>
     <ID>ReturnCount:LiteMemoApp.kt$private fun bottomTabTransitionDirection( scope: AnimatedContentTransitionScope&lt;NavBackStackEntry&gt; ): Int?</ID>
     <ID>ReturnCount:TagManageViewModel.kt$TagManageViewModel$fun saveEdit()</ID>
