@@ -77,9 +77,9 @@ import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
-    onFilterSelected: (HomeFilterUiState) -> Unit,
+    onFilterSelect: (HomeFilterUiState) -> Unit,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onMemoLongClick: (MemoId) -> Unit,
     onMemoSelectionToggle: (MemoId) -> Unit,
     onClearSelection: () -> Unit,
@@ -116,9 +116,9 @@ fun HomeScreen(
 
             else -> HomeContent(
                 uiState = uiState,
-                onFilterSelected = onFilterSelected,
+                onFilterSelect = onFilterSelect,
                 onSearchToggle = onSearchToggle,
-                onSearchQueryChanged = onSearchQueryChanged,
+                onSearchQueryChange = onSearchQueryChange,
                 onMemoLongClick = onMemoLongClick,
                 onMemoSelectionToggle = onMemoSelectionToggle,
                 onClearSelection = onClearSelection,
@@ -143,9 +143,9 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     uiState: HomeUiState,
-    onFilterSelected: (HomeFilterUiState) -> Unit,
+    onFilterSelect: (HomeFilterUiState) -> Unit,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onMemoLongClick: (MemoId) -> Unit,
     onMemoSelectionToggle: (MemoId) -> Unit,
     onClearSelection: () -> Unit,
@@ -184,7 +184,7 @@ private fun HomeContent(
                     isSearchActive = uiState.isSearchActive,
                     searchQuery = uiState.searchQuery,
                     onSearchToggle = onSearchToggle,
-                    onSearchQueryChanged = onSearchQueryChanged
+                    onSearchQueryChange = onSearchQueryChange
                 )
             }
         }
@@ -230,7 +230,7 @@ private fun HomeContent(
                 HomeFilterRow(
                     selectedFilter = uiState.selectedFilter,
                     tags = uiState.tags,
-                    onFilterSelected = onFilterSelected
+                    onFilterSelect = onFilterSelect
                 )
             }
             if (uiState.memos.isEmpty()) {
@@ -284,7 +284,7 @@ private fun HomeTopBar(
     isSearchActive: Boolean,
     searchQuery: String,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit
+    onSearchQueryChange: (String) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -309,7 +309,7 @@ private fun HomeTopBar(
             }
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = onSearchQueryChanged,
+                onValueChange = onSearchQueryChange,
                 modifier = Modifier
                     .weight(1f)
                     .focusRequester(focusRequester),
@@ -317,7 +317,7 @@ private fun HomeTopBar(
                 singleLine = true,
                 trailingIcon = if (searchQuery.isNotEmpty()) {
                     {
-                        IconButton(onClick = { onSearchQueryChanged("") }) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = stringResource(R.string.clear_search),
@@ -468,7 +468,7 @@ private fun HomeBulkTagDialog(
 private fun HomeFilterRow(
     selectedFilter: HomeFilterUiState,
     tags: List<TagUiModel>,
-    onFilterSelected: (HomeFilterUiState) -> Unit
+    onFilterSelect: (HomeFilterUiState) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -479,24 +479,24 @@ private fun HomeFilterRow(
         FilterButton(
             label = stringResource(R.string.filter_all),
             selected = selectedFilter == HomeFilterUiState.All,
-            onClick = { onFilterSelected(HomeFilterUiState.All) }
+            onClick = { onFilterSelect(HomeFilterUiState.All) }
         )
         FilterButton(
             label = stringResource(R.string.unorganized_label),
             selected = selectedFilter == HomeFilterUiState.Unorganized,
-            onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
+            onClick = { onFilterSelect(HomeFilterUiState.Unorganized) }
         )
         FilterButton(
             label = stringResource(R.string.filter_favorite),
             selected = selectedFilter == HomeFilterUiState.Favorite,
-            onClick = { onFilterSelected(HomeFilterUiState.Favorite) }
+            onClick = { onFilterSelect(HomeFilterUiState.Favorite) }
         )
         tags.forEach { tag ->
             val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
             FilterButton(
                 label = tag.name,
                 selected = selectedFilter == tagFilter,
-                onClick = { onFilterSelected(tagFilter) },
+                onClick = { onFilterSelect(tagFilter) },
                 colorArgb = tag.colorArgb
             )
         }
@@ -602,9 +602,9 @@ private fun HomeScreenPreview() {
     LiteMemoTheme {
         HomeScreen(
             uiState = uiState,
-            onFilterSelected = {},
+            onFilterSelect = {},
             onSearchToggle = {},
-            onSearchQueryChanged = {},
+            onSearchQueryChange = {},
             onMemoLongClick = {},
             onMemoSelectionToggle = {},
             onClearSelection = {},

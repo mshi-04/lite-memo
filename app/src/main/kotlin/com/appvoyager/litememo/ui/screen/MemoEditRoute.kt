@@ -22,7 +22,7 @@ import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 @Composable
 fun MemoEditRoute(
     onNavigateBack: () -> Unit,
-    onMemoDeleted: (MemoId) -> Unit,
+    onMemoDelete: (MemoId) -> Unit,
     onSaveError: () -> Unit,
     onDeleteError: () -> Unit,
     onShareError: () -> Unit,
@@ -33,7 +33,7 @@ fun MemoEditRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
-    val currentOnMemoDeleted by rememberUpdatedState(onMemoDeleted)
+    val currentOnMemoDelete by rememberUpdatedState(onMemoDelete)
     val currentOnSaveError by rememberUpdatedState(onSaveError)
     val currentOnDeleteError by rememberUpdatedState(onDeleteError)
     val currentOnImageAttachError by rememberUpdatedState(onImageAttachError)
@@ -47,7 +47,7 @@ fun MemoEditRoute(
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 MemoEditNavigationEvent.NavigateBack -> currentOnNavigateBack()
-                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDeleted(event.memoId)
+                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDelete(event.memoId)
             }
         }
     }
@@ -72,9 +72,9 @@ fun MemoEditRoute(
 
     MemoEditScreen(
         uiState = uiState,
-        onTitleChanged = { viewModel.updateTitle(it) },
-        onBodyChanged = { viewModel.updateBody(it) },
-        onTagToggled = { viewModel.toggleTag(it) },
+        onTitleChange = { viewModel.updateTitle(it) },
+        onBodyChange = { viewModel.updateBody(it) },
+        onTagToggle = { viewModel.toggleTag(it) },
         onDelete = { viewModel.delete() },
         onBackRequest = { viewModel.finishEditing() },
         onRetry = { viewModel.reload() },

@@ -43,9 +43,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = uiState,
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},
@@ -83,9 +83,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = uiState,
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = { uiState = uiState.copy(isSearchActive = true) },
-                    onSearchQueryChanged = { query ->
+                    onSearchQueryChange = { query ->
                         uiState = uiState.copy(
                             searchQuery = query,
                             searchResults = uiState.memos.filter { memo ->
@@ -138,9 +138,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = HomeUiState(isLoading = false, memos = listOf(memo)),
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},
@@ -174,9 +174,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = HomeUiState(isLoading = false, memos = listOf(memo)),
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},
@@ -216,9 +216,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = uiState,
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},

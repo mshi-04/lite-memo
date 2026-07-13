@@ -32,8 +32,8 @@ class SettingsScreenComposeTest {
             TestScreenContent {
                 SettingsScreen(
                     uiState = uiState,
-                    onThemeModeSelected = {},
-                    onMemoSortOrderSelected = {},
+                    onThemeModeSelect = {},
+                    onMemoSortOrderSelect = {},
                     onAppLockEnabledChange = {},
                     onExpandThemeDropdown = {},
                     onCollapseThemeDropdown = {},
@@ -73,8 +73,8 @@ class SettingsScreenComposeTest {
             TestScreenContent {
                 SettingsScreen(
                     uiState = uiState,
-                    onThemeModeSelected = {},
-                    onMemoSortOrderSelected = {},
+                    onThemeModeSelect = {},
+                    onMemoSortOrderSelect = {},
                     onAppLockEnabledChange = {},
                     onExpandThemeDropdown = {},
                     onCollapseThemeDropdown = {},
@@ -119,8 +119,8 @@ class SettingsScreenComposeTest {
             TestScreenContent {
                 SettingsScreen(
                     uiState = uiState,
-                    onThemeModeSelected = {},
-                    onMemoSortOrderSelected = {},
+                    onThemeModeSelect = {},
+                    onMemoSortOrderSelect = {},
                     onAppLockEnabledChange = {},
                     onExpandThemeDropdown = {},
                     onCollapseThemeDropdown = {},

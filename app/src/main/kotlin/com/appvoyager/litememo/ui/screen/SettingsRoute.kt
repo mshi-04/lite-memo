@@ -111,8 +111,8 @@ fun SettingsRoute(
 
     SettingsScreen(
         uiState = uiState,
-        onThemeModeSelected = { viewModel.setThemeMode(it) },
-        onMemoSortOrderSelected = { viewModel.setMemoSortOrder(it) },
+        onThemeModeSelect = { viewModel.setThemeMode(it) },
+        onMemoSortOrderSelect = { viewModel.setMemoSortOrder(it) },
         onAppLockEnabledChange = { enabled ->
             if (enabled) {
                 if (viewModel.beginAppLockAuthentication()) {

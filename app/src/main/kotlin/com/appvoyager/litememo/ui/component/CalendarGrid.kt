@@ -51,7 +51,7 @@ private const val CALENDAR_GRID_FADE_OUT_DURATION_MILLIS = 120
 fun AnimatedCalendarGrid(
     month: YearMonth?,
     days: List<CalendarDayUiState>,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelect: (LocalDate) -> Unit
 ) {
     AnimatedContent(
         targetState = CalendarGridAnimationState(
@@ -77,13 +77,13 @@ fun AnimatedCalendarGrid(
     ) { state ->
         CalendarGrid(
             days = state.days,
-            onDateSelected = onDateSelected
+            onDateSelect = onDateSelect
         )
     }
 }
 
 @Composable
-private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelected: (LocalDate) -> Unit) {
+private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelect: (LocalDate) -> Unit) {
     val leadingBlankCount = days.firstOrNull()?.date?.dayOfWeek?.value?.rem(DAY_COUNT) ?: 0
     val cells = List(leadingBlankCount) { null } + days
 
@@ -98,7 +98,7 @@ private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelected: (LocalD
                     val day = week.getOrNull(index)
                     CalendarDayCell(
                         day = day,
-                        onDateSelected = onDateSelected,
+                        onDateSelect = onDateSelect,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -129,7 +129,7 @@ private fun CalendarWeekHeader() {
 @Composable
 private fun CalendarDayCell(
     day: CalendarDayUiState?,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelect: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (day == null) {
@@ -168,7 +168,7 @@ private fun CalendarDayCell(
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(containerColor)
-            .clickable(role = Role.Button) { onDateSelected(day.date) }
+            .clickable(role = Role.Button) { onDateSelect(day.date) }
             .semantics(mergeDescendants = true) {
                 contentDescription = cellDescription
                 selected = day.isSelected

@@ -94,13 +94,13 @@ fun CalendarScreen(
     uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelect: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
-    onDatePickerRequested: () -> Unit,
-    onDatePickerDismissed: () -> Unit,
-    onDatePicked: (Long) -> Unit,
+    onDatePickerRequest: () -> Unit,
+    onDatePickerDismiss: () -> Unit,
+    onDatePick: (Long) -> Unit,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onRetry: () -> Unit,
     onMemoClick: (MemoId) -> Unit,
     onCreateMemoClick: () -> Unit,
@@ -120,11 +120,11 @@ fun CalendarScreen(
                     uiState = uiState,
                     onPreviousMonth = onPreviousMonth,
                     onNextMonth = onNextMonth,
-                    onDateSelected = onDateSelected,
+                    onDateSelect = onDateSelect,
                     onCalendarExpandedToggle = onCalendarExpandedToggle,
-                    onDatePickerRequested = onDatePickerRequested,
+                    onDatePickerRequest = onDatePickerRequest,
                     onSearchToggle = onSearchToggle,
-                    onSearchQueryChanged = onSearchQueryChanged,
+                    onSearchQueryChange = onSearchQueryChange,
                     onMemoClick = onMemoClick
                 )
                 FloatingActionButton(
@@ -144,8 +144,8 @@ fun CalendarScreen(
         if (uiState.isDatePickerVisible && uiState.selectedDate != null) {
             CalendarDatePickerDialog(
                 selectedDate = uiState.selectedDate,
-                onDatePicked = onDatePicked,
-                onDismiss = onDatePickerDismissed
+                onDatePick = onDatePick,
+                onDismiss = onDatePickerDismiss
             )
         }
     }
@@ -156,11 +156,11 @@ private fun CalendarContent(
     uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelect: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
-    onDatePickerRequested: () -> Unit,
+    onDatePickerRequest: () -> Unit,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onMemoClick: (MemoId) -> Unit
 ) {
     LazyColumn(
@@ -173,7 +173,7 @@ private fun CalendarContent(
                 isSearchActive = uiState.isSearchActive,
                 searchQuery = uiState.searchQuery,
                 onSearchToggle = onSearchToggle,
-                onSearchQueryChanged = onSearchQueryChanged
+                onSearchQueryChange = onSearchQueryChange
             )
         }
         if (uiState.isSearchActive) {
@@ -212,9 +212,9 @@ private fun CalendarContent(
                     uiState = uiState,
                     onPreviousMonth = onPreviousMonth,
                     onNextMonth = onNextMonth,
-                    onDateSelected = onDateSelected,
+                    onDateSelect = onDateSelect,
                     onCalendarExpandedToggle = onCalendarExpandedToggle,
-                    onDatePickerRequested = onDatePickerRequested
+                    onDatePickerRequest = onDatePickerRequest
                 )
             }
             item {
@@ -248,7 +248,7 @@ private fun CalendarTopBar(
     isSearchActive: Boolean,
     searchQuery: String,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit
+    onSearchQueryChange: (String) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -273,7 +273,7 @@ private fun CalendarTopBar(
             }
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = onSearchQueryChanged,
+                onValueChange = onSearchQueryChange,
                 modifier = Modifier
                     .weight(1f)
                     .focusRequester(focusRequester),
@@ -281,7 +281,7 @@ private fun CalendarTopBar(
                 singleLine = true,
                 trailingIcon = if (searchQuery.isNotEmpty()) {
                     {
-                        IconButton(onClick = { onSearchQueryChanged("") }) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = stringResource(R.string.clear_search),
@@ -320,9 +320,9 @@ private fun CalendarMonthCard(
     uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelect: (LocalDate) -> Unit,
     onCalendarExpandedToggle: () -> Unit,
-    onDatePickerRequested: () -> Unit
+    onDatePickerRequest: () -> Unit
 ) {
     val swipeThresholdPx = with(LocalDensity.current) { MONTH_SWIPE_THRESHOLD_DP.dp.toPx() }
 
@@ -342,7 +342,7 @@ private fun CalendarMonthCard(
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
                 onCalendarExpandedToggle = onCalendarExpandedToggle,
-                onDatePickerRequested = onDatePickerRequested
+                onDatePickerRequest = onDatePickerRequest
             )
             AnimatedVisibility(
                 visible = uiState.isCalendarExpanded,
@@ -383,7 +383,7 @@ private fun CalendarMonthCard(
                     AnimatedCalendarGrid(
                         month = uiState.selectedMonth,
                         days = uiState.days,
-                        onDateSelected = onDateSelected
+                        onDateSelect = onDateSelect
                     )
                 }
             }
@@ -405,7 +405,7 @@ private fun CalendarMonthHeader(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onCalendarExpandedToggle: () -> Unit,
-    onDatePickerRequested: () -> Unit
+    onDatePickerRequest: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -415,7 +415,7 @@ private fun CalendarMonthHeader(
             text = monthTitle(month),
             modifier = Modifier
                 .weight(1f)
-                .clickable(onClick = onDatePickerRequested),
+                .clickable(onClick = onDatePickerRequest),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -448,7 +448,7 @@ private fun CalendarMonthHeader(
 @Composable
 private fun CalendarDatePickerDialog(
     selectedDate: LocalDate,
-    onDatePicked: (Long) -> Unit,
+    onDatePick: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
     val selectedDateMillis = remember(selectedDate) {
@@ -461,7 +461,7 @@ private fun CalendarDatePickerDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    datePickerState.selectedDateMillis?.let(onDatePicked) ?: onDismiss()
+                    datePickerState.selectedDateMillis?.let(onDatePick) ?: onDismiss()
                 }
             ) {
                 Text(text = stringResource(R.string.ok_label))
@@ -547,13 +547,13 @@ private fun CalendarScreenPreview() {
             uiState = uiState,
             onPreviousMonth = {},
             onNextMonth = {},
-            onDateSelected = {},
+            onDateSelect = {},
             onCalendarExpandedToggle = {},
-            onDatePickerRequested = {},
-            onDatePickerDismissed = {},
-            onDatePicked = {},
+            onDatePickerRequest = {},
+            onDatePickerDismiss = {},
+            onDatePick = {},
             onSearchToggle = {},
-            onSearchQueryChanged = {},
+            onSearchQueryChange = {},
             onRetry = {},
             onMemoClick = {},
             onCreateMemoClick = {}

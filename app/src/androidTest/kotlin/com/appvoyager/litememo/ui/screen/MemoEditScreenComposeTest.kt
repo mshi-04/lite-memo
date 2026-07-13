@@ -31,9 +31,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = uiState,
-                    onTitleChanged = { title -> uiState = uiState.copy(title = title) },
-                    onBodyChanged = { body -> uiState = uiState.copy(body = body) },
-                    onTagToggled = {},
+                    onTitleChange = { title -> uiState = uiState.copy(title = title) },
+                    onBodyChange = { body -> uiState = uiState.copy(body = body) },
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -68,9 +68,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -101,9 +101,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(images = listOf(image)),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -132,9 +132,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(images = listOf(image)),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -162,9 +162,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(isDeletePending = true),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
