@@ -5,7 +5,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -53,7 +52,6 @@ import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
-import com.appvoyager.litememo.ui.component.TagChip
 import com.appvoyager.litememo.ui.state.TrashUiState
 import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import java.time.Instant
