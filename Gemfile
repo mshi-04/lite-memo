@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "4.0.4"
+ruby file: ".ruby-version"
 
 gem "fastlane", "2.237.0"
 gem "fiddle", "1.1.8"

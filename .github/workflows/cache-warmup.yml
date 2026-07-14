@@ -49,6 +49,9 @@ jobs:
       - name: Run Unit Test and Release Build
         run: bundle exec fastlane android unit_test release:true
 
+      - name: Warm Kover Coverage Cache
+        run: bundle exec fastlane android coverage
+
   android-test-cache:
     name: Warm Android Test Cache
     runs-on: ubuntu-latest

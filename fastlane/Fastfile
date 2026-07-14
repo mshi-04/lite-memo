@@ -1,6 +1,10 @@
 default_platform(:android)
 
 platform :android do
+  before_all do
+    skip_docs
+  end
+
   desc "Run KtLint"
   lane :ktlint do
     gradle(

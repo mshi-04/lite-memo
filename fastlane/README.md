@@ -3,12 +3,6 @@ fastlane documentation
 
 # Installation
 
-Make sure you have the latest version of the Xcode command line tools installed:
-
-```sh
-xcode-select --install
-```
-
 For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
 
 # Available Actions
@@ -81,7 +75,7 @@ Run Android UI/Instrumentation tests
 
 ----
 
-This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
+This README.md is generated from the Fastfile. Automatic regeneration during lane execution is disabled; update this file together with the Fastfile lane descriptions.
 
 More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
 
