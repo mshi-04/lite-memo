@@ -18,7 +18,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.component.MemoCardTestTags
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState

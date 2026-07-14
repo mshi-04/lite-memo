@@ -53,9 +53,15 @@ CI と同じ静的解析 / Unit Test を手元で流す場合は fastlane を使
 bundle exec fastlane android ci
 
 # 個別に
+bundle exec fastlane android static_analysis
 bundle exec fastlane android ktlint
 bundle exec fastlane android detekt
 bundle exec fastlane android lint
+bundle exec fastlane android unit_test
+bundle exec fastlane android coverage
+
+# Instrumented Test / Compose UI Test（端末またはエミュレーターが必要）
+bundle exec fastlane android android_test
 ```
 
 Gradle から直接実行する場合は次のとおりです。
@@ -69,4 +75,5 @@ Gradle から直接実行する場合は次のとおりです。
 ## CI キャッシュ
 
 GitHub Actions の Gradle / AVD キャッシュは、長期運用する `main` / `develop` の push で作成します。
-Pull Request では既存キャッシュの復元だけを行い、PR 固有の `refs/pull/.../merge` に重いキャッシュを作らないようにします。
+`main` では通常の CI、`develop` では Cache Warmup workflow がキャッシュを更新します。
+Pull Request では base branch 側の既存キャッシュを復元するだけとし、PR 固有の `refs/pull/.../merge` にはキャッシュを作成しません。

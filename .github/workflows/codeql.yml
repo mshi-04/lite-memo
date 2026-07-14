@@ -22,6 +22,8 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    env:
+      CODEQL_OVERLAY_DATABASE_MODE: none
 
     strategy:
       fail-fast: false
