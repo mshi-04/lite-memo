@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-// GitHub Pages (docs/privacy/) で公開しているプライバシーポリシー
 private const val PRIVACY_POLICY_URL = "https://mshi-04.github.io/lite-memo/privacy/"
 
 private fun defaultExportFileName(): String {

@@ -64,13 +64,10 @@ class HomeViewModel @Inject constructor(
     private val retryTrigger = MutableStateFlow(false)
     private var isBulkActionInFlight = false
 
-    // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
     private val searchResults = searchQuery
-        // searchQuery は StateFlow なので連続する同一値は既に除去される。
-        // 空クエリは即時、入力中のみデバウンスして 1 文字ごとの LIKE 検索を抑える。
         .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
         .flatMapLatest { query ->
             if (query.isBlank()) {

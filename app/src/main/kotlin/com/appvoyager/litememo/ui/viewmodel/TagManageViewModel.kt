@@ -42,7 +42,6 @@ class TagManageViewModel @Inject constructor(
     private val deleteDialog = MutableStateFlow<TagUiModel?>(null)
     private val retryTrigger = MutableStateFlow(false)
 
-    // 削除失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _deleteErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val deleteErrorEvent = _deleteErrorEvent.receiveAsFlow()
 

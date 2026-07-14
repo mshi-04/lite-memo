@@ -81,8 +81,6 @@ class CalendarViewModel @Inject constructor(
     }
 
     private val searchResults = searchQuery
-        // searchQuery は StateFlow なので連続する同一値は既に除去される。
-        // 空クエリは即時、入力中のみデバウンスして 1 文字ごとの LIKE 検索を抑える。
         .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
         .flatMapLatest { query ->
             if (query.isBlank()) {
@@ -103,7 +101,6 @@ class CalendarViewModel @Inject constructor(
         CalendarUiControls(expanded, datePickerVisible, searching, query)
     }
 
-    // retry() でこのフロー全体を再購読し、カレンダーデータと検索の両方を再実行する
     val uiState: StateFlow<CalendarUiState> = retryTrigger.flatMapLatest {
         combine(
             observedCalendarData,
@@ -207,8 +204,6 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun selectDateFromPicker(millis: Long) {
-        // DatePicker の millis は UTC midnight エンコード（CalendarScreen 側も UTC で符号化）。
-        // 端末 zoneId でデコードすると UTC より西の端末で前日にずれるため UTC で戻す。
         val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
         selectDate(date)
         dismissDatePicker()
