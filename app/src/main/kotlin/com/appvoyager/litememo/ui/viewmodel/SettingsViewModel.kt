@@ -205,15 +205,15 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-internal sealed interface SettingsSnackbarEvent {
-    data object ExportSuccess : SettingsSnackbarEvent
-    data object ExportError : SettingsSnackbarEvent
-    data object ImportSuccess : SettingsSnackbarEvent
-    data object ImportError : SettingsSnackbarEvent
-    data object AppLockAuthenticationFailed : SettingsSnackbarEvent
-    data object AppLockAuthenticationCanceled : SettingsSnackbarEvent
-    data object AppLockNoDeviceCredential : SettingsSnackbarEvent
-    data object AppLockUnavailable : SettingsSnackbarEvent
+internal sealed class SettingsSnackbarEvent {
+    data object ExportSuccess : SettingsSnackbarEvent()
+    data object ExportError : SettingsSnackbarEvent()
+    data object ImportSuccess : SettingsSnackbarEvent()
+    data object ImportError : SettingsSnackbarEvent()
+    data object AppLockAuthenticationFailed : SettingsSnackbarEvent()
+    data object AppLockAuthenticationCanceled : SettingsSnackbarEvent()
+    data object AppLockNoDeviceCredential : SettingsSnackbarEvent()
+    data object AppLockUnavailable : SettingsSnackbarEvent()
 }
 
 private data class UiFlags(
