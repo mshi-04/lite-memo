@@ -17,8 +17,6 @@ fun CalendarRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // 詳細画面へ遷移して戻ったときに検索状態を復帰できるよう、離脱時に検索は閉じない。
-
     CalendarScreen(
         uiState = uiState,
         onPreviousMonth = { viewModel.previousMonth() },

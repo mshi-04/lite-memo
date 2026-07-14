@@ -11,7 +11,6 @@ class WidgetMemoLoader(private val observeMemosUseCase: ObserveMemosUseCase) {
         .take(limit)
         .map { it.toWidgetItem() }
 
-    // Glance の composition 内で collect し、メモ変更に追従して再コンポーズするための Flow 版。
     fun observeRecent(limit: Int): Flow<List<WidgetItem>> = observeMemosUseCase()
         .map { memos -> memos.take(limit).map { it.toWidgetItem() } }
 }
@@ -28,7 +27,6 @@ internal fun Memo.toWidgetItem(): WidgetItem {
         primary = trimmedTitle
         snippet = bodyLines.joinToString(" ")
     } else {
-        // タイトルが空の本文のみメモは、本文先頭行を主表示に使う。
         primary = bodyLines.firstOrNull().orEmpty()
         snippet = bodyLines.drop(1).joinToString(" ")
     }

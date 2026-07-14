@@ -5,14 +5,12 @@
     android:viewportWidth="512"
     android:viewportHeight="512">
 
-    <!-- memo outline -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#000000"
         android:strokeWidth="14"
         android:strokeLineJoin="round"
         android:pathData="M202,136 H278 L346,204 V340 Q346,376 310,376 H202 Q166,376 166,340 V172 Q166,136 202,136 Z" />
-    <!-- written lines -->
     <path
         android:fillColor="#000000"
         android:pathData="M209,244 h66 a9,9 0 0 1 9,9 a9,9 0 0 1 -9,9 h-66 a9,9 0 0 1 -9,-9 a9,9 0 0 1 9,-9 z" />
@@ -20,7 +18,6 @@
         android:fillColor="#000000"
         android:pathData="M209,288 h34 a9,9 0 0 1 9,9 a9,9 0 0 1 -9,9 h-34 a9,9 0 0 1 -9,-9 a9,9 0 0 1 9,-9 z" />
 
-    <!-- quill as a solid single-color mark -->
     <group
         android:name="quill"
         android:pivotX="0"

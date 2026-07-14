@@ -48,14 +48,9 @@ class SettingsViewModel @Inject constructor(
     private val isExporting = MutableStateFlow(false)
     private val isImporting = MutableStateFlow(false)
     private val showImportConfirmDialog = MutableStateFlow(false)
-
     private var pendingImportReference: ExportFileReference? = null
-
-    // AppLock 有効化の認証中に再度トグルされると Authenticator が UNAVAILABLE を返し、
-    // 実態と違う失敗表示になるため、認証要求中は再要求を無視する。
     private var isAppLockAuthenticating = false
 
-    // 異なる文言（Export/Import/AppLock）の通知が最新1件に潰れないよう BUFFERED を使う。
     private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
     internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
 

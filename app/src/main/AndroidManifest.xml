@@ -26,7 +26,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Home screen widgets -->
         <receiver
             android:name=".ui.widget.newmemo.NewMemoWidgetReceiver"
             android:exported="true"

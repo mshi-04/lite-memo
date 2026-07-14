@@ -114,9 +114,6 @@ fun LiteMemoApp(
         memoEditPopInFlight = false
     }
 
-    // ウィジェットのタップ要求は app-lock / tutorial ゲート通過後（＝この Composable が構成された後）に
-    // ここで消化する。navigateOnce の RESUMED ガードはコールド起動時に取りこぼすため通さず、
-    // launchSingleTop で重複遷移を防ぎつつ、消化後に onConsumeWidgetNav で再発火を止める。
     val currentOnConsumeWidgetNav by rememberUpdatedState(onConsumeWidgetNav)
     LaunchedEffect(pendingWidgetNav) {
         when (val request = pendingWidgetNav) {
@@ -313,8 +310,6 @@ fun LiteMemoApp(
     }
 }
 
-// 連打対策: 遷移アニメーション中の多重 pop / navigate を一元的に抑止する。
-// 現在の画面が RESUMED（遷移完了・最前面）のときだけ操作を実行する。
 private fun NavController.isCurrentEntryResumed(): Boolean =
     currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true
 

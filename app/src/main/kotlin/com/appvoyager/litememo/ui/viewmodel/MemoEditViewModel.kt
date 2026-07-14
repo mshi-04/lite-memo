@@ -228,7 +228,6 @@ class MemoEditViewModel @Inject constructor(
                 clearSavedState()
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             } else {
-                // 保存失敗時は下書きを消さず画面に留め、再試行できるようにする。
                 isFinishing = false
             }
         }
@@ -453,7 +452,6 @@ class MemoEditViewModel @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            // Cleanup is best-effort; user-facing save/delete errors are reported elsewhere.
         }
     }
 

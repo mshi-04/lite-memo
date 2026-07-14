@@ -54,8 +54,6 @@ class RecentMemosWidget : GlanceAppWidget() {
             WidgetEntryPoint::class.java
         )
         val loader = WidgetMemoLoader(entryPoint.observeMemosUseCase())
-        // provideContent 前で 1 度だけ読むとセッション中に更新が反映されないため、
-        // 初期スナップショットだけ用意し、以降は composition 内で Flow を collect して追従する。
         val initial = runCatching { loader.loadRecent(MAX_ITEMS) }.getOrDefault(emptyList())
         provideContent {
             val items by remember { loader.observeRecent(MAX_ITEMS) }

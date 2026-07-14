@@ -26,8 +26,6 @@ object WidgetLaunchIntents {
             action = ACTION_WIDGET_OPEN
             putExtra(EXTRA_TARGET, TARGET_OPEN_MEMO)
             putExtra(EXTRA_MEMO_ID, memoId.value)
-            // リスト各行の PendingIntent は extra だけ異なると衝突するため、
-            // memoId を含む一意な data を付けて filterEquals を分離する。
             data = "litememo://memo/${encodeNavigationArgument(memoId.value)}".toUri()
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

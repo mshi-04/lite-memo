@@ -51,7 +51,6 @@ class TrashViewModel @Inject constructor(
     private val showEmptyTrashDialog = MutableStateFlow(false)
     private var isActionInFlight = false
 
-    // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
