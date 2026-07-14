@@ -474,13 +474,13 @@ class MemoEditViewModel @Inject constructor(
     }
 }
 
-sealed class MemoEditNavigationEvent {
-    data object NavigateBack : MemoEditNavigationEvent()
-    data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent()
+sealed interface MemoEditNavigationEvent {
+    data object NavigateBack : MemoEditNavigationEvent
+    data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent
 }
 
-sealed class MemoEditOperationErrorEvent {
-    data object SaveFailed : MemoEditOperationErrorEvent()
-    data object DeleteFailed : MemoEditOperationErrorEvent()
-    data object ImageAttachFailed : MemoEditOperationErrorEvent()
+sealed interface MemoEditOperationErrorEvent {
+    data object SaveFailed : MemoEditOperationErrorEvent
+    data object DeleteFailed : MemoEditOperationErrorEvent
+    data object ImageAttachFailed : MemoEditOperationErrorEvent
 }
