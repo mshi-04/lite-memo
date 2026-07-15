@@ -8,7 +8,6 @@ class SetMemoSortOrderUseCase @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) {
 
-    suspend operator fun invoke(order: MemoSortOrder) {
+    suspend operator fun invoke(order: MemoSortOrder) =
         userSettingsRepository.setMemoSortOrder(order)
-    }
 }

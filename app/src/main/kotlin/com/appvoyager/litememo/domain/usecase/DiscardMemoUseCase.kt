@@ -6,8 +6,6 @@ import javax.inject.Inject
 
 class DiscardMemoUseCase @Inject constructor(private val memoRepository: MemoRepository) {
 
-    suspend operator fun invoke(id: MemoId) {
-        memoRepository.discardMemo(id)
-    }
+    suspend operator fun invoke(id: MemoId) = memoRepository.discardMemo(id)
 
 }
