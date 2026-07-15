@@ -8,7 +8,5 @@ class SetThemeModeUseCase @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) {
 
-    suspend operator fun invoke(mode: ThemeMode) {
-        userSettingsRepository.setThemeMode(mode)
-    }
+    suspend operator fun invoke(mode: ThemeMode) = userSettingsRepository.setThemeMode(mode)
 }

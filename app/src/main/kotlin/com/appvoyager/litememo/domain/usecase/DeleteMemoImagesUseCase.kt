@@ -6,8 +6,7 @@ import javax.inject.Inject
 
 class DeleteMemoImagesUseCase @Inject constructor(private val memoImageStore: MemoImageStore) {
 
-    suspend operator fun invoke(fileNames: List<MemoImageFileName>) {
+    suspend operator fun invoke(fileNames: List<MemoImageFileName>) =
         memoImageStore.deleteImages(fileNames)
-    }
 
 }
