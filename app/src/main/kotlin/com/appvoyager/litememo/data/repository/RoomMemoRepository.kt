@@ -127,7 +127,7 @@ class RoomMemoRepository @Inject constructor(
     }
 
     @VisibleForTesting
-    internal suspend fun executeImport(tags: List<Tag>, memos: List<Memo>): List<String> {
+    suspend fun executeImport(tags: List<Tag>, memos: List<Memo>): List<String> {
         requireNoDuplicateTagIds(tags)
         requireNoDuplicateMemoIds(memos)
 

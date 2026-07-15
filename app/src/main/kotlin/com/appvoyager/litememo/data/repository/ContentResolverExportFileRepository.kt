@@ -30,4 +30,5 @@ class ContentResolverExportFileRepository @Inject constructor(
     }
 
     private fun ExportFileReference.toUri(): Uri = Uri.parse(value)
+
 }

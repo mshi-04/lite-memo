@@ -2,13 +2,13 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appvoyager.litememo.domain.exception.DuplicateTagNameException
 import com.appvoyager.litememo.domain.model.SaveTagCommand
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
-import com.appvoyager.litememo.domain.usecase.DuplicateTagNameException
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveTagUseCase
 import com.appvoyager.litememo.ui.state.TagEditState

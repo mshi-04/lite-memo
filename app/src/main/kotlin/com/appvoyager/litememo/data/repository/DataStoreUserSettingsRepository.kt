@@ -56,10 +56,11 @@ class DataStoreUserSettingsRepository @Inject constructor(
         dataStore.edit { prefs -> prefs[TUTORIAL_COMPLETED_KEY] = true }
     }
 
-    internal companion object {
+    companion object {
         val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         val MEMO_SORT_ORDER_KEY = stringPreferencesKey("memo_sort_order")
         val APP_LOCK_ENABLED_KEY = booleanPreferencesKey("app_lock_enabled")
         val TUTORIAL_COMPLETED_KEY = booleanPreferencesKey("tutorial_completed")
     }
+
 }

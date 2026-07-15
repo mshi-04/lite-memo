@@ -3,5 +3,5 @@ package com.appvoyager.litememo.ui.navigation
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-internal fun encodeNavigationArgument(value: String): String =
+fun encodeNavigationArgument(value: String): String =
     URLEncoder.encode(value, StandardCharsets.UTF_8.name()).replace("+", "%20")

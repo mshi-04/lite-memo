@@ -10,4 +10,5 @@ class ObserveMemoSortOrderUseCase @Inject constructor(
 ) {
 
     operator fun invoke(): Flow<MemoSortOrder> = userSettingsRepository.observeMemoSortOrder()
+
 }

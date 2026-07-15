@@ -16,7 +16,6 @@ class ImportMemosUseCase @Inject constructor(private val memoRepository: MemoRep
             val filtered = memo.tagIds.filter { it in validTagIds }.distinct()
             if (filtered.size == memo.tagIds.size) memo else memo.copy(tagIds = filtered)
         }
-
         memoRepository.importAll(data.tags, sanitizedMemos)
     }
 

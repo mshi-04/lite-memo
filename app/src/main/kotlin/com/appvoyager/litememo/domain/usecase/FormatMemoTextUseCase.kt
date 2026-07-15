@@ -14,4 +14,5 @@ class FormatMemoTextUseCase @Inject constructor() {
             else -> null
         }
     }
+
 }

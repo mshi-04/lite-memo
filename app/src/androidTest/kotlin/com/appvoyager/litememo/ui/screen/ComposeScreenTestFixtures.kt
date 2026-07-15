@@ -8,13 +8,13 @@ import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @Composable
-internal fun TestScreenContent(content: @Composable () -> Unit) {
+fun TestScreenContent(content: @Composable () -> Unit) {
     LiteMemoTheme {
         content()
     }
 }
 
-internal fun testMemoUiModel(
+fun testMemoUiModel(
     id: String = "memo-1",
     title: String = "Title",
     body: String = "Body",
@@ -30,13 +30,13 @@ internal fun testMemoUiModel(
     thumbnailPath = thumbnailPath
 )
 
-internal fun testTagUiModel(id: String = "tag-1", name: String = "Tag") = TagUiModel(
+fun testTagUiModel(id: String = "tag-1", name: String = "Tag") = TagUiModel(
     id = id,
     name = name,
     colorArgb = 0xFF4CAF50
 )
 
-internal fun testMemoImageUiModel(
+fun testMemoImageUiModel(
     id: String = "image-1",
     fileName: String = "image-1.jpg",
     filePath: String = "/missing/image-1.jpg",

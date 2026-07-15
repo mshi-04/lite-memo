@@ -52,7 +52,7 @@ class SettingsViewModel @Inject constructor(
     private var isAppLockAuthenticating = false
 
     private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
-    internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
+    val snackbarEvent = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
         observeThemeModeUseCase(),
@@ -200,7 +200,7 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-internal sealed interface SettingsSnackbarEvent {
+sealed interface SettingsSnackbarEvent {
     data object ExportSuccess : SettingsSnackbarEvent
     data object ExportError : SettingsSnackbarEvent
     data object ImportSuccess : SettingsSnackbarEvent

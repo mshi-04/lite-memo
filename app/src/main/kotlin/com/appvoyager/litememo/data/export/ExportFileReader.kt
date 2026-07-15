@@ -77,7 +77,6 @@ class ExportFileReader @Inject constructor(
             }
             output.write(buffer, 0, read)
         }
-
         return output.toString(Charsets.UTF_8.name())
     }
 

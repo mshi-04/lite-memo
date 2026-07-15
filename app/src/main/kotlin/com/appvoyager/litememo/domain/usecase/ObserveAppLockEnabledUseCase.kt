@@ -9,4 +9,5 @@ class ObserveAppLockEnabledUseCase @Inject constructor(
 ) {
 
     operator fun invoke(): Flow<Boolean> = userSettingsRepository.observeAppLockEnabled()
+
 }

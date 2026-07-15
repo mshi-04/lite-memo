@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import com.appvoyager.litememo.R
 
-internal fun Context.launchShareMemo(text: String, subject: String?, onError: () -> Unit) {
+fun Context.launchShareMemo(text: String, subject: String?, onError: () -> Unit) {
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         putExtra(Intent.EXTRA_TEXT, text)
         if (!subject.isNullOrEmpty()) {

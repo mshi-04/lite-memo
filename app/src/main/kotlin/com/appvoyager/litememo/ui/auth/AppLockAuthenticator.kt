@@ -31,6 +31,12 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
             dispatchResult(authResult)
         }
 
+    private val biometricManager: BiometricManager
+        get() = BiometricManager.from(activity)
+
+    private val keyguardManager: KeyguardManager
+        get() = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+
     fun authenticate(callback: (AppLockAuthenticationResult) -> Unit) {
         if (pendingCallback != null) {
             callback(AppLockAuthenticationResult.UNAVAILABLE)
@@ -151,9 +157,4 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
         else -> AppLockAuthenticationResult.FAILED
     }
 
-    private val biometricManager: BiometricManager
-        get() = BiometricManager.from(activity)
-
-    private val keyguardManager: KeyguardManager
-        get() = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 }

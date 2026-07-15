@@ -113,4 +113,5 @@ class ApplyMemoBulkActionUseCase @Inject constructor(
             }
         memoRepository.saveAllMemos(updated)
     }
+
 }
