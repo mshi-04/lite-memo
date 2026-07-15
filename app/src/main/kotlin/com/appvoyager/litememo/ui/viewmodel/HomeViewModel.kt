@@ -22,6 +22,7 @@ import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
+import com.appvoyager.litememo.ui.state.SearchUiState
 import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -57,8 +59,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
-    private val isSearchActive = MutableStateFlow(false)
-    private val searchQuery = MutableStateFlow("")
+    private val searchState = MutableStateFlow(SearchUiState())
     private val selection = MutableStateFlow(HomeSelectionUiState())
     private val bulkTagDialog = MutableStateFlow(HomeBulkTagDialogUiState())
     private val retryTrigger = MutableStateFlow(false)
@@ -67,7 +68,9 @@ class HomeViewModel @Inject constructor(
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
-    private val searchResults = searchQuery
+    private val searchResults = searchState
+        .map { search -> search.query }
+        .distinctUntilChanged()
         .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
         .flatMapLatest { query ->
             if (query.isBlank()) {
@@ -81,15 +84,13 @@ class HomeViewModel @Inject constructor(
 
     private val uiControls = combine(
         selectedFilter,
-        isSearchActive,
-        searchQuery,
+        searchState,
         selection,
         bulkTagDialog
-    ) { filter, searching, query, activeSelection, tagDialog ->
+    ) { filter, search, activeSelection, tagDialog ->
         HomeUiControls(
             filter = filter,
-            searching = searching,
-            query = query,
+            search = search,
             selection = activeSelection,
             tagDialog = tagDialog
         )
@@ -116,13 +117,25 @@ class HomeViewModel @Inject constructor(
                 ?.map { memo -> memo.tagIds.toSet() }
                 ?.reduce { commonTagIds, tagIds -> commonTagIds intersect tagIds }
                 ?: emptySet()
+            val search = if (controls.search.isActive) {
+                SearchUiState(
+                    isActive = true,
+                    query = controls.search.query,
+                    hasError = searchHits == null,
+                    results = MemoUiModel.fromDomain(
+                        searchHits ?: emptyList(),
+                        tags,
+                        resolveMemoImagePathUseCase::invoke
+                    )
+                )
+            } else {
+                SearchUiState()
+            }
 
             HomeUiState(
                 isLoading = false,
                 selectedFilter = effectiveFilter,
-                isSearchActive = controls.searching,
-                searchQuery = controls.query,
-                hasSearchError = searchHits == null,
+                search = search,
                 selection = controls.selection,
                 allSelectedFavorite = allSelectedFavorite,
                 allSelectedTagIds = allSelectedTagIds,
@@ -130,11 +143,6 @@ class HomeViewModel @Inject constructor(
                 tags = tagUiModels,
                 memos = MemoUiModel.fromDomain(
                     filteredMemos,
-                    tags,
-                    resolveMemoImagePathUseCase::invoke
-                ),
-                searchResults = MemoUiModel.fromDomain(
-                    searchHits ?: emptyList(),
                     tags,
                     resolveMemoImagePathUseCase::invoke
                 )
@@ -145,8 +153,7 @@ class HomeViewModel @Inject constructor(
                     isLoading = false,
                     hasError = true,
                     selectedFilter = selectedFilter.value,
-                    isSearchActive = isSearchActive.value,
-                    searchQuery = searchQuery.value,
+                    search = searchState.value,
                     selection = selection.value,
                     bulkTagDialog = bulkTagDialog.value
                 )
@@ -163,20 +170,19 @@ class HomeViewModel @Inject constructor(
     }
 
     fun toggleSearch() {
-        val wasActive = isSearchActive.value
-        isSearchActive.value = !wasActive
-        if (wasActive) {
-            closeSearch()
+        searchState.update { search ->
+            if (search.isActive) SearchUiState() else SearchUiState(isActive = true)
         }
     }
 
     fun updateSearchQuery(query: String) {
-        searchQuery.value = query
+        searchState.update { search ->
+            if (search.isActive) search.copy(query = query) else search
+        }
     }
 
     fun closeSearch() {
-        isSearchActive.value = false
-        searchQuery.value = ""
+        searchState.update { SearchUiState() }
     }
 
     fun setMemoFavorite(memoId: MemoId, isFavorite: Boolean) {
@@ -247,7 +253,7 @@ class HomeViewModel @Inject constructor(
     fun getSelectedMemoForShare(): MemoUiModel? {
         val state = uiState.value
         val selectedId = state.selection.selectedMemoIds.singleOrNull() ?: return null
-        return (state.memos + state.searchResults).find { it.id == selectedId }
+        return (state.memos + state.search.results).find { it.id == selectedId }
     }
 
     fun retry() {
@@ -302,8 +308,7 @@ class HomeViewModel @Inject constructor(
 
 private data class HomeUiControls(
     val filter: HomeFilterUiState,
-    val searching: Boolean,
-    val query: String,
+    val search: SearchUiState,
     val selection: HomeSelectionUiState,
     val tagDialog: HomeBulkTagDialogUiState
 )

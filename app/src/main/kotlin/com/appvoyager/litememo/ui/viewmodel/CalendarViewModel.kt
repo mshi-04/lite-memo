@@ -16,6 +16,7 @@ import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
+import com.appvoyager.litememo.ui.state.SearchUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -54,8 +56,7 @@ class CalendarViewModel @Inject constructor(
     private val selectedDate = MutableStateFlow(initialDate)
     private val isCalendarExpanded = MutableStateFlow(true)
     private val isDatePickerVisible = MutableStateFlow(false)
-    private val isSearchActive = MutableStateFlow(false)
-    private val searchQuery = MutableStateFlow("")
+    private val searchState = MutableStateFlow(SearchUiState())
     private val retryTrigger = MutableStateFlow(0)
 
     private val observedCalendarData = combine(
@@ -80,7 +81,9 @@ class CalendarViewModel @Inject constructor(
         )
     }
 
-    private val searchResults = searchQuery
+    private val searchResults = searchState
+        .map { search -> search.query }
+        .distinctUntilChanged()
         .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
         .flatMapLatest { query ->
             if (query.isBlank()) {
@@ -95,10 +98,9 @@ class CalendarViewModel @Inject constructor(
     private val uiControls = combine(
         isCalendarExpanded,
         isDatePickerVisible,
-        isSearchActive,
-        searchQuery
-    ) { expanded, datePickerVisible, searching, query ->
-        CalendarUiControls(expanded, datePickerVisible, searching, query)
+        searchState
+    ) { expanded, datePickerVisible, search ->
+        CalendarUiControls(expanded, datePickerVisible, search)
     }
 
     val uiState: StateFlow<CalendarUiState> = retryTrigger.flatMapLatest {
@@ -112,6 +114,24 @@ class CalendarViewModel @Inject constructor(
             val hasError = observed.monthSummary == null ||
                 observed.memos == null ||
                 observed.tags == null
+            val search = if (controls.search.isActive) {
+                SearchUiState(
+                    isActive = true,
+                    query = controls.search.query,
+                    hasError = searchHits == null,
+                    results = if (searchHits != null && observed.tags != null) {
+                        MemoUiModel.fromDomain(
+                            searchHits,
+                            observed.tags,
+                            resolveMemoImagePathUseCase::invoke
+                        )
+                    } else {
+                        emptyList()
+                    }
+                )
+            } else {
+                SearchUiState()
+            }
             CalendarUiState(
                 isLoading = false,
                 hasError = hasError,
@@ -119,22 +139,11 @@ class CalendarViewModel @Inject constructor(
                 selectedDate = date.value,
                 isCalendarExpanded = controls.expanded,
                 isDatePickerVisible = controls.datePickerVisible,
-                isSearchActive = controls.searching,
-                searchQuery = controls.query,
+                search = search,
                 days = observed.monthSummary?.toDayUiStates(date) ?: emptyList(),
                 memos = if (observed.memos != null && observed.tags != null) {
                     MemoUiModel.fromDomain(
                         observed.memos,
-                        observed.tags,
-                        resolveMemoImagePathUseCase::invoke
-                    )
-                } else {
-                    emptyList()
-                },
-                hasSearchError = searchHits == null,
-                searchResults = if (searchHits != null && observed.tags != null) {
-                    MemoUiModel.fromDomain(
-                        searchHits,
                         observed.tags,
                         resolveMemoImagePathUseCase::invoke
                     )
@@ -178,20 +187,19 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun toggleSearch() {
-        val wasActive = isSearchActive.value
-        isSearchActive.value = !wasActive
-        if (wasActive) {
-            closeSearch()
+        searchState.update { search ->
+            if (search.isActive) SearchUiState() else SearchUiState(isActive = true)
         }
     }
 
     fun updateSearchQuery(query: String) {
-        searchQuery.value = query
+        searchState.update { search ->
+            if (search.isActive) search.copy(query = query) else search
+        }
     }
 
     fun closeSearch() {
-        isSearchActive.value = false
-        searchQuery.value = ""
+        searchState.update { SearchUiState() }
     }
 
     fun retry() {
@@ -243,6 +251,5 @@ private data class ObservedCalendarData(
 private data class CalendarUiControls(
     val expanded: Boolean,
     val datePickerVisible: Boolean,
-    val searching: Boolean,
-    val query: String
+    val search: SearchUiState
 )

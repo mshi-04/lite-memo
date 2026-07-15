@@ -25,6 +25,7 @@ import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
+import com.appvoyager.litememo.ui.state.SearchUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -173,7 +174,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun updateSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
+    fun stateTransitionSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(
             memos = listOf(
@@ -184,56 +185,62 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
+        // StateTransition: query changes publish matching memos in the shared search state.
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.isSearchActive && it.searchResults.isNotEmpty() }
+        val state = viewModel.uiState.first {
+            it.search.isActive &&
+                it.search.query == "shopping" &&
+                it.search.results.isNotEmpty()
+        }
 
         // Assert
-        assertEquals(
-            Triple(true, "shopping", listOf("Shopping list")),
-            Triple(state.isSearchActive, state.searchQuery, state.searchResults.map { it.title })
-        )
+        assertEquals(listOf("Shopping list"), state.search.results.map { it.title })
     }
 
     @Test
-    fun toggleSearchClearsQueryWhenSearchIsClosed() = runTest(dispatcher) {
+    fun stateTransitionToggleSearchResetsSearchWhenClosed() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val activeState = viewModel.uiState.first { it.isSearchActive }
-        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+        viewModel.uiState.first {
+            it.search.isActive && it.search.query == "shopping"
+        }
 
         // Act
+        // StateTransition: toggling an active search resets the complete search snapshot.
         viewModel.toggleSearch()
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.isSearchActive }
+        val state = viewModel.uiState.first { !it.search.isActive }
 
         // Assert
-        assertEquals("", state.searchQuery)
+        assertEquals(SearchUiState(), state.search)
     }
 
     @Test
-    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+    fun stateTransitionCloseSearchResetsSearch() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val activeState = viewModel.uiState.first { it.isSearchActive }
-        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+        viewModel.uiState.first {
+            it.search.isActive && it.search.query == "shopping"
+        }
 
         // Act
+        // StateTransition: closing search resets active, query, error, and results together.
         viewModel.closeSearch()
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.isSearchActive }
+        val state = viewModel.uiState.first { !it.search.isActive }
 
         // Assert
-        assertEquals(false to "", state.isSearchActive to state.searchQuery)
+        assertEquals(SearchUiState(), state.search)
     }
 
     @Test
