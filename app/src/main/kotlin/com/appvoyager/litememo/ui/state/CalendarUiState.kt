@@ -10,10 +10,7 @@ data class CalendarUiState(
     val selectedDate: LocalDate? = null,
     val isCalendarExpanded: Boolean = true,
     val isDatePickerVisible: Boolean = false,
-    val isSearchActive: Boolean = false,
-    val searchQuery: String = "",
-    val hasSearchError: Boolean = false,
+    val search: SearchUiState = SearchUiState(),
     val days: List<CalendarDayUiState> = emptyList(),
-    val memos: List<MemoUiModel> = emptyList(),
-    val searchResults: List<MemoUiModel> = emptyList()
+    val memos: List<MemoUiModel> = emptyList()
 )

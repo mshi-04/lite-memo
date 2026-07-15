@@ -22,6 +22,7 @@ import com.appvoyager.litememo.ui.component.MemoCardTestTags
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
+import com.appvoyager.litememo.ui.state.SearchUiState
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -83,14 +84,18 @@ class HomeScreenComposeTest {
                 HomeScreen(
                     uiState = uiState,
                     onFilterSelect = {},
-                    onSearchToggle = { uiState = uiState.copy(isSearchActive = true) },
+                    onSearchToggle = {
+                        uiState = uiState.copy(search = SearchUiState(isActive = true))
+                    },
                     onSearchQueryChange = { query ->
                         uiState = uiState.copy(
-                            searchQuery = query,
-                            searchResults = uiState.memos.filter { memo ->
-                                memo.title.contains(query, ignoreCase = true) ||
-                                    memo.body.contains(query, ignoreCase = true)
-                            }
+                            search = uiState.search.copy(
+                                query = query,
+                                results = uiState.memos.filter { memo ->
+                                    memo.title.contains(query, ignoreCase = true) ||
+                                        memo.body.contains(query, ignoreCase = true)
+                                }
+                            )
                         )
                     },
                     onMemoLongClick = {},

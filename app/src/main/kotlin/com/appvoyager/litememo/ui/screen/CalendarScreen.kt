@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,10 +29,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,19 +41,14 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -71,6 +63,7 @@ import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.component.SearchTopBar
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.state.MemoUiModel
@@ -169,29 +162,29 @@ private fun CalendarContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            CalendarTopBar(
-                isSearchActive = uiState.isSearchActive,
-                searchQuery = uiState.searchQuery,
+            SearchTopBar(
+                search = uiState.search,
                 onSearchToggle = onSearchToggle,
-                onSearchQueryChange = onSearchQueryChange
+                onSearchQueryChange = onSearchQueryChange,
+                inactiveTitle = stringResource(R.string.calendar_title)
             )
         }
-        if (uiState.isSearchActive) {
-            if (uiState.hasSearchError) {
+        if (uiState.search.isActive) {
+            if (uiState.search.hasError) {
                 item {
                     MessageContent(
                         title = stringResource(R.string.search_error_title),
                         body = stringResource(R.string.search_error_body)
                     )
                 }
-            } else if (uiState.searchQuery.isBlank()) {
+            } else if (uiState.search.query.isBlank()) {
                 item {
                     MessageContent(
                         title = stringResource(R.string.search_hint),
                         body = stringResource(R.string.search_hint_body)
                     )
                 }
-            } else if (uiState.searchResults.isEmpty()) {
+            } else if (uiState.search.results.isEmpty()) {
                 item {
                     MessageContent(
                         title = stringResource(R.string.no_search_results_title),
@@ -200,7 +193,7 @@ private fun CalendarContent(
                 }
             } else {
                 items(
-                    items = uiState.searchResults,
+                    items = uiState.search.results,
                     key = { memo -> memo.id.value }
                 ) { memo ->
                     MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
@@ -238,78 +231,6 @@ private fun CalendarContent(
                 ) { memo ->
                     MemoCard(memo = memo, onClick = { onMemoClick(memo.id) })
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CalendarTopBar(
-    isSearchActive: Boolean,
-    searchQuery: String,
-    onSearchToggle: () -> Unit,
-    onSearchQueryChange: (String) -> Unit
-) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isSearchActive) {
-        if (isSearchActive) {
-            runCatching { focusRequester.requestFocus() }
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isSearchActive) {
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(R.string.close_search)
-                )
-            }
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                placeholder = { Text(text = stringResource(R.string.search_hint)) },
-                singleLine = true,
-                trailingIcon = if (searchQuery.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.clear_search),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                } else {
-                    null
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.calendar_title),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search)
-                )
             }
         }
     }

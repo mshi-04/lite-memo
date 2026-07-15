@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,14 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.AlertDialog
@@ -38,8 +35,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,8 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +59,7 @@ import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.component.SearchTopBar
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
@@ -180,31 +174,30 @@ private fun HomeContent(
             }
         } else {
             item {
-                HomeTopBar(
-                    isSearchActive = uiState.isSearchActive,
-                    searchQuery = uiState.searchQuery,
+                SearchTopBar(
+                    search = uiState.search,
                     onSearchToggle = onSearchToggle,
                     onSearchQueryChange = onSearchQueryChange
                 )
             }
         }
-        if (uiState.isSearchActive) {
+        if (uiState.search.isActive) {
             when {
-                uiState.hasSearchError -> item {
+                uiState.search.hasError -> item {
                     MessageContent(
                         title = stringResource(R.string.search_error_title),
                         body = stringResource(R.string.search_error_body)
                     )
                 }
 
-                uiState.searchQuery.isBlank() -> item {
+                uiState.search.query.isBlank() -> item {
                     MessageContent(
                         title = stringResource(R.string.search_hint),
                         body = stringResource(R.string.search_hint_body)
                     )
                 }
 
-                uiState.searchResults.isEmpty() -> item {
+                uiState.search.results.isEmpty() -> item {
                     MessageContent(
                         title = stringResource(R.string.no_search_results_title),
                         body = stringResource(R.string.no_search_results_body)
@@ -212,7 +205,7 @@ private fun HomeContent(
                 }
 
                 else -> items(
-                    items = uiState.searchResults,
+                    items = uiState.search.results,
                     key = { memo -> memo.id.value }
                 ) { memo ->
                     SelectableMemoCard(
@@ -277,73 +270,6 @@ private fun SelectableMemoCard(
         onLongClick = { onMemoLongClick(memo.id) },
         selected = selected
     )
-}
-
-@Composable
-private fun HomeTopBar(
-    isSearchActive: Boolean,
-    searchQuery: String,
-    onSearchToggle: () -> Unit,
-    onSearchQueryChange: (String) -> Unit
-) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isSearchActive) {
-        if (isSearchActive) {
-            runCatching { focusRequester.requestFocus() }
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isSearchActive) {
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(R.string.close_search)
-                )
-            }
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                placeholder = { Text(text = stringResource(R.string.search_hint)) },
-                singleLine = true,
-                trailingIcon = if (searchQuery.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.clear_search),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                } else {
-                    null
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search)
-                )
-            }
-        }
-    }
 }
 
 @Composable
