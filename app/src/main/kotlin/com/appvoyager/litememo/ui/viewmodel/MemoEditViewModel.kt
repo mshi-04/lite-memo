@@ -288,6 +288,7 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
+    // 保存・破棄・ゴミ箱送りは同一の [persistMutex] で直列化し、進行中の保存が完了した後に破棄／ゴミ箱送りが走ることを保証する。
     private suspend fun persist(): Boolean = persistMutex.withLock {
         val state = _uiState.value
         if (state.isContentBlank()) return@withLock true

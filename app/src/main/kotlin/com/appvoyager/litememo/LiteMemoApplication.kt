@@ -2,6 +2,7 @@ package com.appvoyager.litememo
 
 import android.app.Application
 import android.util.Log
+import com.appvoyager.litememo.di.ApplicationScope
 import com.appvoyager.litememo.ui.widget.data.WidgetRefresher
 import com.appvoyager.litememo.ui.widget.di.WidgetEntryPoint
 import com.google.android.gms.ads.MobileAds
@@ -9,14 +10,13 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val WIDGET_REFRESH_DEBOUNCE_MS = 500L
 private const val WIDGET_REFRESH_TAG = "WidgetRefresh"
@@ -24,7 +24,9 @@ private const val WIDGET_REFRESH_TAG = "WidgetRefresh"
 @HiltAndroidApp
 class LiteMemoApplication : Application() {
 
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
 
     override fun onCreate() {
         super.onCreate()

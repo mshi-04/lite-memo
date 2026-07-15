@@ -20,6 +20,7 @@ import com.appvoyager.litememo.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -52,7 +53,7 @@ class SettingsViewModel @Inject constructor(
     private var isAppLockAuthenticating = false
 
     private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
-    val snackbarEvent = _snackbarEvent.receiveAsFlow()
+    val snackbarEvent: Flow<SettingsSnackbarEvent> = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
         observeThemeModeUseCase(),
