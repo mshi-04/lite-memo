@@ -283,7 +283,8 @@ private fun TagEditDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    DEFAULT_TAG_COLORS.forEach { colorArgb ->
+                    DEFAULT_TAG_COLORS.forEach { paletteColor ->
+                        val colorArgb = paletteColor.argb
                         val isSelected = colorArgb == state.colorArgb
                         val colorCode = colorArgb.toString(HEX_RADIX)
                             .uppercase()
