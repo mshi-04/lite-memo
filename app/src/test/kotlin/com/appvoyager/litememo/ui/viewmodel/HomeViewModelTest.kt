@@ -190,18 +190,13 @@ class HomeViewModelTest {
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.search.isActive && it.search.results.isNotEmpty()
+            it.search.isActive &&
+                it.search.query == "shopping" &&
+                it.search.results.isNotEmpty()
         }
 
         // Assert
-        assertEquals(
-            Triple(true, "shopping", listOf("Shopping list")),
-            Triple(
-                state.search.isActive,
-                state.search.query,
-                state.search.results.map { it.title }
-            )
-        )
+        assertEquals(listOf("Shopping list"), state.search.results.map { it.title })
     }
 
     @Test

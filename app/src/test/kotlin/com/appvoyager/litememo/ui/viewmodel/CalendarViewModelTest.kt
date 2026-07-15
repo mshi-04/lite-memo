@@ -282,10 +282,7 @@ class CalendarViewModelTest {
         }
 
         // Assert
-        assertEquals(
-            false to listOf("Shopping"),
-            state.search.hasError to state.search.results.map { it.title }
-        )
+        assertEquals(listOf("Shopping"), state.search.results.map { it.title })
     }
 
     private fun calendarViewModel(

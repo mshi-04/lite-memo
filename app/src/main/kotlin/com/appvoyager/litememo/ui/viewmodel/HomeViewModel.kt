@@ -182,7 +182,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun closeSearch() {
-        searchState.value = SearchUiState()
+        searchState.update { SearchUiState() }
     }
 
     fun setMemoFavorite(memoId: MemoId, isFavorite: Boolean) {

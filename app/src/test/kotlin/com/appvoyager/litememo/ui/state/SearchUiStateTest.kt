@@ -8,20 +8,32 @@ import org.junit.jupiter.api.Test
 class SearchUiStateTest {
 
     @Test
-    fun normalConstructorKeepsActiveSearchValues() {
+    fun normalConstructorKeepsActiveQuery() {
+        // Act
+        // Normal: active search keeps its query.
+        val search = SearchUiState(
+            isActive = true,
+            query = "shopping"
+        )
+
+        // Assert
+        assertEquals("shopping", search.query)
+    }
+
+    @Test
+    fun normalConstructorKeepsActiveResults() {
         // Arrange
         val results = listOf(memoUiModel())
 
         // Act
-        // Normal: active search keeps its query and results.
+        // Normal: active search keeps its results.
         val search = SearchUiState(
             isActive = true,
-            query = "shopping",
             results = results
         )
 
         // Assert
-        assertEquals("shopping" to results, search.query to search.results)
+        assertEquals(results, search.results)
     }
 
     @Test

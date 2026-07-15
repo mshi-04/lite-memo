@@ -36,14 +36,6 @@ fun SearchTopBar(
     modifier: Modifier = Modifier,
     inactiveTitle: String = ""
 ) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(search.isActive) {
-        if (search.isActive) {
-            runCatching { focusRequester.requestFocus() }
-        }
-    }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -51,6 +43,12 @@ fun SearchTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (search.isActive) {
+            val focusRequester = remember { FocusRequester() }
+
+            LaunchedEffect(focusRequester) {
+                runCatching { focusRequester.requestFocus() }
+            }
+
             IconButton(onClick = onSearchToggle) {
                 Icon(
                     imageVector = Icons.Default.Close,

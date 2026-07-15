@@ -199,7 +199,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun closeSearch() {
-        searchState.value = SearchUiState()
+        searchState.update { SearchUiState() }
     }
 
     fun retry() {
