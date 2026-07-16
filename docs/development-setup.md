@@ -75,5 +75,5 @@ Gradle から直接実行する場合は次のとおりです。
 ## CI キャッシュ
 
 GitHub Actions の Gradle / AVD キャッシュは、長期運用する `main` / `develop` の push で作成します。
-`main` / `develop` では通常の CI がキャッシュを更新します。
+`main` / `develop` では通常の CI が未作成のキャッシュを作成します。
 Pull Request では base branch 側の既存キャッシュを復元するだけとし、PR 固有の `refs/pull/.../merge` にはキャッシュを作成しません。
