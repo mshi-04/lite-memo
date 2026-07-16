@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.event
+package com.appvoyager.litememo.ui.action
 
 import com.appvoyager.litememo.domain.model.value.MemoId
 

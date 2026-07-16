@@ -48,12 +48,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.ui.action.TrashScreenActions
+import com.appvoyager.litememo.ui.action.TrashedMemoCardActions
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.data.TrashedMemoCardSelection
-import com.appvoyager.litememo.ui.event.TrashScreenActions
-import com.appvoyager.litememo.ui.event.TrashedMemoCardActions
 import com.appvoyager.litememo.ui.model.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.state.TrashUiState
 import java.time.Instant

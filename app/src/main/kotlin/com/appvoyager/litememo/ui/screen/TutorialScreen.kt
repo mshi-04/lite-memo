@@ -39,8 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.action.TutorialNavigationActions
 import com.appvoyager.litememo.ui.data.TutorialPageItem
-import com.appvoyager.litememo.ui.event.TutorialNavigationActions
 import com.appvoyager.litememo.ui.state.TutorialNavigationState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import kotlinx.coroutines.launch

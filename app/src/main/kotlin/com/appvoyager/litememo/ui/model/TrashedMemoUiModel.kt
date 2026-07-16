@@ -2,7 +2,6 @@ package com.appvoyager.litememo.ui.model
 
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import com.appvoyager.litememo.ui.model.TagUiModel
 
 data class TrashedMemoUiModel(
     val id: MemoId,

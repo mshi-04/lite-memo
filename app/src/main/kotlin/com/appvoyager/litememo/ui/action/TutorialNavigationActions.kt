@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.event
+package com.appvoyager.litememo.ui.action
 
 data class TutorialNavigationActions(
     val onPreviousClick: () -> Unit,

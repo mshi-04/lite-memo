@@ -52,7 +52,6 @@ import com.appvoyager.litememo.ui.route.SettingsRoute
 import com.appvoyager.litememo.ui.route.TagManageRoute
 import com.appvoyager.litememo.ui.route.TrashRoute
 import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
-import com.appvoyager.litememo.ui.type.LiteMemoDestination
 import com.appvoyager.litememo.ui.viewmodel.LiteMemoAppViewModel
 import kotlinx.coroutines.launch
 

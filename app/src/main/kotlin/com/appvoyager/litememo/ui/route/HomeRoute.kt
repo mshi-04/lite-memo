@@ -12,8 +12,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.event.launchShareMemo
 import com.appvoyager.litememo.ui.screen.HomeScreen
+import com.appvoyager.litememo.ui.util.launchShareMemo
 import com.appvoyager.litememo.ui.viewmodel.HomeViewModel
 
 @Composable

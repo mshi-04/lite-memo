@@ -136,7 +136,9 @@ kover {
                     "com.appvoyager.litememo.domain.model.*",
                     "com.appvoyager.litememo.domain.model.value.*",
                     "com.appvoyager.litememo.domain.usecase.*",
+                    "com.appvoyager.litememo.ui.model.*",
                     "com.appvoyager.litememo.ui.state.*",
+                    "com.appvoyager.litememo.ui.type.*",
                     "com.appvoyager.litememo.ui.viewmodel.*"
                 )
             }

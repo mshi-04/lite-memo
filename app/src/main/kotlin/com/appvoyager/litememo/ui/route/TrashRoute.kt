@@ -10,7 +10,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.event.TrashScreenActions
+import com.appvoyager.litememo.ui.action.TrashScreenActions
 import com.appvoyager.litememo.ui.screen.TrashScreen
 import com.appvoyager.litememo.ui.viewmodel.TrashViewModel
 

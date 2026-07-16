@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.event
+package com.appvoyager.litememo.ui.auth
 
 import android.app.Activity
 import android.app.KeyguardManager

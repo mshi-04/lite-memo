@@ -22,7 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.appvoyager.litememo.domain.model.ThemeMode
-import com.appvoyager.litememo.ui.event.AppLockAuthenticator
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticator
 import com.appvoyager.litememo.ui.navigation.LiteMemoApp
 import com.appvoyager.litememo.ui.screen.AppLockScreen
 import com.appvoyager.litememo.ui.screen.TutorialScreen
