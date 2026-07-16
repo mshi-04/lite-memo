@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 
 @Composable
 fun TagChip(tag: TagUiModel?, modifier: Modifier = Modifier) {

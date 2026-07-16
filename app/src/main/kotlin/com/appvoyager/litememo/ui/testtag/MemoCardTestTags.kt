@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.component
+package com.appvoyager.litememo.ui.testtag
 
 object MemoCardTestTags {
     const val THUMBNAIL = "memoCardThumbnail"

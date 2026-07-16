@@ -15,8 +15,10 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.data.SettingsUiFlags
+import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.state.SettingsUiState
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -66,7 +68,7 @@ class SettingsViewModel @Inject constructor(
             isImporting,
             showImportConfirmDialog
         ) { themeExpanded, expanded, exporting, importing, importDialog ->
-            UiFlags(themeExpanded, expanded, exporting, importing, importDialog)
+            SettingsUiFlags(themeExpanded, expanded, exporting, importing, importDialog)
         }
     ) { themeMode, sortOrder, appLockEnabled, flags ->
         SettingsUiState(
@@ -200,22 +202,3 @@ class SettingsViewModel @Inject constructor(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
-
-sealed interface SettingsSnackbarEvent {
-    data object ExportSuccess : SettingsSnackbarEvent
-    data object ExportError : SettingsSnackbarEvent
-    data object ImportSuccess : SettingsSnackbarEvent
-    data object ImportError : SettingsSnackbarEvent
-    data object AppLockAuthenticationFailed : SettingsSnackbarEvent
-    data object AppLockAuthenticationCanceled : SettingsSnackbarEvent
-    data object AppLockNoDeviceCredential : SettingsSnackbarEvent
-    data object AppLockUnavailable : SettingsSnackbarEvent
-}
-
-private data class UiFlags(
-    val themeDropdownExpanded: Boolean,
-    val sortOrderExpanded: Boolean,
-    val isExporting: Boolean,
-    val isImporting: Boolean,
-    val showImportConfirmDialog: Boolean
-)

@@ -2,9 +2,9 @@ package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.runtime.Composable
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.state.MemoImageUiModel
-import com.appvoyager.litememo.ui.state.MemoUiModel
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.model.MemoImageUiModel
+import com.appvoyager.litememo.ui.model.MemoUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @Composable

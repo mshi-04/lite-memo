@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.route
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.screen.TagManageScreen
 import com.appvoyager.litememo.ui.viewmodel.TagManageViewModel
 
 @Composable

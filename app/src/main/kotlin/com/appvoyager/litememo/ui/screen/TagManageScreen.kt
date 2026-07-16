@@ -57,10 +57,10 @@ import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
-import com.appvoyager.litememo.ui.state.DEFAULT_TAG_COLORS
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.TagEditState
 import com.appvoyager.litememo.ui.state.TagManageUiState
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.theme.DEFAULT_TAG_COLORS
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 private const val HEX_RADIX = 16

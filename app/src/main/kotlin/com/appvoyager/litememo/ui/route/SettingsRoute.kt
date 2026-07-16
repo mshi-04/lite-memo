@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.route
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -18,8 +18,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
-import com.appvoyager.litememo.ui.viewmodel.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.data.SettingsSnackbarMessages
+import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.screen.SettingsScreen
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -148,17 +150,6 @@ fun SettingsRoute(
 }
 
 private fun Uri.toExportFileReference(): ExportFileReference = ExportFileReference(toString())
-
-private data class SettingsSnackbarMessages(
-    val exportSuccess: String,
-    val exportError: String,
-    val importSuccess: String,
-    val importError: String,
-    val appLockAuthFailed: String,
-    val appLockAuthCanceled: String,
-    val appLockNoDeviceCredential: String,
-    val appLockUnavailable: String
-)
 
 private fun SettingsSnackbarEvent.toMessage(messages: SettingsSnackbarMessages): String =
     when (this) {

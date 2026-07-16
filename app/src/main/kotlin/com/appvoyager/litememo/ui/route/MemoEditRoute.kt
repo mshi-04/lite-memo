@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.route
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,8 +15,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.viewmodel.MemoEditNavigationEvent
-import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorEvent
+import com.appvoyager.litememo.ui.event.MemoEditNavigationEvent
+import com.appvoyager.litememo.ui.event.MemoEditOperationErrorEvent
+import com.appvoyager.litememo.ui.screen.MemoEditScreen
+import com.appvoyager.litememo.ui.util.launchShareMemo
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable

@@ -11,11 +11,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
-import com.appvoyager.litememo.ui.state.AppLockMessage
-import com.appvoyager.litememo.ui.state.AppLockStatus
-import com.appvoyager.litememo.ui.state.TutorialStatus
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.type.AppLockMessage
+import com.appvoyager.litememo.ui.type.AppLockStatus
+import com.appvoyager.litememo.ui.type.TutorialStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first

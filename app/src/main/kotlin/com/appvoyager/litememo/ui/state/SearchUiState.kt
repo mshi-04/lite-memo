@@ -1,5 +1,7 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.ui.model.MemoUiModel
+
 data class SearchUiState(
     val isActive: Boolean = false,
     val query: String = "",

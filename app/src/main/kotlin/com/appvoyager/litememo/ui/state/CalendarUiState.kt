@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.ui.model.MemoUiModel
 import java.time.LocalDate
 import java.time.YearMonth
 

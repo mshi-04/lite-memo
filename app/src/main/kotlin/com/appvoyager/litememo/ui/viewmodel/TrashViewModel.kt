@@ -10,10 +10,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.data.ObservedTrashData
+import com.appvoyager.litememo.ui.model.TagUiModel
+import com.appvoyager.litememo.ui.model.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.state.TrashSelectionUiState
 import com.appvoyager.litememo.ui.state.TrashUiState
-import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -208,5 +209,3 @@ class TrashViewModel @Inject constructor(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
-
-private data class ObservedTrashData(val memos: List<Memo>?, val tags: List<Tag>?)

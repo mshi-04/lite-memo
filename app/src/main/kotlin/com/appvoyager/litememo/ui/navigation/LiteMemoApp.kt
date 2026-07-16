@@ -43,15 +43,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.component.BannerAd
-import com.appvoyager.litememo.ui.screen.CalendarRoute
-import com.appvoyager.litememo.ui.screen.HomeRoute
-import com.appvoyager.litememo.ui.screen.MemoEditRoute
-import com.appvoyager.litememo.ui.screen.OssLicensesRoute
-import com.appvoyager.litememo.ui.screen.SettingsRoute
-import com.appvoyager.litememo.ui.screen.TagManageRoute
-import com.appvoyager.litememo.ui.screen.TrashRoute
+import com.appvoyager.litememo.ui.route.CalendarRoute
+import com.appvoyager.litememo.ui.route.HomeRoute
+import com.appvoyager.litememo.ui.route.MemoEditRoute
+import com.appvoyager.litememo.ui.route.OssLicensesRoute
+import com.appvoyager.litememo.ui.route.SettingsRoute
+import com.appvoyager.litememo.ui.route.TagManageRoute
+import com.appvoyager.litememo.ui.route.TrashRoute
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.LiteMemoAppViewModel
 import kotlinx.coroutines.launch
 

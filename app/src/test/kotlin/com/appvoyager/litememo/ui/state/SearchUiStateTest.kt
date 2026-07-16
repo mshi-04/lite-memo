@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.ui.model.MemoUiModel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test

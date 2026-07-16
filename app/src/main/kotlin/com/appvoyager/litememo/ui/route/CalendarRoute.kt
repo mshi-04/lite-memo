@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.route
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.ui.screen.CalendarScreen
 import com.appvoyager.litememo.ui.viewmodel.CalendarViewModel
 
 @Composable
@@ -31,7 +32,7 @@ fun CalendarRoute(
         onRetry = { viewModel.retry() },
         onMemoClick = onMemoClick,
         onCreateMemoClick = {
-            viewModel.selectedDateMillis()?.let(onCreateMemoClick)
+            viewModel.selectedDateMillis().let(onCreateMemoClick)
         },
         modifier = modifier
     )
