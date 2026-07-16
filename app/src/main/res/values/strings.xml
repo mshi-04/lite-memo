@@ -167,4 +167,16 @@
     <string name="settings_browser_not_found">ブラウザが見つかりませんでした。</string>
     <string name="settings_file_picker_not_found">ファイルを開けるアプリが見つかりませんでした。</string>
     <string name="settings_open_source_licenses">オープンソースライセンス</string>
+
+    <!-- Home screen widgets -->
+    <string name="widget_new_memo_label">新規メモ</string>
+    <string name="widget_new_memo_button">メモ</string>
+    <string name="widget_new_memo_desc">ワンタップで新しいメモを作成します。</string>
+    <string name="widget_recent_label">最近のメモ</string>
+    <string name="widget_recent_desc">お気に入りと最近更新したメモを表示します。</string>
+    <string name="widget_recent_empty">メモがありません。タップして作成</string>
+    <string name="widget_untitled">無題</string>
+    <string name="widget_preview_memo_1">買い物リスト</string>
+    <string name="widget_preview_memo_2">会議メモ</string>
+    <string name="widget_preview_memo_3">アイデア</string>
 </resources>

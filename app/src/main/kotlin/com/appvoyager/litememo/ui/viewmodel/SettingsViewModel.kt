@@ -15,11 +15,14 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.data.SettingsUiFlags
+import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.state.SettingsUiState
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -48,16 +51,11 @@ class SettingsViewModel @Inject constructor(
     private val isExporting = MutableStateFlow(false)
     private val isImporting = MutableStateFlow(false)
     private val showImportConfirmDialog = MutableStateFlow(false)
-
     private var pendingImportReference: ExportFileReference? = null
-
-    // AppLock 有効化の認証中に再度トグルされると Authenticator が UNAVAILABLE を返し、
-    // 実態と違う失敗表示になるため、認証要求中は再要求を無視する。
     private var isAppLockAuthenticating = false
 
-    // 異なる文言（Export/Import/AppLock）の通知が最新1件に潰れないよう BUFFERED を使う。
     private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
-    internal val snackbarEvent = _snackbarEvent.receiveAsFlow()
+    val snackbarEvent: Flow<SettingsSnackbarEvent> = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
         observeThemeModeUseCase(),
@@ -70,7 +68,7 @@ class SettingsViewModel @Inject constructor(
             isImporting,
             showImportConfirmDialog
         ) { themeExpanded, expanded, exporting, importing, importDialog ->
-            UiFlags(themeExpanded, expanded, exporting, importing, importDialog)
+            SettingsUiFlags(themeExpanded, expanded, exporting, importing, importDialog)
         }
     ) { themeMode, sortOrder, appLockEnabled, flags ->
         SettingsUiState(
@@ -86,7 +84,7 @@ class SettingsViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = SettingsUiState(appVersion = appVersion)
     )
 
@@ -199,23 +197,8 @@ class SettingsViewModel @Inject constructor(
         showImportConfirmDialog.value = false
         pendingImportReference = null
     }
-}
 
-internal sealed interface SettingsSnackbarEvent {
-    data object ExportSuccess : SettingsSnackbarEvent
-    data object ExportError : SettingsSnackbarEvent
-    data object ImportSuccess : SettingsSnackbarEvent
-    data object ImportError : SettingsSnackbarEvent
-    data object AppLockAuthenticationFailed : SettingsSnackbarEvent
-    data object AppLockAuthenticationCanceled : SettingsSnackbarEvent
-    data object AppLockNoDeviceCredential : SettingsSnackbarEvent
-    data object AppLockUnavailable : SettingsSnackbarEvent
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
 }
-
-private data class UiFlags(
-    val themeDropdownExpanded: Boolean,
-    val sortOrderExpanded: Boolean,
-    val isExporting: Boolean,
-    val isImporting: Boolean,
-    val showImportConfirmDialog: Boolean
-)

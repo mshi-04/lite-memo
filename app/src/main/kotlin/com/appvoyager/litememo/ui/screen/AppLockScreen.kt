@@ -23,10 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.state.AppLockMessage
-import com.appvoyager.litememo.ui.state.AppLockStatus
 import com.appvoyager.litememo.ui.state.AppLockUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+import com.appvoyager.litememo.ui.type.AppLockMessage
+import com.appvoyager.litememo.ui.type.AppLockStatus
 
 @Composable
 fun AppLockScreen(

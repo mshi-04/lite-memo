@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.viewmodel
 import app.cash.turbine.test
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.usecase.CompleteTutorialUseCase
@@ -10,10 +11,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
-import com.appvoyager.litememo.ui.state.AppLockMessage
-import com.appvoyager.litememo.ui.state.AppLockStatus
-import com.appvoyager.litememo.ui.state.TutorialStatus
+import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.type.AppLockMessage
+import com.appvoyager.litememo.ui.type.AppLockStatus
+import com.appvoyager.litememo.ui.type.TutorialStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -372,6 +374,33 @@ class MainViewModelTest {
 
         // Assert
         assertEquals(1, memoRepository.purgeCutoffs.size)
+    }
+
+    @Test
+    fun normalRequestWidgetNavExposesPendingRequest() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+
+        // Act
+        // Normal: a widget tap request becomes the pending navigation
+        viewModel.requestWidgetNav(WidgetNavRequest.NewMemo)
+
+        // Assert
+        assertEquals(WidgetNavRequest.NewMemo, viewModel.pendingWidgetNav.value)
+    }
+
+    @Test
+    fun stateTransitionConsumeWidgetNavClearsPendingRequest() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = mainViewModel(FakeUserSettingsRepository())
+        viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo(MemoId("memo-1")))
+
+        // Act
+        // StateTransition: consuming the request clears it so it does not re-fire
+        viewModel.consumeWidgetNav()
+
+        // Assert
+        assertEquals(null, viewModel.pendingWidgetNav.value)
     }
 
     private fun mainViewModel(

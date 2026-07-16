@@ -57,11 +57,14 @@ import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
-import com.appvoyager.litememo.ui.state.DEFAULT_TAG_COLORS
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.TagEditState
 import com.appvoyager.litememo.ui.state.TagManageUiState
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.theme.DEFAULT_TAG_COLORS
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+
+private const val HEX_RADIX = 16
+private const val ARGB_HEX_DIGIT_COUNT = 8
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,8 +76,8 @@ fun TagManageScreen(
     onDeleteRequest: (TagUiModel) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
-    onEditNameChanged: (String) -> Unit,
-    onEditColorSelected: (Long) -> Unit,
+    onEditNameChange: (String) -> Unit,
+    onEditColorSelect: (Long) -> Unit,
     onSaveEdit: () -> Unit,
     onCancelEdit: () -> Unit,
     onRetry: () -> Unit,
@@ -149,8 +152,8 @@ fun TagManageScreen(
     uiState.editingTag?.let { editState ->
         TagEditDialog(
             state = editState,
-            onNameChanged = onEditNameChanged,
-            onColorSelected = onEditColorSelected,
+            onNameChange = onEditNameChange,
+            onColorSelect = onEditColorSelect,
             onSave = onSaveEdit,
             onDismiss = onCancelEdit
         )
@@ -225,8 +228,8 @@ private fun TagRow(tag: TagUiModel, onEditClick: () -> Unit, onDeleteClick: () -
 @Composable
 private fun TagEditDialog(
     state: TagEditState,
-    onNameChanged: (String) -> Unit,
-    onColorSelected: (Long) -> Unit,
+    onNameChange: (String) -> Unit,
+    onColorSelect: (Long) -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -247,7 +250,7 @@ private fun TagEditDialog(
             Column {
                 OutlinedTextField(
                     value = state.name,
-                    onValueChange = onNameChanged,
+                    onValueChange = onNameChange,
                     label = { Text(text = stringResource(R.string.tag_name_hint)) },
                     isError = state.nameError || state.duplicateNameError,
                     singleLine = true,
@@ -280,9 +283,12 @@ private fun TagEditDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    DEFAULT_TAG_COLORS.forEach { colorArgb ->
+                    DEFAULT_TAG_COLORS.forEach { paletteColor ->
+                        val colorArgb = paletteColor.argb
                         val isSelected = colorArgb == state.colorArgb
-                        val colorCode = colorArgb.toString(16).uppercase().padStart(8, '0')
+                        val colorCode = colorArgb.toString(HEX_RADIX)
+                            .uppercase()
+                            .padStart(ARGB_HEX_DIGIT_COUNT, '0')
                         val colorDescription = stringResource(
                             R.string.tag_color_option_content_description,
                             colorCode
@@ -308,7 +314,7 @@ private fun TagEditDialog(
                                         Modifier
                                     }
                                 )
-                                .clickable { onColorSelected(colorArgb) },
+                                .clickable { onColorSelect(colorArgb) },
                             contentAlignment = Alignment.Center
                         ) {
                             if (isSelected) {
@@ -374,8 +380,8 @@ private fun TagManageScreenPreview() {
             onDeleteRequest = {},
             onConfirmDelete = {},
             onDismissDelete = {},
-            onEditNameChanged = {},
-            onEditColorSelected = {},
+            onEditNameChange = {},
+            onEditColorSelect = {},
             onSaveEdit = {},
             onCancelEdit = {},
             onRetry = {}

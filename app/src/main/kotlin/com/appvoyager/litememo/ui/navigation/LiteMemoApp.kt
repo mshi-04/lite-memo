@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.ui.navigation
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -26,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -42,15 +42,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.ui.component.BannerAd
-import com.appvoyager.litememo.ui.screen.CalendarRoute
-import com.appvoyager.litememo.ui.screen.HomeRoute
-import com.appvoyager.litememo.ui.screen.MemoEditRoute
-import com.appvoyager.litememo.ui.screen.OssLicensesRoute
-import com.appvoyager.litememo.ui.screen.SettingsRoute
-import com.appvoyager.litememo.ui.screen.TagManageRoute
-import com.appvoyager.litememo.ui.screen.TrashRoute
+import com.appvoyager.litememo.ui.route.CalendarRoute
+import com.appvoyager.litememo.ui.route.HomeRoute
+import com.appvoyager.litememo.ui.route.MemoEditRoute
+import com.appvoyager.litememo.ui.route.OssLicensesRoute
+import com.appvoyager.litememo.ui.route.SettingsRoute
+import com.appvoyager.litememo.ui.route.TagManageRoute
+import com.appvoyager.litememo.ui.route.TrashRoute
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.LiteMemoAppViewModel
 import kotlinx.coroutines.launch
 
@@ -59,12 +60,20 @@ private const val TAG_MANAGE_ROUTE = "tag_manage"
 private const val TRASH_ROUTE = "trash"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
-private fun memoEditRouteWithId(memoId: String) = "$MEMO_EDIT_BASE?memoId=${Uri.encode(memoId)}"
-private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"
+
+private const val BOTTOM_TAB_TRANSITION_DURATION_MS = 220
+private const val BOTTOM_TAB_FADE_IN_DURATION_MS = 160
+private const val BOTTOM_TAB_FADE_OUT_DURATION_MS = 120
+
+fun memoEditRouteWithId(memoId: MemoId) =
+    "$MEMO_EDIT_BASE?memoId=${encodeNavigationArgument(memoId.value)}"
 
 @Composable
 fun LiteMemoApp(
     onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    modifier: Modifier = Modifier,
+    pendingWidgetNav: WidgetNavRequest? = null,
+    onConsumeWidgetNav: () -> Unit = {},
     viewModel: LiteMemoAppViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
@@ -109,7 +118,27 @@ fun LiteMemoApp(
         memoEditPopInFlight = false
     }
 
+    val currentOnConsumeWidgetNav by rememberUpdatedState(onConsumeWidgetNav)
+    LaunchedEffect(pendingWidgetNav) {
+        when (val request = pendingWidgetNav) {
+            null -> Unit
+
+            WidgetNavRequest.NewMemo -> {
+                navController.navigate(MEMO_EDIT_BASE) { launchSingleTop = true }
+                currentOnConsumeWidgetNav()
+            }
+
+            is WidgetNavRequest.OpenMemo -> {
+                navController.navigate(memoEditRouteWithId(request.memoId)) {
+                    launchSingleTop = true
+                }
+                currentOnConsumeWidgetNav()
+            }
+        }
+    }
+
     Scaffold(
+        modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
@@ -261,7 +290,7 @@ fun LiteMemoApp(
                     onImageAttachError = {
                         showErrorSnackbar(imageAttachErrorMessage)
                     },
-                    onMemoDeleted = { memoId ->
+                    onMemoDelete = { memoId ->
                         navController.popBackStackIfResumed(
                             isPopInFlight = { memoEditPopInFlight },
                             setPopInFlight = { memoEditPopInFlight = it },
@@ -285,8 +314,6 @@ fun LiteMemoApp(
     }
 }
 
-// 連打対策: 遷移アニメーション中の多重 pop / navigate を一元的に抑止する。
-// 現在の画面が RESUMED（遷移完了・最前面）のときだけ操作を実行する。
 private fun NavController.isCurrentEntryResumed(): Boolean =
     currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true
 
@@ -364,6 +391,4 @@ private fun bottomTabRouteIndex(route: String?): Int? {
     return index.takeIf { it >= 0 }
 }
 
-private const val BOTTOM_TAB_TRANSITION_DURATION_MS = 220
-private const val BOTTOM_TAB_FADE_IN_DURATION_MS = 160
-private const val BOTTOM_TAB_FADE_OUT_DURATION_MS = 120
+private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"

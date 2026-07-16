@@ -7,5 +7,7 @@ import javax.inject.Inject
 class ObserveTutorialCompletedUseCase @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) {
+
     operator fun invoke(): Flow<Boolean> = userSettingsRepository.observeTutorialCompleted()
+
 }

@@ -7,7 +7,7 @@ class SetAppLockEnabledUseCase @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) {
 
-    suspend operator fun invoke(enabled: Boolean) {
+    suspend operator fun invoke(enabled: Boolean) =
         userSettingsRepository.setAppLockEnabled(enabled)
-    }
+
 }

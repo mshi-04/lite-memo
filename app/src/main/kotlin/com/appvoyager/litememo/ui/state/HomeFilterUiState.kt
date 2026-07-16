@@ -1,30 +1,24 @@
 package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.ui.type.HomeFilterType
 
-data class HomeFilterUiState(val type: Type, val tagId: TagId? = null) {
+data class HomeFilterUiState(val type: HomeFilterType, val tagId: TagId? = null) {
 
     init {
-        require(type != Type.ByTag || tagId != null) {
+        require(type != HomeFilterType.ByTag || tagId != null) {
             "ByTag filter requires a tagId."
         }
-        require(type == Type.ByTag || tagId == null) {
+        require(type == HomeFilterType.ByTag || tagId == null) {
             "Only ByTag filter can have a tagId."
         }
     }
 
-    enum class Type {
-        All,
-        Unorganized,
-        Favorite,
-        ByTag
-    }
-
     companion object {
-        val All = HomeFilterUiState(Type.All)
-        val Unorganized = HomeFilterUiState(Type.Unorganized)
-        val Favorite = HomeFilterUiState(Type.Favorite)
+        val All = HomeFilterUiState(HomeFilterType.All)
+        val Unorganized = HomeFilterUiState(HomeFilterType.Unorganized)
+        val Favorite = HomeFilterUiState(HomeFilterType.Favorite)
 
-        fun byTag(tagId: TagId) = HomeFilterUiState(Type.ByTag, tagId)
+        fun byTag(tagId: TagId) = HomeFilterUiState(HomeFilterType.ByTag, tagId)
     }
 }

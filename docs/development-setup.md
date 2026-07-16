@@ -32,7 +32,6 @@ git config core.hooksPath .githooks
 - Kotlin ファイルを含むコミットで未ステージの tracked 変更がある場合は、意図しない整形や混入を避けるためコミットが中断されます。
 - 整形後は、コミット開始時点でステージされていたファイルだけを再ステージします。KtLint がステージ外のファイルも変更した場合は、内容を確認してから再度コミットしてください。
 - detekt が違反を検出した場合はコミットが中断されます。`app/build/reports/detekt/` のレポートを確認して修正してください（detekt は自動修正しません）。
-- detekt は baseline（`config/detekt/baseline.xml`）を適用するため、既存違反では止まりません（新規違反のみ検出）。
 
 ## 静的解析（ktlint / detekt / Android Lint）
 
@@ -42,17 +41,8 @@ git config core.hooksPath .githooks
 - **detekt**: 書き方・複雑度・アンチパターン（+ Compose 特化ルール）
 - **Android Lint**: Android 特有のバグ・非推奨 API・リソース・アクセシビリティ
 
-detekt は既存違反を baseline で吸収し、CI は新規違反のみで失敗します。
+detekt は baseline を使用せず、`maxIssues: 0` で検出した違反をすべて失敗として扱います。
 Android Lint は baseline なしで実行し、警告もエラーとして扱います。
-
-- detekt baseline: `config/detekt/baseline.xml`
-
-detekt のルールを直したうえで baseline を更新したい場合は、baseline を削除してから再生成します。
-
-```sh
-# detekt baseline の再生成
-./gradlew detektBaseline
-```
 
 ## ローカルでの CI 相当チェック（任意）
 
@@ -63,9 +53,15 @@ CI と同じ静的解析 / Unit Test を手元で流す場合は fastlane を使
 bundle exec fastlane android ci
 
 # 個別に
+bundle exec fastlane android static_analysis
 bundle exec fastlane android ktlint
 bundle exec fastlane android detekt
 bundle exec fastlane android lint
+bundle exec fastlane android unit_test
+bundle exec fastlane android coverage
+
+# Instrumented Test / Compose UI Test（端末またはエミュレーターが必要）
+bundle exec fastlane android android_test
 ```
 
 Gradle から直接実行する場合は次のとおりです。
@@ -79,4 +75,5 @@ Gradle から直接実行する場合は次のとおりです。
 ## CI キャッシュ
 
 GitHub Actions の Gradle / AVD キャッシュは、長期運用する `main` / `develop` の push で作成します。
-Pull Request では既存キャッシュの復元だけを行い、PR 固有の `refs/pull/.../merge` に重いキャッシュを作らないようにします。
+`main` / `develop` では通常の CI が未作成のキャッシュを作成します。
+Pull Request では base branch 側の既存キャッシュを復元するだけとし、PR 固有の `refs/pull/.../merge` にはキャッシュを作成しません。

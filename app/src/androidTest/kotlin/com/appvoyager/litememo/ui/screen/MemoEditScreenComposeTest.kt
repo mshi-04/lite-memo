@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.appvoyager.litememo.ui.state.MemoEditUiState
+import com.appvoyager.litememo.ui.testtag.MemoEditTestTags
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -31,9 +32,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = uiState,
-                    onTitleChanged = { title -> uiState = uiState.copy(title = title) },
-                    onBodyChanged = { body -> uiState = uiState.copy(body = body) },
-                    onTagToggled = {},
+                    onTitleChange = { title -> uiState = uiState.copy(title = title) },
+                    onBodyChange = { body -> uiState = uiState.copy(body = body) },
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -68,9 +69,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -101,9 +102,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(images = listOf(image)),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -132,9 +133,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(images = listOf(image)),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},
@@ -162,9 +163,9 @@ class MemoEditScreenComposeTest {
             TestScreenContent {
                 MemoEditScreen(
                     uiState = MemoEditUiState(isDeletePending = true),
-                    onTitleChanged = {},
-                    onBodyChanged = {},
-                    onTagToggled = {},
+                    onTitleChange = {},
+                    onBodyChange = {},
+                    onTagToggle = {},
                     onDelete = {},
                     onBackRequest = {},
                     onRetry = {},

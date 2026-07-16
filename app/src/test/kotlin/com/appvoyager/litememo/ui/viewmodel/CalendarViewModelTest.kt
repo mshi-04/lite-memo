@@ -21,6 +21,7 @@ import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
+import com.appvoyager.litememo.ui.state.SearchUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -155,23 +156,25 @@ class CalendarViewModelTest {
     }
 
     @Test
-    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+    fun stateTransitionCloseSearchResetsSearch() = runTest(dispatcher) {
         // Arrange
         val viewModel = calendarViewModel()
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val activeState = viewModel.uiState.first { it.isSearchActive }
-        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+        viewModel.uiState.first {
+            it.search.isActive && it.search.query == "shopping"
+        }
 
         // Act
+        // StateTransition: closing search resets active, query, error, and results together.
         viewModel.closeSearch()
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.isSearchActive }
+        val state = viewModel.uiState.first { !it.search.isActive }
 
         // Assert
-        assertEquals(false to "", state.isSearchActive to state.searchQuery)
+        assertEquals(SearchUiState(), state.search)
     }
 
     @Test
@@ -249,7 +252,7 @@ class CalendarViewModelTest {
     }
 
     @Test
-    fun retryReloadsSearchResultsAfterSearchError() = runTest(dispatcher) {
+    fun stateTransitionRetryReloadsSearchResultsAfterSearchError() = runTest(dispatcher) {
         // Arrange
         val memoRepository = RetryableSearchMemoRepository(
             delegate = FakeMemoRepository(
@@ -267,19 +270,19 @@ class CalendarViewModelTest {
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("Shopping")
         advanceUntilIdle()
-        viewModel.uiState.first { it.hasSearchError }
+        viewModel.uiState.first { it.search.hasError }
 
         // Act
+        // StateTransition: retry replaces the failed search snapshot with recovered results.
         memoRepository.allowSearch()
         viewModel.retry()
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.hasSearchError && it.searchResults.isNotEmpty() }
+        val state = viewModel.uiState.first {
+            !it.search.hasError && it.search.results.isNotEmpty()
+        }
 
         // Assert
-        assertEquals(
-            false to listOf("Shopping"),
-            state.hasSearchError to state.searchResults.map { it.title }
-        )
+        assertEquals(listOf("Shopping"), state.search.results.map { it.title })
     }
 
     private fun calendarViewModel(

@@ -8,12 +8,13 @@ import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
-import com.appvoyager.litememo.ui.state.AppLockMessage
-import com.appvoyager.litememo.ui.state.AppLockStatus
+import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
 import com.appvoyager.litememo.ui.state.AppLockUiState
-import com.appvoyager.litememo.ui.state.TutorialStatus
 import com.appvoyager.litememo.ui.state.TutorialUiState
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.type.AppLockMessage
+import com.appvoyager.litememo.ui.type.AppLockStatus
+import com.appvoyager.litememo.ui.type.TutorialStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -48,6 +49,9 @@ class MainViewModel @Inject constructor(
 
     private val _tutorialUiState = MutableStateFlow(TutorialUiState())
     val tutorialUiState: StateFlow<TutorialUiState> = _tutorialUiState.asStateFlow()
+
+    private val _pendingWidgetNav = MutableStateFlow<WidgetNavRequest?>(null)
+    val pendingWidgetNav: StateFlow<WidgetNavRequest?> = _pendingWidgetNav.asStateFlow()
 
     private var appLockEnabled: Boolean? = null
     private var expiredTrashedMemosPurged = false
@@ -113,6 +117,14 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun requestWidgetNav(request: WidgetNavRequest) {
+        _pendingWidgetNav.value = request
+    }
+
+    fun consumeWidgetNav() {
+        _pendingWidgetNav.value = null
+    }
+
     fun completeTutorial() {
         _tutorialUiState.value = TutorialUiState(status = TutorialStatus.HIDDEN)
         viewModelScope.launch {
@@ -173,4 +185,5 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
 }

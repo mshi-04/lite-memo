@@ -19,14 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.AlertDialog
@@ -37,8 +35,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,8 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,22 +59,23 @@ import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.component.SearchTopBar
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
+import com.appvoyager.litememo.ui.model.MemoUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
-import com.appvoyager.litememo.ui.state.MemoUiModel
-import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
-    onFilterSelected: (HomeFilterUiState) -> Unit,
+    onFilterSelect: (HomeFilterUiState) -> Unit,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
-    onMemoLongClick: (String) -> Unit,
-    onMemoSelectionToggle: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onMemoLongClick: (MemoId) -> Unit,
+    onMemoSelectionToggle: (MemoId) -> Unit,
     onClearSelection: () -> Unit,
     onMoveSelectedMemosToTrash: () -> Unit,
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
@@ -88,7 +83,7 @@ fun HomeScreen(
     onToggleSelectedMemosTag: (TagId) -> Unit,
     onDismissBulkTagDialog: () -> Unit,
     onShareSelectedMemo: () -> Unit,
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     onCreateMemoClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -115,9 +110,9 @@ fun HomeScreen(
 
             else -> HomeContent(
                 uiState = uiState,
-                onFilterSelected = onFilterSelected,
+                onFilterSelect = onFilterSelect,
                 onSearchToggle = onSearchToggle,
-                onSearchQueryChanged = onSearchQueryChanged,
+                onSearchQueryChange = onSearchQueryChange,
                 onMemoLongClick = onMemoLongClick,
                 onMemoSelectionToggle = onMemoSelectionToggle,
                 onClearSelection = onClearSelection,
@@ -142,17 +137,17 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     uiState: HomeUiState,
-    onFilterSelected: (HomeFilterUiState) -> Unit,
+    onFilterSelect: (HomeFilterUiState) -> Unit,
     onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
-    onMemoLongClick: (String) -> Unit,
-    onMemoSelectionToggle: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onMemoLongClick: (MemoId) -> Unit,
+    onMemoSelectionToggle: (MemoId) -> Unit,
     onClearSelection: () -> Unit,
     onMoveSelectedMemosToTrash: () -> Unit,
     onSetSelectedMemosFavorite: (Boolean) -> Unit,
     onRequestToggleTagForSelectedMemos: () -> Unit,
     onShareSelectedMemo: () -> Unit,
-    onMemoClick: (String) -> Unit,
+    onMemoClick: (MemoId) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -179,31 +174,30 @@ private fun HomeContent(
             }
         } else {
             item {
-                HomeTopBar(
-                    isSearchActive = uiState.isSearchActive,
-                    searchQuery = uiState.searchQuery,
+                SearchTopBar(
+                    search = uiState.search,
                     onSearchToggle = onSearchToggle,
-                    onSearchQueryChanged = onSearchQueryChanged
+                    onSearchQueryChange = onSearchQueryChange
                 )
             }
         }
-        if (uiState.isSearchActive) {
+        if (uiState.search.isActive) {
             when {
-                uiState.hasSearchError -> item {
+                uiState.search.hasError -> item {
                     MessageContent(
                         title = stringResource(R.string.search_error_title),
                         body = stringResource(R.string.search_error_body)
                     )
                 }
 
-                uiState.searchQuery.isBlank() -> item {
+                uiState.search.query.isBlank() -> item {
                     MessageContent(
                         title = stringResource(R.string.search_hint),
                         body = stringResource(R.string.search_hint_body)
                     )
                 }
 
-                uiState.searchResults.isEmpty() -> item {
+                uiState.search.results.isEmpty() -> item {
                     MessageContent(
                         title = stringResource(R.string.no_search_results_title),
                         body = stringResource(R.string.no_search_results_body)
@@ -211,13 +205,13 @@ private fun HomeContent(
                 }
 
                 else -> items(
-                    items = uiState.searchResults,
-                    key = { memo -> memo.id }
+                    items = uiState.search.results,
+                    key = { memo -> memo.id.value }
                 ) { memo ->
                     SelectableMemoCard(
                         memo = memo,
                         isSelectionActive = uiState.selection.isActive,
-                        selected = uiState.selection.contains(MemoId(memo.id)),
+                        selected = uiState.selection.contains(memo.id),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
                         onMemoLongClick = onMemoLongClick
@@ -229,7 +223,7 @@ private fun HomeContent(
                 HomeFilterRow(
                     selectedFilter = uiState.selectedFilter,
                     tags = uiState.tags,
-                    onFilterSelected = onFilterSelected
+                    onFilterSelect = onFilterSelect
                 )
             }
             if (uiState.memos.isEmpty()) {
@@ -239,12 +233,12 @@ private fun HomeContent(
             } else {
                 items(
                     items = uiState.memos,
-                    key = { memo -> memo.id }
+                    key = { memo -> memo.id.value }
                 ) { memo ->
                     SelectableMemoCard(
                         memo = memo,
                         isSelectionActive = uiState.selection.isActive,
-                        selected = uiState.selection.contains(MemoId(memo.id)),
+                        selected = uiState.selection.contains(memo.id),
                         onMemoClick = onMemoClick,
                         onMemoSelectionToggle = onMemoSelectionToggle,
                         onMemoLongClick = onMemoLongClick
@@ -260,9 +254,9 @@ private fun SelectableMemoCard(
     memo: MemoUiModel,
     isSelectionActive: Boolean,
     selected: Boolean,
-    onMemoClick: (String) -> Unit,
-    onMemoSelectionToggle: (String) -> Unit,
-    onMemoLongClick: (String) -> Unit
+    onMemoClick: (MemoId) -> Unit,
+    onMemoSelectionToggle: (MemoId) -> Unit,
+    onMemoLongClick: (MemoId) -> Unit
 ) {
     MemoCard(
         memo = memo,
@@ -276,78 +270,6 @@ private fun SelectableMemoCard(
         onLongClick = { onMemoLongClick(memo.id) },
         selected = selected
     )
-}
-
-@Composable
-private fun HomeTopBar(
-    isSearchActive: Boolean,
-    searchQuery: String,
-    onSearchToggle: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit
-) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isSearchActive) {
-        if (isSearchActive) {
-            runCatching { focusRequester.requestFocus() }
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isSearchActive) {
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(R.string.close_search)
-                )
-            }
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChanged,
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                placeholder = { Text(text = stringResource(R.string.search_hint)) },
-                singleLine = true,
-                trailingIcon = if (searchQuery.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { onSearchQueryChanged("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.clear_search),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                } else {
-                    null
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.app_name),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search)
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -472,7 +394,7 @@ private fun HomeBulkTagDialog(
 private fun HomeFilterRow(
     selectedFilter: HomeFilterUiState,
     tags: List<TagUiModel>,
-    onFilterSelected: (HomeFilterUiState) -> Unit
+    onFilterSelect: (HomeFilterUiState) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -483,24 +405,24 @@ private fun HomeFilterRow(
         FilterButton(
             label = stringResource(R.string.filter_all),
             selected = selectedFilter == HomeFilterUiState.All,
-            onClick = { onFilterSelected(HomeFilterUiState.All) }
+            onClick = { onFilterSelect(HomeFilterUiState.All) }
         )
         FilterButton(
             label = stringResource(R.string.unorganized_label),
             selected = selectedFilter == HomeFilterUiState.Unorganized,
-            onClick = { onFilterSelected(HomeFilterUiState.Unorganized) }
+            onClick = { onFilterSelect(HomeFilterUiState.Unorganized) }
         )
         FilterButton(
             label = stringResource(R.string.filter_favorite),
             selected = selectedFilter == HomeFilterUiState.Favorite,
-            onClick = { onFilterSelected(HomeFilterUiState.Favorite) }
+            onClick = { onFilterSelect(HomeFilterUiState.Favorite) }
         )
         tags.forEach { tag ->
             val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
             FilterButton(
                 label = tag.name,
                 selected = selectedFilter == tagFilter,
-                onClick = { onFilterSelected(tagFilter) },
+                onClick = { onFilterSelect(tagFilter) },
                 colorArgb = tag.colorArgb
             )
         }
@@ -571,42 +493,44 @@ private fun EmptyHomeContent() {
 }
 
 @Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    LiteMemoTheme {
-        HomeScreen(
-            uiState = previewHomeState(),
-            onFilterSelected = {},
-            onSearchToggle = {},
-            onSearchQueryChanged = {},
-            onMemoLongClick = {},
-            onMemoSelectionToggle = {},
-            onClearSelection = {},
-            onMoveSelectedMemosToTrash = {},
-            onSetSelectedMemosFavorite = {},
-            onRequestToggleTagForSelectedMemos = {},
-            onToggleSelectedMemosTag = {},
-            onDismissBulkTagDialog = {},
-            onShareSelectedMemo = {},
-            onMemoClick = {},
-            onCreateMemoClick = {},
-            onRetry = {}
-        )
-    }
-}
-
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-private fun HomeScreenDarkPreview() {
+private fun HomeScreenPreview() {
+    val uiState = HomeUiState(
+        isLoading = false,
+        tags = listOf(
+            TagUiModel("tag-life", "生活", 0xFF6750A4),
+            TagUiModel("tag-work", "仕事", 0xFFB3261E)
+        ),
+        memos = listOf(
+            MemoUiModel(
+                id = MemoId("memo-1"),
+                title = "買い物リスト",
+                body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
+                tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
+                updatedAtMillis = System.currentTimeMillis(),
+                isFavorite = false
+            ),
+            MemoUiModel(
+                id = MemoId("memo-2"),
+                title = "会議メモ",
+                body = "次回までに画面構成と保存方式を確認する。",
+                tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
+                updatedAtMillis = System.currentTimeMillis(),
+                isFavorite = true
+            )
+        )
+    )
+
     LiteMemoTheme {
         HomeScreen(
-            uiState = previewHomeState(),
-            onFilterSelected = {},
+            uiState = uiState,
+            onFilterSelect = {},
             onSearchToggle = {},
-            onSearchQueryChanged = {},
+            onSearchQueryChange = {},
             onMemoLongClick = {},
             onMemoSelectionToggle = {},
             onClearSelection = {},
@@ -622,29 +546,3 @@ private fun HomeScreenDarkPreview() {
         )
     }
 }
-
-private fun previewHomeState() = HomeUiState(
-    isLoading = false,
-    tags = listOf(
-        TagUiModel("tag-life", "生活", 0xFF6750A4),
-        TagUiModel("tag-work", "仕事", 0xFFB3261E)
-    ),
-    memos = listOf(
-        MemoUiModel(
-            id = "memo-1",
-            title = "買い物リスト",
-            body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
-            tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
-            updatedAtMillis = System.currentTimeMillis(),
-            isFavorite = false
-        ),
-        MemoUiModel(
-            id = "memo-2",
-            title = "会議メモ",
-            body = "次回までに画面構成と保存方式を確認する。",
-            tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
-            updatedAtMillis = System.currentTimeMillis(),
-            isFavorite = true
-        )
-    )
-)

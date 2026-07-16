@@ -6,8 +6,6 @@ import javax.inject.Inject
 
 class DeleteMemoPermanentlyUseCase @Inject constructor(private val memoRepository: MemoRepository) {
 
-    suspend operator fun invoke(id: MemoId) {
-        memoRepository.deleteMemoPermanently(id)
-    }
+    suspend operator fun invoke(id: MemoId) = memoRepository.deleteMemoPermanently(id)
 
 }

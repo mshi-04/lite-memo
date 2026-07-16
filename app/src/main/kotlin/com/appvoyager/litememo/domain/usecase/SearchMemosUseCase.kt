@@ -25,4 +25,5 @@ class SearchMemosUseCase @Inject constructor(
             memos.sortedBy(sortOrder)
         }
     }
+
 }

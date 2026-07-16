@@ -80,8 +80,11 @@ git config core.hooksPath .githooks
 # KtLint
 ./gradlew :app:ktlintCheck
 
-# CI 相当（KtLint + Unit Test）を fastlane で実行
+# CI 相当（KtLint + detekt + Android Lint + Unit Test）を fastlane で実行
 bundle exec fastlane android ci
+
+# Instrumented Test / Compose UI Test（端末またはエミュレーターが必要）
+bundle exec fastlane android android_test
 ```
 
 ## ビルドフレーバー

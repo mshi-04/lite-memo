@@ -1,10 +1,10 @@
 # screen
 
-状態を持たない `XxxScreen` と、ViewModel と接続する `XxxRoute` に分ける。
+状態を持たない `XxxScreen`（`ui/screen`）と、ViewModel と接続する `XxxRoute`（`ui/route`）に分ける。
 
 ## 確認する対象
 
-- `ui/screen/` の `XxxRoute` / `XxxScreen` ペアと、対応する `XxxUiState`
+- `ui/route/` の `XxxRoute` と `ui/screen/` の `XxxScreen` ペア、対応する `XxxUiState`
 - 再利用する `ui/component/` 部品と testTag
 
 ## 実装時の注意

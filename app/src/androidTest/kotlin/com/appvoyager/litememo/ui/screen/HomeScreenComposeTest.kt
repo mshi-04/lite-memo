@@ -18,11 +18,11 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.component.MemoCardTestTags
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
+import com.appvoyager.litememo.ui.state.SearchUiState
+import com.appvoyager.litememo.ui.testtag.MemoCardTestTags
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,9 +43,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = uiState,
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},
@@ -83,15 +83,19 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = uiState,
-                    onFilterSelected = {},
-                    onSearchToggle = { uiState = uiState.copy(isSearchActive = true) },
-                    onSearchQueryChanged = { query ->
+                    onFilterSelect = {},
+                    onSearchToggle = {
+                        uiState = uiState.copy(search = SearchUiState(isActive = true))
+                    },
+                    onSearchQueryChange = { query ->
                         uiState = uiState.copy(
-                            searchQuery = query,
-                            searchResults = uiState.memos.filter { memo ->
-                                memo.title.contains(query, ignoreCase = true) ||
-                                    memo.body.contains(query, ignoreCase = true)
-                            }
+                            search = uiState.search.copy(
+                                query = query,
+                                results = uiState.memos.filter { memo ->
+                                    memo.title.contains(query, ignoreCase = true) ||
+                                        memo.body.contains(query, ignoreCase = true)
+                                }
+                            )
                         )
                     },
                     onMemoLongClick = {},
@@ -138,9 +142,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = HomeUiState(isLoading = false, memos = listOf(memo)),
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},
@@ -174,9 +178,9 @@ class HomeScreenComposeTest {
             TestScreenContent {
                 HomeScreen(
                     uiState = HomeUiState(isLoading = false, memos = listOf(memo)),
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},
@@ -209,16 +213,16 @@ class HomeScreenComposeTest {
                 isLoading = false,
                 memos = listOf(memo),
                 tags = listOf(tag),
-                selection = HomeSelectionUiState(setOf(MemoId(memo.id)))
+                selection = HomeSelectionUiState(setOf(memo.id))
             )
         )
         composeRule.setContent {
             TestScreenContent {
                 HomeScreen(
                     uiState = uiState,
-                    onFilterSelected = {},
+                    onFilterSelect = {},
                     onSearchToggle = {},
-                    onSearchQueryChanged = {},
+                    onSearchQueryChange = {},
                     onMemoLongClick = {},
                     onMemoSelectionToggle = {},
                     onClearSelection = {},

@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
-@Suppress("LongParameterList")
 fun memoFixture(
     id: String = "memo-1",
     title: String = "Title",
@@ -232,7 +231,7 @@ class QueueMemoIdProvider(ids: List<MemoId> = listOf(MemoId("memo-1"))) : MemoId
 
     override fun newMemoId(): MemoId {
         if (memoIds.isEmpty()) {
-            throw IllegalStateException("No more MemoId available in QueueMemoIdProvider.")
+            error("No more MemoId available in QueueMemoIdProvider.")
         }
 
         return memoIds.removeAt(0)
@@ -245,7 +244,7 @@ class QueueTagIdProvider(ids: List<TagId> = listOf(TagId("tag-1"))) : TagIdProvi
 
     override fun newTagId(): TagId {
         if (tagIds.isEmpty()) {
-            throw IllegalStateException("No more TagId available in QueueTagIdProvider.")
+            error("No more TagId available in QueueTagIdProvider.")
         }
 
         return tagIds.removeAt(0)

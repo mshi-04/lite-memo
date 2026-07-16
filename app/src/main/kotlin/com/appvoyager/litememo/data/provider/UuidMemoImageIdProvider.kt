@@ -7,4 +7,5 @@ import java.util.UUID
 class UuidMemoImageIdProvider : MemoImageIdProvider {
 
     override fun newMemoImageId(): MemoImageId = MemoImageId(UUID.randomUUID().toString())
+
 }

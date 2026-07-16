@@ -8,14 +8,8 @@ import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 
 data class MemoWithRefs(
     @Embedded val memo: MemoEntity,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "memoId"
-    )
+    @Relation(parentColumn = "id", entityColumn = "memoId")
     val tagRefs: List<MemoTagRefEntity>,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "memoId"
-    )
+    @Relation(parentColumn = "id", entityColumn = "memoId")
     val imageRefs: List<MemoImageEntity>
 )

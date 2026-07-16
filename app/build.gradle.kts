@@ -119,7 +119,6 @@ ktlint {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    baseline = rootProject.file("config/detekt/baseline.xml")
 }
 
 kover {
@@ -137,7 +136,9 @@ kover {
                     "com.appvoyager.litememo.domain.model.*",
                     "com.appvoyager.litememo.domain.model.value.*",
                     "com.appvoyager.litememo.domain.usecase.*",
+                    "com.appvoyager.litememo.ui.model.*",
                     "com.appvoyager.litememo.ui.state.*",
+                    "com.appvoyager.litememo.ui.type.*",
                     "com.appvoyager.litememo.ui.viewmodel.*"
                 )
             }
@@ -151,7 +152,6 @@ tasks.register<Detekt>("detektPreCommit") {
     description = "Runs detekt only on files passed via -PpreCommitFiles."
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    baseline.set(rootProject.file("config/detekt/baseline.xml"))
     val files =
         preCommitFilesProperty.orNull
             ?.split(",")
@@ -201,6 +201,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
+
+    // Home screen widgets (Jetpack Glance)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
 
     // AndroidX
     implementation(libs.androidx.appcompat)

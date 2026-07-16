@@ -2,18 +2,18 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appvoyager.litememo.domain.exception.DuplicateTagNameException
 import com.appvoyager.litememo.domain.model.SaveTagCommand
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
-import com.appvoyager.litememo.domain.usecase.DuplicateTagNameException
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveTagUseCase
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.TagEditState
 import com.appvoyager.litememo.ui.state.TagManageUiState
-import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -42,7 +42,6 @@ class TagManageViewModel @Inject constructor(
     private val deleteDialog = MutableStateFlow<TagUiModel?>(null)
     private val retryTrigger = MutableStateFlow(false)
 
-    // 削除失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _deleteErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val deleteErrorEvent = _deleteErrorEvent.receiveAsFlow()
 
@@ -64,7 +63,7 @@ class TagManageViewModel @Inject constructor(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = TagManageUiState()
     )
 
@@ -163,4 +162,8 @@ class TagManageViewModel @Inject constructor(
 
     private fun isDuplicateName(name: String, excludeId: String?): Boolean =
         uiState.value.tags.any { it.name == name && it.id != excludeId }
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
 }

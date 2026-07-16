@@ -27,4 +27,5 @@ object AppConfigModule {
     fun provideImportMaxFileSizeBytes(): Long = DEFAULT_IMPORT_MAX_FILE_SIZE_BYTES
 
     private const val DEFAULT_IMPORT_MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024
+
 }

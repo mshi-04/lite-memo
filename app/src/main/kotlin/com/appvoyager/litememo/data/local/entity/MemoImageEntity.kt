@@ -15,9 +15,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [
-        Index(value = ["memoId", "position"], unique = true)
-    ]
+    indices = [Index(value = ["memoId", "position"], unique = true)]
 )
 data class MemoImageEntity(
     @PrimaryKey val id: String,

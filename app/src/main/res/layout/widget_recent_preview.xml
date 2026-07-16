@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ウィジェット選択画面のプレビュー（API 31+）。実際の RecentMemosWidget の見た目を再現する。
+     compound drawable を使い ImageView のネストを避ける（lint: UseCompoundDrawables/UseAppTint 回避）。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_recent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    tools:ignore="UseCompatTextViewDrawableXml">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableEnd="@drawable/ic_widget_edit"
+        android:gravity="center_vertical"
+        android:text="@string/widget_recent_label"
+        android:textColor="#1D1B20"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawablePadding="6dp"
+        android:drawableStart="@drawable/ic_widget_star"
+        android:gravity="center_vertical"
+        android:paddingTop="12dp"
+        android:text="@string/widget_preview_memo_1"
+        android:textColor="#1D1B20"
+        android:textSize="14sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawablePadding="6dp"
+        android:drawableStart="@drawable/ic_widget_star"
+        android:gravity="center_vertical"
+        android:paddingTop="10dp"
+        android:text="@string/widget_preview_memo_2"
+        android:textColor="#1D1B20"
+        android:textSize="14sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:text="@string/widget_preview_memo_3"
+        android:textColor="#1D1B20"
+        android:textSize="14sp" />
+</LinearLayout>

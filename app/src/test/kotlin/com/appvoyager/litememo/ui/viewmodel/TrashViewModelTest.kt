@@ -319,7 +319,7 @@ class TrashViewModelTest {
             repository.moveMemoToTrash(id, deletedAt)
 
         override suspend fun restoreMemoFromTrash(id: MemoId): Unit =
-            throw IllegalStateException("Failed to restore memo.")
+            error("Failed to restore memo.")
 
         override suspend fun deleteMemoPermanently(id: MemoId) =
             repository.deleteMemoPermanently(id)

@@ -3,23 +3,22 @@ package com.appvoyager.litememo.ui.auth
 import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 
 class AppLockAuthenticator(private val activity: FragmentActivity) {
 
     private var pendingCallback: ((AppLockAuthenticationResult) -> Unit)? = null
 
-    private val credentialLauncher: ActivityResultLauncher<android.content.Intent> =
+    private val credentialLauncher: ActivityResultLauncher<Intent> =
         activity.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -31,6 +30,12 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
             dispatchResult(authResult)
         }
 
+    private val biometricManager: BiometricManager
+        get() = BiometricManager.from(activity)
+
+    private val keyguardManager: KeyguardManager
+        get() = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+
     fun authenticate(callback: (AppLockAuthenticationResult) -> Unit) {
         if (pendingCallback != null) {
             callback(AppLockAuthenticationResult.UNAVAILABLE)
@@ -38,37 +43,40 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
         }
         pendingCallback = callback
 
-        if (!canAuthenticate()) {
-            dispatchResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
-            return
-        }
+        when {
+            !canAuthenticate() ->
+                dispatchResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            authenticateWithBiometricPrompt(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-            return
-        }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                authenticateWithBiometricPrompt(
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                )
 
-        if (canAuthenticateWithBiometric(BIOMETRIC_WEAK)) {
-            authenticateWithLegacyBiometricPrompt()
-            return
-        }
+            canAuthenticateWithBiometric(BiometricManager.Authenticators.BIOMETRIC_WEAK) ->
+                authenticateWithLegacyBiometricPrompt()
 
-        authenticateWithDeviceCredential()
+            else -> authenticateWithDeviceCredential()
+        }
     }
 
     private fun canAuthenticate(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) ==
+            return biometricManager.canAuthenticate(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            ) ==
                 BiometricManager.BIOMETRIC_SUCCESS
         }
-        return canAuthenticateWithBiometric(BIOMETRIC_WEAK) || keyguardManager.isDeviceSecure
+        return canAuthenticateWithBiometric(BiometricManager.Authenticators.BIOMETRIC_WEAK) ||
+            keyguardManager.isDeviceSecure
     }
 
     private fun authenticateWithLegacyBiometricPrompt() {
         val builder = BiometricPrompt.PromptInfo.Builder()
             .setTitle(activity.getString(R.string.app_lock_prompt_title))
             .setSubtitle(activity.getString(R.string.app_lock_prompt_subtitle))
-            .setAllowedAuthenticators(BIOMETRIC_WEAK)
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
 
         if (keyguardManager.isDeviceSecure) {
             builder.setNegativeButtonText(
@@ -155,9 +163,4 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
         else -> AppLockAuthenticationResult.FAILED
     }
 
-    private val biometricManager: BiometricManager
-        get() = BiometricManager.from(activity)
-
-    private val keyguardManager: KeyguardManager
-        get() = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 }

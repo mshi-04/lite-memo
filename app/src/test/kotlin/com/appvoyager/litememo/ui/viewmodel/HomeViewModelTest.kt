@@ -25,6 +25,7 @@ import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
+import com.appvoyager.litememo.ui.state.SearchUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -173,7 +174,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun updateSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
+    fun stateTransitionSearchQueryShowsMatchingMemosWhenSearchIsActive() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel(
             memos = listOf(
@@ -184,56 +185,62 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
+        // StateTransition: query changes publish matching memos in the shared search state.
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val state = viewModel.uiState.first { it.isSearchActive && it.searchResults.isNotEmpty() }
+        val state = viewModel.uiState.first {
+            it.search.isActive &&
+                it.search.query == "shopping" &&
+                it.search.results.isNotEmpty()
+        }
 
         // Assert
-        assertEquals(
-            Triple(true, "shopping", listOf("Shopping list")),
-            Triple(state.isSearchActive, state.searchQuery, state.searchResults.map { it.title })
-        )
+        assertEquals(listOf("Shopping list"), state.search.results.map { it.title })
     }
 
     @Test
-    fun toggleSearchClearsQueryWhenSearchIsClosed() = runTest(dispatcher) {
+    fun stateTransitionToggleSearchResetsSearchWhenClosed() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val activeState = viewModel.uiState.first { it.isSearchActive }
-        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+        viewModel.uiState.first {
+            it.search.isActive && it.search.query == "shopping"
+        }
 
         // Act
+        // StateTransition: toggling an active search resets the complete search snapshot.
         viewModel.toggleSearch()
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.isSearchActive }
+        val state = viewModel.uiState.first { !it.search.isActive }
 
         // Assert
-        assertEquals("", state.searchQuery)
+        assertEquals(SearchUiState(), state.search)
     }
 
     @Test
-    fun closeSearchClearsSearchState() = runTest(dispatcher) {
+    fun stateTransitionCloseSearchResetsSearch() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()
         advanceUntilIdle()
         viewModel.toggleSearch()
         viewModel.updateSearchQuery("shopping")
         advanceUntilIdle()
-        val activeState = viewModel.uiState.first { it.isSearchActive }
-        assertEquals(true to "shopping", activeState.isSearchActive to activeState.searchQuery)
+        viewModel.uiState.first {
+            it.search.isActive && it.search.query == "shopping"
+        }
 
         // Act
+        // StateTransition: closing search resets active, query, error, and results together.
         viewModel.closeSearch()
         advanceUntilIdle()
-        val state = viewModel.uiState.first { !it.isSearchActive }
+        val state = viewModel.uiState.first { !it.search.isActive }
 
         // Assert
-        assertEquals(false to "", state.isSearchActive to state.searchQuery)
+        assertEquals(SearchUiState(), state.search)
     }
 
     @Test
@@ -245,7 +252,7 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.setMemoFavorite("memo-1", true)
+        viewModel.setMemoFavorite(MemoId("memo-1"), true)
         advanceUntilIdle()
         val state = viewModel.uiState.first { it.memos.singleOrNull()?.isFavorite == true }
 
@@ -265,7 +272,7 @@ class HomeViewModelTest {
         // Act & Assert
         // Flow/Error: favorite update failure emits exactly one action error event.
         viewModel.actionErrorEvent.test {
-            viewModel.setMemoFavorite("memo-1", true)
+            viewModel.setMemoFavorite(MemoId("memo-1"), true)
             advanceUntilIdle()
             assertEquals(Unit, awaitItem())
         }
@@ -581,7 +588,7 @@ class HomeViewModelTest {
         }
 
         // Assert
-        assertEquals(setOf("memo-1", "memo-2"), state.memos.map { it.id }.toSet())
+        assertEquals(setOf(MemoId("memo-1"), MemoId("memo-2")), state.memos.map { it.id }.toSet())
     }
 
     @Test
@@ -674,7 +681,7 @@ class HomeViewModelTest {
         val selected = viewModel.getSelectedMemoForShare()
 
         // Assert
-        assertEquals("memo-1" to "共有対象", selected?.id to selected?.title)
+        assertEquals(MemoId("memo-1") to "共有対象", selected?.id to selected?.title)
     }
 
     @Test
@@ -823,8 +830,7 @@ class HomeViewModelTest {
 
         override suspend fun getActiveMemo(id: MemoId): Memo? = memo.takeIf { it.id == id }
 
-        override suspend fun saveMemo(memo: Memo): Unit =
-            throw IllegalStateException("Failed to save memo.")
+        override suspend fun saveMemo(memo: Memo): Unit = error("Failed to save memo.")
 
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) = Unit
 
@@ -838,8 +844,7 @@ class HomeViewModelTest {
 
         override suspend fun getAllActiveMemos(): List<Memo> = emptyList()
 
-        override suspend fun saveAllMemos(memos: List<Memo>): Unit =
-            throw IllegalStateException("Failed to save memos.")
+        override suspend fun saveAllMemos(memos: List<Memo>): Unit = error("Failed to save memos.")
 
         override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }

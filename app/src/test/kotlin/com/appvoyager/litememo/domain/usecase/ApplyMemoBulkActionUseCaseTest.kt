@@ -598,7 +598,7 @@ class ApplyMemoBulkActionUseCaseTest {
     ) : MemoRepository by delegate {
 
         override suspend fun saveMemo(memo: Memo) {
-            if (memo.id == saveFailureId) throw IllegalStateException("Failed to save memo.")
+            if (memo.id == saveFailureId) error("Failed to save memo.")
             delegate.saveMemo(memo)
         }
 
@@ -607,7 +607,7 @@ class ApplyMemoBulkActionUseCaseTest {
         }
 
         override suspend fun moveMemoToTrash(id: MemoId, deletedAt: TimestampMillis) {
-            if (id == moveFailureId) throw IllegalStateException("Failed to move memo.")
+            if (id == moveFailureId) error("Failed to move memo.")
             delegate.moveMemoToTrash(id, deletedAt)
         }
     }

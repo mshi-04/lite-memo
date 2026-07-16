@@ -6,7 +6,7 @@ import javax.inject.Inject
 class CompleteTutorialUseCase @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) {
-    suspend operator fun invoke() {
-        userSettingsRepository.completeTutorial()
-    }
+
+    suspend operator fun invoke() = userSettingsRepository.completeTutorial()
+
 }

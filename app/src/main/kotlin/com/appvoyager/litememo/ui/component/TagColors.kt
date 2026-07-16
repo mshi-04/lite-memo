@@ -1,8 +1,8 @@
 package com.appvoyager.litememo.ui.component
 
 import androidx.compose.ui.graphics.Color
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 
-internal fun tagColor(argb: Long): Color = Color(argb.toInt())
+fun tagColor(argb: Long): Color = Color(argb.toInt())
 
-internal fun TagUiModel.toComposeColor(): Color = tagColor(colorArgb)
+fun TagUiModel.toComposeColor(): Color = tagColor(colorArgb)

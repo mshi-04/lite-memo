@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.ui.type.TutorialStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

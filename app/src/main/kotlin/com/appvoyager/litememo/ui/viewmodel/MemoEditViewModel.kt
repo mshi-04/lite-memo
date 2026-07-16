@@ -24,9 +24,11 @@ import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
+import com.appvoyager.litememo.ui.event.MemoEditNavigationEvent
+import com.appvoyager.litememo.ui.event.MemoEditOperationErrorEvent
+import com.appvoyager.litememo.ui.model.MemoImageUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.MemoEditUiState
-import com.appvoyager.litememo.ui.state.MemoImageUiModel
-import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -45,7 +47,6 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 @HiltViewModel
-@Suppress("LongParameterList")
 class MemoEditViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getMemoUseCase: GetMemoUseCase,
@@ -229,7 +230,6 @@ class MemoEditViewModel @Inject constructor(
                 clearSavedState()
                 _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
             } else {
-                // 保存失敗時は下書きを消さず画面に留め、再試行できるようにする。
                 isFinishing = false
             }
         }
@@ -290,12 +290,7 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 現在の編集内容を保存する。保存成功、または保存対象なし（空内容）なら true、保存失敗なら false。
-     *
-     * 保存・破棄・ゴミ箱送りは同一の [persistMutex] で直列化し、
-     * 進行中の保存が完了した後に破棄／ゴミ箱送りが走ることを保証する。
-     */
+    // 保存・破棄・ゴミ箱送りは同一の [persistMutex] で直列化し、進行中の保存が完了した後に破棄／ゴミ箱送りが走ることを保証する。
     private suspend fun persist(): Boolean = persistMutex.withLock {
         val state = _uiState.value
         if (state.isContentBlank()) return@withLock true
@@ -454,7 +449,6 @@ class MemoEditViewModel @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            // Cleanup is best-effort; user-facing save/delete errors are reported elsewhere.
         }
     }
 
@@ -473,15 +467,5 @@ class MemoEditViewModel @Inject constructor(
         const val GENERATED_MEMO_ID_KEY = "generatedMemoId"
         const val SESSION_STARTED_AS_NEW_KEY = "sessionStartedAsNew"
     }
-}
 
-sealed interface MemoEditNavigationEvent {
-    data object NavigateBack : MemoEditNavigationEvent
-    data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent
-}
-
-sealed interface MemoEditOperationErrorEvent {
-    data object SaveFailed : MemoEditOperationErrorEvent
-    data object DeleteFailed : MemoEditOperationErrorEvent
-    data object ImageAttachFailed : MemoEditOperationErrorEvent
 }

@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -40,15 +39,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
+import com.appvoyager.litememo.ui.state.CalendarGridAnimationState
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+
+private const val CALENDAR_GRID_SLIDE_DURATION_MILLIS = 220
+private const val CALENDAR_GRID_FADE_IN_DURATION_MILLIS = 160
+private const val CALENDAR_GRID_FADE_OUT_DURATION_MILLIS = 120
 
 @Composable
 fun AnimatedCalendarGrid(
     month: YearMonth?,
     days: List<CalendarDayUiState>,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelect: (LocalDate) -> Unit
 ) {
     AnimatedContent(
         targetState = CalendarGridAnimationState(
@@ -60,27 +64,27 @@ fun AnimatedCalendarGrid(
             val direction = if (targetState.month.isAfter(initialState.month)) 1 else -1
             (
                 slideInHorizontally(
-                    animationSpec = tween(220),
+                    animationSpec = tween(CALENDAR_GRID_SLIDE_DURATION_MILLIS),
                     initialOffsetX = { width -> width / 4 * direction }
-                ) + fadeIn(animationSpec = tween(160))
+                ) + fadeIn(animationSpec = tween(CALENDAR_GRID_FADE_IN_DURATION_MILLIS))
                 ).togetherWith(
                 slideOutHorizontally(
-                    animationSpec = tween(220),
+                    animationSpec = tween(CALENDAR_GRID_SLIDE_DURATION_MILLIS),
                     targetOffsetX = { width -> -width / 4 * direction }
-                ) + fadeOut(animationSpec = tween(120))
+                ) + fadeOut(animationSpec = tween(CALENDAR_GRID_FADE_OUT_DURATION_MILLIS))
             ).using(SizeTransform(clip = false))
         },
         label = "calendar-month-grid"
     ) { state ->
         CalendarGrid(
             days = state.days,
-            onDateSelected = onDateSelected
+            onDateSelect = onDateSelect
         )
     }
 }
 
 @Composable
-private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelected: (LocalDate) -> Unit) {
+private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelect: (LocalDate) -> Unit) {
     val leadingBlankCount = days.firstOrNull()?.date?.dayOfWeek?.value?.rem(DAY_COUNT) ?: 0
     val cells = List(leadingBlankCount) { null } + days
 
@@ -95,7 +99,7 @@ private fun CalendarGrid(days: List<CalendarDayUiState>, onDateSelected: (LocalD
                     val day = week.getOrNull(index)
                     CalendarDayCell(
                         day = day,
-                        onDateSelected = onDateSelected,
+                        onDateSelect = onDateSelect,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -126,7 +130,7 @@ private fun CalendarWeekHeader() {
 @Composable
 private fun CalendarDayCell(
     day: CalendarDayUiState?,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelect: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (day == null) {
@@ -165,7 +169,7 @@ private fun CalendarDayCell(
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(containerColor)
-            .clickable(role = Role.Button) { onDateSelected(day.date) }
+            .clickable(role = Role.Button) { onDateSelect(day.date) }
             .semantics(mergeDescendants = true) {
                 contentDescription = cellDescription
                 selected = day.isSelected
@@ -192,11 +196,6 @@ private fun CalendarDayCell(
 }
 
 private const val DAY_COUNT = 7
-
-private data class CalendarGridAnimationState(
-    val month: YearMonth?,
-    val days: List<CalendarDayUiState>
-)
 
 private fun YearMonth?.isAfter(other: YearMonth?): Boolean {
     if (this == null || other == null) return true

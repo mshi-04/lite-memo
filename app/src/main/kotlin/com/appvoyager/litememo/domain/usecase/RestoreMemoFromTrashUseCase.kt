@@ -6,8 +6,6 @@ import javax.inject.Inject
 
 class RestoreMemoFromTrashUseCase @Inject constructor(private val memoRepository: MemoRepository) {
 
-    suspend operator fun invoke(id: MemoId) {
-        memoRepository.restoreMemoFromTrash(id)
-    }
+    suspend operator fun invoke(id: MemoId) = memoRepository.restoreMemoFromTrash(id)
 
 }

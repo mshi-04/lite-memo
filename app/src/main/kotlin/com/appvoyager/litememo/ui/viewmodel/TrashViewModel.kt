@@ -10,10 +10,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.data.ObservedTrashData
+import com.appvoyager.litememo.ui.model.TagUiModel
+import com.appvoyager.litememo.ui.model.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.state.TrashSelectionUiState
 import com.appvoyager.litememo.ui.state.TrashUiState
-import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,7 +52,6 @@ class TrashViewModel @Inject constructor(
     private val showEmptyTrashDialog = MutableStateFlow(false)
     private var isActionInFlight = false
 
-    // 操作失敗は一回限りの通知で、同一文言の最新イベントだけ届けばよい。
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
@@ -95,7 +95,7 @@ class TrashViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = TrashUiState()
     )
 
@@ -204,6 +204,8 @@ class TrashViewModel @Inject constructor(
             )
         }
     }
-}
 
-private data class ObservedTrashData(val memos: List<Memo>?, val tags: List<Tag>?)
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
+}

@@ -21,4 +21,5 @@ interface UserSettingsRepository {
     suspend fun setAppLockEnabled(enabled: Boolean)
 
     suspend fun completeTutorial()
+
 }
