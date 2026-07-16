@@ -49,11 +49,9 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.ui.action.TrashScreenActions
-import com.appvoyager.litememo.ui.action.TrashedMemoCardActions
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
-import com.appvoyager.litememo.ui.data.TrashedMemoCardSelection
 import com.appvoyager.litememo.ui.model.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.state.TrashUiState
 import java.time.Instant
@@ -241,23 +239,19 @@ private fun TrashedMemoList(
         ) { memo ->
             TrashedMemoCard(
                 memo = memo,
-                selection = TrashedMemoCardSelection(
-                    selected = uiState.selection.contains(memo.id)
-                ),
-                actions = TrashedMemoCardActions(
-                    onClick = {
-                        if (uiState.selection.isActive) {
-                            actions.onMemoSelectionToggle(memo.id)
-                        }
-                    },
-                    onLongClick = {
-                        if (uiState.selection.isActive) {
-                            actions.onMemoSelectionToggle(memo.id)
-                        } else {
-                            actions.onMemoLongClick(memo.id)
-                        }
+                selected = uiState.selection.contains(memo.id),
+                onClick = {
+                    if (uiState.selection.isActive) {
+                        actions.onMemoSelectionToggle(memo.id)
                     }
-                ),
+                },
+                onLongClick = {
+                    if (uiState.selection.isActive) {
+                        actions.onMemoSelectionToggle(memo.id)
+                    } else {
+                        actions.onMemoLongClick(memo.id)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -268,16 +262,17 @@ private fun TrashedMemoList(
 @Composable
 private fun TrashedMemoCard(
     memo: TrashedMemoUiModel,
-    selection: TrashedMemoCardSelection,
-    actions: TrashedMemoCardActions,
+    selected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val containerColor = if (selection.selected) {
+    val containerColor = if (selected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
         MaterialTheme.colorScheme.surface
     }
-    val border = if (selection.selected) {
+    val border = if (selected) {
         BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
     } else {
         BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -288,8 +283,8 @@ private fun TrashedMemoCard(
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = border,
         modifier = modifier.combinedClickable(
-            onClick = actions.onClick,
-            onLongClick = actions.onLongClick,
+            onClick = onClick,
+            onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.select_trashed_memo),
             role = Role.Button
         )
