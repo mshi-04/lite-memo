@@ -47,13 +47,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
+import com.appvoyager.litememo.ui.data.TrashedMemoCardSelection
+import com.appvoyager.litememo.ui.event.TrashScreenActions
+import com.appvoyager.litememo.ui.event.TrashedMemoCardActions
+import com.appvoyager.litememo.ui.model.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.state.TrashUiState
-import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -79,26 +81,6 @@ fun TrashScreen(uiState: TrashUiState, actions: TrashScreenActions, modifier: Mo
     if (uiState.showEmptyTrashDialog) {
         EmptyTrashConfirmDialog(actions = actions)
     }
-}
-
-interface TrashScreenActions {
-    fun onBackClick()
-
-    fun onMemoLongClick(memoId: MemoId)
-
-    fun onMemoSelectionToggle(memoId: MemoId)
-
-    fun onClearSelection()
-
-    fun onRestoreSelectedMemos()
-
-    fun onEmptyTrashRequest()
-
-    fun onConfirmEmptyTrash()
-
-    fun onDismissEmptyTrash()
-
-    fun onRetry()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -343,10 +325,6 @@ private fun TrashedMemoCard(
         }
     }
 }
-
-private data class TrashedMemoCardSelection(val selected: Boolean)
-
-private data class TrashedMemoCardActions(val onClick: () -> Unit, val onLongClick: () -> Unit)
 
 @Composable
 private fun EmptyTrashConfirmDialog(actions: TrashScreenActions) {

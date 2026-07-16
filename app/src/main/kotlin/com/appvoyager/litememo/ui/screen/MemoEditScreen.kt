@@ -61,6 +61,7 @@ import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoImageThumbnail
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.state.MemoEditUiState
+import com.appvoyager.litememo.ui.testtag.MemoEditTestTags
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)

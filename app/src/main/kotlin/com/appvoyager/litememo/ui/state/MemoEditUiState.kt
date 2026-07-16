@@ -1,5 +1,8 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.ui.model.MemoImageUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
+
 data class MemoEditUiState(
     val isLoading: Boolean = false,
     val hasError: Boolean = false,

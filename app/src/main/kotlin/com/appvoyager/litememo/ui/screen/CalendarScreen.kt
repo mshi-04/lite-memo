@@ -64,11 +64,12 @@ import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoCard
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.SearchTopBar
+import com.appvoyager.litememo.ui.model.MemoUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
-import com.appvoyager.litememo.ui.state.MemoUiModel
-import com.appvoyager.litememo.ui.state.TagUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+import com.appvoyager.litememo.ui.type.MonthSwipeDirection
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
@@ -311,8 +312,6 @@ private fun CalendarMonthCard(
         }
     }
 }
-
-enum class MonthSwipeDirection { PREVIOUS, NEXT }
 
 fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeDirection? {
     if (abs(dragAmount) < thresholdPx) return null

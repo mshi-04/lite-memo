@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.screen
 
+import com.appvoyager.litememo.ui.type.MonthSwipeDirection
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test

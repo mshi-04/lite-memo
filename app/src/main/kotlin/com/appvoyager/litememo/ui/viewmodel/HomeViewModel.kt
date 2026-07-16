@@ -17,13 +17,15 @@ import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoFavoriteUseCase
+import com.appvoyager.litememo.ui.data.HomeUiControls
+import com.appvoyager.litememo.ui.model.MemoUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
-import com.appvoyager.litememo.ui.state.MemoUiModel
 import com.appvoyager.litememo.ui.state.SearchUiState
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.type.HomeFilterType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -287,14 +289,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (type) {
-        HomeFilterUiState.Type.All -> MemoFilter.All
-        HomeFilterUiState.Type.Unorganized -> MemoFilter.Unorganized
-        HomeFilterUiState.Type.Favorite -> MemoFilter.Favorite
-        HomeFilterUiState.Type.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
+        HomeFilterType.All -> MemoFilter.All
+        HomeFilterType.Unorganized -> MemoFilter.Unorganized
+        HomeFilterType.Favorite -> MemoFilter.Favorite
+        HomeFilterType.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
     }
 
     private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState =
-        if (type == HomeFilterUiState.Type.ByTag) {
+        if (type == HomeFilterType.ByTag) {
             if (tags.any { tag -> tag.id == tagId }) this else HomeFilterUiState.All
         } else {
             this
@@ -305,10 +307,3 @@ class HomeViewModel @Inject constructor(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
-
-private data class HomeUiControls(
-    val filter: HomeFilterUiState,
-    val search: SearchUiState,
-    val selection: HomeSelectionUiState,
-    val tagDialog: HomeBulkTagDialogUiState
-)

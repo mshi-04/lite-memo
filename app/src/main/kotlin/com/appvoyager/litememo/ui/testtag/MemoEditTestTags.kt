@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.testtag
 
 object MemoEditTestTags {
     const val TITLE_INPUT = "memoEditTitleInput"

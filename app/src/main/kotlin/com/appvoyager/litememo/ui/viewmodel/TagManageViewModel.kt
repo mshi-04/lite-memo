@@ -11,9 +11,9 @@ import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveTagUseCase
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.TagEditState
 import com.appvoyager.litememo.ui.state.TagManageUiState
-import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel

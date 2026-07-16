@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.route
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -8,6 +8,8 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import com.appvoyager.litememo.ui.data.OssLicense
+import com.appvoyager.litememo.ui.screen.OssLicensesScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray

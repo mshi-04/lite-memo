@@ -22,12 +22,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.appvoyager.litememo.domain.model.ThemeMode
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticator
+import com.appvoyager.litememo.ui.event.AppLockAuthenticator
 import com.appvoyager.litememo.ui.navigation.LiteMemoApp
 import com.appvoyager.litememo.ui.screen.AppLockScreen
 import com.appvoyager.litememo.ui.screen.TutorialScreen
-import com.appvoyager.litememo.ui.state.TutorialStatus
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+import com.appvoyager.litememo.ui.type.TutorialStatus
 import com.appvoyager.litememo.ui.viewmodel.MainViewModel
 import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
 import dagger.hilt.android.AndroidEntryPoint

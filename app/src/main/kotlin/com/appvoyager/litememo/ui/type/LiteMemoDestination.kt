@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.navigation
+package com.appvoyager.litememo.ui.type
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons

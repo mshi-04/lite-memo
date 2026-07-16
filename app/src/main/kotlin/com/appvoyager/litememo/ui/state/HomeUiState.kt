@@ -1,6 +1,9 @@
 package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.ui.model.MemoUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
+import com.appvoyager.litememo.ui.state.SearchUiState
 
 data class HomeUiState(
     val isLoading: Boolean = true,

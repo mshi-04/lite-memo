@@ -17,7 +17,8 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
-import com.appvoyager.litememo.ui.auth.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

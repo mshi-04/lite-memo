@@ -22,6 +22,9 @@
 ## Kotlin
 
 - 関数名は英語にする
+- `app/src/main` の名前付き class / interface / object / enum はトップレベルに置き、型名と同名のファイルへ1型だけ定義する。ただし、sealed hierarchy の直接の子型は親型のファイル内へネストしてよい
+- `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは1ファイル1型の対象外とする
+- `ui` 配下の型は機能名ではなく役割・接尾語で分け、`XxxScreen` は `screen`、`XxxRoute` は `route`、`XxxState` は `state`、`XxxUiModel` は `model`、`XxxEvent` は `event` のように対応するパッケージへ置く
 - ガード条件は早期リターンで扱い、ネストを深くしない
 - 意味のある値は primitive のまま広げず、必要に応じて値オブジェクトにする
 - 値オブジェクトは不正な値を作れない形に寄せる

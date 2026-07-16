@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.state
+package com.appvoyager.litememo.ui.model
 
 import com.appvoyager.litememo.domain.model.Tag
 

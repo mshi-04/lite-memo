@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.screen
+package com.appvoyager.litememo.ui.event
 
 import android.content.Context
 import android.content.Intent

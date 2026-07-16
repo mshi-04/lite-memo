@@ -24,9 +24,11 @@ import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
+import com.appvoyager.litememo.ui.event.MemoEditNavigationEvent
+import com.appvoyager.litememo.ui.event.MemoEditOperationErrorEvent
+import com.appvoyager.litememo.ui.model.MemoImageUiModel
+import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.MemoEditUiState
-import com.appvoyager.litememo.ui.state.MemoImageUiModel
-import com.appvoyager.litememo.ui.state.TagUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -466,15 +468,4 @@ class MemoEditViewModel @Inject constructor(
         const val SESSION_STARTED_AS_NEW_KEY = "sessionStartedAsNew"
     }
 
-}
-
-sealed interface MemoEditNavigationEvent {
-    data object NavigateBack : MemoEditNavigationEvent
-    data class MemoDeleted(val memoId: MemoId) : MemoEditNavigationEvent
-}
-
-sealed interface MemoEditOperationErrorEvent {
-    data object SaveFailed : MemoEditOperationErrorEvent
-    data object DeleteFailed : MemoEditOperationErrorEvent
-    data object ImageAttachFailed : MemoEditOperationErrorEvent
 }

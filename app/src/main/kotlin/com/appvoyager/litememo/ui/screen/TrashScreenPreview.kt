@@ -4,33 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import com.appvoyager.litememo.ui.state.TagUiModel
+import com.appvoyager.litememo.ui.event.PreviewTrashScreenActions
+import com.appvoyager.litememo.ui.model.TagUiModel
+import com.appvoyager.litememo.ui.model.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.state.TrashUiState
-import com.appvoyager.litememo.ui.state.TrashedMemoUiModel
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 private const val PREVIEW_TAG_COLOR = 0xFF6750A4
 private const val PREVIEW_DELETED_AT = 1_000L
-
-private object PreviewTrashScreenActions : TrashScreenActions {
-    override fun onBackClick() = Unit
-
-    override fun onMemoLongClick(memoId: MemoId) = Unit
-
-    override fun onMemoSelectionToggle(memoId: MemoId) = Unit
-
-    override fun onClearSelection() = Unit
-
-    override fun onRestoreSelectedMemos() = Unit
-
-    override fun onEmptyTrashRequest() = Unit
-
-    override fun onConfirmEmptyTrash() = Unit
-
-    override fun onDismissEmptyTrash() = Unit
-
-    override fun onRetry() = Unit
-}
 
 @Preview(showBackground = true, name = "ゴミ箱一覧")
 @Composable

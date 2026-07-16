@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.tagFixture
+import com.appvoyager.litememo.ui.model.MemoUiModel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
