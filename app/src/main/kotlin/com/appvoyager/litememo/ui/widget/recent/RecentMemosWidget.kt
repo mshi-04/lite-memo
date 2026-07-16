@@ -48,6 +48,7 @@ import dagger.hilt.android.EntryPointAccessors
 private const val MAX_ITEMS = 8
 
 class RecentMemosWidget : GlanceAppWidget() {
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entryPoint = EntryPointAccessors.fromApplication(
             context.applicationContext,
@@ -63,6 +64,7 @@ class RecentMemosWidget : GlanceAppWidget() {
             }
         }
     }
+
 }
 
 @Composable

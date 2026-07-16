@@ -206,7 +206,7 @@ class CalendarViewModel @Inject constructor(
         retryTrigger.update { it + 1 }
     }
 
-    fun selectedDateMillis(): Long? {
+    fun selectedDateMillis(): Long {
         val date = selectedDate.value.value
         return date.atStartOfDay(zoneId).toInstant().toEpochMilli()
     }
@@ -240,6 +240,7 @@ class CalendarViewModel @Inject constructor(
         const val SEARCH_DEBOUNCE_MILLIS = 250L
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
+
 }
 
 private data class ObservedCalendarData(

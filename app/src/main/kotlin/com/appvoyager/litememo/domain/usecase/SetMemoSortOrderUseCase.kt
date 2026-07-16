@@ -10,4 +10,5 @@ class SetMemoSortOrderUseCase @Inject constructor(
 
     suspend operator fun invoke(order: MemoSortOrder) =
         userSettingsRepository.setMemoSortOrder(order)
+
 }

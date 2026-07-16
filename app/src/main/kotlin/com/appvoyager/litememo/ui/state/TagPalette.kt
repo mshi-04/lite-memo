@@ -2,7 +2,7 @@ package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.value.TagColor
 
-internal val DEFAULT_TAG_COLORS: List<TagColor> = listOf(
+val DEFAULT_TAG_COLORS: List<TagColor> = listOf(
     TagColor(argb = 0xFF6750A4),
     TagColor(argb = 0xFFB3261E),
     TagColor(argb = 0xFF006D3B),

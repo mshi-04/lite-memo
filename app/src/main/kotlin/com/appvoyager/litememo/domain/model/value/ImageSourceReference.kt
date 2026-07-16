@@ -13,4 +13,5 @@ value class ImageSourceReference private constructor(val value: String) {
             return ImageSourceReference(value)
         }
     }
+
 }

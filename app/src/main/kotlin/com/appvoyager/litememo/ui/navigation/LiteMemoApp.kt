@@ -60,9 +60,13 @@ private const val TAG_MANAGE_ROUTE = "tag_manage"
 private const val TRASH_ROUTE = "trash"
 private const val MEMO_EDIT_BASE = "memo_edit"
 private const val MEMO_EDIT_ROUTE = "$MEMO_EDIT_BASE?memoId={memoId}&createdAt={createdAt}"
-internal fun memoEditRouteWithId(memoId: MemoId) =
+
+private const val BOTTOM_TAB_TRANSITION_DURATION_MS = 220
+private const val BOTTOM_TAB_FADE_IN_DURATION_MS = 160
+private const val BOTTOM_TAB_FADE_OUT_DURATION_MS = 120
+
+fun memoEditRouteWithId(memoId: MemoId) =
     "$MEMO_EDIT_BASE?memoId=${encodeNavigationArgument(memoId.value)}"
-private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"
 
 @Composable
 fun LiteMemoApp(
@@ -387,6 +391,4 @@ private fun bottomTabRouteIndex(route: String?): Int? {
     return index.takeIf { it >= 0 }
 }
 
-private const val BOTTOM_TAB_TRANSITION_DURATION_MS = 220
-private const val BOTTOM_TAB_FADE_IN_DURATION_MS = 160
-private const val BOTTOM_TAB_FADE_OUT_DURATION_MS = 120
+private fun memoEditRouteWithCreatedAt(createdAt: Long) = "$MEMO_EDIT_BASE?createdAt=$createdAt"

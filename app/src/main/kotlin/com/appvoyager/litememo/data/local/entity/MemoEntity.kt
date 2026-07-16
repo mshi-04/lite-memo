@@ -6,10 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "memos",
-    indices = [
-        Index(value = ["createdAt"]),
-        Index(value = ["deletedAt"])
-    ]
+    indices = [Index(value = ["createdAt"]), Index(value = ["deletedAt"])]
 )
 data class MemoEntity(
     @PrimaryKey val id: String,

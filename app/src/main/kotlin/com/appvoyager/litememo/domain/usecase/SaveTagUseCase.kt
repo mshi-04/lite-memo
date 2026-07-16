@@ -1,8 +1,8 @@
 package com.appvoyager.litememo.domain.usecase
 
+import com.appvoyager.litememo.domain.exception.DuplicateTagNameException
 import com.appvoyager.litememo.domain.model.SaveTagCommand
 import com.appvoyager.litememo.domain.model.Tag
-import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.TagRepository
@@ -34,6 +34,3 @@ class SaveTagUseCase @Inject constructor(
     }
 
 }
-
-class DuplicateTagNameException(tagName: TagName) :
-    IllegalArgumentException("Tag name already exists: ${tagName.value}")

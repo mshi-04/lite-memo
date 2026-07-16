@@ -51,6 +51,67 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        mainViewModel.onAppStarted()
+    }
+
+    override fun onStop() {
+        if (!isChangingConfigurations) {
+            mainViewModel.onAppStopped()
+        }
+        super.onStop()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleWidgetIntent(intent)
+    }
+
+    private fun handleWidgetIntent(intent: Intent?) {
+        val request = WidgetLaunchIntents.parseWidgetNav(
+            action = intent?.action,
+            target = intent?.getStringExtra(WidgetLaunchIntents.EXTRA_TARGET),
+            memoId = intent?.getStringExtra(WidgetLaunchIntents.EXTRA_MEMO_ID)
+        ) ?: return
+        mainViewModel.requestWidgetNav(request)
+    }
+
+    private fun observeAuthenticationRequests() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.authenticationRequestEvent.collect {
+                    appLockAuthenticator.authenticate { result ->
+                        mainViewModel.onAuthenticationResult(result)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeSecureScreen() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.secureScreenEnabled.collect { enabled ->
+                    if (enabled) {
+                        window.setFlags(
+                            WindowManager.LayoutParams.FLAG_SECURE,
+                            WindowManager.LayoutParams.FLAG_SECURE
+                        )
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun openSecuritySettings() {
+        runCatching { startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS)) }
+            .onFailure { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+    }
+
     @Composable
     private fun LiteMemoContent() {
         val themeMode by mainViewModel.themeMode
@@ -109,64 +170,4 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        handleWidgetIntent(intent)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mainViewModel.onAppStarted()
-    }
-
-    private fun handleWidgetIntent(intent: Intent?) {
-        val request = WidgetLaunchIntents.parseWidgetNav(
-            action = intent?.action,
-            target = intent?.getStringExtra(WidgetLaunchIntents.EXTRA_TARGET),
-            memoId = intent?.getStringExtra(WidgetLaunchIntents.EXTRA_MEMO_ID)
-        ) ?: return
-        mainViewModel.requestWidgetNav(request)
-    }
-
-    override fun onStop() {
-        if (!isChangingConfigurations) {
-            mainViewModel.onAppStopped()
-        }
-        super.onStop()
-    }
-
-    private fun observeAuthenticationRequests() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.authenticationRequestEvent.collect {
-                    appLockAuthenticator.authenticate { result ->
-                        mainViewModel.onAuthenticationResult(result)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun observeSecureScreen() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.secureScreenEnabled.collect { enabled ->
-                    if (enabled) {
-                        window.setFlags(
-                            WindowManager.LayoutParams.FLAG_SECURE,
-                            WindowManager.LayoutParams.FLAG_SECURE
-                        )
-                    } else {
-                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun openSecuritySettings() {
-        runCatching { startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS)) }
-            .onFailure { startActivity(Intent(Settings.ACTION_SETTINGS)) }
-    }
 }

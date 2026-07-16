@@ -33,4 +33,5 @@ class FileSystemMemoImageStore @Inject constructor(
     private companion object {
         const val FALLBACK_EXTENSION = "img"
     }
+
 }

@@ -312,9 +312,9 @@ private fun CalendarMonthCard(
     }
 }
 
-internal enum class MonthSwipeDirection { PREVIOUS, NEXT }
+enum class MonthSwipeDirection { PREVIOUS, NEXT }
 
-internal fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeDirection? {
+fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeDirection? {
     if (abs(dragAmount) < thresholdPx) return null
     return if (dragAmount < 0f) MonthSwipeDirection.NEXT else MonthSwipeDirection.PREVIOUS
 }

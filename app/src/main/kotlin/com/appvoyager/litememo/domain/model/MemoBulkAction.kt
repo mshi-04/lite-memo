@@ -21,4 +21,5 @@ sealed class MemoBulkAction {
 
         fun removeTag(tagId: TagId): MemoBulkAction = RemoveTag(tagId)
     }
+
 }

@@ -21,9 +21,6 @@ import androidx.room.Index
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [
-        Index(value = ["memoId", "position"], unique = true),
-        Index(value = ["tagId"])
-    ]
+    indices = [Index(value = ["memoId", "position"], unique = true), Index(value = ["tagId"])]
 )
 data class MemoTagRefEntity(val memoId: String, val tagId: String, val position: Int)

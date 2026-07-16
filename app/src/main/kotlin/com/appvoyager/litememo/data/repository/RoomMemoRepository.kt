@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.data.repository
 
-import androidx.annotation.VisibleForTesting
 import androidx.room.withTransaction
 import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
@@ -126,8 +125,7 @@ class RoomMemoRepository @Inject constructor(
         deleteImageFiles(removedFileNames)
     }
 
-    @VisibleForTesting
-    internal suspend fun executeImport(tags: List<Tag>, memos: List<Memo>): List<String> {
+    suspend fun executeImport(tags: List<Tag>, memos: List<Memo>): List<String> {
         requireNoDuplicateTagIds(tags)
         requireNoDuplicateMemoIds(memos)
 

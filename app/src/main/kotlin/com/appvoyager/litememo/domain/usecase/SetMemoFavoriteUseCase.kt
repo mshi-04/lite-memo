@@ -23,7 +23,6 @@ class SetMemoFavoriteUseCase @Inject constructor(
             updatedAt = memo.updatedAtFrom(now),
             isFavorite = isFavorite
         )
-
         memoRepository.saveMemo(updatedMemo)
         return updatedMemo
     }

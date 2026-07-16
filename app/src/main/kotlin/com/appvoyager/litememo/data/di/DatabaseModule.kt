@@ -24,7 +24,6 @@ object DatabaseModule {
             LiteMemoDatabase.DATABASE_NAME
         ).apply {
             LiteMemoMigrations.ALL.forEach { migration -> addMigrations(migration) }
-        }
-            .build()
+        }.build()
 
 }

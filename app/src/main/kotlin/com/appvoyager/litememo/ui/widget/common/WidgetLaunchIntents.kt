@@ -41,4 +41,5 @@ object WidgetLaunchIntents {
 
     private fun memoIdOrNull(rawValue: String): MemoId? =
         runCatching { MemoId(rawValue) }.getOrNull()
+
 }

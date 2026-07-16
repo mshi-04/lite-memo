@@ -32,6 +32,7 @@ import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
 import com.appvoyager.litememo.ui.widget.theme.WidgetColorProviders
 
 class NewMemoWidget : GlanceAppWidget() {
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             GlanceTheme(colors = WidgetColorProviders) {
@@ -39,6 +40,7 @@ class NewMemoWidget : GlanceAppWidget() {
             }
         }
     }
+
 }
 
 @Composable

@@ -288,12 +288,7 @@ class MemoEditViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 現在の編集内容を保存する。保存成功、または保存対象なし（空内容）なら true、保存失敗なら false。
-     *
-     * 保存・破棄・ゴミ箱送りは同一の [persistMutex] で直列化し、
-     * 進行中の保存が完了した後に破棄／ゴミ箱送りが走ることを保証する。
-     */
+    // 保存・破棄・ゴミ箱送りは同一の [persistMutex] で直列化し、進行中の保存が完了した後に破棄／ゴミ箱送りが走ることを保証する。
     private suspend fun persist(): Boolean = persistMutex.withLock {
         val state = _uiState.value
         if (state.isContentBlank()) return@withLock true
@@ -470,6 +465,7 @@ class MemoEditViewModel @Inject constructor(
         const val GENERATED_MEMO_ID_KEY = "generatedMemoId"
         const val SESSION_STARTED_AS_NEW_KEY = "sessionStartedAsNew"
     }
+
 }
 
 sealed interface MemoEditNavigationEvent {
