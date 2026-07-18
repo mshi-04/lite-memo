@@ -2,7 +2,7 @@ package com.appvoyager.litememo.ui.state
 
 import com.appvoyager.litememo.domain.model.Memo
 
-internal sealed interface MemoSearchResult {
+sealed interface MemoSearchResult {
 
     data object Inactive : MemoSearchResult
 

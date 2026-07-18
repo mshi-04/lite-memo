@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-internal class MemoSearchStateHolder(private val searchMemosUseCase: SearchMemosUseCase) {
+class MemoSearchStateHolder(private val searchMemosUseCase: SearchMemosUseCase) {
 
     private val mutableControls = MutableStateFlow(SearchUiState())
     val controls: StateFlow<SearchUiState> = mutableControls.asStateFlow()
