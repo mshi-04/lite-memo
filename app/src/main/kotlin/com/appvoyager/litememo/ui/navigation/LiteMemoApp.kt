@@ -355,10 +355,6 @@ private fun NavController.navigateOnce(route: String) {
     }
 }
 
-/**
- * ウィジェット起因の遷移向け。現在の entry が RESUMED なら即遷移し、まだなら
- * cold start で遷移を取りこぼさないよう ON_RESUME まで一度だけ遅延する。
- */
 private fun NavController.navigateWhenResumed(
     route: String,
     builder: NavOptionsBuilder.() -> Unit
