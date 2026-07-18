@@ -202,6 +202,75 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun normalSearchResultMapsTags() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "shopping", title = "Shopping list", tagIds = listOf(tagId))
+            ),
+            tags = listOf(tagFixture(id = tagId.value, name = "生活"))
+        )
+        advanceUntilIdle()
+
+        // Act
+        // Normal: the ViewModel keeps screen-specific tag mapping for raw search results.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals(listOf("生活"), state.search.results.single().tags.map { it.name })
+    }
+
+    @Test
+    fun normalSearchResultMapsThumbnailPath() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(
+                    id = "shopping",
+                    title = "Shopping list",
+                    images = listOf(memoImageFixture(fileName = "search-image.jpg"))
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        // Act
+        // Normal: the ViewModel keeps image path resolution for raw search results.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals("/images/search-image.jpg", state.search.results.single().thumbnailPath)
+    }
+
+    @Test
+    fun stateTransitionSearchKeepsSelection() = runTest(dispatcher) {
+        // Arrange
+        val memoId = MemoId("shopping")
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = memoId.value, title = "Shopping list"))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(memoId)
+
+        // Act
+        // StateTransition: search input and results do not replace Home selection state.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals(setOf(memoId), state.selection.selectedMemoIds)
+    }
+
+    @Test
     fun stateTransitionToggleSearchResetsSearchWhenClosed() = runTest(dispatcher) {
         // Arrange
         val viewModel = homeViewModel()

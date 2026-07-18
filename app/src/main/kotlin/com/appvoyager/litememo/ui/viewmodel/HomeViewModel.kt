@@ -3,7 +3,6 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.domain.model.ApplyMemoBulkActionCommand
-import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoBulkAction
 import com.appvoyager.litememo.domain.model.MemoFilter
 import com.appvoyager.litememo.domain.model.Tag
@@ -24,30 +23,25 @@ import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
-import com.appvoyager.litememo.ui.state.SearchUiState
+import com.appvoyager.litememo.ui.state.MemoSearchStateHolder
 import com.appvoyager.litememo.ui.type.HomeFilterType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val observeMemosUseCase: ObserveMemosUseCase,
@@ -61,7 +55,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
-    private val searchState = MutableStateFlow(SearchUiState())
+    private val memoSearch = MemoSearchStateHolder(searchMemosUseCase)
     private val selection = MutableStateFlow(HomeSelectionUiState())
     private val bulkTagDialog = MutableStateFlow(HomeBulkTagDialogUiState())
     private val retryTrigger = MutableStateFlow(false)
@@ -70,23 +64,9 @@ class HomeViewModel @Inject constructor(
     private val _actionErrorEvent = Channel<Unit>(Channel.CONFLATED)
     val actionErrorEvent = _actionErrorEvent.receiveAsFlow()
 
-    private val searchResults = searchState
-        .map { search -> search.query }
-        .distinctUntilChanged()
-        .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
-        .flatMapLatest { query ->
-            if (query.isBlank()) {
-                flowOf(emptyList())
-            } else {
-                searchMemosUseCase(query)
-                    .map<List<Memo>, List<Memo>?> { memos -> memos }
-                    .catch { emit(null) }
-            }
-        }
-
     private val uiControls = combine(
         selectedFilter,
-        searchState,
+        memoSearch.controls,
         selection,
         bulkTagDialog
     ) { filter, search, activeSelection, tagDialog ->
@@ -103,8 +83,8 @@ class HomeViewModel @Inject constructor(
             observeMemosUseCase(),
             observeTagsUseCase(),
             uiControls,
-            searchResults
-        ) { memos, tags, controls, searchHits ->
+            memoSearch.results
+        ) { memos, tags, controls, searchResult ->
             val tagUiModels = tags.map { TagUiModel.fromDomain(it) }
             val effectiveFilter = controls.filter.effectiveFilter(tags)
             val filteredMemos = filterMemosUseCase(memos, effectiveFilter.toDomainFilter())
@@ -119,19 +99,12 @@ class HomeViewModel @Inject constructor(
                 ?.map { memo -> memo.tagIds.toSet() }
                 ?.reduce { commonTagIds, tagIds -> commonTagIds intersect tagIds }
                 ?: emptySet()
-            val search = if (controls.search.isActive) {
-                SearchUiState(
-                    isActive = true,
-                    query = controls.search.query,
-                    hasError = searchHits == null,
-                    results = MemoUiModel.fromDomain(
-                        searchHits ?: emptyList(),
-                        tags,
-                        resolveMemoImagePathUseCase::invoke
-                    )
+            val search = memoSearch.toUiState(controls.search, searchResult) { searchHits ->
+                MemoUiModel.fromDomain(
+                    searchHits,
+                    tags,
+                    resolveMemoImagePathUseCase::invoke
                 )
-            } else {
-                SearchUiState()
             }
 
             HomeUiState(
@@ -155,7 +128,7 @@ class HomeViewModel @Inject constructor(
                     isLoading = false,
                     hasError = true,
                     selectedFilter = selectedFilter.value,
-                    search = searchState.value,
+                    search = memoSearch.controls.value,
                     selection = selection.value,
                     bulkTagDialog = bulkTagDialog.value
                 )
@@ -172,19 +145,15 @@ class HomeViewModel @Inject constructor(
     }
 
     fun toggleSearch() {
-        searchState.update { search ->
-            if (search.isActive) SearchUiState() else SearchUiState(isActive = true)
-        }
+        memoSearch.toggle()
     }
 
     fun updateSearchQuery(query: String) {
-        searchState.update { search ->
-            if (search.isActive) search.copy(query = query) else search
-        }
+        memoSearch.updateQuery(query)
     }
 
     fun closeSearch() {
-        searchState.update { SearchUiState() }
+        memoSearch.close()
     }
 
     fun setMemoFavorite(memoId: MemoId, isFavorite: Boolean) {
@@ -303,7 +272,6 @@ class HomeViewModel @Inject constructor(
         }
 
     private companion object {
-        const val SEARCH_DEBOUNCE_MILLIS = 250L
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
