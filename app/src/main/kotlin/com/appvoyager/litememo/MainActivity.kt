@@ -45,7 +45,9 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         observeAuthenticationRequests()
         observeSecureScreen()
-        handleWidgetIntent(intent)
+        if (savedInstanceState == null) {
+            handleWidgetIntent(intent)
+        }
         setContent {
             LiteMemoContent()
         }
@@ -118,7 +120,6 @@ class MainActivity : FragmentActivity() {
             .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
         val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
         val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
-        val pendingWidgetNav by mainViewModel.pendingWidgetNav.collectAsStateWithLifecycle()
         val darkTheme = when (themeMode) {
             ThemeMode.SYSTEM -> isSystemInDarkTheme()
             ThemeMode.LIGHT -> false
@@ -155,8 +156,7 @@ class MainActivity : FragmentActivity() {
                             onRequestAppLockAuthentication = { onResult ->
                                 appLockAuthenticator.authenticate(onResult)
                             },
-                            pendingWidgetNav = pendingWidgetNav,
-                            onConsumeWidgetNav = { mainViewModel.consumeWidgetNav() }
+                            widgetNavEvents = mainViewModel.widgetNavEvent
                         )
                     }
                 }

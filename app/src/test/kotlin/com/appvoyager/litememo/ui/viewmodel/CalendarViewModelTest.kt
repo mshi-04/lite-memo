@@ -8,6 +8,7 @@ import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -323,6 +324,9 @@ class CalendarViewModelTest {
         }
 
         override fun observeActiveMemos(): Flow<List<Memo>> = delegate.observeActiveMemos()
+
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> =
+            delegate.observeRecentActiveMemos(limit)
 
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             if (searchFails) {

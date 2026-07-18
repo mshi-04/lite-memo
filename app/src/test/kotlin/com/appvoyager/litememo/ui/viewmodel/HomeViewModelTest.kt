@@ -8,6 +8,7 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -782,6 +783,10 @@ class HomeViewModelTest {
             throw throwable
         }
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = flow {
+            throw throwable
+        }
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> = flow {
             throw throwable
         }
@@ -817,6 +822,17 @@ class HomeViewModelTest {
     private class SaveFailingMemoRepository(private val memo: Memo) : MemoRepository {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
+
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = flowOf(
+            listOf(memo).take(limit).map { item ->
+                MemoSummary(
+                    id = item.id,
+                    title = item.title,
+                    body = item.body,
+                    isFavorite = item.isFavorite
+                )
+            }
+        )
 
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             flowOf(emptyList())

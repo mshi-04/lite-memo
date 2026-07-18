@@ -25,16 +25,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,6 +55,8 @@ import com.appvoyager.litememo.ui.route.TagManageRoute
 import com.appvoyager.litememo.ui.route.TrashRoute
 import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import com.appvoyager.litememo.ui.viewmodel.LiteMemoAppViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 
 private const val OSS_LICENSES_ROUTE = "oss_licenses"
@@ -72,8 +76,7 @@ fun memoEditRouteWithId(memoId: MemoId) =
 fun LiteMemoApp(
     onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
-    pendingWidgetNav: WidgetNavRequest? = null,
-    onConsumeWidgetNav: () -> Unit = {},
+    widgetNavEvents: Flow<WidgetNavRequest> = emptyFlow(),
     viewModel: LiteMemoAppViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
@@ -118,21 +121,18 @@ fun LiteMemoApp(
         memoEditPopInFlight = false
     }
 
-    val currentOnConsumeWidgetNav by rememberUpdatedState(onConsumeWidgetNav)
-    LaunchedEffect(pendingWidgetNav) {
-        when (val request = pendingWidgetNav) {
-            null -> Unit
-
-            WidgetNavRequest.NewMemo -> {
-                navController.navigate(MEMO_EDIT_BASE) { launchSingleTop = true }
-                currentOnConsumeWidgetNav()
-            }
-
-            is WidgetNavRequest.OpenMemo -> {
-                navController.navigate(memoEditRouteWithId(request.memoId)) {
-                    launchSingleTop = true
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(widgetNavEvents, lifecycleOwner, navController) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            widgetNavEvents.collect { request ->
+                val route = when (request) {
+                    WidgetNavRequest.NewMemo -> MEMO_EDIT_BASE
+                    is WidgetNavRequest.OpenMemo -> memoEditRouteWithId(request.memoId)
                 }
-                currentOnConsumeWidgetNav()
+                navController.navigateWhenResumed(route) {
+                    launchSingleTop = true
+                    popUpTo(MEMO_EDIT_ROUTE) { inclusive = true }
+                }
             }
         }
     }
@@ -353,6 +353,31 @@ private fun NavController.navigateOnce(route: String) {
     if (isCurrentEntryResumed()) {
         navigate(route) { launchSingleTop = true }
     }
+}
+
+private fun NavController.navigateWhenResumed(
+    route: String,
+    builder: NavOptionsBuilder.() -> Unit
+) {
+    if (isCurrentEntryResumed()) {
+        navigate(route, builder)
+        return
+    }
+    val entry = currentBackStackEntry ?: return
+    lateinit var observer: LifecycleEventObserver
+    observer = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                entry.lifecycle.removeObserver(observer)
+                navigate(route, builder)
+            }
+
+            Lifecycle.Event.ON_DESTROY -> entry.lifecycle.removeObserver(observer)
+
+            else -> Unit
+        }
+    }
+    entry.lifecycle.addObserver(observer)
 }
 
 private fun bottomTabEnterTransition(

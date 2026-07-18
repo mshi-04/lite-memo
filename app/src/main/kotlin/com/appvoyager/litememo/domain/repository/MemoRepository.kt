@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.domain.repository
 
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 interface MemoRepository {
 
     fun observeActiveMemos(): Flow<List<Memo>>
+
+    fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>>
 
     fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 

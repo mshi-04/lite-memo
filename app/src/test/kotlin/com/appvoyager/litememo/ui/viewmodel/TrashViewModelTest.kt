@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -300,6 +301,9 @@ class TrashViewModelTest {
         private val repository = FakeMemoRepository(initialMemos)
 
         override fun observeActiveMemos(): Flow<List<Memo>> = repository.observeActiveMemos()
+
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> =
+            repository.observeRecentActiveMemos(limit)
 
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             repository.observeActiveMemosBySearchQuery(query)

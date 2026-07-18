@@ -377,30 +377,34 @@ class MainViewModelTest {
     }
 
     @Test
-    fun normalRequestWidgetNavExposesPendingRequest() = runTest(dispatcher) {
+    fun flowRequestWidgetNavEmitsNavigationEvent() = runTest(dispatcher) {
         // Arrange
         val viewModel = mainViewModel(FakeUserSettingsRepository())
 
-        // Act
-        // Normal: a widget tap request becomes the pending navigation
-        viewModel.requestWidgetNav(WidgetNavRequest.NewMemo)
-
-        // Assert
-        assertEquals(WidgetNavRequest.NewMemo, viewModel.pendingWidgetNav.value)
+        // Act & Assert
+        // Flow: a widget tap request is delivered once as a one-shot navigation event
+        viewModel.widgetNavEvent.test {
+            viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo(MemoId("memo-1")))
+            assertEquals(WidgetNavRequest.OpenMemo(MemoId("memo-1")), awaitItem())
+            expectNoEvents()
+        }
     }
 
     @Test
-    fun stateTransitionConsumeWidgetNavClearsPendingRequest() = runTest(dispatcher) {
+    fun flowWidgetNavEventDoesNotReplayToLateCollector() = runTest(dispatcher) {
         // Arrange
         val viewModel = mainViewModel(FakeUserSettingsRepository())
-        viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo(MemoId("memo-1")))
+        viewModel.widgetNavEvent.test {
+            viewModel.requestWidgetNav(WidgetNavRequest.NewMemo)
+            assertEquals(WidgetNavRequest.NewMemo, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
 
-        // Act
-        // StateTransition: consuming the request clears it so it does not re-fire
-        viewModel.consumeWidgetNav()
-
-        // Assert
-        assertEquals(null, viewModel.pendingWidgetNav.value)
+        // Act & Assert
+        // Flow: a re-collection (e.g. after rotation) does not replay the consumed event
+        viewModel.widgetNavEvent.test {
+            expectNoEvents()
+        }
     }
 
     private fun mainViewModel(

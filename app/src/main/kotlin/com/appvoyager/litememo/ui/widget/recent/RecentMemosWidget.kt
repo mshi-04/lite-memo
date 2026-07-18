@@ -44,8 +44,8 @@ import com.appvoyager.litememo.ui.widget.data.WidgetMemoLoader
 import com.appvoyager.litememo.ui.widget.di.WidgetEntryPoint
 import com.appvoyager.litememo.ui.widget.theme.WidgetColorProviders
 import dagger.hilt.android.EntryPointAccessors
-
-private const val MAX_ITEMS = 8
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.catch
 
 class RecentMemosWidget : GlanceAppWidget() {
 
@@ -54,11 +54,18 @@ class RecentMemosWidget : GlanceAppWidget() {
             context.applicationContext,
             WidgetEntryPoint::class.java
         )
-        val loader = WidgetMemoLoader(entryPoint.observeMemosUseCase())
-        val initial = runCatching { loader.loadRecent(MAX_ITEMS) }.getOrDefault(emptyList())
+        val loader = WidgetMemoLoader(entryPoint.observeRecentMemosUseCase())
+        val initial = runCatching {
+            loader.loadRecent()
+        }.getOrElse {
+            if (it is CancellationException) throw it else emptyList()
+        }
         provideContent {
-            val items by remember { loader.observeRecent(MAX_ITEMS) }
-                .collectAsState(initial = initial)
+            val items by remember {
+                loader.observeRecent().catch {
+                    emit(emptyList())
+                }
+            }.collectAsState(initial = initial)
             GlanceTheme(colors = WidgetColorProviders) {
                 RecentMemosContent(items)
             }

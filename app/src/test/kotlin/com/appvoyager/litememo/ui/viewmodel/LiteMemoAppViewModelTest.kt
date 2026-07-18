@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -86,6 +87,9 @@ class LiteMemoAppViewModelTest {
         MemoRepository {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(emptyList())
+
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> =
+            flowOf(emptyList())
 
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             flowOf(emptyList())
