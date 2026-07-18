@@ -15,9 +15,11 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -45,13 +47,13 @@ class RoomMemoRepository @Inject constructor(
             memos.map { memo -> memo.toDomain() }
         }
 
-    override fun observeActiveMemosCreatedBetween(
-        from: TimestampMillis,
-        to: TimestampMillis
-    ): Flow<List<Memo>> {
-        require(from.value <= to.value) { "from must not be later than to." }
+    override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> {
+        if (range.isEmpty) return flowOf(emptyList())
         return memoDao
-            .observeActiveMemosWithRefsCreatedBetween(from.value, to.value)
+            .observeActiveMemosWithRefsCreatedBetween(
+                range.fromInclusive.value,
+                range.toExclusive.value
+            )
             .map { memos ->
                 memos.map { memo -> memo.toDomain() }
             }

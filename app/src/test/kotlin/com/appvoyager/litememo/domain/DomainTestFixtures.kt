@@ -15,6 +15,7 @@ import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
@@ -23,6 +24,7 @@ import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -122,16 +124,13 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
             }
         }
 
-    override fun observeActiveMemosCreatedBetween(
-        from: TimestampMillis,
-        to: TimestampMillis
-    ): Flow<List<Memo>> {
-        require(from.value < to.value) { "from must be earlier than to." }
+    override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> {
+        if (range.isEmpty) return flowOf(emptyList())
         return memos.map { list ->
             list.filter { memo ->
                 memo.deletedAt == null &&
-                    memo.createdAt.value >= from.value &&
-                    memo.createdAt.value < to.value
+                    memo.createdAt.value >= range.fromInclusive.value &&
+                    memo.createdAt.value < range.toExclusive.value
             }
         }
     }

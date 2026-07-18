@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import kotlinx.coroutines.flow.Flow
 
 interface MemoRepository {
@@ -16,10 +17,7 @@ interface MemoRepository {
 
     fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 
-    fun observeActiveMemosCreatedBetween(
-        from: TimestampMillis,
-        to: TimestampMillis
-    ): Flow<List<Memo>>
+    fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>>
 
     fun observeTrashedMemos(): Flow<List<Memo>>
 
