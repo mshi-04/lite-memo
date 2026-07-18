@@ -14,6 +14,7 @@ import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
@@ -335,10 +336,8 @@ class CalendarViewModelTest {
                 delegate.observeActiveMemosBySearchQuery(query)
             }
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = delegate.observeActiveMemosCreatedBetween(from, to)
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            delegate.observeActiveMemosCreatedBetween(range)
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = delegate.observeTrashedMemos()
 

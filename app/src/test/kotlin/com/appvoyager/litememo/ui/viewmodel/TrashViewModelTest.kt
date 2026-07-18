@@ -11,6 +11,7 @@ import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
 import com.appvoyager.litememo.domain.usecase.DeleteMemoPermanentlyUseCase
@@ -308,10 +309,8 @@ class TrashViewModelTest {
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             repository.observeActiveMemosBySearchQuery(query)
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = repository.observeActiveMemosCreatedBetween(from, to)
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            repository.observeActiveMemosCreatedBetween(range)
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = repository.observeTrashedMemos()
 

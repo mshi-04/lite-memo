@@ -18,6 +18,7 @@ import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.flow.Flow
@@ -135,15 +136,18 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeActiveMemosCreatedBetweenDelegatesTimestampValuesToDao() = runTest {
+    fun interactionObserveActiveMemosCreatedBetweenDelegatesTimestampValuesToDao() = runTest {
         // Arrange
         val dao = FakeMemoDao()
         val repository = createRepository(dao)
 
         // Act
+        // Interaction: repository unwraps the range only at the DAO boundary
         repository.observeActiveMemosCreatedBetween(
-            from = TimestampMillis(1_000L),
-            to = TimestampMillis(2_000L)
+            TimestampRange(
+                fromInclusive = TimestampMillis(1_000L),
+                toExclusive = TimestampMillis(2_000L)
+            )
         ).first()
 
         // Assert
@@ -151,7 +155,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeActiveMemosCreatedBetweenReturnsDomainMemosFromDao() = runTest {
+    fun normalObserveActiveMemosCreatedBetweenReturnsDomainMemosFromDao() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithRefs = listOf(memoWithRefs(memoId = "memo-1"))
@@ -159,9 +163,12 @@ class RoomMemoRepositoryTest {
         val repository = createRepository(dao)
 
         // Act
+        // Normal: DAO results are mapped back to domain memos
         val memos = repository.observeActiveMemosCreatedBetween(
-            from = TimestampMillis(500L),
-            to = TimestampMillis(2_000L)
+            TimestampRange(
+                fromInclusive = TimestampMillis(500L),
+                toExclusive = TimestampMillis(2_000L)
+            )
         ).first()
 
         // Assert
@@ -169,7 +176,7 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeActiveMemosCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
+    fun boundaryObserveActiveMemosCreatedBetweenUsesInclusiveStartAndExclusiveEnd() = runTest {
         // Arrange
         val dao = FakeMemoDao(
             memosWithRefs = listOf(
@@ -182,9 +189,12 @@ class RoomMemoRepositoryTest {
         val repository = createRepository(dao)
 
         // Act
+        // Boundary: start is included and end is excluded
         val memos = repository.observeActiveMemosCreatedBetween(
-            from = TimestampMillis(1_000L),
-            to = TimestampMillis(2_000L)
+            TimestampRange(
+                fromInclusive = TimestampMillis(1_000L),
+                toExclusive = TimestampMillis(2_000L)
+            )
         ).first()
 
         // Assert
@@ -192,36 +202,22 @@ class RoomMemoRepositoryTest {
     }
 
     @Test
-    fun observeActiveMemosCreatedBetweenWithEqualRangeReturnsEmpty() = runTest {
-        // Arrange
-        val dao = FakeMemoDao(
-            memosWithRefs = listOf(memoWithRefs(memoId = "memo-1", createdAt = 1_000L))
-        )
-        val repository = createRepository(dao)
-
-        // Act
-        val memos = repository.observeActiveMemosCreatedBetween(
-            from = TimestampMillis(1_000L),
-            to = TimestampMillis(1_000L)
-        ).first()
-
-        // Assert
-        assertEquals(emptyList<MemoId>(), memos.map { it.id })
-    }
-
-    @Test
-    fun observeActiveMemosCreatedBetweenWithDescendingRangeThrowsBeforeCallingDao() {
+    fun boundaryObserveActiveMemosCreatedBetweenShortCircuitsEqualRange() = runTest {
         // Arrange
         val dao = FakeMemoDao(failOnObserveMemosBetween = true)
         val repository = createRepository(dao)
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException::class.java) {
-            repository.observeActiveMemosCreatedBetween(
-                from = TimestampMillis(2_000L),
-                to = TimestampMillis(1_000L)
+        // Act
+        // Boundary/Interaction: an empty range emits empty without querying Room
+        val memos = repository.observeActiveMemosCreatedBetween(
+            TimestampRange(
+                fromInclusive = TimestampMillis(1_000L),
+                toExclusive = TimestampMillis(1_000L)
             )
-        }
+        ).first()
+
+        // Assert
+        assertEquals(emptyList<MemoId>(), memos.map { it.id })
     }
 
     @Test

@@ -15,6 +15,7 @@ import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
@@ -122,19 +123,14 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
             }
         }
 
-    override fun observeActiveMemosCreatedBetween(
-        from: TimestampMillis,
-        to: TimestampMillis
-    ): Flow<List<Memo>> {
-        require(from.value < to.value) { "from must be earlier than to." }
-        return memos.map { list ->
+    override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+        memos.map { list ->
             list.filter { memo ->
                 memo.deletedAt == null &&
-                    memo.createdAt.value >= from.value &&
-                    memo.createdAt.value < to.value
+                    memo.createdAt.value >= range.fromInclusive.value &&
+                    memo.createdAt.value < range.toExclusive.value
             }
         }
-    }
 
     override fun observeTrashedMemos(): Flow<List<Memo>> = memos.map { list ->
         list.filter { it.deletedAt != null }.sortedByDescending { it.deletedAt?.value }
