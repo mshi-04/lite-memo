@@ -180,6 +180,29 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun stateTransitionSearchKeepsSelectedDate() = runTest(dispatcher) {
+        // Arrange
+        val selectedDate = LocalDate.of(2026, 5, 11)
+        val viewModel = calendarViewModel(
+            memoRepository = FakeMemoRepository(
+                listOf(memoFixture(id = "shopping", title = "Shopping list"))
+            )
+        )
+        advanceUntilIdle()
+        viewModel.selectDate(selectedDate)
+
+        // Act
+        // StateTransition: search input and results do not replace Calendar date state.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals(selectedDate, state.selectedDate)
+    }
+
+    @Test
     fun uiStateMarksOnlyMemoDatesWithDot() = runTest(dispatcher) {
         // Arrange
         val viewModel = calendarViewModel(
