@@ -55,11 +55,12 @@ class LiteMemoApplication : Application() {
                 .distinctUntilChanged()
                 .debounce(WIDGET_REFRESH_DEBOUNCE_MS)
                 .collect {
-                    val error = runCatching {
+                    runCatching {
                         WidgetRefresher.refreshLists(this@LiteMemoApplication)
-                    }.exceptionOrNull() ?: return@collect
-                    if (error is CancellationException) throw error
-                    Log.w(WIDGET_REFRESH_TAG, "Widget refresh failed", error)
+                    }.onFailure { error ->
+                        if (error is CancellationException) throw error
+                        Log.w(WIDGET_REFRESH_TAG, "Widget refresh failed", error)
+                    }
                 }
         }
     }
