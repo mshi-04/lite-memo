@@ -18,6 +18,16 @@ interface MemoDao {
     @Query("SELECT * FROM memos WHERE deletedAt IS NULL")
     fun observeActiveMemosWithRefs(): Flow<List<MemoWithRefs>>
 
+    @Query(
+        """
+        SELECT * FROM memos
+        WHERE deletedAt IS NULL
+        ORDER BY isFavorite DESC, updatedAt DESC, createdAt DESC
+        LIMIT :limit
+        """
+    )
+    fun observeRecentActiveMemos(limit: Int): Flow<List<MemoEntity>>
+
     @Transaction
     @Query(
         """

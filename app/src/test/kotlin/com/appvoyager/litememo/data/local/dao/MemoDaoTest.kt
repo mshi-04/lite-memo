@@ -135,6 +135,8 @@ class MemoDaoTest {
 
         override fun observeActiveMemosWithRefs() = emptyMemoFlow
 
+        override fun observeRecentActiveMemos(limit: Int) = flowOf(emptyList<MemoEntity>())
+
         override fun observeActiveMemosWithRefsBySearchPattern(pattern: String) = emptyMemoFlow
 
         override fun observeActiveMemosWithRefsCreatedBetween(fromMillis: Long, toMillis: Long) =

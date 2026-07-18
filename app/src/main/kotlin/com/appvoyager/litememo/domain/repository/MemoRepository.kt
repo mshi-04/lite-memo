@@ -11,6 +11,8 @@ interface MemoRepository {
 
     fun observeActiveMemos(): Flow<List<Memo>>
 
+    fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>>
+
     fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 
     fun observeActiveMemosCreatedBetween(

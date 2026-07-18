@@ -32,6 +32,11 @@ class RoomMemoRepository @Inject constructor(
             memos.map { memo -> memo.toDomain() }
         }
 
+    override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> =
+        memoDao.observeRecentActiveMemos(limit).map { entities ->
+            entities.map { entity -> entity.toDomain() }
+        }
+
     override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
         memoDao.observeActiveMemosWithRefsBySearchPattern(
             query.value.toEscapedLikePattern()

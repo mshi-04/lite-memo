@@ -324,6 +324,9 @@ class CalendarViewModelTest {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = delegate.observeActiveMemos()
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> =
+            delegate.observeRecentActiveMemos(limit)
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             if (searchFails) {
                 flow { throw IllegalStateException("Search failed.") }

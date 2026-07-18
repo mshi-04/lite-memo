@@ -67,4 +67,6 @@ fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>, imageRefs: List<MemoIma
     )
 }
 
+fun MemoEntity.toDomain(): Memo = toDomain(tagRefs = emptyList(), imageRefs = emptyList())
+
 fun MemoWithRefs.toDomain() = memo.toDomain(tagRefs, imageRefs)

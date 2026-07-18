@@ -90,6 +90,10 @@ class SearchMemosUseCaseTest {
             fail<Nothing>("observeActiveMemos should not be called.")
         }
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> = flow {
+            fail<Nothing>("observeRecentActiveMemos should not be called.")
+        }
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> {
             if (failOnSearch) {
                 fail<Nothing>("observeActiveMemosBySearchQuery should not be called.")

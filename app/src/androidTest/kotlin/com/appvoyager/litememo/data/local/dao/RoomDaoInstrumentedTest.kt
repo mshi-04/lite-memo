@@ -298,6 +298,33 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
+    fun observeRecentActiveMemosOrdersByFavoriteThenUpdatedDesc() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "old", updatedAt = 1_000L))
+        memoDao.upsertMemo(memoEntity(id = "new", updatedAt = 3_000L))
+        memoDao.upsertMemo(memoEntity(id = "fav", updatedAt = 2_000L, isFavorite = true))
+        memoDao.upsertMemo(memoEntity(id = "trashed", updatedAt = 4_000L, deletedAt = 5_000L))
+
+        // Act
+        val memos = memoDao.observeRecentActiveMemos(limit = 10).first()
+
+        // Assert
+        assertEquals(listOf("fav", "new", "old"), memos.map { it.id })
+    }
+
+    @Test
+    fun observeRecentActiveMemosLimitsRowCount() = runTest {
+        // Arrange
+        (1..5).forEach { memoDao.upsertMemo(memoEntity(id = "memo-$it", updatedAt = it * 1_000L)) }
+
+        // Act
+        val memos = memoDao.observeRecentActiveMemos(limit = 2).first()
+
+        // Assert
+        assertEquals(listOf("memo-5", "memo-4"), memos.map { it.id })
+    }
+
+    @Test
     fun observeActiveMemosWithRefsExcludesTrashedMemos() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-active"))
@@ -447,14 +474,16 @@ class RoomDaoInstrumentedTest {
         title: String = "Title",
         body: String = "Body",
         createdAt: Long = 1_000L,
+        updatedAt: Long = createdAt,
+        isFavorite: Boolean = false,
         deletedAt: Long? = null
     ) = MemoEntity(
         id = id,
         title = title,
         body = body,
         createdAt = createdAt,
-        updatedAt = createdAt,
-        isFavorite = false,
+        updatedAt = updatedAt,
+        isFavorite = isFavorite,
         deletedAt = deletedAt
     )
 

@@ -785,6 +785,18 @@ class RoomMemoRepositoryTest {
         override fun observeActiveMemosWithRefs(): Flow<List<MemoWithRefs>> =
             memosWithRefs.map { list -> list.filter { it.memo.deletedAt == null } }
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoEntity>> =
+            memosWithRefs.map { list ->
+                list.map { it.memo }
+                    .filter { it.deletedAt == null }
+                    .sortedWith(
+                        compareByDescending<MemoEntity> { it.isFavorite }
+                            .thenByDescending { it.updatedAt }
+                            .thenByDescending { it.createdAt }
+                    )
+                    .take(limit)
+            }
+
         override fun observeActiveMemosWithRefsBySearchPattern(
             pattern: String
         ): Flow<List<MemoWithRefs>> {

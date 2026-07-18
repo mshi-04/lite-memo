@@ -301,6 +301,9 @@ class TrashViewModelTest {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = repository.observeActiveMemos()
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> =
+            repository.observeRecentActiveMemos(limit)
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             repository.observeActiveMemosBySearchQuery(query)
 

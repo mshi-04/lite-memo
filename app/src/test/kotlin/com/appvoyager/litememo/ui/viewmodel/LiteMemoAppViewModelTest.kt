@@ -87,6 +87,8 @@ class LiteMemoAppViewModelTest {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> = flowOf(emptyList())
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             flowOf(emptyList())
 

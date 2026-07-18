@@ -82,6 +82,16 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     override fun observeActiveMemos(): Flow<List<Memo>> =
         memos.map { list -> list.filter { it.deletedAt == null } }
 
+    override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> = memos.map { list ->
+        list.filter { it.deletedAt == null }
+            .sortedWith(
+                compareByDescending<Memo> { it.isFavorite }
+                    .thenByDescending { it.updatedAt.value }
+                    .thenByDescending { it.createdAt.value }
+            )
+            .take(limit)
+    }
+
     override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
         memos.map { list ->
             list.filter { memo ->
