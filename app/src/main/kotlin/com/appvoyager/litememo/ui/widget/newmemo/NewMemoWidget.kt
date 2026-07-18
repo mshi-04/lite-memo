@@ -28,8 +28,8 @@ import androidx.glance.layout.size
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.theme.WidgetColorProviders
 import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
-import com.appvoyager.litememo.ui.widget.theme.WidgetColorProviders
 
 class NewMemoWidget : GlanceAppWidget() {
 
