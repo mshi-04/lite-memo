@@ -24,6 +24,7 @@ import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -123,14 +124,16 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
             }
         }
 
-    override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
-        memos.map { list ->
+    override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> {
+        if (range.isEmpty) return flowOf(emptyList())
+        return memos.map { list ->
             list.filter { memo ->
                 memo.deletedAt == null &&
                     memo.createdAt.value >= range.fromInclusive.value &&
                     memo.createdAt.value < range.toExclusive.value
             }
         }
+    }
 
     override fun observeTrashedMemos(): Flow<List<Memo>> = memos.map { list ->
         list.filter { it.deletedAt != null }.sortedByDescending { it.deletedAt?.value }
