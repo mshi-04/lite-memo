@@ -3,9 +3,11 @@ package com.appvoyager.litememo.data.mapper
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
@@ -67,6 +69,11 @@ fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>, imageRefs: List<MemoIma
     )
 }
 
-fun MemoEntity.toDomain(): Memo = toDomain(tagRefs = emptyList(), imageRefs = emptyList())
+fun MemoSummaryProjection.toDomain() = MemoSummary(
+    id = MemoId(id),
+    title = MemoTitle(title),
+    body = MemoBody(body),
+    isFavorite = isFavorite
+)
 
 fun MemoWithRefs.toDomain() = memo.toDomain(tagRefs, imageRefs)

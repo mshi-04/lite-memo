@@ -3,6 +3,7 @@ package com.appvoyager.litememo
 import android.app.Application
 import android.util.Log
 import com.appvoyager.litememo.di.ApplicationScope
+import com.appvoyager.litememo.ui.widget.data.WidgetMemoLoader
 import com.appvoyager.litememo.ui.widget.data.WidgetRefresher
 import com.appvoyager.litememo.ui.widget.di.WidgetEntryPoint
 import com.google.android.gms.ads.MobileAds
@@ -43,7 +44,7 @@ class LiteMemoApplication : Application() {
                 this@LiteMemoApplication,
                 WidgetEntryPoint::class.java
             )
-            entryPoint.observeMemosUseCase()()
+            WidgetMemoLoader(entryPoint.observeRecentMemosUseCase()).observeRecent()
                 .drop(1)
                 .distinctUntilChanged()
                 .debounce(WIDGET_REFRESH_DEBOUNCE_MS)

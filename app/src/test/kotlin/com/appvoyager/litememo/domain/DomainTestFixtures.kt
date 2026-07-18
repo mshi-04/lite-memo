@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.ImageSourceReference
 import com.appvoyager.litememo.domain.model.value.MemoBody
@@ -52,6 +53,18 @@ fun memoImageFixture(id: String = "image-1", fileName: String = "image-1.jpg") =
     fileName = MemoImageFileName(fileName)
 )
 
+fun memoSummaryFixture(
+    id: String = "memo-1",
+    title: String = "Title",
+    body: String = "Body",
+    isFavorite: Boolean = false
+) = MemoSummary(
+    id = MemoId(id),
+    title = MemoTitle(title),
+    body = MemoBody(body),
+    isFavorite = isFavorite
+)
+
 fun tagFixture(
     id: String = "tag-1",
     name: String = "Tag",
@@ -82,7 +95,7 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
     override fun observeActiveMemos(): Flow<List<Memo>> =
         memos.map { list -> list.filter { it.deletedAt == null } }
 
-    override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> = memos.map { list ->
+    override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = memos.map { list ->
         list.filter { it.deletedAt == null }
             .sortedWith(
                 compareByDescending<Memo> { it.isFavorite }
@@ -90,6 +103,14 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
                     .thenByDescending { it.createdAt.value }
             )
             .take(limit)
+            .map { memo ->
+                MemoSummary(
+                    id = memo.id,
+                    title = memo.title,
+                    body = memo.body,
+                    isFavorite = memo.isFavorite
+                )
+            }
     }
 
     override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =

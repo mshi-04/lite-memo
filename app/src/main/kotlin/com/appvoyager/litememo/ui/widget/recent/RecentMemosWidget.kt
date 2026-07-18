@@ -48,7 +48,6 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 
-private const val MAX_ITEMS = 8
 private const val WIDGET_TAG = "RecentMemosWidget"
 
 class RecentMemosWidget : GlanceAppWidget() {
@@ -61,7 +60,7 @@ class RecentMemosWidget : GlanceAppWidget() {
         )
         val loader = WidgetMemoLoader(entryPoint.observeRecentMemosUseCase())
         val initial = try {
-            loader.loadRecent(MAX_ITEMS)
+            loader.loadRecent()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -69,7 +68,7 @@ class RecentMemosWidget : GlanceAppWidget() {
             emptyList()
         }
         provideContent {
-            val items by remember { loader.observeRecent(MAX_ITEMS).catch { emit(emptyList()) } }
+            val items by remember { loader.observeRecent().catch { emit(emptyList()) } }
                 .collectAsState(initial = initial)
             GlanceTheme(colors = WidgetColorProviders) {
                 RecentMemosContent(items)

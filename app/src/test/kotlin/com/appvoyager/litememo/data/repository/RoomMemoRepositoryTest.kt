@@ -8,9 +8,11 @@ import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
 import com.appvoyager.litememo.data.local.entity.TagEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
+import com.appvoyager.litememo.domain.memoSummaryFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -51,6 +53,50 @@ class RoomMemoRepositoryTest {
 
         // Assert
         assertEquals(listOf(MemoId("memo-1")), memos.map { it.id })
+    }
+
+    @Test
+    fun normalObserveRecentActiveMemosReturnsSummaryContract() = runTest {
+        // Arrange
+        val dao = FakeMemoDao(
+            memosWithRefs = listOf(
+                memoWithRefs(
+                    memoId = "memo-1",
+                    title = "Title",
+                    body = "Body",
+                    isFavorite = true,
+                    tagRefs = listOf(
+                        MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0)
+                    ),
+                    imageRefs = listOf(
+                        MemoImageEntity(
+                            id = "image-1",
+                            memoId = "memo-1",
+                            fileName = "image-1.jpg",
+                            position = 0
+                        )
+                    )
+                )
+            )
+        )
+        val repository = createRepository(dao)
+
+        // Act
+        // Normal: memo-only rows map to the explicit summary contract
+        val summaries = repository.observeRecentActiveMemos(limit = 8).first()
+
+        // Assert
+        assertEquals(
+            listOf(
+                memoSummaryFixture(
+                    id = "memo-1",
+                    title = "Title",
+                    body = "Body",
+                    isFavorite = true
+                )
+            ),
+            summaries
+        )
     }
 
     @Test
@@ -718,22 +764,26 @@ class RoomMemoRepositoryTest {
 
     private fun memoWithRefs(
         memoId: String,
+        title: String = "Title",
+        body: String = "Body",
         createdAt: Long = 1000L,
         updatedAt: Long = 1000L,
+        isFavorite: Boolean = false,
         tagRefs: List<MemoTagRefEntity> = emptyList(),
+        imageRefs: List<MemoImageEntity> = emptyList(),
         deletedAt: Long? = null
     ) = MemoWithRefs(
         memo = MemoEntity(
             id = memoId,
-            title = "Title",
-            body = "Body",
+            title = title,
+            body = body,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            isFavorite = false,
+            isFavorite = isFavorite,
             deletedAt = deletedAt
         ),
         tagRefs = tagRefs,
-        imageRefs = emptyList()
+        imageRefs = imageRefs
     )
 
     private data class MovedToTrashRecord(val memoId: String, val deletedAt: Long)
@@ -785,7 +835,7 @@ class RoomMemoRepositoryTest {
         override fun observeActiveMemosWithRefs(): Flow<List<MemoWithRefs>> =
             memosWithRefs.map { list -> list.filter { it.memo.deletedAt == null } }
 
-        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoEntity>> =
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummaryProjection>> =
             memosWithRefs.map { list ->
                 list.map { it.memo }
                     .filter { it.deletedAt == null }
@@ -795,6 +845,14 @@ class RoomMemoRepositoryTest {
                             .thenByDescending { it.createdAt }
                     )
                     .take(limit)
+                    .map { memo ->
+                        MemoSummaryProjection(
+                            id = memo.id,
+                            title = memo.title,
+                            body = memo.body,
+                            isFavorite = memo.isFavorite
+                        )
+                    }
             }
 
         override fun observeActiveMemosWithRefsBySearchPattern(

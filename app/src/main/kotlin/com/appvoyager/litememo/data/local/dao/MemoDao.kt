@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import kotlinx.coroutines.flow.Flow
 
@@ -20,13 +21,13 @@ interface MemoDao {
 
     @Query(
         """
-        SELECT * FROM memos
+        SELECT id, title, body, isFavorite FROM memos
         WHERE deletedAt IS NULL
         ORDER BY isFavorite DESC, updatedAt DESC, createdAt DESC
         LIMIT :limit
         """
     )
-    fun observeRecentActiveMemos(limit: Int): Flow<List<MemoEntity>>
+    fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummaryProjection>>
 
     @Transaction
     @Query(

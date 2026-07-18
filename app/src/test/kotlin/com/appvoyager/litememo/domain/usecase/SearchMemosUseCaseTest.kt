@@ -4,6 +4,7 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSortOrder
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -90,7 +91,7 @@ class SearchMemosUseCaseTest {
             fail<Nothing>("observeActiveMemos should not be called.")
         }
 
-        override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> = flow {
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = flow {
             fail<Nothing>("observeRecentActiveMemos should not be called.")
         }
 

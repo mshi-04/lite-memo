@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.widget.data
 
-import com.appvoyager.litememo.domain.memoFixture
+import com.appvoyager.litememo.domain.memoSummaryFixture
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.usecase.ObserveRecentMemosUseCase
 import io.mockk.every
@@ -24,30 +24,30 @@ class WidgetMemoLoaderTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
             listOf(
-                memoFixture(id = "a", title = "A"),
-                memoFixture(id = "b", title = "B"),
-                memoFixture(id = "c", title = "C")
+                memoSummaryFixture(id = "a", title = "A"),
+                memoSummaryFixture(id = "b", title = "B"),
+                memoSummaryFixture(id = "c", title = "C")
             )
         )
 
         // Act
-        val items = loader.loadRecent(limit = 8)
+        val items = loader.loadRecent()
 
         // Assert
         assertEquals(listOf(MemoId("a"), MemoId("b"), MemoId("c")), items.map { it.id })
     }
 
     @Test
-    fun interactionLoadRecentRequestsUseCaseWithLimit() = runTest {
+    fun interactionLoadRecentRequestsWidgetDisplayLimit() = runTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(emptyList())
 
         // Act
-        // Interaction: the limit is forwarded to the use case (truncation lives in SQL)
-        loader.loadRecent(limit = 5)
+        // Interaction: loading uses the same fixed limit as the widget scroll content
+        loader.loadRecent()
 
         // Assert
-        verify { observeRecentMemosUseCase.invoke(5) }
+        verify { observeRecentMemosUseCase.invoke(8) }
     }
 
     @Test
@@ -56,7 +56,7 @@ class WidgetMemoLoaderTest {
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(emptyList())
 
         // Act
-        val items = loader.loadRecent(limit = 8)
+        val items = loader.loadRecent()
 
         // Assert
         assertTrue(items.isEmpty())
@@ -67,13 +67,13 @@ class WidgetMemoLoaderTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
             listOf(
-                memoFixture(id = "a", title = "A"),
-                memoFixture(id = "b", title = "B")
+                memoSummaryFixture(id = "a", title = "A"),
+                memoSummaryFixture(id = "b", title = "B")
             )
         )
 
         // Act
-        val items = loader.observeRecent(limit = 8).first()
+        val items = loader.observeRecent().first()
 
         // Assert
         assertEquals(listOf(MemoId("a"), MemoId("b")), items.map { it.id })
@@ -83,11 +83,11 @@ class WidgetMemoLoaderTest {
     fun normalFavoriteFlagIsMapped() = runTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = "A", isFavorite = true))
+            listOf(memoSummaryFixture(id = "m", title = "A", isFavorite = true))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertTrue(item.isFavorite)
@@ -97,11 +97,11 @@ class WidgetMemoLoaderTest {
     fun normalTitledMemoUsesTitleAsPrimaryAndBodyAsSnippet() = runTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = "見出し", body = "本文1\n本文2"))
+            listOf(memoSummaryFixture(id = "m", title = "見出し", body = "本文1\n本文2"))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals("見出し", item.title)
@@ -112,11 +112,11 @@ class WidgetMemoLoaderTest {
     fun boundaryBodyOnlyMemoUsesFirstBodyLineAsPrimary() = runTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = "", body = "先頭行\n2行目"))
+            listOf(memoSummaryFixture(id = "m", title = "", body = "先頭行\n2行目"))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals("先頭行", item.title)
@@ -128,11 +128,11 @@ class WidgetMemoLoaderTest {
         // Arrange
         // Boundary: untitled single line longer than the title limit must not lose the tail
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = "", body = "x".repeat(100)))
+            listOf(memoSummaryFixture(id = "m", title = "", body = "x".repeat(100)))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals("x".repeat(50), item.title)
@@ -144,11 +144,11 @@ class WidgetMemoLoaderTest {
         // Arrange
         val longTitle = "あ".repeat(100)
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = longTitle, body = ""))
+            listOf(memoSummaryFixture(id = "m", title = longTitle, body = ""))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals(50, item.title.length)
@@ -158,11 +158,11 @@ class WidgetMemoLoaderTest {
     fun boundaryLongSnippetTruncatedToMax() = runTest {
         // Arrange
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = "T", body = "c".repeat(200)))
+            listOf(memoSummaryFixture(id = "m", title = "T", body = "c".repeat(200)))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals(80, item.snippet.length)
@@ -174,11 +174,11 @@ class WidgetMemoLoaderTest {
         // Boundary: an emoji straddling the 50-char limit must not leave a lone surrogate
         val title = "a".repeat(49) + "😀"
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = title, body = ""))
+            listOf(memoSummaryFixture(id = "m", title = title, body = ""))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals("a".repeat(49), item.title)
@@ -190,11 +190,11 @@ class WidgetMemoLoaderTest {
         // Arrange
         val body = "b".repeat(79) + "😀"
         every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
-            listOf(memoFixture(id = "m", title = "T", body = body))
+            listOf(memoSummaryFixture(id = "m", title = "T", body = body))
         )
 
         // Act
-        val item = loader.loadRecent(limit = 1).single()
+        val item = loader.loadRecent().single()
 
         // Assert
         assertEquals("b".repeat(79), item.snippet)

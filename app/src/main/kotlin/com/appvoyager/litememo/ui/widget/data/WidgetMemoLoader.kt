@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.widget.data
 
-import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.usecase.ObserveRecentMemosUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -8,13 +8,14 @@ import kotlinx.coroutines.flow.map
 
 class WidgetMemoLoader(private val observeRecentMemosUseCase: ObserveRecentMemosUseCase) {
 
-    fun observeRecent(limit: Int): Flow<List<WidgetItem>> = observeRecentMemosUseCase(limit)
+    fun observeRecent(): Flow<List<WidgetItem>> = observeRecentMemosUseCase(RECENT_MEMOS_LIMIT)
         .map { memos -> memos.map { it.toWidgetItem() } }
 
-    suspend fun loadRecent(limit: Int): List<WidgetItem> = observeRecent(limit).first()
+    suspend fun loadRecent(): List<WidgetItem> = observeRecent().first()
 
 }
 
+private const val RECENT_MEMOS_LIMIT = 8
 private const val MAX_TITLE_LENGTH = 50
 private const val MAX_SNIPPET_LENGTH = 80
 
@@ -22,7 +23,7 @@ private const val MAX_SNIPPET_LENGTH = 80
 // 巨大な本文全体を lines() 走査しないためのガード。
 private const val BODY_SCAN_PREFIX = (MAX_TITLE_LENGTH + MAX_SNIPPET_LENGTH) * 4
 
-private fun Memo.toWidgetItem(): WidgetItem {
+private fun MemoSummary.toWidgetItem(): WidgetItem {
     val trimmedTitle = title.value.trim()
     val bodyLines = body.value.take(BODY_SCAN_PREFIX).trim().lines()
         .map { it.trim() }

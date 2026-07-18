@@ -9,6 +9,7 @@ import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toImageRefs
 import com.appvoyager.litememo.data.mapper.toTagRefs
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
@@ -32,9 +33,9 @@ class RoomMemoRepository @Inject constructor(
             memos.map { memo -> memo.toDomain() }
         }
 
-    override fun observeRecentActiveMemos(limit: Int): Flow<List<Memo>> =
-        memoDao.observeRecentActiveMemos(limit).map { entities ->
-            entities.map { entity -> entity.toDomain() }
+    override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> =
+        memoDao.observeRecentActiveMemos(limit).map { projections ->
+            projections.map { projection -> projection.toDomain() }
         }
 
     override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =

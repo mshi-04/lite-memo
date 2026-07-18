@@ -1,6 +1,5 @@
 package com.appvoyager.litememo.ui.widget.di
 
-import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveRecentMemosUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -14,7 +13,5 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
-    fun observeMemosUseCase(): ObserveMemosUseCase
-
     fun observeRecentMemosUseCase(): ObserveRecentMemosUseCase
 }
