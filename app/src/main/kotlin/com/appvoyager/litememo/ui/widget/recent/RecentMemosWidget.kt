@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.widget.recent
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,20 +45,31 @@ import com.appvoyager.litememo.ui.widget.data.WidgetMemoLoader
 import com.appvoyager.litememo.ui.widget.di.WidgetEntryPoint
 import com.appvoyager.litememo.ui.widget.theme.WidgetColorProviders
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.catch
 
 private const val MAX_ITEMS = 8
+private const val WIDGET_TAG = "RecentMemosWidget"
 
 class RecentMemosWidget : GlanceAppWidget() {
 
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entryPoint = EntryPointAccessors.fromApplication(
             context.applicationContext,
             WidgetEntryPoint::class.java
         )
-        val loader = WidgetMemoLoader(entryPoint.observeMemosUseCase())
-        val initial = runCatching { loader.loadRecent(MAX_ITEMS) }.getOrDefault(emptyList())
+        val loader = WidgetMemoLoader(entryPoint.observeRecentMemosUseCase())
+        val initial = try {
+            loader.loadRecent(MAX_ITEMS)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            Log.w(WIDGET_TAG, "Failed to load initial widget memos", e)
+            emptyList()
+        }
         provideContent {
-            val items by remember { loader.observeRecent(MAX_ITEMS) }
+            val items by remember { loader.observeRecent(MAX_ITEMS).catch { emit(emptyList()) } }
                 .collectAsState(initial = initial)
             GlanceTheme(colors = WidgetColorProviders) {
                 RecentMemosContent(items)

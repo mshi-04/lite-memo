@@ -50,8 +50,8 @@ class MainViewModel @Inject constructor(
     private val _tutorialUiState = MutableStateFlow(TutorialUiState())
     val tutorialUiState: StateFlow<TutorialUiState> = _tutorialUiState.asStateFlow()
 
-    private val _pendingWidgetNav = MutableStateFlow<WidgetNavRequest?>(null)
-    val pendingWidgetNav: StateFlow<WidgetNavRequest?> = _pendingWidgetNav.asStateFlow()
+    private val _widgetNavEvent = Channel<WidgetNavRequest>(Channel.CONFLATED)
+    val widgetNavEvent = _widgetNavEvent.receiveAsFlow()
 
     private var appLockEnabled: Boolean? = null
     private var expiredTrashedMemosPurged = false
@@ -118,11 +118,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun requestWidgetNav(request: WidgetNavRequest) {
-        _pendingWidgetNav.value = request
-    }
-
-    fun consumeWidgetNav() {
-        _pendingWidgetNav.value = null
+        _widgetNavEvent.trySend(request)
     }
 
     fun completeTutorial() {
