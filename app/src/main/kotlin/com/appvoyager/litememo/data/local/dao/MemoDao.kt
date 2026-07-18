@@ -23,7 +23,7 @@ interface MemoDao {
         """
         SELECT id, title, body, isFavorite FROM memos
         WHERE deletedAt IS NULL
-        ORDER BY isFavorite DESC, updatedAt DESC, createdAt DESC
+        ORDER BY isFavorite DESC, updatedAt DESC, createdAt DESC, id ASC
         LIMIT :limit
         """
     )

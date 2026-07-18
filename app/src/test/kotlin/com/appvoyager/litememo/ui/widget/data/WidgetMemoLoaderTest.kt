@@ -124,6 +124,22 @@ class WidgetMemoLoaderTest {
     }
 
     @Test
+    fun boundaryLeadingWhitespaceDoesNotConsumeBodyScanLimit() = runTest {
+        // Arrange
+        val body = " ".repeat(600) + "\n\nVisible body"
+        every { observeRecentMemosUseCase.invoke(any()) } returns flowOf(
+            listOf(memoSummaryFixture(id = "m", title = "", body = body))
+        )
+
+        // Act
+        // Boundary: leading whitespace is removed before applying the body scan limit
+        val item = loader.loadRecent().single()
+
+        // Assert
+        assertEquals("Visible body", item.title)
+    }
+
+    @Test
     fun boundaryUntitledSingleLongLineKeepsRemainderInSnippet() = runTest {
         // Arrange
         // Boundary: untitled single line longer than the title limit must not lose the tail

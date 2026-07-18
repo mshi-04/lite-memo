@@ -325,6 +325,21 @@ class RoomDaoInstrumentedTest {
     }
 
     @Test
+    fun boundaryObserveRecentActiveMemosUsesIdAtLimitBoundary() = runTest {
+        // Arrange
+        memoDao.upsertMemo(memoEntity(id = "memo-c"))
+        memoDao.upsertMemo(memoEntity(id = "memo-a"))
+        memoDao.upsertMemo(memoEntity(id = "memo-b"))
+
+        // Act
+        // Boundary: identical sort keys use id ascending at the LIMIT boundary
+        val memos = memoDao.observeRecentActiveMemos(limit = 2).first()
+
+        // Assert
+        assertEquals(listOf("memo-a", "memo-b"), memos.map { it.id })
+    }
+
+    @Test
     fun observeActiveMemosWithRefsExcludesTrashedMemos() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-active"))

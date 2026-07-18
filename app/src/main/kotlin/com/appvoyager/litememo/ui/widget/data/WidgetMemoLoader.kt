@@ -23,7 +23,7 @@ private const val BODY_SCAN_PREFIX = (MAX_TITLE_LENGTH + MAX_SNIPPET_LENGTH) * 4
 
 private fun MemoSummary.toWidgetItem(): WidgetItem {
     val trimmedTitle = title.value.trim()
-    val bodyLines = body.value.take(BODY_SCAN_PREFIX).trim().lines()
+    val bodyLines = body.value.trimStart().take(BODY_SCAN_PREFIX).trim().lines()
         .map { it.trim() }
         .filter { it.isNotEmpty() }
     val primary: String
