@@ -36,13 +36,13 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.theme.WidgetColorProviders
 import com.appvoyager.litememo.ui.widget.common.WidgetEmptyState
 import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
 import com.appvoyager.litememo.ui.widget.common.WidgetMemoRow
 import com.appvoyager.litememo.ui.widget.data.WidgetItem
 import com.appvoyager.litememo.ui.widget.data.WidgetMemoLoader
 import com.appvoyager.litememo.ui.widget.di.WidgetEntryPoint
-import com.appvoyager.litememo.ui.widget.theme.WidgetColorProviders
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
