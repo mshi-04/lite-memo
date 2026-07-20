@@ -152,6 +152,27 @@ class RoomMemoImportRepositoryInstrumentedTest {
         )
     }
 
+    @Test
+    fun normalImportOverwritesExistingMemoWithSameId() = runTest {
+        // Arrange
+        seedMemoWithImage()
+        val repository = repository(RecordingMemoImageStore())
+
+        // Act
+        // Normal: importing an existing memo id replaces the stored memo content.
+        repository.import(exportData(memos = listOf(memo(id = "memo"))))
+        val persistedMemo = memoDao.getActiveMemoWithRefs("memo")
+
+        // Assert
+        assertEquals(
+            MemoContentSnapshot(title = "Title", updatedAt = 2_000L),
+            MemoContentSnapshot(
+                title = persistedMemo?.memo?.title,
+                updatedAt = persistedMemo?.memo?.updatedAt
+            )
+        )
+    }
+
     private fun repository(imageStore: MemoImageStore) = RoomMemoImportRepository(
         memoDao = memoDao,
         tagDao = database.tagDao(),
@@ -212,6 +233,8 @@ class RoomMemoImportRepositoryInstrumentedTest {
         val memoId: String?,
         val tagIds: List<String>
     )
+
+    private data class MemoContentSnapshot(val title: String?, val updatedAt: Long?)
 
     private data class RollbackSnapshot(
         val failedWithConstraint: Boolean,
