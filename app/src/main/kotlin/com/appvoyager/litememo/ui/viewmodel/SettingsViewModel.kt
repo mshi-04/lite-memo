@@ -98,7 +98,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { runCatching { setAppLockEnabledUseCase(enabled) } }
     }
 
-    /** 認証要求が受け付けられたら true。認証中の重複要求は false を返して無視させる。 */
+    // 認証要求が受け付けられたら true。認証中の重複要求は false を返して無視させる。
     fun beginAppLockAuthentication(): Boolean {
         if (isAppLockAuthenticating) return false
         isAppLockAuthenticating = true
