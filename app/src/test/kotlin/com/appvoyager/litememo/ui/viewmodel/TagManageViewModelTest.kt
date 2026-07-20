@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.QueueTagIdProvider
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.tagFixture
@@ -227,6 +228,8 @@ class TagManageViewModelTest {
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
 
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
+
         override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
             repository.getTagsByIds(ids)
 
@@ -245,6 +248,8 @@ class TagManageViewModelTest {
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
 
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
+
         override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
             repository.getTagsByIds(ids)
 
@@ -262,6 +267,8 @@ class TagManageViewModelTest {
         override fun observeTags(): Flow<List<Tag>> = flowOf(emptyList())
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
+
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
 
         override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
             repository.getTagsByIds(ids)

@@ -11,10 +11,15 @@ import com.appvoyager.litememo.data.mapper.toImageRefsByMemoId
 import com.appvoyager.litememo.data.mapper.toTagRefsByMemoId
 import com.appvoyager.litememo.data.util.deleteImageFiles
 import com.appvoyager.litememo.data.util.requireNoDuplicateIds
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.model.ExportData
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.repository.MemoImportRepository
 import javax.inject.Inject
+
+// SQLite の bind variable 上限に収まるよう name 一括検索を分割する単位。
+private const val NAME_QUERY_CHUNK_SIZE = 900
 
 class RoomMemoImportRepository @Inject constructor(
     private val memoDao: MemoDao,
@@ -33,7 +38,12 @@ class RoomMemoImportRepository @Inject constructor(
         val imageRefsByMemoId = data.memos.toImageRefsByMemoId()
 
         val removedFileNames = database.withTransaction {
-            tagDao.upsertAllTags(tagEntities)
+            val conflictingTagNames = findConflictingTagNames(data)
+            if (conflictingTagNames.isNotEmpty()) {
+                throw ImportTagNameConflictException(conflictingTagNames)
+            }
+
+            tagDao.insertOrUpdateAllTags(tagEntities)
             memoDao.upsertAllMemosWithRefsAndCollectRemovedFileNames(
                 memoEntities,
                 tagRefsByMemoId,
@@ -41,6 +51,20 @@ class RoomMemoImportRepository @Inject constructor(
             )
         }
         memoImageStore.deleteImageFiles(removedFileNames)
+    }
+
+    private suspend fun findConflictingTagNames(data: ExportData): List<TagName> {
+        if (data.tags.isEmpty()) return emptyList()
+
+        val importedTagIds = data.tags.mapTo(mutableSetOf()) { it.id.value }
+        return data.tags.map { it.name.value }
+            .distinct()
+            .chunked(NAME_QUERY_CHUNK_SIZE)
+            .flatMap { names -> tagDao.findTagsByNames(names) }
+            .filterNot { it.id in importedTagIds }
+            .map { TagName(it.name) }
+            .distinct()
+            .sortedBy { it.value }
     }
 
 }

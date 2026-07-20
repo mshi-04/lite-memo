@@ -4,6 +4,7 @@ import com.appvoyager.litememo.data.local.dao.TagDao
 import com.appvoyager.litememo.data.local.entity.TagEntity
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,6 +112,45 @@ class RoomTagRepositoryTest {
         assertEquals("tag-1", dao.deletedTagId)
     }
 
+    @Test
+    fun findTagByNameReturnsMatchingTag() = runTest {
+        // Arrange
+        val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1", name = "Work")))
+        val repository = RoomTagRepository(dao)
+
+        // Act
+        val tag = repository.findTagByName(TagName("Work"))
+
+        // Assert
+        assertEquals(TagId("tag-1"), tag?.id)
+    }
+
+    @Test
+    fun findTagByNameReturnsNullWhenNameIsAbsent() = runTest {
+        // Arrange
+        val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1", name = "Work")))
+        val repository = RoomTagRepository(dao)
+
+        // Act
+        val tag = repository.findTagByName(TagName("Home"))
+
+        // Assert
+        assertNull(tag)
+    }
+
+    @Test
+    fun boundaryFindTagByNameDoesNotMatchDifferentLetterCase() = runTest {
+        // Arrange
+        val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1", name = "Work")))
+        val repository = RoomTagRepository(dao)
+
+        // Act
+        val tag = repository.findTagByName(TagName("work"))
+
+        // Assert
+        assertNull(tag)
+    }
+
     private fun tagEntity(id: String, name: String = "Tag") = TagEntity(
         id = id,
         name = name,
@@ -135,8 +175,20 @@ class RoomTagRepositoryTest {
             return tags.value.filter { it.id in ids }
         }
 
-        override suspend fun upsertTag(tag: TagEntity) {
-            savedTag = tag
+        override suspend fun findTagByName(name: String): TagEntity? =
+            tags.value.firstOrNull { it.name == name }
+
+        override suspend fun findTagsByNames(names: List<String>): List<TagEntity> =
+            tags.value.filter { it.name in names }
+
+        override suspend fun insertTags(tags: List<TagEntity>) {
+            savedTags = tags
+            savedTag = tags.lastOrNull()
+        }
+
+        override suspend fun updateTags(tags: List<TagEntity>) {
+            savedTags = tags
+            savedTag = tags.lastOrNull()
         }
 
         override suspend fun deleteTag(id: String) {
@@ -144,11 +196,6 @@ class RoomTagRepositoryTest {
         }
 
         override suspend fun getAllTags(): List<TagEntity> = tags.value
-
-        override suspend fun upsertAllTags(tags: List<TagEntity>) {
-            savedTags = tags
-            savedTag = tags.lastOrNull()
-        }
     }
 
 }

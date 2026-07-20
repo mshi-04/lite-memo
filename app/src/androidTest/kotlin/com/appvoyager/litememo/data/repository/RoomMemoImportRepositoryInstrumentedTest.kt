@@ -8,6 +8,8 @@ import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
+import com.appvoyager.litememo.data.local.entity.TagEntity
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
@@ -173,6 +175,98 @@ class RoomMemoImportRepositoryInstrumentedTest {
         )
     }
 
+    @Test
+    fun errorImportRollsBackWhenExistingTagNameConflicts() = runTest {
+        // Arrange
+        database.tagDao().insertOrUpdateAllTags(
+            listOf(tagEntity(id = "existing-tag", name = "Work"))
+        )
+        val repository = repository(RecordingMemoImageStore())
+        val data = exportData(
+            tags = listOf(tag(id = "imported-tag", name = "Work")),
+            memos = listOf(memo(id = "memo"))
+        )
+
+        // Act
+        // Error: a name held by a tag the import does not overwrite aborts the whole import.
+        val failure = runCatching { repository.import(data) }.exceptionOrNull()
+        val persistedMemo = memoDao.getActiveMemoWithRefs("memo")
+
+        // Assert
+        assertEquals(
+            TagConflictSnapshot(listOf(TagName("Work")), null),
+            TagConflictSnapshot(
+                conflictingTagNames = (failure as? ImportTagNameConflictException)?.tagNames,
+                persistedMemoId = persistedMemo?.memo?.id
+            )
+        )
+    }
+
+    @Test
+    fun errorImportReportsEveryConflictingExistingTagName() = runTest {
+        // Arrange
+        database.tagDao().insertOrUpdateAllTags(
+            listOf(
+                tagEntity(id = "existing-1", name = "Work"),
+                tagEntity(id = "existing-2", name = "Home")
+            )
+        )
+        val repository = repository(RecordingMemoImageStore())
+        val data = exportData(
+            tags = listOf(
+                tag(id = "imported-1", name = "Work"),
+                tag(id = "imported-2", name = "Home")
+            )
+        )
+
+        // Act
+        // Error: every conflicting name is collected before any upsert starts.
+        val failure = runCatching { repository.import(data) }.exceptionOrNull()
+
+        // Assert
+        assertEquals(
+            listOf(TagName("Home"), TagName("Work")),
+            (failure as? ImportTagNameConflictException)?.tagNames
+        )
+    }
+
+    @Test
+    fun normalImportOverwritesExistingTagHoldingTheSameName() = runTest {
+        // Arrange
+        database.tagDao().insertOrUpdateAllTags(listOf(tagEntity(id = "tag", name = "Work")))
+        val repository = repository(RecordingMemoImageStore())
+
+        // Act
+        // Normal: the same tag id keeps its name, so no conflict is reported.
+        repository.import(exportData(tags = listOf(tag(id = "tag", name = "Work"))))
+        val persistedTag = database.tagDao().findTagByName("Work")
+
+        // Assert
+        assertEquals("tag", persistedTag?.id)
+    }
+
+    @Test
+    fun normalImportKeepsExistingTagsThatAreNotInImportData() = runTest {
+        // Arrange
+        database.tagDao().insertOrUpdateAllTags(listOf(tagEntity(id = "kept-tag", name = "Kept")))
+        val repository = repository(RecordingMemoImageStore())
+
+        // Act
+        // Normal: import merges instead of replacing, so untouched tags survive.
+        repository.import(exportData(tags = listOf(tag(id = "new-tag", name = "New"))))
+        val persistedTagIds = database.tagDao().getAllTags().map { it.id }
+
+        // Assert
+        assertEquals(listOf("kept-tag", "new-tag"), persistedTagIds.sorted())
+    }
+
+    private fun tagEntity(id: String, name: String) = TagEntity(
+        id = id,
+        name = name,
+        colorArgb = 0xFF6750A4,
+        createdAt = 1_000L
+    )
+
     private fun repository(imageStore: MemoImageStore) = RoomMemoImportRepository(
         memoDao = memoDao,
         tagDao = database.tagDao(),
@@ -212,9 +306,9 @@ class RoomMemoImportRepositoryInstrumentedTest {
             memos = memos
         )
 
-    private fun tag(id: String) = Tag(
+    private fun tag(id: String, name: String = "Tag") = Tag(
         id = TagId(id),
-        name = TagName("Tag"),
+        name = TagName(name),
         color = TagColor(0xFF6750A4),
         createdAt = TimestampMillis(1_000L)
     )
@@ -235,6 +329,11 @@ class RoomMemoImportRepositoryInstrumentedTest {
     )
 
     private data class MemoContentSnapshot(val title: String?, val updatedAt: Long?)
+
+    private data class TagConflictSnapshot(
+        val conflictingTagNames: List<TagName>?,
+        val persistedMemoId: String?
+    )
 
     private data class RollbackSnapshot(
         val failedWithConstraint: Boolean,

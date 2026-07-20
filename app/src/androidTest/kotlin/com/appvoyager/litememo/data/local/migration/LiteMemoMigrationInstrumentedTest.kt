@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.data.local.migration
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -30,12 +31,7 @@ class LiteMemoMigrationInstrumentedTest {
         }
 
         // Act
-        val database = helper.runMigrationsAndValidate(
-            TEST_DATABASE_NAME,
-            1,
-            true,
-            *LiteMemoMigrations.ALL
-        )
+        val database = helper.validate()
         val row = database.readMemoWithTagRef()
         database.close()
 
@@ -55,6 +51,29 @@ class LiteMemoMigrationInstrumentedTest {
         )
     }
 
+    @Test
+    fun errorVersion1SchemaRejectsDuplicateTagName() {
+        // Arrange
+        helper.createDatabase(TEST_DATABASE_NAME, 1).apply {
+            insertTag(id = "tag-1", name = "Work")
+            close()
+        }
+        val database = helper.validate()
+
+        // Act
+        // Error: the unique index blocks a second tag id claiming the same name.
+        val failure = runCatching {
+            database.insertTag(id = "tag-2", name = "Work", createdAt = 2_000L)
+        }.exceptionOrNull()
+        database.close()
+
+        // Assert
+        assertEquals(true, failure is SQLiteConstraintException)
+    }
+
+    private fun MigrationTestHelper.validate(): SupportSQLiteDatabase =
+        runMigrationsAndValidate(TEST_DATABASE_NAME, 1, true, *LiteMemoMigrations.ALL)
+
     private fun SupportSQLiteDatabase.insertMemo() {
         execSQL(
             """
@@ -65,10 +84,14 @@ class LiteMemoMigrationInstrumentedTest {
         )
     }
 
-    private fun SupportSQLiteDatabase.insertTag() {
+    private fun SupportSQLiteDatabase.insertTag(
+        id: String = "tag-1",
+        name: String = "Work",
+        createdAt: Long = 1_000L
+    ) {
         execSQL(
             "INSERT INTO tags (id, name, colorArgb, createdAt) VALUES (?, ?, ?, ?)",
-            arrayOf<Any>("tag-1", "Work", 0xFF6750A4, 1_000L)
+            arrayOf<Any>(id, name, 0xFF6750A4, createdAt)
         )
     }
 

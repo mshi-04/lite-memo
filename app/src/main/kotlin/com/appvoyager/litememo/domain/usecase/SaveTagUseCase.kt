@@ -18,9 +18,8 @@ class SaveTagUseCase @Inject constructor(
         val existingTag = command.id?.let { id ->
             requireNotNull(tagRepository.getTag(id)) { "Tag not found: ${id.value}" }
         }
-        val duplicatedTag = tagRepository.getAllTags().firstOrNull { tag ->
-            tag.name == command.name && tag.id != command.id
-        }
+        val duplicatedTag = tagRepository.findTagByName(command.name)
+            ?.takeIf { it.id != command.id }
         if (duplicatedTag != null) throw DuplicateTagNameException(command.name)
         val tag = Tag(
             id = existingTag?.id ?: tagIdProvider.newTagId(),

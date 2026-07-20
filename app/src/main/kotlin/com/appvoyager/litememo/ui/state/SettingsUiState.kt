@@ -12,5 +12,6 @@ data class SettingsUiState(
     val sortOrderExpanded: Boolean = false,
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
-    val showImportConfirmDialog: Boolean = false
+    val showImportConfirmDialog: Boolean = false,
+    val importErrorDialog: SettingsImportErrorDialogState? = null
 )

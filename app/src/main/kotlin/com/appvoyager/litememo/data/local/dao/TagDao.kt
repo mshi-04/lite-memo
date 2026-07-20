@@ -1,8 +1,10 @@
 package com.appvoyager.litememo.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room.Transaction
+import androidx.room.Update
 import com.appvoyager.litememo.data.local.entity.TagEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -18,8 +20,17 @@ interface TagDao {
     @Query("SELECT * FROM tags WHERE id IN (:ids)")
     suspend fun getTagsByIds(ids: List<String>): List<TagEntity>
 
-    @Upsert
-    suspend fun upsertTag(tag: TagEntity)
+    @Query("SELECT * FROM tags WHERE name = :name LIMIT 1")
+    suspend fun findTagByName(name: String): TagEntity?
+
+    @Query("SELECT * FROM tags WHERE name IN (:names)")
+    suspend fun findTagsByNames(names: List<String>): List<TagEntity>
+
+    @Insert
+    suspend fun insertTags(tags: List<TagEntity>)
+
+    @Update
+    suspend fun updateTags(tags: List<TagEntity>)
 
     @Query("DELETE FROM tags WHERE id = :id")
     suspend fun deleteTag(id: String)
@@ -27,7 +38,23 @@ interface TagDao {
     @Query("SELECT * FROM tags ORDER BY createdAt ASC, id ASC")
     suspend fun getAllTags(): List<TagEntity>
 
-    @Upsert
-    suspend fun upsertAllTags(tags: List<TagEntity>)
+    // @Upsert は name の unique index 違反を主キー衝突と誤認し、更新 0 件の無変更で握り潰す。
+    // id の有無で insert と update を分けて、制約違反を呼び出し側へ伝える。
+    @Transaction
+    suspend fun insertOrUpdateAllTags(tags: List<TagEntity>) {
+        if (tags.isEmpty()) return
+
+        val existingIds = tags.map { it.id }
+            .chunked(ID_QUERY_CHUNK_SIZE)
+            .flatMapTo(mutableSetOf()) { ids -> getTagsByIds(ids).map { it.id } }
+        val (existing, added) = tags.partition { it.id in existingIds }
+        if (added.isNotEmpty()) insertTags(added)
+        if (existing.isNotEmpty()) updateTags(existing)
+    }
+
+    companion object {
+        // SQLite の bind variable 上限に収まるよう id 一括検索を分割する単位。
+        private const val ID_QUERY_CHUNK_SIZE = 900
+    }
 
 }

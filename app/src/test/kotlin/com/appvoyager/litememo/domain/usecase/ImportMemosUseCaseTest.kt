@@ -1,11 +1,13 @@
 package com.appvoyager.litememo.domain.usecase
 
 import com.appvoyager.litememo.domain.FakeMemoImportRepository
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.tagFixture
 import kotlinx.coroutines.test.runTest
@@ -124,6 +126,75 @@ class ImportMemosUseCaseTest {
             listOf(TagId("t1"), TagId("t2")),
             importRepository.importedData.single().memos[0].tagIds
         )
+    }
+
+    @Test
+    fun errorInvokeRejectsSameTagNameWithDifferentIds() = runTest {
+        // Arrange
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
+        val data = exportData(
+            tags = listOf(
+                tagFixture(id = "t1", name = "Work"),
+                tagFixture(id = "t2", name = "Work")
+            )
+        )
+
+        // Act
+        // Error: a name shared by different tag ids is rejected before persistence.
+        val failure = runCatching { useCase(data) }.exceptionOrNull()
+
+        // Assert
+        assertEquals(
+            listOf(TagName("Work")) to emptyList<ExportData>(),
+            (failure as? ImportTagNameConflictException)?.tagNames to
+                importRepository.importedData
+        )
+    }
+
+    @Test
+    fun errorInvokeReportsEveryConflictingTagNameInAscendingOrder() = runTest {
+        // Arrange
+        val useCase = importMemosUseCase()
+        val data = exportData(
+            tags = listOf(
+                tagFixture(id = "t1", name = "Work"),
+                tagFixture(id = "t2", name = "Work"),
+                tagFixture(id = "t3", name = "Home"),
+                tagFixture(id = "t4", name = "Home"),
+                tagFixture(id = "t5", name = "Alone")
+            )
+        )
+
+        // Act
+        // Error: every conflicting name is reported once, sorted case-sensitively.
+        val failure = runCatching { useCase(data) }.exceptionOrNull()
+
+        // Assert
+        assertEquals(
+            listOf(TagName("Home"), TagName("Work")),
+            (failure as? ImportTagNameConflictException)?.tagNames
+        )
+    }
+
+    @Test
+    fun boundaryInvokeAcceptsSameTagNameWithDifferentLetterCase() = runTest {
+        // Arrange
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
+        val data = exportData(
+            tags = listOf(
+                tagFixture(id = "t1", name = "Work"),
+                tagFixture(id = "t2", name = "work")
+            )
+        )
+
+        // Act
+        // Boundary: name comparison stays case-sensitive, so these are distinct names.
+        useCase(data)
+
+        // Assert
+        assertEquals(data, importRepository.importedData.single())
     }
 
     private fun importMemosUseCase(

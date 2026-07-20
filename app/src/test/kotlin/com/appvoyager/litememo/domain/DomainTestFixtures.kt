@@ -214,6 +214,9 @@ class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
 
     override suspend fun getTag(id: TagId): Tag? = tags.value.firstOrNull { it.id == id }
 
+    override suspend fun findTagByName(name: TagName): Tag? =
+        tags.value.firstOrNull { it.name == name }
+
     override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
         tags.value.filter { it.id in ids }
 

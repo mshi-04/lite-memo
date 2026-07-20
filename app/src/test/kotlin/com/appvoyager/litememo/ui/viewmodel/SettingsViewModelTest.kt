@@ -5,8 +5,10 @@ import com.appvoyager.litememo.domain.FakeMemoImportRepository
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.ExportFileRepository
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
@@ -21,6 +23,7 @@ import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogState
 import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -237,22 +240,76 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun flowConfirmImportEmitsErrorSnackbarWhenReadFails() = runTest(dispatcher) {
+    fun flowConfirmImportShowsGenericErrorDialogWithoutSnackbarWhenReadFails() =
+        runTest(dispatcher) {
+            // Arrange
+            val viewModel = settingsViewModel(
+                ImmediateExportFileRepository(readError = IllegalStateException("read failed"))
+            )
+            viewModel.onImportFileSelected(ExportFileReference("content://import"))
+            advanceUntilIdle()
+
+            // Act & Assert
+            // Flow/Error: failed import is held as dialog state instead of a snackbar.
+            viewModel.snackbarEvent.test {
+                viewModel.confirmImport()
+                advanceUntilIdle()
+                expectNoEvents()
+            }
+            val state = viewModel.uiState.first { it.importErrorDialog != null }
+
+            // Assert
+            assertEquals(SettingsImportErrorDialogState.Generic, state.importErrorDialog)
+        }
+
+    @Test
+    fun flowConfirmImportShowsAllConflictingTagNamesWhenImportRejectsTagNames() =
+        runTest(dispatcher) {
+            // Arrange
+            val reference = ExportFileReference("content://import")
+            val importUseCase = mockk<ImportMemosFromFileUseCase>()
+            coEvery { importUseCase(reference) } throws ImportTagNameConflictException(
+                listOf(TagName("Home"), TagName("Work"))
+            )
+            val viewModel = settingsViewModel(mockk<ExportMemosToFileUseCase>(), importUseCase)
+            viewModel.onImportFileSelected(reference)
+            advanceUntilIdle()
+
+            // Act & Assert
+            // Flow/Error: tag name conflicts are surfaced as a dialog holding every name.
+            viewModel.snackbarEvent.test {
+                viewModel.confirmImport()
+                advanceUntilIdle()
+                expectNoEvents()
+            }
+            val state = viewModel.uiState.first { it.importErrorDialog != null }
+
+            // Assert
+            assertEquals(
+                SettingsImportErrorDialogState.TagNameConflict(listOf("Home", "Work")),
+                state.importErrorDialog
+            )
+        }
+
+    @Test
+    fun stateTransitionDismissImportErrorDialogClearsState() = runTest(dispatcher) {
         // Arrange
         val viewModel = settingsViewModel(
             ImmediateExportFileRepository(readError = IllegalStateException("read failed"))
         )
         viewModel.onImportFileSelected(ExportFileReference("content://import"))
+        viewModel.confirmImport()
         advanceUntilIdle()
+        viewModel.uiState.first { it.importErrorDialog != null }
 
-        // Act & Assert
-        // Flow/Error: failed import is converted to an error snackbar.
-        viewModel.snackbarEvent.test {
-            viewModel.confirmImport()
-            advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ImportError, awaitItem())
-        }
-        assertEquals(false, viewModel.uiState.value.showImportConfirmDialog)
+        // Act
+        // StateTransition: dismissing the dialog releases the retained failure.
+        viewModel.dismissImportErrorDialog()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.importErrorDialog == null }
+
+        // Assert
+        assertEquals(null, state.importErrorDialog)
     }
 
     @Test
