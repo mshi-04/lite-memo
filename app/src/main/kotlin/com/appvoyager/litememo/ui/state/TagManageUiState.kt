@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.state
 
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.theme.DEFAULT_TAG_COLORS
 
@@ -12,7 +13,7 @@ data class TagManageUiState(
 )
 
 data class TagEditUiState(
-    val id: String? = null,
+    val id: TagId? = null,
     val name: String = "",
     val colorArgb: Long = DEFAULT_TAG_COLORS.first().argb,
     val nameError: Boolean = false,

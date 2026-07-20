@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
-import com.appvoyager.litememo.ui.state.CalendarGridAnimationUiState
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -201,3 +200,8 @@ private fun YearMonth?.isAfter(other: YearMonth?): Boolean {
     if (this == null || other == null) return true
     return this > other
 }
+
+private data class CalendarGridAnimationUiState(
+    val month: YearMonth?,
+    val days: List<CalendarDayUiState>
+)

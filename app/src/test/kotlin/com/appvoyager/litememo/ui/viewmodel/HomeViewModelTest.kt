@@ -165,10 +165,10 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.selectFilter(HomeFilterUiState.byTag(workTagId))
+        viewModel.selectFilter(HomeFilterUiState.ByTag(workTagId))
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.selectedFilter == HomeFilterUiState.byTag(workTagId)
+            it.selectedFilter == HomeFilterUiState.ByTag(workTagId)
         }
 
         // Assert
@@ -655,7 +655,7 @@ class HomeViewModelTest {
         advanceUntilIdle()
         val state = viewModel.uiState.first {
             !it.selection.isActive &&
-                it.memos.all { memo -> memo.tags.any { tag -> tag.id == tagId.value } }
+                it.memos.all { memo -> memo.tags.any { tag -> tag.id == tagId } }
         }
 
         // Assert

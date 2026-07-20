@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.component
+package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource

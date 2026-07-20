@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.action
+package com.appvoyager.litememo.ui.screen
 
 import com.appvoyager.litememo.domain.model.value.MemoId
 

@@ -2,6 +2,7 @@ package com.appvoyager.litememo.ui.screen
 
 import androidx.compose.runtime.Composable
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.model.MemoImageUiModel
 import com.appvoyager.litememo.ui.model.MemoUiModel
 import com.appvoyager.litememo.ui.model.TagUiModel
@@ -31,7 +32,7 @@ fun testMemoUiModel(
 )
 
 fun testTagUiModel(id: String = "tag-1", name: String = "Tag") = TagUiModel(
-    id = id,
+    id = TagId(id),
     name = name,
     colorArgb = 0xFF4CAF50
 )

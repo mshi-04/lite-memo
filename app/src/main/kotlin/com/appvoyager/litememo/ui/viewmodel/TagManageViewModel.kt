@@ -71,7 +71,7 @@ class TagManageViewModel @Inject constructor(
         editingTag.value = TagEditUiState()
     }
 
-    fun startEdit(tagId: String) {
+    fun startEdit(tagId: TagId) {
         val tag = uiState.value.tags.find { it.id == tagId } ?: return
         editingTag.value = TagEditUiState(
             id = tag.id,
@@ -107,7 +107,7 @@ class TagManageViewModel @Inject constructor(
             runCatching {
                 saveTagUseCase(
                     SaveTagCommand(
-                        id = state.id?.let { TagId(it) },
+                        id = state.id,
                         name = TagName(trimmedName),
                         color = TagColor(state.colorArgb)
                     )
@@ -142,7 +142,7 @@ class TagManageViewModel @Inject constructor(
         val tag = deleteDialog.value ?: return
         viewModelScope.launch {
             runCatching {
-                deleteTagUseCase(TagId(tag.id))
+                deleteTagUseCase(tag.id)
             }.onSuccess {
                 deleteDialog.value = null
             }.onFailure {
@@ -160,7 +160,7 @@ class TagManageViewModel @Inject constructor(
         retryTrigger.update { !it }
     }
 
-    private fun isDuplicateName(name: String, excludeId: String?): Boolean =
+    private fun isDuplicateName(name: String, excludeId: TagId?): Boolean =
         uiState.value.tags.any { it.name == name && it.id != excludeId }
 
     private companion object {
