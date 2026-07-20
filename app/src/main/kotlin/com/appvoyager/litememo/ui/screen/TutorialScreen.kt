@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.action.TutorialNavigationActions
 import com.appvoyager.litememo.ui.data.TutorialPageItem
-import com.appvoyager.litememo.ui.state.TutorialNavigationState
+import com.appvoyager.litememo.ui.state.TutorialNavigationUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import kotlinx.coroutines.launch
 
@@ -80,7 +80,7 @@ fun TutorialScreen(onCompleteTutorial: () -> Unit, modifier: Modifier = Modifier
             }
 
             TutorialNavigation(
-                state = TutorialNavigationState(
+                state = TutorialNavigationUiState(
                     currentPage = settledPage,
                     pageCount = tutorialPageItems.size,
                     enabled = navigationEnabled
@@ -136,7 +136,10 @@ private fun TutorialPageContent(page: TutorialPageItem) {
 }
 
 @Composable
-private fun TutorialNavigation(state: TutorialNavigationState, actions: TutorialNavigationActions) {
+private fun TutorialNavigation(
+    state: TutorialNavigationUiState,
+    actions: TutorialNavigationActions
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

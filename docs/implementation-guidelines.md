@@ -24,6 +24,7 @@
 
 - 関数名は英語にする
 - Route、Screen、ViewModel、主要な UiState / UiModel は、役割と同名の独立ファイルを基本とする
+- UI state / result / event は、それぞれ `XxxUiState` / `XxxUiResult` / `XxxUiEvent` と命名する。補助enumも `AppLockUiStatus` のようにUI契約であることを名前に含める
 - 同じ責務を構成する小型の class / interface / object / enum は、ファイルが読みやすい範囲で関連する所有者ファイルへトップレベル宣言としてまとめてよい。300行程度を分割検討の目安とするが、機械的な上限にはしない
 - sealed hierarchy の直接の子型や、親に強く従属する private 実装型は親型へネストしてよい。外側のインスタンス参照が意図的に必要な場合を除き `inner` は使わない
 - `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは上記のファイル配置判断の対象外とする

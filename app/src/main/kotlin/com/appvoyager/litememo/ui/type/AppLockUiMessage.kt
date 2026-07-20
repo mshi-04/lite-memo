@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.type
 
-enum class AppLockMessage {
+enum class AppLockUiMessage {
     AUTHENTICATION_FAILED,
     AUTHENTICATION_CANCELED,
     NO_DEVICE_CREDENTIAL,

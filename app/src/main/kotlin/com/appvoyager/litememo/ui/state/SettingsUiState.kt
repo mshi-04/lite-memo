@@ -13,5 +13,5 @@ data class SettingsUiState(
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
     val showImportConfirmDialog: Boolean = false,
-    val importErrorDialog: SettingsImportErrorDialogState? = null
+    val importErrorDialog: SettingsImportErrorDialogUiState? = null
 )

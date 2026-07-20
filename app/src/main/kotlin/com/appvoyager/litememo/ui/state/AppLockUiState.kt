@@ -1,12 +1,12 @@
 package com.appvoyager.litememo.ui.state
 
-import com.appvoyager.litememo.ui.type.AppLockMessage
-import com.appvoyager.litememo.ui.type.AppLockStatus
+import com.appvoyager.litememo.ui.type.AppLockUiMessage
+import com.appvoyager.litememo.ui.type.AppLockUiStatus
 
 data class AppLockUiState(
-    val status: AppLockStatus = AppLockStatus.LOADING,
-    val message: AppLockMessage? = null
+    val status: AppLockUiStatus = AppLockUiStatus.LOADING,
+    val message: AppLockUiMessage? = null
 ) {
     val canShowAppContent: Boolean
-        get() = status == AppLockStatus.UNLOCKED
+        get() = status == AppLockUiStatus.UNLOCKED
 }

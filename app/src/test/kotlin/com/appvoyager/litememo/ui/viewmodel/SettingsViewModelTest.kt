@@ -22,9 +22,9 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
-import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
-import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogState
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.event.SettingsSnackbarUiEvent
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -193,7 +193,7 @@ class SettingsViewModelTest {
         viewModel.snackbarEvent.test {
             viewModel.exportMemos(ExportFileReference("content://export"))
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ExportSuccess, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.ExportSuccess, awaitItem())
         }
         assertEquals(
             listOf(ExportFileReference("content://export")),
@@ -213,7 +213,7 @@ class SettingsViewModelTest {
         viewModel.snackbarEvent.test {
             viewModel.exportMemos(ExportFileReference("content://export"))
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ExportError, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.ExportError, awaitItem())
         }
     }
 
@@ -230,7 +230,7 @@ class SettingsViewModelTest {
         viewModel.snackbarEvent.test {
             viewModel.confirmImport()
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ImportSuccess, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.ImportSuccess, awaitItem())
         }
         assertEquals(false, viewModel.uiState.value.showImportConfirmDialog)
         assertEquals(
@@ -259,7 +259,7 @@ class SettingsViewModelTest {
             val state = viewModel.uiState.first { it.importErrorDialog != null }
 
             // Assert
-            assertEquals(SettingsImportErrorDialogState.Generic, state.importErrorDialog)
+            assertEquals(SettingsImportErrorDialogUiState.Generic, state.importErrorDialog)
         }
 
     @Test
@@ -286,7 +286,7 @@ class SettingsViewModelTest {
 
             // Assert
             assertEquals(
-                SettingsImportErrorDialogState.TagNameConflict(listOf("Home", "Work")),
+                SettingsImportErrorDialogUiState.TagNameConflict(listOf("Home", "Work")),
                 state.importErrorDialog
             )
         }
@@ -365,7 +365,7 @@ class SettingsViewModelTest {
         )
 
         // Act
-        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.SUCCEEDED)
         advanceUntilIdle()
 
         // Assert
@@ -384,10 +384,10 @@ class SettingsViewModelTest {
         // Act & Assert
         viewModel.snackbarEvent.test {
             viewModel.onAppLockEnableAuthenticationResult(
-                AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL
+                AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL
             )
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockNoDeviceCredential, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockNoDeviceCredential, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -403,9 +403,9 @@ class SettingsViewModelTest {
 
         // Act & Assert
         viewModel.snackbarEvent.test {
-            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.UNAVAILABLE)
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.UNAVAILABLE)
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockUnavailable, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockUnavailable, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -421,9 +421,9 @@ class SettingsViewModelTest {
 
         // Act & Assert
         viewModel.snackbarEvent.test {
-            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.FAILED)
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.FAILED)
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockAuthenticationFailed, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockAuthenticationFailed, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -439,9 +439,9 @@ class SettingsViewModelTest {
 
         // Act & Assert
         viewModel.snackbarEvent.test {
-            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.CANCELED)
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.CANCELED)
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockAuthenticationCanceled, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockAuthenticationCanceled, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }

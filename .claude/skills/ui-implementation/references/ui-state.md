@@ -1,10 +1,10 @@
 # UI state / UI model
 
-画面状態を `XxxUiState`（`ui/state`）、表示用モデルを `XxxUiModel`（`ui/model`）に置く。
+画面状態を `XxxUiState`、UI処理結果を `XxxUiResult`（`ui/state`）、表示用モデルを `XxxUiModel`（`ui/model`）に置く。
 
 ## 確認する対象
 
-- `ui/state/` の `XxxUiState` と `ui/model/` の `XxxUiModel`、対応する domain model
+- `ui/state/` の `XxxUiState` / `XxxUiResult` と `ui/model/` の `XxxUiModel`、対応する domain model
 - 表示変換を行う Screen / Component 付近の extension
 
 ## 実装時の注意

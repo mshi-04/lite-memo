@@ -12,20 +12,20 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 
 class AppLockAuthenticator(private val activity: FragmentActivity) {
 
-    private var pendingCallback: ((AppLockAuthenticationResult) -> Unit)? = null
+    private var pendingCallback: ((AppLockAuthenticationUiResult) -> Unit)? = null
 
     private val credentialLauncher: ActivityResultLauncher<Intent> =
         activity.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             val authResult = if (result.resultCode == Activity.RESULT_OK) {
-                AppLockAuthenticationResult.SUCCEEDED
+                AppLockAuthenticationUiResult.SUCCEEDED
             } else {
-                AppLockAuthenticationResult.CANCELED
+                AppLockAuthenticationUiResult.CANCELED
             }
             dispatchResult(authResult)
         }
@@ -36,16 +36,16 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
     private val keyguardManager: KeyguardManager
         get() = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
-    fun authenticate(callback: (AppLockAuthenticationResult) -> Unit) {
+    fun authenticate(callback: (AppLockAuthenticationUiResult) -> Unit) {
         if (pendingCallback != null) {
-            callback(AppLockAuthenticationResult.UNAVAILABLE)
+            callback(AppLockAuthenticationUiResult.UNAVAILABLE)
             return
         }
         pendingCallback = callback
 
         when {
             !canAuthenticate() ->
-                dispatchResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
+                dispatchResult(AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL)
 
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
                 authenticateWithBiometricPrompt(
@@ -108,7 +108,7 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult
                 ) {
-                    dispatchResult(AppLockAuthenticationResult.SUCCEEDED)
+                    dispatchResult(AppLockAuthenticationUiResult.SUCCEEDED)
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -132,7 +132,7 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
         )
 
         if (intent == null) {
-            dispatchResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
+            dispatchResult(AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL)
             return
         }
 
@@ -142,25 +142,25 @@ class AppLockAuthenticator(private val activity: FragmentActivity) {
     private fun canAuthenticateWithBiometric(authenticators: Int): Boolean =
         biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
 
-    private fun dispatchResult(result: AppLockAuthenticationResult) {
+    private fun dispatchResult(result: AppLockAuthenticationUiResult) {
         val callback = pendingCallback ?: return
         pendingCallback = null
         callback(result)
     }
 
-    private fun Int.toAuthenticationResult(): AppLockAuthenticationResult = when (this) {
+    private fun Int.toAuthenticationResult(): AppLockAuthenticationUiResult = when (this) {
         BiometricPrompt.ERROR_USER_CANCELED,
         BiometricPrompt.ERROR_CANCELED,
-        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> AppLockAuthenticationResult.CANCELED
+        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> AppLockAuthenticationUiResult.CANCELED
 
         BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL,
-        BiometricPrompt.ERROR_NO_BIOMETRICS -> AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL
+        BiometricPrompt.ERROR_NO_BIOMETRICS -> AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL
 
         BiometricPrompt.ERROR_HW_UNAVAILABLE,
         BiometricPrompt.ERROR_HW_NOT_PRESENT,
-        BiometricPrompt.ERROR_SECURITY_UPDATE_REQUIRED -> AppLockAuthenticationResult.UNAVAILABLE
+        BiometricPrompt.ERROR_SECURITY_UPDATE_REQUIRED -> AppLockAuthenticationUiResult.UNAVAILABLE
 
-        else -> AppLockAuthenticationResult.FAILED
+        else -> AppLockAuthenticationUiResult.FAILED
     }
 
 }

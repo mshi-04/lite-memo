@@ -137,20 +137,13 @@ kover {
                     "com.appvoyager.litememo.domain.model.value.*",
                     "com.appvoyager.litememo.domain.usecase.*",
                     "com.appvoyager.litememo.ui.*.*ViewModel*",
+                    "com.appvoyager.litememo.ui.*.*UiDirection*",
+                    "com.appvoyager.litememo.ui.*.*UiMessage*",
                     "com.appvoyager.litememo.ui.*.*UiModel*",
+                    "com.appvoyager.litememo.ui.*.*UiResult*",
                     "com.appvoyager.litememo.ui.*.*UiState*",
-                    "com.appvoyager.litememo.ui.*.CalendarGridAnimationState*",
-                    "com.appvoyager.litememo.ui.*.MemoSearchResult*",
-                    "com.appvoyager.litememo.ui.*.MemoSearchStateHolder*",
-                    "com.appvoyager.litememo.ui.*.SettingsImportErrorDialogState*",
-                    "com.appvoyager.litememo.ui.*.TagEditState*",
-                    "com.appvoyager.litememo.ui.*.TutorialNavigationState*",
-                    "com.appvoyager.litememo.ui.*.AppLockAuthenticationResult*",
-                    "com.appvoyager.litememo.ui.*.AppLockMessage*",
-                    "com.appvoyager.litememo.ui.*.AppLockStatus*",
-                    "com.appvoyager.litememo.ui.*.HomeFilterType*",
-                    "com.appvoyager.litememo.ui.*.MonthSwipeDirection*",
-                    "com.appvoyager.litememo.ui.*.TutorialStatus*"
+                    "com.appvoyager.litememo.ui.*.*UiStatus*",
+                    "com.appvoyager.litememo.ui.*.*UiType*"
                 )
             }
         }

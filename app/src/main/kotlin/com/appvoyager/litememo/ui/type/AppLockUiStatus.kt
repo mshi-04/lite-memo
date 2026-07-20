@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.type
 
-enum class AppLockStatus {
+enum class AppLockUiStatus {
     LOADING,
     UNLOCKED,
     LOCKED,

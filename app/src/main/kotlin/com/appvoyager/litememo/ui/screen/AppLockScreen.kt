@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.AppLockUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.AppLockMessage
-import com.appvoyager.litememo.ui.type.AppLockStatus
+import com.appvoyager.litememo.ui.type.AppLockUiMessage
+import com.appvoyager.litememo.ui.type.AppLockUiStatus
 
 @Composable
 fun AppLockScreen(
@@ -68,12 +68,12 @@ fun AppLockScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
             when {
-                uiState.status == AppLockStatus.LOADING ||
-                    uiState.status == AppLockStatus.AUTHENTICATING -> {
+                uiState.status == AppLockUiStatus.LOADING ||
+                    uiState.status == AppLockUiStatus.AUTHENTICATING -> {
                     CircularProgressIndicator()
                 }
 
-                uiState.message == AppLockMessage.NO_DEVICE_CREDENTIAL -> {
+                uiState.message == AppLockUiMessage.NO_DEVICE_CREDENTIAL -> {
                     Button(onClick = onOpenSecuritySettings) {
                         Text(text = stringResource(R.string.app_lock_open_settings))
                     }
@@ -90,18 +90,19 @@ fun AppLockScreen(
 }
 
 @Composable
-private fun AppLockMessage?.toDisplayText(status: AppLockStatus): String = when (this) {
-    AppLockMessage.AUTHENTICATION_FAILED -> stringResource(R.string.app_lock_auth_failed)
+private fun AppLockUiMessage?.toDisplayText(status: AppLockUiStatus): String = when (this) {
+    AppLockUiMessage.AUTHENTICATION_FAILED -> stringResource(R.string.app_lock_auth_failed)
 
-    AppLockMessage.AUTHENTICATION_CANCELED -> stringResource(R.string.app_lock_auth_canceled)
+    AppLockUiMessage.AUTHENTICATION_CANCELED -> stringResource(R.string.app_lock_auth_canceled)
 
-    AppLockMessage.NO_DEVICE_CREDENTIAL -> stringResource(R.string.app_lock_no_device_credential)
+    AppLockUiMessage.NO_DEVICE_CREDENTIAL -> stringResource(R.string.app_lock_no_device_credential)
 
-    AppLockMessage.AUTHENTICATION_UNAVAILABLE -> stringResource(R.string.app_lock_auth_unavailable)
+    AppLockUiMessage.AUTHENTICATION_UNAVAILABLE ->
+        stringResource(R.string.app_lock_auth_unavailable)
 
     null -> when (status) {
-        AppLockStatus.LOADING -> stringResource(R.string.app_lock_loading)
-        AppLockStatus.AUTHENTICATING -> stringResource(R.string.app_lock_authenticating)
+        AppLockUiStatus.LOADING -> stringResource(R.string.app_lock_loading)
+        AppLockUiStatus.AUTHENTICATING -> stringResource(R.string.app_lock_authenticating)
         else -> stringResource(R.string.app_lock_body)
     }
 }
@@ -111,7 +112,7 @@ private fun AppLockMessage?.toDisplayText(status: AppLockStatus): String = when 
 private fun AppLockScreenPreview() {
     LiteMemoTheme {
         AppLockScreen(
-            uiState = AppLockUiState(status = AppLockStatus.LOCKED),
+            uiState = AppLockUiState(status = AppLockUiStatus.LOCKED),
             onUnlockClick = {},
             onOpenSecuritySettings = {}
         )
@@ -124,8 +125,8 @@ private fun AppLockNoDeviceCredentialPreview() {
     LiteMemoTheme {
         AppLockScreen(
             uiState = AppLockUiState(
-                status = AppLockStatus.UNAVAILABLE,
-                message = AppLockMessage.NO_DEVICE_CREDENTIAL
+                status = AppLockUiStatus.UNAVAILABLE,
+                message = AppLockUiMessage.NO_DEVICE_CREDENTIAL
             ),
             onUnlockClick = {},
             onOpenSecuritySettings = {}

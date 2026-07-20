@@ -18,7 +18,7 @@ import com.appvoyager.litememo.ui.data.ObservedCalendarData
 import com.appvoyager.litememo.ui.model.MemoUiModel
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
-import com.appvoyager.litememo.ui.state.MemoSearchStateHolder
+import com.appvoyager.litememo.ui.state.MemoSearchUiStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +54,7 @@ class CalendarViewModel @Inject constructor(
     private val selectedDate = MutableStateFlow(initialDate)
     private val isCalendarExpanded = MutableStateFlow(true)
     private val isDatePickerVisible = MutableStateFlow(false)
-    private val memoSearch = MemoSearchStateHolder(searchMemosUseCase)
+    private val memoSearch = MemoSearchUiStateHolder(searchMemosUseCase)
     private val retryTrigger = MutableStateFlow(0)
 
     private val observedCalendarData = combine(

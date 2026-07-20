@@ -69,7 +69,7 @@ import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.MonthSwipeDirection
+import com.appvoyager.litememo.ui.type.MonthSwipeUiDirection
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
@@ -288,8 +288,8 @@ private fun CalendarMonthCard(
                                 onHorizontalDrag = { _, amount -> dragAmount += amount },
                                 onDragEnd = {
                                     when (resolveMonthSwipe(dragAmount, swipeThresholdPx)) {
-                                        MonthSwipeDirection.NEXT -> onNextMonth()
-                                        MonthSwipeDirection.PREVIOUS -> onPreviousMonth()
+                                        MonthSwipeUiDirection.NEXT -> onNextMonth()
+                                        MonthSwipeUiDirection.PREVIOUS -> onPreviousMonth()
                                         null -> Unit
                                     }
                                     dragAmount = 0f
@@ -313,9 +313,9 @@ private fun CalendarMonthCard(
     }
 }
 
-fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeDirection? {
+fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeUiDirection? {
     if (abs(dragAmount) < thresholdPx) return null
-    return if (dragAmount < 0f) MonthSwipeDirection.NEXT else MonthSwipeDirection.PREVIOUS
+    return if (dragAmount < 0f) MonthSwipeUiDirection.NEXT else MonthSwipeUiDirection.PREVIOUS
 }
 
 @Composable
