@@ -15,10 +15,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.event.MemoEditNavigationUiEvent
-import com.appvoyager.litememo.ui.event.MemoEditOperationErrorUiEvent
 import com.appvoyager.litememo.ui.screen.MemoEditScreen
 import com.appvoyager.litememo.ui.util.launchShareMemo
+import com.appvoyager.litememo.ui.viewmodel.MemoEditNavigationUiEvent
+import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorUiEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable

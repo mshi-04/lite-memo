@@ -26,8 +26,6 @@ import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
-import com.appvoyager.litememo.ui.event.MemoEditNavigationUiEvent
-import com.appvoyager.litememo.ui.event.MemoEditOperationErrorUiEvent
 import com.appvoyager.litememo.ui.model.MemoImageUiModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers

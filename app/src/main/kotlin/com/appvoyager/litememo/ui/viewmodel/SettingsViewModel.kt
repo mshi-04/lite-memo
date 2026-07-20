@@ -16,8 +16,6 @@ import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
-import com.appvoyager.litememo.ui.data.SettingsUiFlags
-import com.appvoyager.litememo.ui.event.SettingsSnackbarUiEvent
 import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -211,3 +209,21 @@ class SettingsViewModel @Inject constructor(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
+
+sealed interface SettingsSnackbarUiEvent {
+    data object ExportSuccess : SettingsSnackbarUiEvent
+    data object ExportError : SettingsSnackbarUiEvent
+    data object ImportSuccess : SettingsSnackbarUiEvent
+    data object AppLockAuthenticationFailed : SettingsSnackbarUiEvent
+    data object AppLockAuthenticationCanceled : SettingsSnackbarUiEvent
+    data object AppLockNoDeviceCredential : SettingsSnackbarUiEvent
+    data object AppLockUnavailable : SettingsSnackbarUiEvent
+}
+
+private data class SettingsUiFlags(
+    val themeDropdownExpanded: Boolean,
+    val sortOrderExpanded: Boolean,
+    val isExporting: Boolean,
+    val isImporting: Boolean,
+    val showImportConfirmDialog: Boolean
+)

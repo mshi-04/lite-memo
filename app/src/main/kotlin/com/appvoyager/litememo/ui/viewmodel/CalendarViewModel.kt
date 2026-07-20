@@ -13,12 +13,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveMemosByCalendarDateUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SearchMemosUseCase
-import com.appvoyager.litememo.ui.data.CalendarUiControls
-import com.appvoyager.litememo.ui.data.ObservedCalendarData
 import com.appvoyager.litememo.ui.model.MemoUiModel
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.state.MemoSearchUiStateHolder
+import com.appvoyager.litememo.ui.state.SearchUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -214,3 +213,15 @@ class CalendarViewModel @Inject constructor(
     }
 
 }
+
+private data class CalendarUiControls(
+    val expanded: Boolean,
+    val datePickerVisible: Boolean,
+    val search: SearchUiState
+)
+
+private data class ObservedCalendarData(
+    val monthSummary: CalendarMonthSummary?,
+    val memos: List<Memo>?,
+    val tags: List<Tag>?
+)

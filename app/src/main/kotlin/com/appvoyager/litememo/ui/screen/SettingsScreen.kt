@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
-import com.appvoyager.litememo.ui.component.toDisplayString
 import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
