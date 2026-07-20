@@ -125,8 +125,8 @@ kover {
     reports {
         filters {
             includes {
-                // Keep PR coverage focused on layers that are exercised by JVM unit tests.
-                // Add new unit-testable packages here when production code moves into a new layer.
+                // Keep PR coverage focused on classes that are exercised by JVM unit tests.
+                // UI classes are selected by responsibility so package-only refactors do not change coverage scope.
                 classes(
                     "com.appvoyager.litememo.data.local.entity.*",
                     "com.appvoyager.litememo.data.local.model.*",
@@ -136,10 +136,21 @@ kover {
                     "com.appvoyager.litememo.domain.model.*",
                     "com.appvoyager.litememo.domain.model.value.*",
                     "com.appvoyager.litememo.domain.usecase.*",
-                    "com.appvoyager.litememo.ui.model.*",
-                    "com.appvoyager.litememo.ui.state.*",
-                    "com.appvoyager.litememo.ui.type.*",
-                    "com.appvoyager.litememo.ui.viewmodel.*"
+                    "com.appvoyager.litememo.ui.*.*ViewModel*",
+                    "com.appvoyager.litememo.ui.*.*UiModel*",
+                    "com.appvoyager.litememo.ui.*.*UiState*",
+                    "com.appvoyager.litememo.ui.*.CalendarGridAnimationState*",
+                    "com.appvoyager.litememo.ui.*.MemoSearchResult*",
+                    "com.appvoyager.litememo.ui.*.MemoSearchStateHolder*",
+                    "com.appvoyager.litememo.ui.*.SettingsImportErrorDialogState*",
+                    "com.appvoyager.litememo.ui.*.TagEditState*",
+                    "com.appvoyager.litememo.ui.*.TutorialNavigationState*",
+                    "com.appvoyager.litememo.ui.*.AppLockAuthenticationResult*",
+                    "com.appvoyager.litememo.ui.*.AppLockMessage*",
+                    "com.appvoyager.litememo.ui.*.AppLockStatus*",
+                    "com.appvoyager.litememo.ui.*.HomeFilterType*",
+                    "com.appvoyager.litememo.ui.*.MonthSwipeDirection*",
+                    "com.appvoyager.litememo.ui.*.TutorialStatus*"
                 )
             }
         }

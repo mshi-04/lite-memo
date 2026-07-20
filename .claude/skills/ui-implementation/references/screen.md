@@ -1,6 +1,6 @@
 # screen
 
-状態を持たない `XxxScreen`（`ui/screen`）と、ViewModel と接続する `XxxRoute`（`ui/route`）に分ける。
+state と callback を受け取る `XxxScreen`（`ui/screen`）と、ViewModel と接続する `XxxRoute`（`ui/route`）に分ける。
 
 ## 確認する対象
 
@@ -9,8 +9,9 @@
 
 ## 実装時の注意
 
-- `XxxScreen` は状態を持たず、状態とイベントハンドラを引数で受ける。
+- `XxxScreen` は画面状態とイベントハンドラを引数で受ける。メニュー開閉など短命な UI element state は必要な Composable の近くで持ってよい。
 - `XxxRoute` で ViewModel を collect し、event を screen へ渡す。
+- 画面固有の action、test tag、小型の補助型は `screen` / `component` の所有者へ置き、接尾語だけの補助パッケージを作らない。
 - 固定色を直書きせず、Material 3 theme とライト / ダーク対応を保つ。
 - Preview を壊さない（Route の配線や Preview の細部は docs に委ねる）。
 
