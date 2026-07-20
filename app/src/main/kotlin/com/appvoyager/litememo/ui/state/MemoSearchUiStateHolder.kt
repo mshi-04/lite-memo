@@ -100,3 +100,12 @@ class MemoSearchUiStateHolder(private val searchMemosUseCase: SearchMemosUseCase
         const val SEARCH_DEBOUNCE_MILLIS = 250L
     }
 }
+
+sealed interface MemoSearchUiResult {
+
+    data object Inactive : MemoSearchUiResult
+
+    data class Success(val query: String, val memos: List<Memo>) : MemoSearchUiResult
+
+    data class Failure(val query: String) : MemoSearchUiResult
+}

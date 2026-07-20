@@ -26,8 +26,8 @@ import com.appvoyager.litememo.ui.auth.AppLockAuthenticator
 import com.appvoyager.litememo.ui.navigation.LiteMemoApp
 import com.appvoyager.litememo.ui.screen.AppLockScreen
 import com.appvoyager.litememo.ui.screen.TutorialScreen
+import com.appvoyager.litememo.ui.state.TutorialUiStatus
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.TutorialUiStatus
 import com.appvoyager.litememo.ui.viewmodel.MainViewModel
 import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
 import dagger.hilt.android.AndroidEntryPoint

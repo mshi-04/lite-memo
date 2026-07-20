@@ -23,10 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.ui.state.AppLockUiMessage
 import com.appvoyager.litememo.ui.state.AppLockUiState
+import com.appvoyager.litememo.ui.state.AppLockUiStatus
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.AppLockUiMessage
-import com.appvoyager.litememo.ui.type.AppLockUiStatus
 
 @Composable
 fun AppLockScreen(
@@ -97,8 +97,9 @@ private fun AppLockUiMessage?.toDisplayText(status: AppLockUiStatus): String = w
 
     AppLockUiMessage.NO_DEVICE_CREDENTIAL -> stringResource(R.string.app_lock_no_device_credential)
 
-    AppLockUiMessage.AUTHENTICATION_UNAVAILABLE ->
-        stringResource(R.string.app_lock_auth_unavailable)
+    AppLockUiMessage.AUTHENTICATION_UNAVAILABLE -> stringResource(
+        R.string.app_lock_auth_unavailable
+    )
 
     null -> when (status) {
         AppLockUiStatus.LOADING -> stringResource(R.string.app_lock_loading)
