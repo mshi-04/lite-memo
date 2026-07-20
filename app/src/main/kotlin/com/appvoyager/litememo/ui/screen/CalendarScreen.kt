@@ -69,12 +69,10 @@ import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.MonthSwipeUiDirection
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.math.abs
 
 private const val MONTH_SWIPE_THRESHOLD_DP = 72
 private const val CALENDAR_EXPAND_DURATION_MILLIS = 220
@@ -311,11 +309,6 @@ private fun CalendarMonthCard(
             }
         }
     }
-}
-
-fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeUiDirection? {
-    if (abs(dragAmount) < thresholdPx) return null
-    return if (dragAmount < 0f) MonthSwipeUiDirection.NEXT else MonthSwipeUiDirection.PREVIOUS
 }
 
 @Composable

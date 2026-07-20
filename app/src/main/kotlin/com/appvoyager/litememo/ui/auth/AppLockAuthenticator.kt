@@ -12,7 +12,6 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 
 class AppLockAuthenticator(private val activity: FragmentActivity) {
 

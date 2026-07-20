@@ -1,4 +1,4 @@
-package com.appvoyager.litememo.ui.type
+package com.appvoyager.litememo.ui.auth
 
 enum class AppLockAuthenticationUiResult {
     SUCCEEDED,

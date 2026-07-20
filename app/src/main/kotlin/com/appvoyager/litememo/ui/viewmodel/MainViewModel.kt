@@ -8,13 +8,13 @@ import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
+import com.appvoyager.litememo.ui.state.AppLockUiMessage
 import com.appvoyager.litememo.ui.state.AppLockUiState
+import com.appvoyager.litememo.ui.state.AppLockUiStatus
 import com.appvoyager.litememo.ui.state.TutorialUiState
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
-import com.appvoyager.litememo.ui.type.AppLockUiMessage
-import com.appvoyager.litememo.ui.type.AppLockUiStatus
-import com.appvoyager.litememo.ui.type.TutorialUiStatus
+import com.appvoyager.litememo.ui.state.TutorialUiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel

@@ -18,10 +18,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.data.SettingsSnackbarMessages
 import com.appvoyager.litememo.ui.event.SettingsSnackbarUiEvent
 import com.appvoyager.litememo.ui.screen.SettingsScreen
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime

@@ -21,10 +21,10 @@ import com.appvoyager.litememo.ui.model.MemoUiModel
 import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
+import com.appvoyager.litememo.ui.state.HomeFilterUiType
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoSearchUiStateHolder
-import com.appvoyager.litememo.ui.type.HomeFilterUiType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi

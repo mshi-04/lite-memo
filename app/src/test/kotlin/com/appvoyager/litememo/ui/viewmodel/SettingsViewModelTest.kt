@@ -22,9 +22,9 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.event.SettingsSnackbarUiEvent
 import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

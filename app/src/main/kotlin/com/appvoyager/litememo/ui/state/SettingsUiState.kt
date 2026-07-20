@@ -15,3 +15,10 @@ data class SettingsUiState(
     val showImportConfirmDialog: Boolean = false,
     val importErrorDialog: SettingsImportErrorDialogUiState? = null
 )
+
+sealed interface SettingsImportErrorDialogUiState {
+
+    data class TagNameConflict(val tagNames: List<String>) : SettingsImportErrorDialogUiState
+
+    data object Generic : SettingsImportErrorDialogUiState
+}

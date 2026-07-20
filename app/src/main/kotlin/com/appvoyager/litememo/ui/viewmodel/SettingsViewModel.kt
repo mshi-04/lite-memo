@@ -15,11 +15,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.data.SettingsUiFlags
 import com.appvoyager.litememo.ui.event.SettingsSnackbarUiEvent
 import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
 import com.appvoyager.litememo.ui.state.SettingsUiState
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
