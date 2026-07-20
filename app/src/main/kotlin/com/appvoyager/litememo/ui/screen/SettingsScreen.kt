@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -41,8 +44,11 @@ import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.ui.component.toDisplayString
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogState
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
+
+private val IMPORT_ERROR_DIALOG_MAX_TEXT_HEIGHT = 240.dp
 
 @Composable
 fun SettingsScreen(
@@ -60,6 +66,7 @@ fun SettingsScreen(
     onImportClick: () -> Unit,
     onConfirmImport: () -> Unit,
     onDismissImportConfirmDialog: () -> Unit,
+    onDismissImportErrorDialog: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onOpenSourceLicenseClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -257,6 +264,10 @@ fun SettingsScreen(
             onConfirm = onConfirmImport,
             onDismiss = onDismissImportConfirmDialog
         )
+    }
+
+    uiState.importErrorDialog?.let { dialogState ->
+        ImportErrorDialog(state = dialogState, onDismiss = onDismissImportErrorDialog)
     }
 
 }
@@ -477,6 +488,48 @@ private fun ImportConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 }
 
 @Composable
+private fun ImportErrorDialog(state: SettingsImportErrorDialogState, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.settings_import_error_title))
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = IMPORT_ERROR_DIALOG_MAX_TEXT_HEIGHT)
+                    .verticalScroll(rememberScrollState())
+                    .testTag("settingsImportErrorDialogText")
+            ) {
+                Text(text = state.toMessage())
+                if (state is SettingsImportErrorDialogState.TagNameConflict) {
+                    state.tagNames.forEach { tagName ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = tagName, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("settingsImportErrorDialogClose")
+            ) {
+                Text(text = stringResource(R.string.settings_import_error_close))
+            }
+        }
+    )
+}
+
+@Composable
+private fun SettingsImportErrorDialogState.toMessage(): String = when (this) {
+    is SettingsImportErrorDialogState.TagNameConflict ->
+        stringResource(R.string.settings_import_error_tag_conflict_message)
+
+    SettingsImportErrorDialogState.Generic -> stringResource(R.string.settings_import_error)
+}
+
+@Composable
 private fun ThemeMode.toDisplayString(): String = when (this) {
     ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
@@ -502,6 +555,7 @@ private fun SettingsScreenPreview() {
             onImportClick = {},
             onConfirmImport = {},
             onDismissImportConfirmDialog = {},
+            onDismissImportErrorDialog = {},
             onPrivacyPolicyClick = {},
             onOpenSourceLicenseClick = {}
         )
@@ -554,6 +608,19 @@ private fun ImportConfirmDialogPreview() {
     LiteMemoTheme {
         ImportConfirmDialog(
             onConfirm = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ImportErrorDialogPreview() {
+    LiteMemoTheme {
+        ImportErrorDialog(
+            state = SettingsImportErrorDialogState.TagNameConflict(
+                tagNames = listOf("仕事", "買い物")
+            ),
             onDismiss = {}
         )
     }

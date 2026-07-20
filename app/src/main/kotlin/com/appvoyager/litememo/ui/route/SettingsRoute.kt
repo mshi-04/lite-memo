@@ -63,7 +63,6 @@ fun SettingsRoute(
     val exportSuccessMessage = stringResource(R.string.settings_export_success)
     val exportErrorMessage = stringResource(R.string.settings_export_error)
     val importSuccessMessage = stringResource(R.string.settings_import_success)
-    val importErrorMessage = stringResource(R.string.settings_import_error)
     val appLockAuthenticationFailedMessage = stringResource(R.string.app_lock_auth_failed)
     val appLockAuthenticationCanceledMessage =
         stringResource(R.string.settings_app_lock_auth_canceled)
@@ -94,7 +93,6 @@ fun SettingsRoute(
         exportSuccess = exportSuccessMessage,
         exportError = exportErrorMessage,
         importSuccess = importSuccessMessage,
-        importError = importErrorMessage,
         appLockAuthFailed = appLockAuthenticationFailedMessage,
         appLockAuthCanceled = appLockAuthenticationCanceledMessage,
         appLockNoDeviceCredential = appLockNoDeviceCredentialMessage,
@@ -135,6 +133,7 @@ fun SettingsRoute(
         onImportClick = { launchFilePicker { importLauncher.launch(arrayOf("application/json")) } },
         onConfirmImport = { viewModel.confirmImport() },
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
+        onDismissImportErrorDialog = { viewModel.dismissImportErrorDialog() },
         onPrivacyPolicyClick = {
             launchWithActivityNotFoundSnackbar(
                 launch = {
@@ -156,7 +155,6 @@ private fun SettingsSnackbarEvent.toMessage(messages: SettingsSnackbarMessages):
         SettingsSnackbarEvent.ExportSuccess -> messages.exportSuccess
         SettingsSnackbarEvent.ExportError -> messages.exportError
         SettingsSnackbarEvent.ImportSuccess -> messages.importSuccess
-        SettingsSnackbarEvent.ImportError -> messages.importError
         SettingsSnackbarEvent.AppLockAuthenticationFailed -> messages.appLockAuthFailed
         SettingsSnackbarEvent.AppLockAuthenticationCanceled -> messages.appLockAuthCanceled
         SettingsSnackbarEvent.AppLockNoDeviceCredential -> messages.appLockNoDeviceCredential

@@ -3,6 +3,7 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.di.AppVersion
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
@@ -16,6 +17,7 @@ import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.data.SettingsUiFlags
 import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogState
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,6 +51,7 @@ class SettingsViewModel @Inject constructor(
     private val isExporting = MutableStateFlow(false)
     private val isImporting = MutableStateFlow(false)
     private val showImportConfirmDialog = MutableStateFlow(false)
+    private val importErrorDialog = MutableStateFlow<SettingsImportErrorDialogState?>(null)
     private var pendingImportReference: ExportFileReference? = null
     private var isAppLockAuthenticating = false
 
@@ -67,8 +70,9 @@ class SettingsViewModel @Inject constructor(
             showImportConfirmDialog
         ) { themeExpanded, expanded, exporting, importing, importDialog ->
             SettingsUiFlags(themeExpanded, expanded, exporting, importing, importDialog)
-        }
-    ) { themeMode, sortOrder, appLockEnabled, flags ->
+        },
+        importErrorDialog
+    ) { themeMode, sortOrder, appLockEnabled, flags, importError ->
         SettingsUiState(
             themeMode = themeMode,
             memoSortOrder = sortOrder,
@@ -78,7 +82,8 @@ class SettingsViewModel @Inject constructor(
             sortOrderExpanded = flags.sortOrderExpanded,
             isExporting = flags.isExporting,
             isImporting = flags.isImporting,
-            showImportConfirmDialog = flags.showImportConfirmDialog
+            showImportConfirmDialog = flags.showImportConfirmDialog,
+            importErrorDialog = importError
         )
     }.stateIn(
         scope = viewModelScope,
@@ -181,8 +186,12 @@ class SettingsViewModel @Inject constructor(
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ImportSuccess)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: ImportTagNameConflictException) {
+                importErrorDialog.value = SettingsImportErrorDialogState.TagNameConflict(
+                    tagNames = e.tagNames.map { it.value }
+                )
             } catch (_: Throwable) {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.ImportError)
+                importErrorDialog.value = SettingsImportErrorDialogState.Generic
             } finally {
                 isImporting.value = false
             }
@@ -192,6 +201,10 @@ class SettingsViewModel @Inject constructor(
     fun dismissImportConfirmDialog() {
         showImportConfirmDialog.value = false
         pendingImportReference = null
+    }
+
+    fun dismissImportErrorDialog() {
+        importErrorDialog.value = null
     }
 
     private companion object {

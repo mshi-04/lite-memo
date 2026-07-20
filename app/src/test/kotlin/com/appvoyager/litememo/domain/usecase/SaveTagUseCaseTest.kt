@@ -4,11 +4,14 @@ import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.QueueTagIdProvider
 import com.appvoyager.litememo.domain.model.SaveTagCommand
+import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.tagFixture
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -136,6 +139,74 @@ class SaveTagUseCaseTest {
 
         // Assert
         assertEquals(existing.id, tag.id)
+    }
+
+    @Test
+    fun boundaryInvokeAllowsSameNameWithDifferentLetterCase() = runTest {
+        // Arrange
+        val existing = tagFixture(id = "tag-1", name = "Work")
+        val useCase = saveTagUseCase(tagRepository = FakeTagRepository(listOf(existing)))
+
+        // Act
+        // Boundary: name uniqueness stays case-sensitive.
+        val tag = useCase(SaveTagCommand(name = TagName("work"), color = TagColor(0xFF6750A4)))
+
+        // Assert
+        assertEquals(TagName("work"), tag.name)
+    }
+
+    @Test
+    fun boundaryInvokeThrowsWhenTrimmedNameAlreadyExists() {
+        // Arrange
+        val existing = tagFixture(id = "tag-1", name = "Work")
+        val useCase = saveTagUseCase(tagRepository = FakeTagRepository(listOf(existing)))
+
+        // Act & Assert
+        // Boundary: the trimmed TagName value is what gets looked up.
+        assertThrows(IllegalArgumentException::class.java) {
+            runTest {
+                useCase(SaveTagCommand(name = TagName("  Work  "), color = TagColor(0xFF6750A4)))
+            }
+        }
+    }
+
+    @Test
+    fun interactionInvokeDetectsDuplicateWithoutLoadingAllTags() = runTest {
+        // Arrange
+        val repository = GetAllTagsFailingTagRepository(listOf(tagFixture(id = "tag-1")))
+        val useCase = SaveTagUseCase(
+            tagRepository = repository,
+            tagIdProvider = QueueTagIdProvider(listOf(TagId("generated-tag"))),
+            currentTimeProvider = MutableTimeProvider()
+        )
+
+        // Act
+        // Interaction: duplicate detection uses the name query, never a full tag load.
+        val tag = useCase(SaveTagCommand(name = TagName("Other"), color = TagColor(0xFF6750A4)))
+
+        // Assert
+        assertEquals(TagId("generated-tag"), tag.id)
+    }
+
+    private class GetAllTagsFailingTagRepository(initialTags: List<Tag>) : TagRepository {
+
+        private val repository = FakeTagRepository(initialTags)
+
+        override fun observeTags(): Flow<List<Tag>> = repository.observeTags()
+
+        override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
+
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
+
+        override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
+            repository.getTagsByIds(ids)
+
+        override suspend fun saveTag(tag: Tag) = repository.saveTag(tag)
+
+        override suspend fun deleteTag(id: TagId) = repository.deleteTag(id)
+
+        override suspend fun getAllTags(): List<Tag> =
+            error("SaveTagUseCase must not load all tags.")
     }
 
     private fun saveTagUseCase(

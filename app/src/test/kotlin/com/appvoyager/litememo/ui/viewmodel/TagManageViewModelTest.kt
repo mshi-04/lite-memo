@@ -6,6 +6,7 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.QueueTagIdProvider
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.TagRepository
 import com.appvoyager.litememo.domain.tagFixture
@@ -227,6 +228,8 @@ class TagManageViewModelTest {
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
 
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
+
         override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
             repository.getTagsByIds(ids)
 
@@ -235,8 +238,6 @@ class TagManageViewModelTest {
         override suspend fun deleteTag(id: TagId) = repository.deleteTag(id)
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
-
-        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
     }
 
     private class DeleteFailingTagRepository(initialTags: List<Tag>) : TagRepository {
@@ -247,6 +248,8 @@ class TagManageViewModelTest {
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
 
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
+
         override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
             repository.getTagsByIds(ids)
 
@@ -255,8 +258,6 @@ class TagManageViewModelTest {
         override suspend fun deleteTag(id: TagId): Unit = error("Failed to delete tag.")
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
-
-        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
     }
 
     private class StaleObserveTagRepository(initialTags: List<Tag>) : TagRepository {
@@ -267,6 +268,8 @@ class TagManageViewModelTest {
 
         override suspend fun getTag(id: TagId): Tag? = repository.getTag(id)
 
+        override suspend fun findTagByName(name: TagName): Tag? = repository.findTagByName(name)
+
         override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
             repository.getTagsByIds(ids)
 
@@ -275,7 +278,5 @@ class TagManageViewModelTest {
         override suspend fun deleteTag(id: TagId) = repository.deleteTag(id)
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
-
-        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
     }
 }

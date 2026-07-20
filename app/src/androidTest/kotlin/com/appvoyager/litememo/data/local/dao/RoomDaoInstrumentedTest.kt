@@ -41,9 +41,15 @@ class RoomDaoInstrumentedTest {
     @Test
     fun observeTagsReturnsTagsOrderedByCreatedAtThenId() = runTest {
         // Arrange
-        tagDao.upsertTag(tagEntity(id = "tag-c", createdAt = 2_000L))
-        tagDao.upsertTag(tagEntity(id = "tag-b", createdAt = 1_000L))
-        tagDao.upsertTag(tagEntity(id = "tag-a", createdAt = 1_000L))
+        tagDao.insertOrUpdateAllTags(
+            listOf(tagEntity(id = "tag-c", name = "Tag C", createdAt = 2_000L))
+        )
+        tagDao.insertOrUpdateAllTags(
+            listOf(tagEntity(id = "tag-b", name = "Tag B", createdAt = 1_000L))
+        )
+        tagDao.insertOrUpdateAllTags(
+            listOf(tagEntity(id = "tag-a", name = "Tag A", createdAt = 1_000L))
+        )
 
         // Act
         val tags = tagDao.observeTags().first()
@@ -112,7 +118,7 @@ class RoomDaoInstrumentedTest {
     fun observeActiveMemosWithRefsBySearchPatternReturnsRelatedTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1", title = "Tagged memo"))
-        tagDao.upsertTag(tagEntity(id = "tag-1"))
+        tagDao.insertOrUpdateAllTags(listOf(tagEntity(id = "tag-1")))
         memoDao.insertTagRefs(
             listOf(
                 MemoTagRefEntity(
@@ -134,7 +140,7 @@ class RoomDaoInstrumentedTest {
     fun observeActiveMemosWithRefsReturnsRelatedTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
-        tagDao.upsertTag(tagEntity(id = "tag-1"))
+        tagDao.insertOrUpdateAllTags(listOf(tagEntity(id = "tag-1")))
         memoDao.insertTagRefs(
             listOf(
                 MemoTagRefEntity(
@@ -249,7 +255,7 @@ class RoomDaoInstrumentedTest {
     fun deleteTagCascadesDeleteToMemoTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
-        tagDao.upsertTag(tagEntity(id = "tag-1"))
+        tagDao.insertOrUpdateAllTags(listOf(tagEntity(id = "tag-1")))
         memoDao.insertTagRefs(
             listOf(
                 MemoTagRefEntity(
@@ -276,8 +282,8 @@ class RoomDaoInstrumentedTest {
             runTest {
                 // Arrange
                 memoDao.upsertMemo(memoEntity(id = "memo-1"))
-                tagDao.upsertTag(tagEntity(id = "tag-1"))
-                tagDao.upsertTag(tagEntity(id = "tag-2"))
+                tagDao.insertOrUpdateAllTags(listOf(tagEntity(id = "tag-1")))
+                tagDao.insertOrUpdateAllTags(listOf(tagEntity(id = "tag-2")))
                 val tagRefs = listOf(
                     MemoTagRefEntity(
                         memoId = "memo-1",
@@ -420,7 +426,7 @@ class RoomDaoInstrumentedTest {
     fun discardMemoCascadesDeleteToMemoTagRefs() = runTest {
         // Arrange
         memoDao.upsertMemo(memoEntity(id = "memo-1"))
-        tagDao.upsertTag(tagEntity(id = "tag-1"))
+        tagDao.insertOrUpdateAllTags(listOf(tagEntity(id = "tag-1")))
         memoDao.insertTagRefs(
             listOf(MemoTagRefEntity(memoId = "memo-1", tagId = "tag-1", position = 0))
         )
@@ -502,9 +508,9 @@ class RoomDaoInstrumentedTest {
         deletedAt = deletedAt
     )
 
-    private fun tagEntity(id: String, createdAt: Long = 1_000L) = TagEntity(
+    private fun tagEntity(id: String, name: String = "Tag", createdAt: Long = 1_000L) = TagEntity(
         id = id,
-        name = "Tag",
+        name = name,
         colorArgb = 0xFF6750A4,
         createdAt = createdAt
     )

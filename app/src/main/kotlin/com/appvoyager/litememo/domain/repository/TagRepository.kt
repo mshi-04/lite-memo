@@ -2,6 +2,7 @@ package com.appvoyager.litememo.domain.repository
 
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
 import kotlinx.coroutines.flow.Flow
 
 interface TagRepository {
@@ -10,6 +11,8 @@ interface TagRepository {
 
     suspend fun getTag(id: TagId): Tag?
 
+    suspend fun findTagByName(name: TagName): Tag?
+
     suspend fun getTagsByIds(ids: List<TagId>): List<Tag>
 
     suspend fun saveTag(tag: Tag)
@@ -17,7 +20,5 @@ interface TagRepository {
     suspend fun deleteTag(id: TagId)
 
     suspend fun getAllTags(): List<Tag>
-
-    suspend fun saveAllTags(tags: List<Tag>)
 
 }
