@@ -263,12 +263,12 @@ class HomeViewModel @Inject constructor(
         is HomeFilterUiState.ByTag -> MemoFilter.ByTag(tagId)
     }
 
-    private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState =
-        if (this is HomeFilterUiState.ByTag && tags.none { tag -> tag.id == tagId }) {
-            HomeFilterUiState.All
-        } else {
-            this
+    private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState {
+        if (this is HomeFilterUiState.ByTag && tags.none { it.id == tagId }) {
+            return HomeFilterUiState.All
         }
+        return this
+    }
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

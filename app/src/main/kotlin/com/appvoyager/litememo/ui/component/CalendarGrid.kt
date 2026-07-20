@@ -201,4 +201,7 @@ private fun YearMonth?.isAfter(other: YearMonth?): Boolean {
     return this > other
 }
 
-data class CalendarGridAnimationUiState(val month: YearMonth?, val days: List<CalendarDayUiState>)
+private data class CalendarGridAnimationUiState(
+    val month: YearMonth?,
+    val days: List<CalendarDayUiState>
+)

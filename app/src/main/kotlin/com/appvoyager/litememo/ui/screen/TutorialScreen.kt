@@ -253,7 +253,11 @@ private data class TutorialPageItem(
     @get:StringRes val bodyResId: Int
 )
 
-data class TutorialNavigationUiState(val currentPage: Int, val pageCount: Int, val enabled: Boolean)
+private data class TutorialNavigationUiState(
+    val currentPage: Int,
+    val pageCount: Int,
+    val enabled: Boolean
+)
 
 private data class TutorialNavigationActions(
     val onPreviousClick: () -> Unit,
