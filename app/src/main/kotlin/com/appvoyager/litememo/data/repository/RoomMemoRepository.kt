@@ -1,16 +1,12 @@
 package com.appvoyager.litememo.data.repository
 
-import androidx.room.withTransaction
-import com.appvoyager.litememo.data.local.LiteMemoDatabase
 import com.appvoyager.litememo.data.local.dao.MemoDao
-import com.appvoyager.litememo.data.local.dao.TagDao
 import com.appvoyager.litememo.data.mapper.toDomain
 import com.appvoyager.litememo.data.mapper.toEntity
 import com.appvoyager.litememo.data.mapper.toImageRefs
 import com.appvoyager.litememo.data.mapper.toTagRefs
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSummary
-import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.SearchQuery
@@ -25,8 +21,6 @@ import javax.inject.Inject
 
 class RoomMemoRepository @Inject constructor(
     private val memoDao: MemoDao,
-    private val tagDao: TagDao,
-    private val database: LiteMemoDatabase,
     private val memoImageStore: MemoImageStore
 ) : MemoRepository {
 
@@ -126,44 +120,10 @@ class RoomMemoRepository @Inject constructor(
         deleteImageFiles(removedFileNames)
     }
 
-    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
-        val removedFileNames = database.withTransaction {
-            executeImport(tags, memos)
-        }
-        deleteImageFiles(removedFileNames)
-    }
-
-    suspend fun executeImport(tags: List<Tag>, memos: List<Memo>): List<String> {
-        requireNoDuplicateTagIds(tags)
-        requireNoDuplicateMemoIds(memos)
-
-        val tagEntities = tags.map { it.toEntity() }
-        val entities = memos.map { it.toEntity() }
-        val tagRefsByMemoId = memos.associate { memo ->
-            memo.id.value to memo.toTagRefs()
-        }
-        val imageRefsByMemoId = memos.associate { memo ->
-            memo.id.value to memo.toImageRefs()
-        }
-
-        tagDao.upsertAllTags(tagEntities)
-        return memoDao.upsertAllMemosWithRefsAndCollectRemovedFileNames(
-            entities,
-            tagRefsByMemoId,
-            imageRefsByMemoId
-        )
-    }
-
     private fun requireNoDuplicateMemoIds(memos: List<Memo>) {
         val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
             .filterValues { it > 1 }.keys
         require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
-    }
-
-    private fun requireNoDuplicateTagIds(tags: List<Tag>) {
-        val duplicateIds = tags.groupingBy { it.id.value }.eachCount()
-            .filterValues { it > 1 }.keys
-        require(duplicateIds.isEmpty()) { "Duplicate tag ids: $duplicateIds" }
     }
 
     private suspend fun deleteImageFiles(fileNames: Collection<String>) {

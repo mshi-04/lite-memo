@@ -6,9 +6,8 @@ import com.appvoyager.litememo.di.AppVersion
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
-import com.appvoyager.litememo.domain.repository.ExportFileRepository
-import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
-import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ExportMemosToFileUseCase
+import com.appvoyager.litememo.domain.usecase.ImportMemosFromFileUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
@@ -40,9 +39,8 @@ class SettingsViewModel @Inject constructor(
     private val setThemeModeUseCase: SetThemeModeUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
     private val setAppLockEnabledUseCase: SetAppLockEnabledUseCase,
-    private val exportMemosUseCase: ExportMemosUseCase,
-    private val importMemosUseCase: ImportMemosUseCase,
-    private val exportFileRepository: ExportFileRepository,
+    private val exportMemosToFileUseCase: ExportMemosToFileUseCase,
+    private val importMemosFromFileUseCase: ImportMemosFromFileUseCase,
     @param:AppVersion private val appVersion: String
 ) : ViewModel() {
 
@@ -153,8 +151,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isExporting.value = true
             try {
-                val exportData = exportMemosUseCase()
-                exportFileRepository.write(reference, exportData)
+                exportMemosToFileUseCase(reference)
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ExportSuccess)
             } catch (e: CancellationException) {
                 throw e
@@ -180,8 +177,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isImporting.value = true
             try {
-                val exportData = exportFileRepository.read(reference)
-                importMemosUseCase(exportData)
+                importMemosFromFileUseCase(reference)
                 _snackbarEvent.trySend(SettingsSnackbarEvent.ImportSuccess)
             } catch (e: CancellationException) {
                 throw e

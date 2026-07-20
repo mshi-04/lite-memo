@@ -7,7 +7,6 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSummary
-import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
@@ -336,8 +335,6 @@ class TrashViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = repository.saveAllMemos(memos)
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) =
-            repository.importAll(tags, memos)
     }
 
     private class DeleteFailingMemoRepository(initialMemos: List<Memo>) :

@@ -2,7 +2,6 @@ package com.appvoyager.litememo.ui.viewmodel
 
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSummary
-import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
@@ -118,6 +117,5 @@ class LiteMemoAppViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 }

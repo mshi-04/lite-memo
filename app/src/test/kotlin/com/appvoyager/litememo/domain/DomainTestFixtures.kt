@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.domain
 
+import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
 import com.appvoyager.litememo.domain.model.MemoSummary
@@ -20,6 +21,7 @@ import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.MemoImageStore
+import com.appvoyager.litememo.domain.repository.MemoImportRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
@@ -87,7 +89,6 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     private val memos = MutableStateFlow(initialMemos)
     val savedMemos = mutableListOf<Memo>()
-    val importedTags = mutableListOf<Tag>()
     val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
@@ -189,12 +190,17 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         memos.forEach { saveMemo(it) }
     }
 
-    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
-        importedTags += tags
-        memos.forEach { saveMemo(it) }
-    }
-
     fun currentMemos(): List<Memo> = memos.value
+
+}
+
+class FakeMemoImportRepository : MemoImportRepository {
+
+    val importedData = mutableListOf<ExportData>()
+
+    override suspend fun import(data: ExportData) {
+        importedData += data
+    }
 
 }
 

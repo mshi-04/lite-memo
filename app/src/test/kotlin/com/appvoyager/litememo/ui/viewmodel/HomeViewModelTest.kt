@@ -884,7 +884,6 @@ class HomeViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 
     private class SaveFailingMemoRepository(private val memo: Memo) : MemoRepository {
@@ -928,6 +927,5 @@ class HomeViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>): Unit = error("Failed to save memos.")
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 }
