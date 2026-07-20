@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MemoSearchStateHolderTest {
+class MemoSearchUiStateHolderTest {
 
     @Test
     fun stateTransitionInitialControlsAreInactive() {
@@ -45,7 +45,7 @@ class MemoSearchStateHolderTest {
         // Act & Assert
         // Flow: a new holder emits the inactive raw result before any interaction.
         holder.results.test {
-            assertEquals(MemoSearchResult.Inactive, awaitItem())
+            assertEquals(MemoSearchUiResult.Inactive, awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -161,7 +161,7 @@ class MemoSearchStateHolderTest {
             advanceTimeBy(250.milliseconds)
             runCurrent()
             assertEquals(
-                MemoSearchResult.Success(query = "shopping", memos = listOf(memo)),
+                MemoSearchUiResult.Success(query = "shopping", memos = listOf(memo)),
                 awaitItem()
             )
             cancelAndIgnoreRemainingEvents()
@@ -222,7 +222,7 @@ class MemoSearchStateHolderTest {
             advanceTimeBy(250.milliseconds)
             runCurrent()
             assertEquals(
-                MemoSearchResult.Success(query = "missing", memos = emptyList()),
+                MemoSearchUiResult.Success(query = "missing", memos = emptyList()),
                 awaitItem()
             )
             cancelAndIgnoreRemainingEvents()
@@ -245,7 +245,7 @@ class MemoSearchStateHolderTest {
             holder.updateQuery("shopping")
             advanceTimeBy(250.milliseconds)
             runCurrent()
-            assertEquals(MemoSearchResult.Failure(query = "shopping"), awaitItem())
+            assertEquals(MemoSearchUiResult.Failure(query = "shopping"), awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -322,19 +322,20 @@ class MemoSearchStateHolderTest {
             advanceTimeBy(250.milliseconds)
             runCurrent()
             assertEquals(
-                MemoSearchResult.Success(query = "second", memos = emptyList()),
+                MemoSearchUiResult.Success(query = "second", memos = emptyList()),
                 awaitItem()
             )
             cancelAndIgnoreRemainingEvents()
         }
     }
 
-    private fun stateHolder(repository: MemoRepository = memoRepository()) = MemoSearchStateHolder(
-        SearchMemosUseCase(
-            memoRepository = repository,
-            userSettingsRepository = FakeUserSettingsRepository()
+    private fun stateHolder(repository: MemoRepository = memoRepository()) =
+        MemoSearchUiStateHolder(
+            SearchMemosUseCase(
+                memoRepository = repository,
+                userSettingsRepository = FakeUserSettingsRepository()
+            )
         )
-    )
 
     private fun memoRepository(
         search: (String) -> Flow<List<Memo>> = { flowOf(emptyList()) }

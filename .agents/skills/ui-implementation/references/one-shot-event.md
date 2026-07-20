@@ -12,6 +12,7 @@ Snackbar・画面遷移・認証要求など一回限りの通知を Channel eve
 - 画面上に残る失敗は UI state、一回限りの通知は Channel event に分ける。
 - Channel 種別（`CONFLATED` / `BUFFERED` など）は docs の規約に従って選ぶ。規約本文はここで複製しない。
 - 中間イベントを落とせない通知で latest-wins を仮定しない。
+- event 型は `XxxUiEvent` と命名して公開元の ViewModel と同じ `ui/viewmodel` に置き、接尾語だけの `ui/event` パッケージを作らない。
 
 ## テスト判断
 

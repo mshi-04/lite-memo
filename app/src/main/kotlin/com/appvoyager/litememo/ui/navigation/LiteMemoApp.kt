@@ -53,7 +53,7 @@ import com.appvoyager.litememo.ui.route.OssLicensesRoute
 import com.appvoyager.litememo.ui.route.SettingsRoute
 import com.appvoyager.litememo.ui.route.TagManageRoute
 import com.appvoyager.litememo.ui.route.TrashRoute
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.type.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.viewmodel.LiteMemoAppViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -74,7 +74,7 @@ fun memoEditRouteWithId(memoId: MemoId) =
 
 @Composable
 fun LiteMemoApp(
-    onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    onRequestAppLockAuthentication: ((AppLockAuthenticationUiResult) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
     widgetNavEvents: Flow<WidgetNavRequest> = emptyFlow(),
     viewModel: LiteMemoAppViewModel = hiltViewModel()

@@ -18,30 +18,30 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class MemoSearchStateHolder(private val searchMemosUseCase: SearchMemosUseCase) {
+class MemoSearchUiStateHolder(private val searchMemosUseCase: SearchMemosUseCase) {
 
     private val mutableControls = MutableStateFlow(SearchUiState())
     val controls: StateFlow<SearchUiState> = mutableControls.asStateFlow()
 
-    val results: Flow<MemoSearchResult> = controls
+    val results: Flow<MemoSearchUiResult> = controls
         .debounce { search ->
             if (!search.isActive || search.query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS
         }
         .flatMapLatest { search ->
             when {
-                !search.isActive -> flowOf(MemoSearchResult.Inactive)
+                !search.isActive -> flowOf(MemoSearchUiResult.Inactive)
 
                 search.query.isBlank() -> flowOf(
-                    MemoSearchResult.Success(query = search.query, memos = emptyList())
+                    MemoSearchUiResult.Success(query = search.query, memos = emptyList())
                 )
 
                 else -> searchMemosUseCase(search.query)
-                    .map<List<Memo>, MemoSearchResult> { memos ->
-                        MemoSearchResult.Success(query = search.query, memos = memos)
+                    .map<List<Memo>, MemoSearchUiResult> { memos ->
+                        MemoSearchUiResult.Success(query = search.query, memos = memos)
                     }
                     .catch { throwable ->
                         if (throwable is CancellationException) throw throwable
-                        emit(MemoSearchResult.Failure(query = search.query))
+                        emit(MemoSearchUiResult.Failure(query = search.query))
                     }
             }
         }
@@ -72,15 +72,15 @@ class MemoSearchStateHolder(private val searchMemosUseCase: SearchMemosUseCase) 
 
     fun toUiState(
         controls: SearchUiState,
-        result: MemoSearchResult,
+        result: MemoSearchUiResult,
         mapMemos: (List<Memo>) -> List<MemoUiModel>
     ): SearchUiState {
         if (!controls.isActive) return SearchUiState()
 
         return when (result) {
-            MemoSearchResult.Inactive -> controls.copy(hasError = false, results = emptyList())
+            MemoSearchUiResult.Inactive -> controls.copy(hasError = false, results = emptyList())
 
-            is MemoSearchResult.Success -> controls.copy(
+            is MemoSearchUiResult.Success -> controls.copy(
                 hasError = false,
                 results = if (result.query == controls.query) {
                     mapMemos(result.memos)
@@ -89,7 +89,7 @@ class MemoSearchStateHolder(private val searchMemosUseCase: SearchMemosUseCase) 
                 }
             )
 
-            is MemoSearchResult.Failure -> controls.copy(
+            is MemoSearchUiResult.Failure -> controls.copy(
                 hasError = result.query == controls.query,
                 results = emptyList()
             )

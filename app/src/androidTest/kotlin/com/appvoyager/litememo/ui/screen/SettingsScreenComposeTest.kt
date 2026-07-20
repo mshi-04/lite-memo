@@ -14,7 +14,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogState
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import org.junit.Rule
 import org.junit.Test
@@ -156,7 +156,7 @@ class SettingsScreenComposeTest {
         // Arrange
         val uiState = SettingsUiState(
             appVersion = "1.0.0",
-            importErrorDialog = SettingsImportErrorDialogState.TagNameConflict(
+            importErrorDialog = SettingsImportErrorDialogUiState.TagNameConflict(
                 tagNames = listOf("Home", "Work")
             )
         )
@@ -185,7 +185,7 @@ class SettingsScreenComposeTest {
         val tagNames = (1..20).map { "タグ$it" }
         val uiState = SettingsUiState(
             appVersion = "1.0.0",
-            importErrorDialog = SettingsImportErrorDialogState.TagNameConflict(tagNames)
+            importErrorDialog = SettingsImportErrorDialogUiState.TagNameConflict(tagNames)
         )
         composeRule.setContent {
             TestScreenContent {
@@ -209,7 +209,7 @@ class SettingsScreenComposeTest {
         var uiState by mutableStateOf(
             SettingsUiState(
                 appVersion = "1.0.0",
-                importErrorDialog = SettingsImportErrorDialogState.Generic
+                importErrorDialog = SettingsImportErrorDialogUiState.Generic
             )
         )
         composeRule.setContent {

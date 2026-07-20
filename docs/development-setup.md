@@ -5,7 +5,19 @@
 ## 前提
 
 - JDK 17（Gradle の `jvmToolchain` は 17）
+- Android SDK（compileSdk 36.1）
+- fastlane を使う場合は、[`.ruby-version`](../.ruby-version) に合う Ruby と Bundler
 - ビルドフレーバーは `dev` / `prod`。開発・動作確認は `dev` を使う
+
+## Ruby / Bundler
+
+fastlane を使う場合は、repository root で依存 gem を準備します。
+Ruby と gem の具体的なバージョンは [`.ruby-version`](../.ruby-version) と
+[`Gemfile.lock`](../Gemfile.lock) を正本とします。
+
+```powershell
+bundle install
+```
 
 ## Firebase / Crashlytics
 
@@ -44,12 +56,13 @@ git config core.hooksPath .githooks
 detekt は baseline を使用せず、`maxIssues: 0` で検出した違反をすべて失敗として扱います。
 Android Lint は baseline なしで実行し、警告もエラーとして扱います。
 
-## ローカルでの CI 相当チェック（任意）
+## ローカルでの共通チェック（任意）
 
-CI と同じ静的解析 / Unit Test を手元で流す場合は fastlane を使えます。
+日常的に静的解析と JVM Unit Test の共通部分を手元で流す場合は fastlane を使えます。
+`android ci` はローカル向けの共通セットであり、Pull Request の CI 全体とは一致しません。
 
 ```sh
-# まとめて（KtLint → detekt → Android Lint → Unit Test）
+# 共通セット（KtLint → detekt → Android Lint → JVM Unit Test）
 bundle exec fastlane android ci
 
 # 個別に
@@ -64,13 +77,46 @@ bundle exec fastlane android coverage
 bundle exec fastlane android android_test
 ```
 
-Gradle から直接実行する場合は次のとおりです。
+## Pull Request 前の主要なアプリ検証
+
+`develop` / `main` を base にする Pull Request では、静的解析と JVM Unit Test に加えて
+release / R8 build と coverage を検証します。
+GitHub Actions では Static Analysis、Unit Test、Android Test を別 job で並列実行します。
+ローカルで主要なアプリ検証を再現するコマンドは次のとおりです。
+
+```powershell
+bundle exec fastlane android static_analysis
+bundle exec fastlane android unit_test release:true
+bundle exec fastlane android coverage
+
+# 端末またはエミュレーターが使える場合
+bundle exec fastlane android android_test
+```
+
+Gradle から同じアプリ検証を直接実行する場合は次のとおりです。
 
 ```sh
-./gradlew app:ktlintCheck
-./gradlew detekt
+./gradlew :app:ktlintCheck
+./gradlew :app:detekt
 ./gradlew :app:lintProdDebug
+./gradlew :app:testProdDebugUnitTest
+./gradlew :app:assembleProdRelease
+./gradlew :app:koverXmlReportProdDebug :app:koverHtmlReportProdDebug
+
+# 端末またはエミュレーターが必要
+./gradlew :app:connectedDevDebugAndroidTest
 ```
+
+Gradle Wrapper Validation、skill 同期、actionlint、CodeQL などの workflow 固有チェックは、
+上記コマンドだけでは再現しません。最終結果は GitHub Actions で確認します。
+
+## カバレッジ計測（Kover）
+
+Kover の集計対象は `app/build.gradle.kts` の `kover` ブロックで明示的に指定しています。
+UI 層は責務ごとのパターンに加えて、個別の型名も列挙しています。
+
+対象の型を追加・改名・削除したときは、同じ commit で `kover` の `classes(...)` も更新します。
+列挙から外れた型は失敗せずに集計対象から静かに外れるため、ビルドやテストでは検出できません。
 
 ## CI キャッシュ
 

@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
-import com.appvoyager.litememo.ui.state.CalendarGridAnimationState
+import com.appvoyager.litememo.ui.state.CalendarGridAnimationUiState
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -55,7 +55,7 @@ fun AnimatedCalendarGrid(
     onDateSelect: (LocalDate) -> Unit
 ) {
     AnimatedContent(
-        targetState = CalendarGridAnimationState(
+        targetState = CalendarGridAnimationUiState(
             month = month,
             days = days
         ),

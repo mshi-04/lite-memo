@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.type
 
-enum class AppLockAuthenticationResult {
+enum class AppLockAuthenticationUiResult {
     SUCCEEDED,
     FAILED,
     CANCELED,
