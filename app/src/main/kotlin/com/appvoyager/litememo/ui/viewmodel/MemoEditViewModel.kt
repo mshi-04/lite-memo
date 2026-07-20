@@ -24,8 +24,8 @@ import com.appvoyager.litememo.domain.usecase.MoveMemoToTrashUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.ResolveMemoImagePathUseCase
 import com.appvoyager.litememo.domain.usecase.SaveMemoUseCase
-import com.appvoyager.litememo.ui.event.MemoEditNavigationEvent
-import com.appvoyager.litememo.ui.event.MemoEditOperationErrorEvent
+import com.appvoyager.litememo.ui.event.MemoEditNavigationUiEvent
+import com.appvoyager.litememo.ui.event.MemoEditOperationErrorUiEvent
 import com.appvoyager.litememo.ui.model.MemoImageUiModel
 import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.MemoEditUiState
@@ -86,10 +86,10 @@ class MemoEditViewModel @Inject constructor(
     )
     val uiState: StateFlow<MemoEditUiState> = _uiState.asStateFlow()
 
-    private val _navigationEvent = Channel<MemoEditNavigationEvent>(Channel.BUFFERED)
+    private val _navigationEvent = Channel<MemoEditNavigationUiEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    private val _operationErrorEvent = Channel<MemoEditOperationErrorEvent>(Channel.BUFFERED)
+    private val _operationErrorEvent = Channel<MemoEditOperationErrorUiEvent>(Channel.BUFFERED)
     val operationErrorEvent = _operationErrorEvent.receiveAsFlow()
 
     private val persistMutex = Mutex()
@@ -172,7 +172,7 @@ class MemoEditViewModel @Inject constructor(
                 }
             }
             if (hasFailure) {
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.ImageAttachFailed)
+                _operationErrorEvent.trySend(MemoEditOperationErrorUiEvent.ImageAttachFailed)
             }
         }
     }
@@ -204,13 +204,13 @@ class MemoEditViewModel @Inject constructor(
                     val deletedMemoId = moveMemoToTrashUseCase(targetMemoId)
                     clearSavedState()
                     _uiState.update { state -> state.copy(isDeletePending = false) }
-                    _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+                    _navigationEvent.trySend(MemoEditNavigationUiEvent.MemoDeleted(deletedMemoId))
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Throwable) {
                     isFinishing = false
                     _uiState.update { state -> state.copy(isDeletePending = false) }
-                    _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
+                    _operationErrorEvent.trySend(MemoEditOperationErrorUiEvent.DeleteFailed)
                 }
             }
         }
@@ -228,7 +228,7 @@ class MemoEditViewModel @Inject constructor(
             }
             if (persist()) {
                 clearSavedState()
-                _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+                _navigationEvent.trySend(MemoEditNavigationUiEvent.NavigateBack)
             } else {
                 isFinishing = false
             }
@@ -319,7 +319,7 @@ class MemoEditViewModel @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            _operationErrorEvent.trySend(MemoEditOperationErrorEvent.SaveFailed)
+            _operationErrorEvent.trySend(MemoEditOperationErrorUiEvent.SaveFailed)
             false
         } finally {
             activePersistImageIds = emptySet()
@@ -332,17 +332,17 @@ class MemoEditViewModel @Inject constructor(
                 if (isNewMemoSession) {
                     discardMemoUseCase(memoId)
                     clearSavedState()
-                    _navigationEvent.trySend(MemoEditNavigationEvent.NavigateBack)
+                    _navigationEvent.trySend(MemoEditNavigationUiEvent.NavigateBack)
                 } else {
                     val deletedMemoId = moveMemoToTrashUseCase(memoId)
                     clearSavedState()
-                    _navigationEvent.trySend(MemoEditNavigationEvent.MemoDeleted(deletedMemoId))
+                    _navigationEvent.trySend(MemoEditNavigationUiEvent.MemoDeleted(deletedMemoId))
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
                 isFinishing = false
-                _operationErrorEvent.trySend(MemoEditOperationErrorEvent.DeleteFailed)
+                _operationErrorEvent.trySend(MemoEditOperationErrorUiEvent.DeleteFailed)
             }
         }
     }

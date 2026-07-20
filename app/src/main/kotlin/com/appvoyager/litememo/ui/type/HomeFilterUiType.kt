@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.type
 
-enum class HomeFilterType {
+enum class HomeFilterUiType {
     All,
     Unorganized,
     Favorite,

@@ -23,8 +23,8 @@ import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
-import com.appvoyager.litememo.ui.state.MemoSearchStateHolder
-import com.appvoyager.litememo.ui.type.HomeFilterType
+import com.appvoyager.litememo.ui.state.MemoSearchUiStateHolder
+import com.appvoyager.litememo.ui.type.HomeFilterUiType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -55,7 +55,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val selectedFilter = MutableStateFlow<HomeFilterUiState>(HomeFilterUiState.All)
-    private val memoSearch = MemoSearchStateHolder(searchMemosUseCase)
+    private val memoSearch = MemoSearchUiStateHolder(searchMemosUseCase)
     private val selection = MutableStateFlow(HomeSelectionUiState())
     private val bulkTagDialog = MutableStateFlow(HomeBulkTagDialogUiState())
     private val retryTrigger = MutableStateFlow(false)
@@ -258,14 +258,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (type) {
-        HomeFilterType.All -> MemoFilter.All
-        HomeFilterType.Unorganized -> MemoFilter.Unorganized
-        HomeFilterType.Favorite -> MemoFilter.Favorite
-        HomeFilterType.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
+        HomeFilterUiType.All -> MemoFilter.All
+        HomeFilterUiType.Unorganized -> MemoFilter.Unorganized
+        HomeFilterUiType.Favorite -> MemoFilter.Favorite
+        HomeFilterUiType.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
     }
 
     private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState =
-        if (type == HomeFilterType.ByTag) {
+        if (type == HomeFilterUiType.ByTag) {
             if (tags.any { tag -> tag.id == tagId }) this else HomeFilterUiState.All
         } else {
             this

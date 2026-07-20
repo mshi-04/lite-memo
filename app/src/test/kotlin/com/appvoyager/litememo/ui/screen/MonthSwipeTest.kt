@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.ui.screen
 
-import com.appvoyager.litememo.ui.type.MonthSwipeDirection
+import com.appvoyager.litememo.ui.type.MonthSwipeUiDirection
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -13,7 +13,7 @@ class MonthSwipeTest {
         val result = resolveMonthSwipe(dragAmount = -120f, thresholdPx = 100f)
 
         // Assert
-        assertEquals(MonthSwipeDirection.NEXT, result)
+        assertEquals(MonthSwipeUiDirection.NEXT, result)
     }
 
     @Test
@@ -22,7 +22,7 @@ class MonthSwipeTest {
         val result = resolveMonthSwipe(dragAmount = 120f, thresholdPx = 100f)
 
         // Assert
-        assertEquals(MonthSwipeDirection.PREVIOUS, result)
+        assertEquals(MonthSwipeUiDirection.PREVIOUS, result)
     }
 
     @Test
@@ -49,7 +49,7 @@ class MonthSwipeTest {
         val result = resolveMonthSwipe(dragAmount = -100f, thresholdPx = 100f)
 
         // Assert
-        assertEquals(MonthSwipeDirection.NEXT, result)
+        assertEquals(MonthSwipeUiDirection.NEXT, result)
     }
 
     @Test
@@ -58,6 +58,6 @@ class MonthSwipeTest {
         val result = resolveMonthSwipe(dragAmount = 100f, thresholdPx = 100f)
 
         // Assert
-        assertEquals(MonthSwipeDirection.PREVIOUS, result)
+        assertEquals(MonthSwipeUiDirection.PREVIOUS, result)
     }
 }

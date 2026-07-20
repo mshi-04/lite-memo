@@ -6,6 +6,6 @@ data class TagManageUiState(
     val isLoading: Boolean = true,
     val hasError: Boolean = false,
     val tags: List<TagUiModel> = emptyList(),
-    val editingTag: TagEditState? = null,
+    val editingTag: TagEditUiState? = null,
     val showDeleteDialog: TagUiModel? = null
 )

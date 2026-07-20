@@ -44,7 +44,7 @@ import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.ui.component.toDisplayString
-import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogState
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
 import com.appvoyager.litememo.ui.state.SettingsUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
@@ -488,7 +488,7 @@ private fun ImportConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun ImportErrorDialog(state: SettingsImportErrorDialogState, onDismiss: () -> Unit) {
+private fun ImportErrorDialog(state: SettingsImportErrorDialogUiState, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -502,7 +502,7 @@ private fun ImportErrorDialog(state: SettingsImportErrorDialogState, onDismiss: 
                     .testTag("settingsImportErrorDialogText")
             ) {
                 Text(text = state.toMessage())
-                if (state is SettingsImportErrorDialogState.TagNameConflict) {
+                if (state is SettingsImportErrorDialogUiState.TagNameConflict) {
                     state.tagNames.forEach { tagName ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = tagName, style = MaterialTheme.typography.bodyMedium)
@@ -522,11 +522,11 @@ private fun ImportErrorDialog(state: SettingsImportErrorDialogState, onDismiss: 
 }
 
 @Composable
-private fun SettingsImportErrorDialogState.toMessage(): String = when (this) {
-    is SettingsImportErrorDialogState.TagNameConflict ->
+private fun SettingsImportErrorDialogUiState.toMessage(): String = when (this) {
+    is SettingsImportErrorDialogUiState.TagNameConflict ->
         stringResource(R.string.settings_import_error_tag_conflict_message)
 
-    SettingsImportErrorDialogState.Generic -> stringResource(R.string.settings_import_error)
+    SettingsImportErrorDialogUiState.Generic -> stringResource(R.string.settings_import_error)
 }
 
 @Composable
@@ -618,7 +618,7 @@ private fun ImportConfirmDialogPreview() {
 private fun ImportErrorDialogPreview() {
     LiteMemoTheme {
         ImportErrorDialog(
-            state = SettingsImportErrorDialogState.TagNameConflict(
+            state = SettingsImportErrorDialogUiState.TagNameConflict(
                 tagNames = listOf("仕事", "買い物")
             ),
             onDismiss = {}

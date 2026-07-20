@@ -58,7 +58,7 @@ import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.model.TagUiModel
-import com.appvoyager.litememo.ui.state.TagEditState
+import com.appvoyager.litememo.ui.state.TagEditUiState
 import com.appvoyager.litememo.ui.state.TagManageUiState
 import com.appvoyager.litememo.ui.theme.DEFAULT_TAG_COLORS
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
@@ -227,7 +227,7 @@ private fun TagRow(tag: TagUiModel, onEditClick: () -> Unit, onDeleteClick: () -
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagEditDialog(
-    state: TagEditState,
+    state: TagEditUiState,
     onNameChange: (String) -> Unit,
     onColorSelect: (Long) -> Unit,
     onSave: () -> Unit,

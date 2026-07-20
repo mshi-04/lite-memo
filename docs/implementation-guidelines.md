@@ -23,9 +23,12 @@
 ## Kotlin
 
 - 関数名は英語にする
-- Lite Memo のプロジェクト規約として、`app/src/main` の名前付き class / interface / object / enum はトップレベルに置き、型名と同名のファイルへ1型だけ定義する。ただし、sealed hierarchy の直接の子型は親型のファイル内へネストしてよい
-- `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは1ファイル1型の対象外とする
-- `ui` 配下の型は機能名ではなく役割・接尾語で分け、`XxxScreen` は `screen`、`XxxRoute` は `route`、`XxxState` は `state`、`XxxUiModel` は `model`、`XxxActions` は `action`、`XxxEvent` は `event` のように対応するパッケージへ置く。該当する役割パッケージがない enum は `type`、その他の表示・受け渡し用 data class は `data` にまとめる
+- Route、Screen、ViewModel、主要な UiState / UiModel は、役割と同名の独立ファイルを基本とする
+- UI state / result / event は、それぞれ `XxxUiState` / `XxxUiResult` / `XxxUiEvent` と命名する。補助enumも `AppLockUiStatus` のようにUI契約であることを名前に含める
+- 同じ責務を構成する小型の class / interface / object / enum は、ファイルが読みやすい範囲で関連する所有者ファイルへトップレベル宣言としてまとめてよい。300行程度を分割検討の目安とするが、機械的な上限にはしない
+- sealed hierarchy の直接の子型や、親に強く従属する private 実装型は親型へネストしてよい。外側のインスタンス参照が意図的に必要な場合を除き `inner` は使わない
+- `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは上記のファイル配置判断の対象外とする
+- `ui` 配下は機能別ではなく主要な役割で分ける。型の接尾語だけを根拠に `action` / `data` / `event` / `testtag` / `type` パッケージを作らず、所有する `screen` / `route` / `viewmodel` / `state` / `model` / `component` へ置く
 - ガード条件は早期リターンで扱い、ネストを深くしない
 - 意味のある値は primitive のまま広げず、必要に応じて値オブジェクトにする
 - 値オブジェクトは不正な値を作れない形に寄せる
