@@ -106,7 +106,7 @@ class RoomMemoRepository @Inject constructor(
         memoDao.getAllActiveMemosWithRefs().map { it.toDomain() }
 
     override suspend fun saveAllMemos(memos: List<Memo>) {
-        memos.requireNoDuplicateIds(label = "memo") { it.id.value }
+        memos.requireNoDuplicateIds(label = "memo") { it.id }
 
         val entities = memos.map { it.toEntity() }
         val removedFileNames = memoDao.upsertAllMemosWithRefsAndCollectRemovedFileNames(
