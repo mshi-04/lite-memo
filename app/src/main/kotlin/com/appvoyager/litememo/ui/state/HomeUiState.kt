@@ -18,31 +18,11 @@ data class HomeUiState(
     val memos: List<MemoUiModel> = emptyList()
 )
 
-data class HomeFilterUiState(val type: HomeFilterUiType, val tagId: TagId? = null) {
-
-    init {
-        require(type != HomeFilterUiType.ByTag || tagId != null) {
-            "ByTag filter requires a tagId."
-        }
-        require(type == HomeFilterUiType.ByTag || tagId == null) {
-            "Only ByTag filter can have a tagId."
-        }
-    }
-
-    companion object {
-        val All = HomeFilterUiState(HomeFilterUiType.All)
-        val Unorganized = HomeFilterUiState(HomeFilterUiType.Unorganized)
-        val Favorite = HomeFilterUiState(HomeFilterUiType.Favorite)
-
-        fun byTag(tagId: TagId) = HomeFilterUiState(HomeFilterUiType.ByTag, tagId)
-    }
-}
-
-enum class HomeFilterUiType {
-    All,
-    Unorganized,
-    Favorite,
-    ByTag
+sealed interface HomeFilterUiState {
+    data object All : HomeFilterUiState
+    data object Unorganized : HomeFilterUiState
+    data object Favorite : HomeFilterUiState
+    data class ByTag(val tagId: TagId) : HomeFilterUiState
 }
 
 data class HomeSelectionUiState(val selectedMemoIds: Set<MemoId> = emptySet()) {

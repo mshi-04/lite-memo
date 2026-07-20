@@ -56,6 +56,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoImageThumbnail
@@ -69,7 +70,7 @@ fun MemoEditScreen(
     uiState: MemoEditUiState,
     onTitleChange: (String) -> Unit,
     onBodyChange: (String) -> Unit,
-    onTagToggle: (String) -> Unit,
+    onTagToggle: (TagId) -> Unit,
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
     onRetry: () -> Unit,

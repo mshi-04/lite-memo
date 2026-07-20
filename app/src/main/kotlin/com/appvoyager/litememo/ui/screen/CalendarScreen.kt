@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.AnimatedCalendarGrid
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
@@ -440,7 +441,7 @@ private fun CalendarScreenPreview() {
                 id = MemoId("memo-1"),
                 title = "週次レビュー",
                 body = "完了したタスクと来週の優先度を整理する。",
-                tags = listOf(TagUiModel("tag-work", "仕事", 0xFF6750A4)),
+                tags = listOf(TagUiModel(TagId("tag-work"), "仕事", 0xFF6750A4)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isFavorite = false
             ),
@@ -448,7 +449,7 @@ private fun CalendarScreenPreview() {
                 id = MemoId("memo-2"),
                 title = "献立メモ",
                 body = "冷蔵庫の野菜を使い切る。買い足しは卵。",
-                tags = listOf(TagUiModel("tag-life", "生活", 0xFF006D3B)),
+                tags = listOf(TagUiModel(TagId("tag-life"), "生活", 0xFF006D3B)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isFavorite = false
             )

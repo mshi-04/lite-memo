@@ -20,7 +20,6 @@ import com.appvoyager.litememo.ui.model.MemoUiModel
 import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.HomeBulkTagDialogUiState
 import com.appvoyager.litememo.ui.state.HomeFilterUiState
-import com.appvoyager.litememo.ui.state.HomeFilterUiType
 import com.appvoyager.litememo.ui.state.HomeSelectionUiState
 import com.appvoyager.litememo.ui.state.HomeUiState
 import com.appvoyager.litememo.ui.state.MemoSearchUiStateHolder
@@ -257,16 +256,16 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (type) {
-        HomeFilterUiType.All -> MemoFilter.All
-        HomeFilterUiType.Unorganized -> MemoFilter.Unorganized
-        HomeFilterUiType.Favorite -> MemoFilter.Favorite
-        HomeFilterUiType.ByTag -> MemoFilter.ByTag(requireNotNull(tagId))
+    private fun HomeFilterUiState.toDomainFilter(): MemoFilter = when (this) {
+        HomeFilterUiState.All -> MemoFilter.All
+        HomeFilterUiState.Unorganized -> MemoFilter.Unorganized
+        HomeFilterUiState.Favorite -> MemoFilter.Favorite
+        is HomeFilterUiState.ByTag -> MemoFilter.ByTag(tagId)
     }
 
     private fun HomeFilterUiState.effectiveFilter(tags: List<Tag>): HomeFilterUiState =
-        if (type == HomeFilterUiType.ByTag) {
-            if (tags.any { tag -> tag.id == tagId }) this else HomeFilterUiState.All
+        if (this is HomeFilterUiState.ByTag && tags.none { tag -> tag.id == tagId }) {
+            HomeFilterUiState.All
         } else {
             this
         }

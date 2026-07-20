@@ -112,7 +112,7 @@ class TagManageViewModelTest {
         viewModel.uiState.first { it.tags.isNotEmpty() }
 
         // Act
-        viewModel.startEdit("tag-1")
+        viewModel.startEdit(TagId("tag-1"))
         viewModel.saveEdit()
         advanceUntilIdle()
         val state = viewModel.uiState.first { it.editingTag == null }

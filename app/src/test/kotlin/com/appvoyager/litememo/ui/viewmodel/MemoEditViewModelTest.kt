@@ -81,7 +81,7 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(
-            MemoEditSnapshot("Saved title", "Saved body", setOf("tag-1"), true),
+            MemoEditSnapshot("Saved title", "Saved body", setOf(TagId("tag-1")), true),
             MemoEditSnapshot(state.title, state.body, state.selectedTagIds, state.isFavorite)
         )
     }
@@ -105,7 +105,8 @@ class MemoEditViewModelTest {
 
         // Assert
         assertEquals(
-            false to MemoEditSnapshot("Existing title", "Existing body", setOf("tag-1"), true),
+            false to
+                MemoEditSnapshot("Existing title", "Existing body", setOf(TagId("tag-1")), true),
             state.isLoading to MemoEditSnapshot(
                 state.title,
                 state.body,
@@ -593,7 +594,7 @@ class MemoEditViewModelTest {
                 MemoEditSnapshot(
                     title = memo.title.value,
                     body = memo.body.value,
-                    selectedTagIds = memo.tagIds.map { it.value }.toSet(),
+                    selectedTagIds = memo.tagIds.toSet(),
                     isFavorite = memo.isFavorite
                 )
             }
@@ -797,7 +798,7 @@ class MemoEditViewModelTest {
 private data class MemoEditSnapshot(
     val title: String,
     val body: String,
-    val selectedTagIds: Set<String>,
+    val selectedTagIds: Set<TagId>,
     val isFavorite: Boolean
 )
 
