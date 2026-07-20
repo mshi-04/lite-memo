@@ -76,6 +76,37 @@ class RoomTagRepositoryInstrumentedTest {
     }
 
     @Test
+    fun normalSaveTagUpdatesExistingTagWithSameId() = runTest {
+        // Arrange
+        repository.saveTag(tag(id = "tag-1", name = "Work"))
+
+        // Act
+        // Normal: re-saving the same id updates in place instead of hitting the unique index.
+        repository.saveTag(tag(id = "tag-1", name = "Renamed"))
+        val storedTags = database.tagDao().getAllTags()
+
+        // Assert
+        assertEquals(listOf("tag-1" to "Renamed"), storedTags.map { it.id to it.name })
+    }
+
+    @Test
+    fun normalSaveTagKeepsExistingNameWhenOnlyOtherFieldsChange() = runTest {
+        // Arrange
+        repository.saveTag(tag(id = "tag-1", name = "Work"))
+
+        // Act
+        // Normal: an update that keeps its own name must not conflict with itself.
+        repository.saveTag(tag(id = "tag-1", name = "Work", colorArgb = 0xFF006D3B))
+        val storedTags = database.tagDao().getAllTags()
+
+        // Assert
+        assertEquals(
+            listOf(Triple("tag-1", "Work", 0xFF006D3BL)),
+            storedTags.map { Triple(it.id, it.name, it.colorArgb) }
+        )
+    }
+
+    @Test
     fun boundarySaveTagAllowsSameNameWithDifferentLetterCase() = runTest {
         // Arrange
         repository.saveTag(tag(id = "tag-1", name = "Work"))
@@ -88,10 +119,10 @@ class RoomTagRepositoryInstrumentedTest {
         assertEquals(listOf("tag-1", "tag-2"), storedIds.sorted())
     }
 
-    private fun tag(id: String, name: String) = Tag(
+    private fun tag(id: String, name: String, colorArgb: Long = 0xFF6750A4) = Tag(
         id = TagId(id),
         name = TagName(name),
-        color = TagColor(0xFF6750A4),
+        color = TagColor(colorArgb),
         createdAt = TimestampMillis(1_000L)
     )
 

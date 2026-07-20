@@ -63,7 +63,6 @@ class RoomMemoImportRepository @Inject constructor(
             .flatMap { names -> tagDao.findTagsByNames(names) }
             .filterNot { it.id in importedTagIds }
             .map { TagName(it.name) }
-            .distinct()
             .sortedBy { it.value }
     }
 

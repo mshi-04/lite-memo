@@ -99,6 +99,39 @@ class RoomTagRepositoryTest {
         assertEquals("tag-1", dao.savedTag?.id)
     }
 
+    // 未知の id は insert、既存 id は update に振り分けられることを固定する
+    @Test
+    fun saveTagInsertsWhenTagIdIsNew() = runTest {
+        // Arrange
+        val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1", name = "Work")))
+        val repository = RoomTagRepository(dao)
+
+        // Act
+        repository.saveTag(tagFixture(id = "tag-2", name = "Home"))
+
+        // Assert
+        assertEquals(
+            listOf("tag-2") to emptyList<String>(),
+            dao.insertedTags.map { it.id } to dao.updatedTags.map { it.id }
+        )
+    }
+
+    @Test
+    fun saveTagUpdatesWhenTagIdAlreadyExists() = runTest {
+        // Arrange
+        val dao = FakeTagDao(tags = listOf(tagEntity(id = "tag-1", name = "Work")))
+        val repository = RoomTagRepository(dao)
+
+        // Act
+        repository.saveTag(tagFixture(id = "tag-1", name = "Renamed"))
+
+        // Assert
+        assertEquals(
+            emptyList<String>() to listOf("tag-1" to "Renamed"),
+            dao.insertedTags.map { it.id } to dao.updatedTags.map { it.id to it.name }
+        )
+    }
+
     @Test
     fun deleteTagDelegatesTagIdValueToDao() = runTest {
         // Arrange
@@ -164,6 +197,8 @@ class RoomTagRepositoryTest {
         var getTagsByIdsCallCount = 0
         var savedTag: TagEntity? = null
         var savedTags: List<TagEntity> = emptyList()
+        var insertedTags: List<TagEntity> = emptyList()
+        var updatedTags: List<TagEntity> = emptyList()
         var deletedTagId: String? = null
 
         override fun observeTags(): Flow<List<TagEntity>> = tags
@@ -182,11 +217,13 @@ class RoomTagRepositoryTest {
             tags.value.filter { it.name in names }
 
         override suspend fun insertTags(tags: List<TagEntity>) {
+            insertedTags = tags
             savedTags = tags
             savedTag = tags.lastOrNull()
         }
 
         override suspend fun updateTags(tags: List<TagEntity>) {
+            updatedTags = tags
             savedTags = tags
             savedTag = tags.lastOrNull()
         }
