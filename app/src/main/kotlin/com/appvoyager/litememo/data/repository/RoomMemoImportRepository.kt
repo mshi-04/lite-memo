@@ -47,13 +47,13 @@ class RoomMemoImportRepository @Inject constructor(
     }
 
     private fun requireNoDuplicateMemoIds(memos: List<Memo>) {
-        val duplicateIds = memos.groupingBy { it.id.value }.eachCount()
+        val duplicateIds = memos.groupingBy { it.id }.eachCount()
             .filterValues { it > 1 }.keys
         require(duplicateIds.isEmpty()) { "Duplicate memo ids: $duplicateIds" }
     }
 
     private fun requireNoDuplicateTagIds(tags: List<Tag>) {
-        val duplicateIds = tags.groupingBy { it.id.value }.eachCount()
+        val duplicateIds = tags.groupingBy { it.id }.eachCount()
             .filterValues { it > 1 }.keys
         require(duplicateIds.isEmpty()) { "Duplicate tag ids: $duplicateIds" }
     }
