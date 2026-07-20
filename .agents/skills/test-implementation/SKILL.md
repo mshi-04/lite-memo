@@ -1,6 +1,6 @@
 ---
 name: test-implementation
-description: Lite Memo のテストコードの追加、修正、テスト固有レビューを扱う。JUnit 5、runTest、MockK、Turbine、ViewModel test、UseCase test、mapper test、Room/Compose instrumented test、AAA、観点 prefix が対象。
+description: Lite Memo のテストコードの追加、修正、テスト固有レビューを扱う。JUnit Jupiter（JVM Unit Test）、JUnit 4（instrumented test）、runTest、MockK、Turbine、ViewModel test、UseCase test、mapper test、Room/Compose instrumented test、AAA、観点 prefix が対象。
 ---
 
 # 目的

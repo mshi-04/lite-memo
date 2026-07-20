@@ -13,12 +13,8 @@
 ## Architecture
 
 - 構造は Clean Architecture + MVVM を基本にする
-- 依存方向は `ui -> domain <- data` を守る（プレゼンテーション層は `ui` パッケージ）
-- Screen は state と callback を受け取り、Route / ViewModel との接続を画面本体から分離する
-- ViewModel は必要な UseCase または domain の抽象に依存し、単純委譲のためだけに UseCase を増やさない
-- data 層の実装詳細を `ui` 層へ漏らさない
 - DI は Hilt を使う
-- 詳細なレイヤー / パッケージ構成は `docs/architecture.md` を参照する
+- 依存方向、レイヤーの責務、パッケージ構成、UseCase の粒度は [`docs/architecture.md`](architecture.md) を正本とする
 
 ## Kotlin
 
@@ -30,8 +26,7 @@
 - `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは上記のファイル配置判断の対象外とする
 - `ui` 配下は機能別ではなく主要な役割で分ける。型の接尾語だけを根拠に `action` / `data` / `event` / `testtag` / `type` パッケージを作らず、所有する `screen` / `route` / `viewmodel` / `state` / `model` / `component` へ置く
 - ガード条件は早期リターンで扱い、ネストを深くしない
-- 意味のある値は primitive のまま広げず、必要に応じて値オブジェクトにする
-- 値オブジェクトは不正な値を作れない形に寄せる
+- 意味のある値は primitive のまま広げず、必要に応じて値オブジェクトにする（設計方針は [`docs/architecture.md`](architecture.md) の Value Object を正本とする）
 - 取り得る種類だけを閉じ、実装型に別の superclass や複数 interface の実装余地を残す場合は `sealed interface` で表す
 - 親型に共通の状態・実装・constructor 制約を持たせる場合や、class としての継承関係が必要な場合は `sealed class` で表す
 
@@ -47,7 +42,7 @@
 - ファイル操作など blocking I/O を行う実装が、注入した dispatcher への切り替えを所有する
 - `CancellationException` は再送出し、広い例外捕捉で coroutine のキャンセルを握りつぶさない
 - 永続化の使い分けは [`docs/architecture.md`](architecture.md) の Data 方針を正本とする
-- 画像添付などの Android 依存 URI / ContentResolver は ViewModel に直接持ち込まず、UseCase と data 層の境界に閉じる
+- 画像添付などの Android 依存 URI / ContentResolver は ViewModel に直接持ち込まない。配置は [`docs/architecture.md`](architecture.md) の メモ画像 方針を正本とする
 
 ## UI Event / Error
 
