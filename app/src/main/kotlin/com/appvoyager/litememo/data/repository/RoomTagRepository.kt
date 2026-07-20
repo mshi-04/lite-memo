@@ -31,8 +31,6 @@ class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRep
         return ids.mapNotNull { id -> tagsById[id.value]?.toDomain() }
     }
 
-    // tags の制約は主キーと name の unique index だけで、主キーは insert / update の分岐が解決する。
-    // ここでの constraint 違反は name 衝突とみなし、Domain error へ変換する。
     override suspend fun saveTag(tag: Tag) {
         try {
             tagDao.insertOrUpdateAllTags(listOf(tag.toEntity()))

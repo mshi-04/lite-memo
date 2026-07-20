@@ -18,7 +18,6 @@ import com.appvoyager.litememo.domain.repository.MemoImageStore
 import com.appvoyager.litememo.domain.repository.MemoImportRepository
 import javax.inject.Inject
 
-// SQLite の bind variable 上限に収まるよう name 一括検索を分割する単位。
 private const val NAME_QUERY_CHUNK_SIZE = 900
 
 class RoomMemoImportRepository @Inject constructor(

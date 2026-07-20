@@ -38,8 +38,6 @@ interface TagDao {
     @Query("SELECT * FROM tags ORDER BY createdAt ASC, id ASC")
     suspend fun getAllTags(): List<TagEntity>
 
-    // @Upsert は name の unique index 違反を主キー衝突と誤認し、更新 0 件の無変更で握り潰す。
-    // id の有無で insert と update を分けて、制約違反を呼び出し側へ伝える。
     @Transaction
     suspend fun insertOrUpdateAllTags(tags: List<TagEntity>) {
         if (tags.isEmpty()) return
@@ -53,7 +51,6 @@ interface TagDao {
     }
 
     companion object {
-        // SQLite の bind variable 上限に収まるよう id 一括検索を分割する単位。
         private const val ID_QUERY_CHUNK_SIZE = 900
     }
 
