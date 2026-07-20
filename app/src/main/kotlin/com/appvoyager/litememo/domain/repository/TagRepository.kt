@@ -18,6 +18,4 @@ interface TagRepository {
 
     suspend fun getAllTags(): List<Tag>
 
-    suspend fun saveAllTags(tags: List<Tag>)
-
 }

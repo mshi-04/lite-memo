@@ -229,10 +229,6 @@ class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
 
     override suspend fun getAllTags(): List<Tag> = tags.value
 
-    override suspend fun saveAllTags(tags: List<Tag>) {
-        tags.forEach { saveTag(it) }
-    }
-
     fun currentTags(): List<Tag> = tags.value
 
 }

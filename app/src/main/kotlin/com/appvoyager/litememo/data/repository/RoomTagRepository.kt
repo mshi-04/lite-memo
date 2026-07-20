@@ -35,8 +35,4 @@ class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRep
 
     override suspend fun getAllTags(): List<Tag> = tagDao.getAllTags().map { it.toDomain() }
 
-    override suspend fun saveAllTags(tags: List<Tag>) {
-        tagDao.upsertAllTags(tags.map { it.toEntity() })
-    }
-
 }

@@ -235,8 +235,6 @@ class TagManageViewModelTest {
         override suspend fun deleteTag(id: TagId) = repository.deleteTag(id)
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
-
-        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
     }
 
     private class DeleteFailingTagRepository(initialTags: List<Tag>) : TagRepository {
@@ -255,8 +253,6 @@ class TagManageViewModelTest {
         override suspend fun deleteTag(id: TagId): Unit = error("Failed to delete tag.")
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
-
-        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
     }
 
     private class StaleObserveTagRepository(initialTags: List<Tag>) : TagRepository {
@@ -275,7 +271,5 @@ class TagManageViewModelTest {
         override suspend fun deleteTag(id: TagId) = repository.deleteTag(id)
 
         override suspend fun getAllTags(): List<Tag> = repository.getAllTags()
-
-        override suspend fun saveAllTags(tags: List<Tag>) = repository.saveAllTags(tags)
     }
 }
