@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.domain.usecase
 
-import com.appvoyager.litememo.domain.FakeMemoRepository
+import com.appvoyager.litememo.domain.FakeMemoImportRepository
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
@@ -16,53 +16,54 @@ import org.junit.jupiter.api.Test
 class ImportMemosUseCaseTest {
 
     @Test
-    fun invokeSavesTagsAndMemos() = runTest {
+    fun interactionInvokePassesTagsAndMemosToImportRepository() = runTest {
         // Arrange
         val tag = tagFixture(id = "t1", name = "Tag")
         val memo = memoFixture(id = "m1", tagIds = listOf(TagId("t1")))
         val data = exportData(tags = listOf(tag), memos = listOf(memo))
-        val memoRepo = FakeMemoRepository()
-        val useCase = importMemosUseCase(memoRepository = memoRepo)
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
 
         // Act
+        // Interaction: validated export data is passed to the import repository once.
         useCase(data)
 
         // Assert
-        assertEquals(1, memoRepo.importedTags.size)
-        assertEquals(1, memoRepo.currentMemos().size)
+        assertEquals(data, importRepository.importedData.single())
     }
 
     @Test
-    fun invokeRemovesInvalidTagIdsFromImportedMemos() = runTest {
+    fun boundaryInvokeRemovesInvalidTagIdsFromImportedMemos() = runTest {
         // Arrange
         val tag = tagFixture(id = "t1")
         val memo = memoFixture(id = "m1", tagIds = listOf(TagId("t1"), TagId("missing")))
-        val memoRepo = FakeMemoRepository()
-        val useCase = importMemosUseCase(memoRepository = memoRepo)
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
 
         // Act
+        // Boundary: tag ids absent from the imported tag set are removed.
         useCase(exportData(tags = listOf(tag), memos = listOf(memo)))
 
         // Assert
-        assertEquals(listOf(TagId("t1")), memoRepo.currentMemos()[0].tagIds)
+        assertEquals(listOf(TagId("t1")), importRepository.importedData.single().memos[0].tagIds)
     }
 
     @Test
-    fun invokeHandlesEmptyExportData() = runTest {
+    fun boundaryInvokePassesEmptyExportDataToRepository() = runTest {
         // Arrange
-        val memoRepo = FakeMemoRepository()
-        val useCase = importMemosUseCase(memoRepository = memoRepo)
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
 
         // Act
+        // Boundary: an empty import remains a valid repository operation.
         useCase(exportData())
 
         // Assert
-        assertEquals(0, memoRepo.importedTags.size)
-        assertEquals(0, memoRepo.currentMemos().size)
+        assertEquals(exportData(), importRepository.importedData.single())
     }
 
     @Test
-    fun invokeThrowsForUnsupportedVersion() {
+    fun errorInvokeRejectsUnsupportedVersion() {
         // Arrange
         val useCase = importMemosUseCase()
         val data = ExportData(
@@ -73,13 +74,14 @@ class ImportMemosUseCaseTest {
         )
 
         // Act & Assert
+        // Error: unsupported format versions are rejected before persistence.
         assertThrows(IllegalArgumentException::class.java) {
             runTest { useCase(data) }
         }
     }
 
     @Test
-    fun invokePreservesValidTagIdsWhenSomeAreInvalid() = runTest {
+    fun boundaryInvokePreservesValidTagIdsWhenSomeAreInvalid() = runTest {
         // Arrange
         val tag1 = tagFixture(id = "t1")
         val tag2 = tagFixture(id = "t2", name = "Tag2")
@@ -87,18 +89,22 @@ class ImportMemosUseCaseTest {
             id = "m1",
             tagIds = listOf(TagId("t1"), TagId("missing"), TagId("t2"))
         )
-        val memoRepo = FakeMemoRepository()
-        val useCase = importMemosUseCase(memoRepository = memoRepo)
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
 
         // Act
+        // Boundary: valid tag ids retain their relative order after filtering.
         useCase(exportData(tags = listOf(tag1, tag2), memos = listOf(memo)))
 
         // Assert
-        assertEquals(listOf(TagId("t1"), TagId("t2")), memoRepo.currentMemos()[0].tagIds)
+        assertEquals(
+            listOf(TagId("t1"), TagId("t2")),
+            importRepository.importedData.single().memos[0].tagIds
+        )
     }
 
     @Test
-    fun invokeRemovesDuplicateTagIdsFromImportedMemos() = runTest {
+    fun boundaryInvokeRemovesDuplicateTagIdsFromImportedMemos() = runTest {
         // Arrange
         val tag1 = tagFixture(id = "t1")
         val tag2 = tagFixture(id = "t2", name = "Tag2")
@@ -106,33 +112,23 @@ class ImportMemosUseCaseTest {
             id = "m1",
             tagIds = listOf(TagId("t1"), TagId("t2"), TagId("t1"))
         )
-        val memoRepo = FakeMemoRepository()
-        val useCase = importMemosUseCase(memoRepository = memoRepo)
+        val importRepository = FakeMemoImportRepository()
+        val useCase = importMemosUseCase(importRepository)
 
         // Act
+        // Boundary: duplicate tag ids collapse to their first occurrence.
         useCase(exportData(tags = listOf(tag1, tag2), memos = listOf(memo)))
 
         // Assert
-        assertEquals(listOf(TagId("t1"), TagId("t2")), memoRepo.currentMemos()[0].tagIds)
+        assertEquals(
+            listOf(TagId("t1"), TagId("t2")),
+            importRepository.importedData.single().memos[0].tagIds
+        )
     }
 
-    @Test
-    fun invokeUpsertsMemoWithSameId() = runTest {
-        // Arrange
-        val existing = memoFixture(id = "m1", title = "Old")
-        val imported = memoFixture(id = "m1", title = "New")
-        val memoRepo = FakeMemoRepository(listOf(existing))
-        val useCase = importMemosUseCase(memoRepository = memoRepo)
-
-        // Act
-        useCase(exportData(memos = listOf(imported)))
-
-        // Assert
-        assertEquals("New", memoRepo.currentMemos().first { it.id.value == "m1" }.title.value)
-    }
-
-    private fun importMemosUseCase(memoRepository: FakeMemoRepository = FakeMemoRepository()) =
-        ImportMemosUseCase(memoRepository = memoRepository)
+    private fun importMemosUseCase(
+        importRepository: FakeMemoImportRepository = FakeMemoImportRepository()
+    ) = ImportMemosUseCase(memoImportRepository = importRepository)
 
     private fun exportData(tags: List<Tag> = emptyList(), memos: List<Memo> = emptyList()) =
         ExportData(

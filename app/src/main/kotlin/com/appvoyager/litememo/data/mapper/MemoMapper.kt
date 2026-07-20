@@ -43,6 +43,10 @@ fun Memo.toImageRefs() = images.mapIndexed { index, image ->
     )
 }
 
+fun List<Memo>.toTagRefsByMemoId() = associate { memo -> memo.id.value to memo.toTagRefs() }
+
+fun List<Memo>.toImageRefsByMemoId() = associate { memo -> memo.id.value to memo.toImageRefs() }
+
 fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>, imageRefs: List<MemoImageEntity>): Memo {
     require(tagRefs.all { it.memoId == id }) {
         "All tagRefs must reference memoId=$id."

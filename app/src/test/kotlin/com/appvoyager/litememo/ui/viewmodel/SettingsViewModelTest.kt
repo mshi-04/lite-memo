@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import app.cash.turbine.test
+import com.appvoyager.litememo.domain.FakeMemoImportRepository
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
@@ -9,7 +10,9 @@ import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.ExportFileRepository
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
+import com.appvoyager.litememo.domain.usecase.ExportMemosToFileUseCase
 import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ImportMemosFromFileUseCase
 import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
@@ -19,6 +22,9 @@ import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
 import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
 import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,6 +55,82 @@ class SettingsViewModelTest {
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun interactionExportMemosCallsFileOrchestrationOnce() = runTest(dispatcher) {
+        // Arrange
+        val reference = ExportFileReference("content://export")
+        val exportUseCase = mockk<ExportMemosToFileUseCase>()
+        val importUseCase = mockk<ImportMemosFromFileUseCase>()
+        coEvery { exportUseCase(reference) } returns Unit
+        val viewModel = settingsViewModel(exportUseCase, importUseCase)
+
+        // Act
+        // Interaction: the ViewModel delegates the whole export operation once.
+        viewModel.exportMemos(reference)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { exportUseCase(reference) }
+    }
+
+    @Test
+    fun interactionConfirmImportCallsFileOrchestrationOnce() = runTest(dispatcher) {
+        // Arrange
+        val reference = ExportFileReference("content://import")
+        val exportUseCase = mockk<ExportMemosToFileUseCase>()
+        val importUseCase = mockk<ImportMemosFromFileUseCase>()
+        coEvery { importUseCase(reference) } returns Unit
+        val viewModel = settingsViewModel(exportUseCase, importUseCase)
+        viewModel.onImportFileSelected(reference)
+
+        // Act
+        // Interaction: confirmation delegates the whole import operation once.
+        viewModel.confirmImport()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { importUseCase(reference) }
+    }
+
+    @Test
+    fun stateTransitionExportMemosMaintainsProgressState() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = BlockingExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+
+        // Act
+        // StateTransition: export progress stays active until the file operation finishes.
+        viewModel.exportMemos(ExportFileReference("content://export"))
+        runCurrent()
+        val inProgress = viewModel.uiState.first { it.isExporting }.isExporting
+        exportFileRepository.completeWrite()
+        advanceUntilIdle()
+        val completed = viewModel.uiState.first { !it.isExporting }.isExporting
+
+        // Assert
+        assertEquals(true to false, inProgress to completed)
+    }
+
+    @Test
+    fun stateTransitionConfirmImportMaintainsProgressState() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = BlockingExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+        viewModel.onImportFileSelected(ExportFileReference("content://import"))
+
+        // Act
+        // StateTransition: import progress stays active until the file operation finishes.
+        viewModel.confirmImport()
+        runCurrent()
+        val inProgress = viewModel.uiState.first { it.isImporting }.isImporting
+        exportFileRepository.completeRead()
+        advanceUntilIdle()
+        val completed = viewModel.uiState.first { !it.isImporting }.isImporting
+
+        // Assert
+        assertEquals(true to false, inProgress to completed)
     }
 
     @Test
@@ -346,6 +428,24 @@ class SettingsViewModelTest {
         )
 
     private fun settingsViewModel(
+        exportUseCase: ExportMemosToFileUseCase,
+        importUseCase: ImportMemosFromFileUseCase
+    ): SettingsViewModel {
+        val userSettingsRepository = FakeUserSettingsRepository()
+        return SettingsViewModel(
+            observeThemeModeUseCase = ObserveThemeModeUseCase(userSettingsRepository),
+            setThemeModeUseCase = SetThemeModeUseCase(userSettingsRepository),
+            observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
+            setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
+            observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(userSettingsRepository),
+            setAppLockEnabledUseCase = SetAppLockEnabledUseCase(userSettingsRepository),
+            exportMemosToFileUseCase = exportUseCase,
+            importMemosFromFileUseCase = importUseCase,
+            appVersion = "1.0.0"
+        )
+    }
+
+    private fun settingsViewModel(
         exportFileRepository: ExportFileRepository,
         userSettingsRepository: FakeUserSettingsRepository
     ): SettingsViewModel {
@@ -358,15 +458,20 @@ class SettingsViewModelTest {
             setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
             observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(userSettingsRepository),
             setAppLockEnabledUseCase = SetAppLockEnabledUseCase(userSettingsRepository),
-            exportMemosUseCase = ExportMemosUseCase(
-                memoRepository = memoRepository,
-                tagRepository = tagRepository,
-                currentTimeProvider = MutableTimeProvider(TimestampMillis(1_000L))
+            exportMemosToFileUseCase = ExportMemosToFileUseCase(
+                exportMemosUseCase = ExportMemosUseCase(
+                    memoRepository = memoRepository,
+                    tagRepository = tagRepository,
+                    currentTimeProvider = MutableTimeProvider(TimestampMillis(1_000L))
+                ),
+                exportFileRepository = exportFileRepository
             ),
-            importMemosUseCase = ImportMemosUseCase(
-                memoRepository = memoRepository
+            importMemosFromFileUseCase = ImportMemosFromFileUseCase(
+                exportFileRepository = exportFileRepository,
+                importMemosUseCase = ImportMemosUseCase(
+                    memoImportRepository = FakeMemoImportRepository()
+                )
             ),
-            exportFileRepository = exportFileRepository,
             appVersion = "1.0.0"
         )
     }

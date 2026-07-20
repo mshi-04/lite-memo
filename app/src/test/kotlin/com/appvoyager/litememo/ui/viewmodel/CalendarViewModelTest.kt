@@ -384,7 +384,5 @@ class CalendarViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = delegate.saveAllMemos(memos)
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) =
-            delegate.importAll(tags, memos)
     }
 }
