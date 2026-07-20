@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.appvoyager.litememo.data.local.LiteMemoDatabase
+import com.appvoyager.litememo.data.local.entity.TagEntity
 import com.appvoyager.litememo.domain.exception.DuplicateTagNameException
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagColor
@@ -86,7 +87,10 @@ class RoomTagRepositoryInstrumentedTest {
         val storedTags = database.tagDao().getAllTags()
 
         // Assert
-        assertEquals(listOf("tag-1" to "Renamed"), storedTags.map { it.id to it.name })
+        assertEquals(
+            listOf(StoredTag(id = "tag-1", name = "Renamed", colorArgb = 0xFF6750A4)),
+            storedTags.map { it.toStoredTag() }
+        )
     }
 
     @Test
@@ -101,8 +105,8 @@ class RoomTagRepositoryInstrumentedTest {
 
         // Assert
         assertEquals(
-            listOf(Triple("tag-1", "Work", 0xFF006D3BL)),
-            storedTags.map { Triple(it.id, it.name, it.colorArgb) }
+            listOf(StoredTag(id = "tag-1", name = "Work", colorArgb = 0xFF006D3B)),
+            storedTags.map { it.toStoredTag() }
         )
     }
 
@@ -118,6 +122,10 @@ class RoomTagRepositoryInstrumentedTest {
         // Assert
         assertEquals(listOf("tag-1", "tag-2"), storedIds.sorted())
     }
+
+    private fun TagEntity.toStoredTag() = StoredTag(id = id, name = name, colorArgb = colorArgb)
+
+    private data class StoredTag(val id: String, val name: String, val colorArgb: Long)
 
     private fun tag(id: String, name: String, colorArgb: Long = 0xFF6750A4) = Tag(
         id = TagId(id),

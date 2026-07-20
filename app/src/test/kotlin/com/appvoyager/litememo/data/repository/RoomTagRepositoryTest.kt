@@ -99,7 +99,6 @@ class RoomTagRepositoryTest {
         assertEquals("tag-1", dao.savedTag?.id)
     }
 
-    // 未知の id は insert、既存 id は update に振り分けられることを固定する
     @Test
     fun saveTagInsertsWhenTagIdIsNew() = runTest {
         // Arrange
@@ -111,8 +110,8 @@ class RoomTagRepositoryTest {
 
         // Assert
         assertEquals(
-            listOf("tag-2") to emptyList<String>(),
-            dao.insertedTags.map { it.id } to dao.updatedTags.map { it.id }
+            WriteSplit(insertedIds = listOf("tag-2"), updatedIds = emptyList()),
+            dao.toWriteSplit()
         )
     }
 
@@ -127,8 +126,12 @@ class RoomTagRepositoryTest {
 
         // Assert
         assertEquals(
-            emptyList<String>() to listOf("tag-1" to "Renamed"),
-            dao.insertedTags.map { it.id } to dao.updatedTags.map { it.id to it.name }
+            WriteSplit(
+                insertedIds = emptyList(),
+                updatedIds = listOf("tag-1"),
+                updatedNames = listOf("Renamed")
+            ),
+            dao.toWriteSplit()
         )
     }
 
@@ -183,6 +186,18 @@ class RoomTagRepositoryTest {
         // Assert
         assertNull(tag)
     }
+
+    private fun FakeTagDao.toWriteSplit() = WriteSplit(
+        insertedIds = insertedTags.map { it.id },
+        updatedIds = updatedTags.map { it.id },
+        updatedNames = updatedTags.map { it.name }
+    )
+
+    private data class WriteSplit(
+        val insertedIds: List<String>,
+        val updatedIds: List<String>,
+        val updatedNames: List<String> = emptyList()
+    )
 
     private fun tagEntity(id: String, name: String = "Tag") = TagEntity(
         id = id,
