@@ -15,3 +15,10 @@ data class CalendarUiState(
     val days: List<CalendarDayUiState> = emptyList(),
     val memos: List<MemoUiModel> = emptyList()
 )
+
+data class CalendarDayUiState(
+    val date: LocalDate,
+    val dayOfMonth: Int,
+    val isSelected: Boolean,
+    val hasMemo: Boolean
+)

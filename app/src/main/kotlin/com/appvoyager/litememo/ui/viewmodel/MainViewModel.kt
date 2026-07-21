@@ -8,13 +8,13 @@ import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
+import com.appvoyager.litememo.ui.state.AppLockUiMessage
 import com.appvoyager.litememo.ui.state.AppLockUiState
+import com.appvoyager.litememo.ui.state.AppLockUiStatus
 import com.appvoyager.litememo.ui.state.TutorialUiState
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
-import com.appvoyager.litememo.ui.type.AppLockMessage
-import com.appvoyager.litememo.ui.type.AppLockStatus
-import com.appvoyager.litememo.ui.type.TutorialStatus
+import com.appvoyager.litememo.ui.state.TutorialUiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -50,8 +50,8 @@ class MainViewModel @Inject constructor(
     private val _tutorialUiState = MutableStateFlow(TutorialUiState())
     val tutorialUiState: StateFlow<TutorialUiState> = _tutorialUiState.asStateFlow()
 
-    private val _pendingWidgetNav = MutableStateFlow<WidgetNavRequest?>(null)
-    val pendingWidgetNav: StateFlow<WidgetNavRequest?> = _pendingWidgetNav.asStateFlow()
+    private val _widgetNavEvent = Channel<WidgetNavRequest>(Channel.CONFLATED)
+    val widgetNavEvent = _widgetNavEvent.receiveAsFlow()
 
     private var appLockEnabled: Boolean? = null
     private var expiredTrashedMemosPurged = false
@@ -64,7 +64,7 @@ class MainViewModel @Inject constructor(
     fun onAppStarted() {
         if (appLockEnabled != true) return
         val status = _appLockUiState.value.status
-        if (status == AppLockStatus.LOCKED || status == AppLockStatus.UNAVAILABLE) {
+        if (status == AppLockUiStatus.LOCKED || status == AppLockUiStatus.UNAVAILABLE) {
             requestUnlock()
         }
     }
@@ -72,61 +72,57 @@ class MainViewModel @Inject constructor(
     fun onAppStopped() {
         if (
             appLockEnabled == true &&
-            _appLockUiState.value.status != AppLockStatus.AUTHENTICATING
+            _appLockUiState.value.status != AppLockUiStatus.AUTHENTICATING
         ) {
-            _appLockUiState.value = AppLockUiState(status = AppLockStatus.LOCKED)
+            _appLockUiState.value = AppLockUiState(status = AppLockUiStatus.LOCKED)
         }
     }
 
     fun requestUnlock() {
         if (appLockEnabled != true) return
-        if (_appLockUiState.value.status == AppLockStatus.AUTHENTICATING) return
+        if (_appLockUiState.value.status == AppLockUiStatus.AUTHENTICATING) return
 
-        _appLockUiState.value = AppLockUiState(status = AppLockStatus.AUTHENTICATING)
+        _appLockUiState.value = AppLockUiState(status = AppLockUiStatus.AUTHENTICATING)
         _authenticationRequestEvent.trySend(Unit)
     }
 
-    fun onAuthenticationResult(result: AppLockAuthenticationResult) {
+    fun onAuthenticationResult(result: AppLockAuthenticationUiResult) {
         _appLockUiState.value = when (result) {
-            AppLockAuthenticationResult.SUCCEEDED -> AppLockUiState(
-                status = AppLockStatus.UNLOCKED
+            AppLockAuthenticationUiResult.SUCCEEDED -> AppLockUiState(
+                status = AppLockUiStatus.UNLOCKED
             )
 
-            AppLockAuthenticationResult.FAILED -> AppLockUiState(
-                status = AppLockStatus.LOCKED,
-                message = AppLockMessage.AUTHENTICATION_FAILED
+            AppLockAuthenticationUiResult.FAILED -> AppLockUiState(
+                status = AppLockUiStatus.LOCKED,
+                message = AppLockUiMessage.AUTHENTICATION_FAILED
             )
 
-            AppLockAuthenticationResult.CANCELED -> AppLockUiState(
-                status = AppLockStatus.LOCKED,
-                message = AppLockMessage.AUTHENTICATION_CANCELED
+            AppLockAuthenticationUiResult.CANCELED -> AppLockUiState(
+                status = AppLockUiStatus.LOCKED,
+                message = AppLockUiMessage.AUTHENTICATION_CANCELED
             )
 
-            AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL -> AppLockUiState(
-                status = AppLockStatus.UNAVAILABLE,
-                message = AppLockMessage.NO_DEVICE_CREDENTIAL
+            AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL -> AppLockUiState(
+                status = AppLockUiStatus.UNAVAILABLE,
+                message = AppLockUiMessage.NO_DEVICE_CREDENTIAL
             )
 
-            AppLockAuthenticationResult.UNAVAILABLE -> AppLockUiState(
-                status = AppLockStatus.UNAVAILABLE,
-                message = AppLockMessage.AUTHENTICATION_UNAVAILABLE
+            AppLockAuthenticationUiResult.UNAVAILABLE -> AppLockUiState(
+                status = AppLockUiStatus.UNAVAILABLE,
+                message = AppLockUiMessage.AUTHENTICATION_UNAVAILABLE
             )
         }
-        if (result == AppLockAuthenticationResult.SUCCEEDED) {
+        if (result == AppLockAuthenticationUiResult.SUCCEEDED) {
             purgeExpiredTrashedMemosOnce()
         }
     }
 
     fun requestWidgetNav(request: WidgetNavRequest) {
-        _pendingWidgetNav.value = request
-    }
-
-    fun consumeWidgetNav() {
-        _pendingWidgetNav.value = null
+        _widgetNavEvent.trySend(request)
     }
 
     fun completeTutorial() {
-        _tutorialUiState.value = TutorialUiState(status = TutorialStatus.HIDDEN)
+        _tutorialUiState.value = TutorialUiState(status = TutorialUiStatus.HIDDEN)
         viewModelScope.launch {
             try {
                 completeTutorialUseCase()
@@ -146,7 +142,7 @@ class MainViewModel @Inject constructor(
 
                 when {
                     !enabled -> {
-                        _appLockUiState.value = AppLockUiState(status = AppLockStatus.UNLOCKED)
+                        _appLockUiState.value = AppLockUiState(status = AppLockUiStatus.UNLOCKED)
                         purgeExpiredTrashedMemosOnce()
                     }
 
@@ -156,7 +152,7 @@ class MainViewModel @Inject constructor(
 
                     previous == false -> {
                         _appLockUiState.update { state ->
-                            state.copy(status = AppLockStatus.UNLOCKED, message = null)
+                            state.copy(status = AppLockUiStatus.UNLOCKED, message = null)
                         }
                         purgeExpiredTrashedMemosOnce()
                     }

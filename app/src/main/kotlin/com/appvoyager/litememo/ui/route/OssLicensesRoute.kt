@@ -8,7 +8,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
-import com.appvoyager.litememo.ui.data.OssLicense
+import com.appvoyager.litememo.ui.model.OssLicense
 import com.appvoyager.litememo.ui.screen.OssLicensesScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

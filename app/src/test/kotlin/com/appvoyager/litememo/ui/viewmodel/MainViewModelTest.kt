@@ -11,11 +11,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTutorialCompletedUseCase
 import com.appvoyager.litememo.domain.usecase.PurgeExpiredTrashedMemosUseCase
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.navigation.WidgetNavRequest
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
-import com.appvoyager.litememo.ui.type.AppLockMessage
-import com.appvoyager.litememo.ui.type.AppLockStatus
-import com.appvoyager.litememo.ui.type.TutorialStatus
+import com.appvoyager.litememo.ui.state.AppLockUiMessage
+import com.appvoyager.litememo.ui.state.AppLockUiStatus
+import com.appvoyager.litememo.ui.state.TutorialUiStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -55,7 +55,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(AppLockStatus.UNLOCKED, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.UNLOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -69,7 +69,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(AppLockStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -113,10 +113,10 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.SUCCEEDED)
 
         // Assert
-        assertEquals(AppLockStatus.UNLOCKED, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.UNLOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -126,13 +126,13 @@ class MainViewModelTest {
         repository.setAppLockEnabled(true)
         val viewModel = mainViewModel(repository)
         advanceUntilIdle()
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL)
 
         // Act
         viewModel.onAppStarted()
 
         // Assert
-        assertEquals(AppLockStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -144,10 +144,10 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.FAILED)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.FAILED)
 
         // Assert
-        assertEquals(AppLockStatus.LOCKED, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.LOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -159,10 +159,10 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.CANCELED)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.CANCELED)
 
         // Assert
-        assertEquals(AppLockStatus.LOCKED, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.LOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -175,12 +175,12 @@ class MainViewModelTest {
             advanceUntilIdle()
 
             // Act
-            viewModel.onAuthenticationResult(AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL)
+            viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL)
 
             // Assert
             val state = viewModel.appLockUiState.value
             assertEquals(
-                AppLockStatus.UNAVAILABLE to AppLockMessage.NO_DEVICE_CREDENTIAL,
+                AppLockUiStatus.UNAVAILABLE to AppLockUiMessage.NO_DEVICE_CREDENTIAL,
                 state.status to state.message
             )
         }
@@ -195,12 +195,12 @@ class MainViewModelTest {
             advanceUntilIdle()
 
             // Act
-            viewModel.onAuthenticationResult(AppLockAuthenticationResult.UNAVAILABLE)
+            viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.UNAVAILABLE)
 
             // Assert
             val state = viewModel.appLockUiState.value
             assertEquals(
-                AppLockStatus.UNAVAILABLE to AppLockMessage.AUTHENTICATION_UNAVAILABLE,
+                AppLockUiStatus.UNAVAILABLE to AppLockUiMessage.AUTHENTICATION_UNAVAILABLE,
                 state.status to state.message
             )
         }
@@ -226,13 +226,13 @@ class MainViewModelTest {
         repository.setAppLockEnabled(true)
         val viewModel = mainViewModel(repository)
         advanceUntilIdle()
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.SUCCEEDED)
 
         // Act
         viewModel.onAppStopped()
 
         // Assert
-        assertEquals(AppLockStatus.LOCKED, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.LOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -245,7 +245,7 @@ class MainViewModelTest {
         viewModel.onAppStopped()
 
         // Assert
-        assertEquals(AppLockStatus.UNLOCKED, viewModel.appLockUiState.value.status)
+        assertEquals(AppLockUiStatus.UNLOCKED, viewModel.appLockUiState.value.status)
     }
 
     @Test
@@ -255,7 +255,7 @@ class MainViewModelTest {
         repository.setAppLockEnabled(true)
         val viewModel = mainViewModel(repository)
         advanceUntilIdle()
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.FAILED)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.FAILED)
 
         // Act
         repository.setAppLockEnabled(false)
@@ -263,7 +263,7 @@ class MainViewModelTest {
 
         // Assert
         val state = viewModel.appLockUiState.value
-        assertEquals(AppLockStatus.UNLOCKED to null, state.status to state.message)
+        assertEquals(AppLockUiStatus.UNLOCKED to null, state.status to state.message)
     }
 
     @Test
@@ -279,7 +279,7 @@ class MainViewModelTest {
             viewModel.onAppStopped()
 
             // Assert
-            assertEquals(AppLockStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
+            assertEquals(AppLockUiStatus.AUTHENTICATING, viewModel.appLockUiState.value.status)
         }
 
     @Test
@@ -292,7 +292,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(TutorialStatus.VISIBLE, viewModel.tutorialUiState.value.status)
+        assertEquals(TutorialUiStatus.VISIBLE, viewModel.tutorialUiState.value.status)
     }
 
     @Test
@@ -307,7 +307,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialUiState.value.status)
+        assertEquals(TutorialUiStatus.HIDDEN, viewModel.tutorialUiState.value.status)
     }
 
     @Test
@@ -320,7 +320,7 @@ class MainViewModelTest {
         viewModel.completeTutorial()
 
         // Assert
-        assertEquals(TutorialStatus.HIDDEN, viewModel.tutorialUiState.value.status)
+        assertEquals(TutorialUiStatus.HIDDEN, viewModel.tutorialUiState.value.status)
     }
 
     @Test
@@ -369,7 +369,7 @@ class MainViewModelTest {
 
         // Act
         // Normal: startup purge waits until locked content can be shown
-        viewModel.onAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        viewModel.onAuthenticationResult(AppLockAuthenticationUiResult.SUCCEEDED)
         advanceUntilIdle()
 
         // Assert
@@ -377,30 +377,34 @@ class MainViewModelTest {
     }
 
     @Test
-    fun normalRequestWidgetNavExposesPendingRequest() = runTest(dispatcher) {
+    fun flowRequestWidgetNavEmitsNavigationEvent() = runTest(dispatcher) {
         // Arrange
         val viewModel = mainViewModel(FakeUserSettingsRepository())
 
-        // Act
-        // Normal: a widget tap request becomes the pending navigation
-        viewModel.requestWidgetNav(WidgetNavRequest.NewMemo)
-
-        // Assert
-        assertEquals(WidgetNavRequest.NewMemo, viewModel.pendingWidgetNav.value)
+        // Act & Assert
+        // Flow: a widget tap request is delivered once as a one-shot navigation event
+        viewModel.widgetNavEvent.test {
+            viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo(MemoId("memo-1")))
+            assertEquals(WidgetNavRequest.OpenMemo(MemoId("memo-1")), awaitItem())
+            expectNoEvents()
+        }
     }
 
     @Test
-    fun stateTransitionConsumeWidgetNavClearsPendingRequest() = runTest(dispatcher) {
+    fun flowWidgetNavEventDoesNotReplayToLateCollector() = runTest(dispatcher) {
         // Arrange
         val viewModel = mainViewModel(FakeUserSettingsRepository())
-        viewModel.requestWidgetNav(WidgetNavRequest.OpenMemo(MemoId("memo-1")))
+        viewModel.widgetNavEvent.test {
+            viewModel.requestWidgetNav(WidgetNavRequest.NewMemo)
+            assertEquals(WidgetNavRequest.NewMemo, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
 
-        // Act
-        // StateTransition: consuming the request clears it so it does not re-fire
-        viewModel.consumeWidgetNav()
-
-        // Assert
-        assertEquals(null, viewModel.pendingWidgetNav.value)
+        // Act & Assert
+        // Flow: a re-collection (e.g. after rotation) does not replay the consumed event
+        viewModel.widgetNavEvent.test {
+            expectNoEvents()
+        }
     }
 
     private fun mainViewModel(

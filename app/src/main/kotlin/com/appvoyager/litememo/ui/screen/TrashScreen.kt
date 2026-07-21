@@ -48,7 +48,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-import com.appvoyager.litememo.ui.action.TrashScreenActions
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent

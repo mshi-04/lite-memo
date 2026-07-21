@@ -355,9 +355,9 @@ private fun HomeBulkTagDialog(
                 LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
                     items(
                         items = uiState.tags,
-                        key = { tag -> tag.id }
+                        key = { tag -> tag.id.value }
                     ) { tag ->
-                        val tagId = TagId(tag.id)
+                        val tagId = tag.id
                         FilterChip(
                             selected = tagId in uiState.allSelectedTagIds,
                             onClick = { onToggleSelectedMemosTag(tagId) },
@@ -418,7 +418,7 @@ private fun HomeFilterRow(
             onClick = { onFilterSelect(HomeFilterUiState.Favorite) }
         )
         tags.forEach { tag ->
-            val tagFilter = HomeFilterUiState.byTag(TagId(tag.id))
+            val tagFilter = HomeFilterUiState.ByTag(tag.id)
             FilterButton(
                 label = tag.name,
                 selected = selectedFilter == tagFilter,
@@ -502,15 +502,15 @@ private fun HomeScreenPreview() {
     val uiState = HomeUiState(
         isLoading = false,
         tags = listOf(
-            TagUiModel("tag-life", "生活", 0xFF6750A4),
-            TagUiModel("tag-work", "仕事", 0xFFB3261E)
+            TagUiModel(TagId("tag-life"), "生活", 0xFF6750A4),
+            TagUiModel(TagId("tag-work"), "仕事", 0xFFB3261E)
         ),
         memos = listOf(
             MemoUiModel(
                 id = MemoId("memo-1"),
                 title = "買い物リスト",
                 body = "卵、牛乳、コーヒー豆。帰りに駅前で買う。",
-                tags = listOf(TagUiModel("tag-life", "生活", 0xFF6750A4)),
+                tags = listOf(TagUiModel(TagId("tag-life"), "生活", 0xFF6750A4)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isFavorite = false
             ),
@@ -518,7 +518,7 @@ private fun HomeScreenPreview() {
                 id = MemoId("memo-2"),
                 title = "会議メモ",
                 body = "次回までに画面構成と保存方式を確認する。",
-                tags = listOf(TagUiModel("tag-work", "仕事", 0xFFB3261E)),
+                tags = listOf(TagUiModel(TagId("tag-work"), "仕事", 0xFFB3261E)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isFavorite = true
             )

@@ -1,10 +1,13 @@
 package com.appvoyager.litememo.data.repository
 
+import android.database.sqlite.SQLiteConstraintException
 import com.appvoyager.litememo.data.local.dao.TagDao
 import com.appvoyager.litememo.data.mapper.toDomain
 import com.appvoyager.litememo.data.mapper.toEntity
+import com.appvoyager.litememo.domain.exception.DuplicateTagNameException
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,6 +20,9 @@ class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRep
 
     override suspend fun getTag(id: TagId): Tag? = tagDao.getTag(id.value)?.toDomain()
 
+    override suspend fun findTagByName(name: TagName): Tag? =
+        tagDao.findTagByName(name.value)?.toDomain()
+
     override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> {
         if (ids.isEmpty()) return emptyList()
 
@@ -26,7 +32,11 @@ class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRep
     }
 
     override suspend fun saveTag(tag: Tag) {
-        tagDao.upsertTag(tag.toEntity())
+        try {
+            tagDao.insertOrUpdateAllTags(listOf(tag.toEntity()))
+        } catch (_: SQLiteConstraintException) {
+            throw DuplicateTagNameException(tag.name)
+        }
     }
 
     override suspend fun deleteTag(id: TagId) {
@@ -34,9 +44,5 @@ class RoomTagRepository @Inject constructor(private val tagDao: TagDao) : TagRep
     }
 
     override suspend fun getAllTags(): List<Tag> = tagDao.getAllTags().map { it.toDomain() }
-
-    override suspend fun saveAllTags(tags: List<Tag>) {
-        tagDao.upsertAllTags(tags.map { it.toEntity() })
-    }
 
 }

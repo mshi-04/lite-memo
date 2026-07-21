@@ -8,11 +8,13 @@ import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
@@ -163,10 +165,10 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Act
-        viewModel.selectFilter(HomeFilterUiState.byTag(workTagId))
+        viewModel.selectFilter(HomeFilterUiState.ByTag(workTagId))
         advanceUntilIdle()
         val state = viewModel.uiState.first {
-            it.selectedFilter == HomeFilterUiState.byTag(workTagId)
+            it.selectedFilter == HomeFilterUiState.ByTag(workTagId)
         }
 
         // Assert
@@ -197,6 +199,75 @@ class HomeViewModelTest {
 
         // Assert
         assertEquals(listOf("Shopping list"), state.search.results.map { it.title })
+    }
+
+    @Test
+    fun normalSearchResultMapsTags() = runTest(dispatcher) {
+        // Arrange
+        val tagId = TagId("tag-1")
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(id = "shopping", title = "Shopping list", tagIds = listOf(tagId))
+            ),
+            tags = listOf(tagFixture(id = tagId.value, name = "生活"))
+        )
+        advanceUntilIdle()
+
+        // Act
+        // Normal: the ViewModel keeps screen-specific tag mapping for raw search results.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals(listOf("生活"), state.search.results.single().tags.map { it.name })
+    }
+
+    @Test
+    fun normalSearchResultMapsThumbnailPath() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = homeViewModel(
+            memos = listOf(
+                memoFixture(
+                    id = "shopping",
+                    title = "Shopping list",
+                    images = listOf(memoImageFixture(fileName = "search-image.jpg"))
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        // Act
+        // Normal: the ViewModel keeps image path resolution for raw search results.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals("/images/search-image.jpg", state.search.results.single().thumbnailPath)
+    }
+
+    @Test
+    fun stateTransitionSearchKeepsSelection() = runTest(dispatcher) {
+        // Arrange
+        val memoId = MemoId("shopping")
+        val viewModel = homeViewModel(
+            memos = listOf(memoFixture(id = memoId.value, title = "Shopping list"))
+        )
+        advanceUntilIdle()
+        viewModel.startSelection(memoId)
+
+        // Act
+        // StateTransition: search input and results do not replace Home selection state.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals(setOf(memoId), state.selection.selectedMemoIds)
     }
 
     @Test
@@ -584,7 +655,7 @@ class HomeViewModelTest {
         advanceUntilIdle()
         val state = viewModel.uiState.first {
             !it.selection.isActive &&
-                it.memos.all { memo -> memo.tags.any { tag -> tag.id == tagId.value } }
+                it.memos.all { memo -> memo.tags.any { tag -> tag.id == tagId } }
         }
 
         // Assert
@@ -782,14 +853,16 @@ class HomeViewModelTest {
             throw throwable
         }
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = flow {
+            throw throwable
+        }
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> = flow {
             throw throwable
         }
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = flow { throw throwable }
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            flow { throw throwable }
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
@@ -811,20 +884,28 @@ class HomeViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 
     private class SaveFailingMemoRepository(private val memo: Memo) : MemoRepository {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(listOf(memo))
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = flowOf(
+            listOf(memo).take(limit).map { item ->
+                MemoSummary(
+                    id = item.id,
+                    title = item.title,
+                    body = item.body,
+                    isFavorite = item.isFavorite
+                )
+            }
+        )
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             flowOf(emptyList())
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = flowOf(emptyList())
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            flowOf(emptyList())
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
@@ -846,6 +927,5 @@ class HomeViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>): Unit = error("Failed to save memos.")
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 }

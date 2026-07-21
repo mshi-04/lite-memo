@@ -52,13 +52,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MessageContent
 import com.appvoyager.litememo.ui.component.tagColor
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.model.TagUiModel
-import com.appvoyager.litememo.ui.state.TagEditState
+import com.appvoyager.litememo.ui.state.TagEditUiState
 import com.appvoyager.litememo.ui.state.TagManageUiState
 import com.appvoyager.litememo.ui.theme.DEFAULT_TAG_COLORS
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
@@ -72,7 +73,7 @@ fun TagManageScreen(
     uiState: TagManageUiState,
     onBackClick: () -> Unit,
     onCreateClick: () -> Unit,
-    onEditClick: (String) -> Unit,
+    onEditClick: (TagId) -> Unit,
     onDeleteRequest: (TagUiModel) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -136,7 +137,7 @@ fun TagManageScreen(
                 ) {
                     items(
                         items = uiState.tags,
-                        key = { it.id }
+                        key = { it.id.value }
                     ) { tag ->
                         TagRow(
                             tag = tag,
@@ -227,7 +228,7 @@ private fun TagRow(tag: TagUiModel, onEditClick: () -> Unit, onDeleteClick: () -
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagEditDialog(
-    state: TagEditState,
+    state: TagEditUiState,
     onNameChange: (String) -> Unit,
     onColorSelect: (Long) -> Unit,
     onSave: () -> Unit,
@@ -369,9 +370,9 @@ private fun TagManageScreenPreview() {
             uiState = TagManageUiState(
                 isLoading = false,
                 tags = listOf(
-                    TagUiModel("1", "仕事", 0xFFB3261E),
-                    TagUiModel("2", "生活", 0xFF6750A4),
-                    TagUiModel("3", "趣味", 0xFF006D3B)
+                    TagUiModel(TagId("1"), "仕事", 0xFFB3261E),
+                    TagUiModel(TagId("2"), "生活", 0xFF6750A4),
+                    TagUiModel(TagId("3"), "趣味", 0xFF006D3B)
                 )
             ),
             onBackClick = {},

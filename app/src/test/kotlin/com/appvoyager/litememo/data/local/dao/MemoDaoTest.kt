@@ -3,6 +3,7 @@ package com.appvoyager.litememo.data.local.dao
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -134,6 +135,9 @@ class MemoDaoTest {
         private val emptyMemoFlow = flowOf(emptyList<MemoWithRefs>())
 
         override fun observeActiveMemosWithRefs() = emptyMemoFlow
+
+        override fun observeRecentActiveMemos(limit: Int) =
+            flowOf(emptyList<MemoSummaryProjection>())
 
         override fun observeActiveMemosWithRefsBySearchPattern(pattern: String) = emptyMemoFlow
 

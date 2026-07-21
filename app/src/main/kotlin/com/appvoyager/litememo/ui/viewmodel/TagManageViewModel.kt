@@ -12,7 +12,7 @@ import com.appvoyager.litememo.domain.usecase.DeleteTagUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveTagsUseCase
 import com.appvoyager.litememo.domain.usecase.SaveTagUseCase
 import com.appvoyager.litememo.ui.model.TagUiModel
-import com.appvoyager.litememo.ui.state.TagEditState
+import com.appvoyager.litememo.ui.state.TagEditUiState
 import com.appvoyager.litememo.ui.state.TagManageUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +38,7 @@ class TagManageViewModel @Inject constructor(
     private val deleteTagUseCase: DeleteTagUseCase
 ) : ViewModel() {
 
-    private val editingTag = MutableStateFlow<TagEditState?>(null)
+    private val editingTag = MutableStateFlow<TagEditUiState?>(null)
     private val deleteDialog = MutableStateFlow<TagUiModel?>(null)
     private val retryTrigger = MutableStateFlow(false)
 
@@ -68,12 +68,12 @@ class TagManageViewModel @Inject constructor(
     )
 
     fun startCreate() {
-        editingTag.value = TagEditState()
+        editingTag.value = TagEditUiState()
     }
 
-    fun startEdit(tagId: String) {
+    fun startEdit(tagId: TagId) {
         val tag = uiState.value.tags.find { it.id == tagId } ?: return
-        editingTag.value = TagEditState(
+        editingTag.value = TagEditUiState(
             id = tag.id,
             name = tag.name,
             colorArgb = tag.colorArgb
@@ -107,7 +107,7 @@ class TagManageViewModel @Inject constructor(
             runCatching {
                 saveTagUseCase(
                     SaveTagCommand(
-                        id = state.id?.let { TagId(it) },
+                        id = state.id,
                         name = TagName(trimmedName),
                         color = TagColor(state.colorArgb)
                     )
@@ -142,7 +142,7 @@ class TagManageViewModel @Inject constructor(
         val tag = deleteDialog.value ?: return
         viewModelScope.launch {
             runCatching {
-                deleteTagUseCase(TagId(tag.id))
+                deleteTagUseCase(tag.id)
             }.onSuccess {
                 deleteDialog.value = null
             }.onFailure {
@@ -160,7 +160,7 @@ class TagManageViewModel @Inject constructor(
         retryTrigger.update { !it }
     }
 
-    private fun isDuplicateName(name: String, excludeId: String?): Boolean =
+    private fun isDuplicateName(name: String, excludeId: TagId?): Boolean =
         uiState.value.tags.any { it.name == name && it.id != excludeId }
 
     private companion object {

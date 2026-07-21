@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import kotlinx.coroutines.flow.Flow
 
@@ -17,6 +18,16 @@ interface MemoDao {
     @Transaction
     @Query("SELECT * FROM memos WHERE deletedAt IS NULL")
     fun observeActiveMemosWithRefs(): Flow<List<MemoWithRefs>>
+
+    @Query(
+        """
+        SELECT id, title, body, isFavorite FROM memos
+        WHERE deletedAt IS NULL
+        ORDER BY isFavorite DESC, updatedAt DESC, createdAt DESC, id ASC
+        LIMIT :limit
+        """
+    )
+    fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummaryProjection>>
 
     @Transaction
     @Query(

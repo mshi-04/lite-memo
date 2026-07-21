@@ -13,23 +13,22 @@
 ## Architecture
 
 - 構造は Clean Architecture + MVVM を基本にする
-- 依存方向は `ui -> domain <- data` を守る（プレゼンテーション層は `ui` パッケージ）
-- UI は ViewModel に依存し、ViewModel は UseCase 経由で domain にアクセスする
-- data 層の実装詳細を `ui` 層へ漏らさない
 - DI は Hilt を使う
-- 詳細なレイヤー / パッケージ構成は `docs/architecture.md` を参照する
+- 依存方向、レイヤーの責務、パッケージ構成、UseCase の粒度は [`docs/architecture.md`](architecture.md) を正本とする
 
 ## Kotlin
 
 - 関数名は英語にする
-- `app/src/main` の名前付き class / interface / object / enum はトップレベルに置き、型名と同名のファイルへ1型だけ定義する。ただし、sealed hierarchy の直接の子型は親型のファイル内へネストしてよい
-- `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは1ファイル1型の対象外とする
-- `ui` 配下の型は機能名ではなく役割・接尾語で分け、`XxxScreen` は `screen`、`XxxRoute` は `route`、`XxxState` は `state`、`XxxUiModel` は `model`、`XxxActions` は `action`、`XxxEvent` は `event` のように対応するパッケージへ置く。該当する役割パッケージがない enum は `type`、その他の表示・受け渡し用 data class は `data` にまとめる
+- Route、Screen、ViewModel、主要な UiState / UiModel は、役割と同名の独立ファイルを基本とする
+- UI state / result / event は、それぞれ `XxxUiState` / `XxxUiResult` / `XxxUiEvent` と命名する。補助enumも `AppLockUiStatus` のようにUI契約であることを名前に含める
+- 同じ責務を構成する小型の class / interface / object / enum は、ファイルが読みやすい範囲で関連する所有者ファイルへトップレベル宣言としてまとめてよい。300行程度を分割検討の目安とするが、機械的な上限にはしない
+- sealed hierarchy の直接の子型や、親に強く従属する private 実装型は親型へネストしてよい。外側のインスタンス参照が意図的に必要な場合を除き `inner` は使わない
+- `companion object` と匿名 object 式は許容し、`app/src/test` と `app/src/androidTest` のテストコードは上記のファイル配置判断の対象外とする
+- `ui` 配下は機能別ではなく主要な役割で分ける。型の接尾語だけを根拠に `action` / `data` / `event` / `testtag` / `type` パッケージを作らず、所有する `screen` / `route` / `viewmodel` / `state` / `model` / `component` へ置く
 - ガード条件は早期リターンで扱い、ネストを深くしない
-- 意味のある値は primitive のまま広げず、必要に応じて値オブジェクトにする
-- 値オブジェクトは不正な値を作れない形に寄せる
-- 共通の状態や実装を持たず、取り得る種類だけを閉じる型は `sealed interface` で表す
-- 親型に共通の状態・実装・コンストラクタ制約を持たせる場合は `sealed class` で表す
+- 意味のある値は primitive のまま広げず、必要に応じて値オブジェクトにする（設計方針は [`docs/architecture.md`](architecture.md) の Value Object を正本とする）
+- 取り得る種類だけを閉じ、実装型に別の superclass や複数 interface の実装余地を残す場合は `sealed interface` で表す
+- 親型に共通の状態・実装・constructor 制約を持たせる場合や、class としての継承関係が必要な場合は `sealed class` で表す
 
 ## Navigation
 
@@ -39,17 +38,22 @@
 ## State / Data
 
 - ViewModel から UI へは StateFlow を中心に状態を公開する
-- 非同期処理は Coroutines を使い、UI スレッドをブロックしない
+- 非同期処理は Coroutines を使い、公開する suspend API を main-safe にする
+- ファイル操作など blocking I/O を行う実装が、注入した dispatcher への切り替えを所有する
+- `CancellationException` は再送出し、広い例外捕捉で coroutine のキャンセルを握りつぶさない
 - 永続化の使い分けは [`docs/architecture.md`](architecture.md) の Data 方針を正本とする
-- 画像添付などの Android 依存 URI / ContentResolver は ViewModel に直接持ち込まず、UseCase と data 層の境界に閉じる
-- メモ画像の export/import は現時点では対象外。import で同一 ID のメモを上書きすると既存の添付画像は失われる前提で扱う
+- 画像添付などの Android 依存 URI / ContentResolver は ViewModel に直接持ち込まない。配置は [`docs/architecture.md`](architecture.md) の メモ画像 方針を正本とする
 
 ## UI Event / Error
 
-- 画面上に状態として残る失敗は UI state の boolean や sealed state で表す
-- Snackbar、画面遷移、認証要求など一回限りの通知は Channel event で表す
+以下は新規実装と、event delivery を実質的に変更するコードへ適用します。
+既存の Channel event を変更する場合は用途を確認し、重要な処理結果を扱っていれば変更範囲で UI state へ移行します。
+
+- 保存成否やユーザーの確認が必要なエラーなど、失ってはいけない処理結果は UI state に保持し、UI から確認済み callback を受けて消費済みにする
+- UI 操作を起点とする画面遷移や認証要求は UI callback として Navigation / UI helper へ渡す
+- Channel event は、collector 不在、再生成、送信失敗で失われても処理結果や整合性に影響しない best-effort の通知に限る
 - 一回限り event の Channel は、`latest wins`（最新だけ届けばよい）が成立する場合に限り `Channel.CONFLATED` を使う
-- 中間イベントを落とせない通知（内容の異なる Snackbar、結果付き画面遷移など）は `Channel.BUFFERED` など取りこぼさない手段を選ぶ
+- `Channel.BUFFERED` は一時的な backpressure を吸収する手段であり、取りこぼしのない永続的な配送手段として扱わない
 
 ## Test
 

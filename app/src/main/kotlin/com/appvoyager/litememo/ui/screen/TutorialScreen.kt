@@ -1,5 +1,6 @@
 package com.appvoyager.litememo.ui.screen
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -39,9 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
-import com.appvoyager.litememo.ui.action.TutorialNavigationActions
-import com.appvoyager.litememo.ui.data.TutorialPageItem
-import com.appvoyager.litememo.ui.state.TutorialNavigationState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 import kotlinx.coroutines.launch
 
@@ -80,7 +79,7 @@ fun TutorialScreen(onCompleteTutorial: () -> Unit, modifier: Modifier = Modifier
             }
 
             TutorialNavigation(
-                state = TutorialNavigationState(
+                state = TutorialNavigationUiState(
                     currentPage = settledPage,
                     pageCount = tutorialPageItems.size,
                     enabled = navigationEnabled
@@ -136,7 +135,10 @@ private fun TutorialPageContent(page: TutorialPageItem) {
 }
 
 @Composable
-private fun TutorialNavigation(state: TutorialNavigationState, actions: TutorialNavigationActions) {
+private fun TutorialNavigation(
+    state: TutorialNavigationUiState,
+    actions: TutorialNavigationActions
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,3 +246,21 @@ private fun TutorialScreenPreview() {
         TutorialScreen(onCompleteTutorial = {})
     }
 }
+
+private data class TutorialPageItem(
+    val icon: ImageVector,
+    @get:StringRes val titleResId: Int,
+    @get:StringRes val bodyResId: Int
+)
+
+private data class TutorialNavigationUiState(
+    val currentPage: Int,
+    val pageCount: Int,
+    val enabled: Boolean
+)
+
+private data class TutorialNavigationActions(
+    val onPreviousClick: () -> Unit,
+    val onNextClick: () -> Unit,
+    val onCompleteTutorial: () -> Unit
+)

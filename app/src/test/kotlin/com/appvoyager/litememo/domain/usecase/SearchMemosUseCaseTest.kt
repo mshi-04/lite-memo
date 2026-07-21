@@ -4,10 +4,11 @@ import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoSortOrder
-import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import kotlinx.coroutines.flow.Flow
@@ -90,6 +91,10 @@ class SearchMemosUseCaseTest {
             fail<Nothing>("observeActiveMemos should not be called.")
         }
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = flow {
+            fail<Nothing>("observeRecentActiveMemos should not be called.")
+        }
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> {
             if (failOnSearch) {
                 fail<Nothing>("observeActiveMemosBySearchQuery should not be called.")
@@ -98,10 +103,8 @@ class SearchMemosUseCaseTest {
             return flowOf(results)
         }
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = flowOf(emptyList())
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            flowOf(emptyList())
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
@@ -123,6 +126,5 @@ class SearchMemosUseCaseTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 }

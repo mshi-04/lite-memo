@@ -1,23 +1,37 @@
 # Unit Test
 
-この文書は Lite Memo の Unit Test 方針をまとめます。
+この文書は Lite Memo の Unit Test / instrumented test 方針をまとめます。
 
 ## 基本方針
 
-- Unit Test は JUnit 5 を使う
+- JVM Unit Test（`src/test`）は JUnit Jupiter（現在は 6.x）を使う
+- instrumented test（`src/androidTest`）は JUnit 4 と AndroidX Test を使い、`AndroidJUnitRunner` を継承した `HiltTestRunner` で実行する
 - テスト関数名は英語にする
 - 1つのテスト関数では、原則として1つの振る舞いを1つの主要な assert で検証する
-- 複数条件を検証したい場合は、テスト関数を分ける
 - Domain の値オブジェクト、UseCase、Repository interface 境界を優先してテストする
 
-## テスト対象の優先度
+## テスト配置の判断
 
-JVM 上の Unit Test で優先してテストするもの:
+ライブラリ名ではなく、検証する振る舞いが実 Android 環境を必要とするかで `src/test` と `src/androidTest` を選びます。
+
+JVM Unit Test で優先してテストするもの:
 
 - 値オブジェクトの生成条件と不正値
 - UseCase の正常系と失敗系
-- Repository interface を境界にした domain の振る舞い
+- Repository interface を境界にした Domain の振る舞い
 - mapper の変換ルール
+- ViewModel の状態遷移と UI state の生成
+- Android Framework の実動作を必要としない Repository 実装
+- 一時ファイルや依存の差し替えで完結する DataStore の振る舞い
+
+instrumented test で検証するもの:
+
+- Android SQLite 上の Room DAO とマイグレーション
+- 実際の `ContentResolver`、Provider、SAF との連携
+- Android の Context、ファイルシステム、ライフサイクルとの統合が必要な DataStore の振る舞い
+- 必要に応じた Compose UI の操作と表示分岐
+
+DataStore や Repository という分類だけで一律に `androidTest` へ置かず、JVM で同じ振る舞いを検証できる場合は JVM Unit Test を優先します。
 
 後回しにしてよいもの:
 
@@ -38,11 +52,12 @@ import org.junit.jupiter.api.Test
 
 class MemoTitleTest {
     @Test
-    fun constructorReturnsTrimmedValueWhenInputHasSurroundingWhitespace() {
+    fun normalConstructorReturnsTrimmedValueWhenInputHasSurroundingWhitespace() {
         // Arrange
         val input = "  shopping  "
 
         // Act
+        // Normal: surrounding whitespace is removed
         val title = MemoTitle(input)
 
         // Assert
@@ -53,24 +68,24 @@ class MemoTitleTest {
 
 ## Assert
 
-- 1テスト関数につき、主要な assert は1つにする
-- setup、実行、検証の意図が分かるように書く
-- 複数の assert が必要に見える場合は、別の振る舞いが混ざっていないか確認する
+- 「主要な assert」は、テスト関数名で示した1つの振る舞いの結果を判定する検証を指す
+- 1つの振る舞いを共同で検証する複数の assert は許容し、失敗内容をまとめて確認したい場合は `assertAll` などでグループ化する
+- 対象が自然に data class や値オブジェクトで表せる場合は値全体を比較してよいが、assert 数を減らすためだけの比較用型は作らない
+- `verify` / `coVerify` / `confirmVerified` など、同じ振る舞いを裏付ける interaction check は主要な assert と併用してよい
+- 別の振る舞いを検証する assert が必要な場合は、テスト関数を分ける
 
 ## AAA Comments
 
 - テストは Arrange / Act / Assert の流れで書く
 - 基本は `// Arrange`、`// Act`、`// Assert` コメントを入れる
-- 各ブロックの責務を混ぜない
-- Arrange が不要な場合（準備するものがない）は `// Arrange` を省略してよい
-- `// Arrange` / `// Act` / `// Assert` のラベルは置き換えず、常に残す
-- 検証観点（後述）は、`// Act` の直下に `// <観点>: <意図>` の形で1行添える
-- Turbine の `.test {}` のように操作と検証が交錯する場合は、ラベルを `// Act & Assert` にする
+- Arrange が不要な場合は `// Arrange` を省略してよい
+- Act と Assert は原則として分け、必要なラベルを別の表現へ置き換えない
+- Turbine の `.test {}` のように操作と検証が構造上交錯する場合に限り、`// Act & Assert` を使う
+- 検証観点は、`// Act` または `// Act & Assert` の直下に `// <観点>: <意図>` の形で1行添える
 
 ## テスト観点（命名とコメント）
 
 テストが「何を検証しているか」を、関数名の接頭辞とコメントで明示します。
-観点を明示することで、テストの意図と網羅状況が読み取りやすくなります。
 
 ### 観点の種類
 
@@ -79,68 +94,119 @@ class MemoTitleTest {
 | `Normal` | 正常系。期待どおりの入力で期待どおりの結果になる |
 | `Boundary` | 境界・特殊入力（空リスト、重複、空白のみ、no-op など） |
 | `Error` | 失敗系。例外の送出やエラーイベントの発火 |
-| `Interaction` | 依存（Repository / Provider など）の呼び出し有無・回数・順序の検証（MockK の `verify` 系） |
-| `Flow` | `StateFlow` / `Channel` event の発火を検証（Turbine の `.test {}` を使う） |
+| `Interaction` | 依存（Repository / Provider など）の呼び出し有無・回数・順序の検証 |
+| `Flow` | `StateFlow` / event stream の発火を検証 |
 | `Coroutine` | 仮想時間・debounce・キャンセルなど coroutine の挙動 |
 | `StateTransition` | 操作前後の UI state の遷移 |
 
 ### 適用ルール
 
 - 関数名は観点を接頭辞に付ける（camelCase）。例: `normalUiStateLoadsExistingMemo`、`boundaryEmptyTagIdsSkipsTagValidation`、`flowSaveEmitsOperationErrorWhenMemoSaveFails`
-- AAA ラベルは残したまま、`// Act`（または `// Act & Assert`）の直下に `// <観点>: <意図>` を1行置く。例: `// Boundary: blank input is rejected`。複数観点が絡む場合は `// Boundary/Interaction: ...` のように `/` で連結する
+- AAA ラベルは残したまま、`// Act` または `// Act & Assert` の直下に観点を1行置く。例: `// Boundary: blank input is rejected`
+- 複数観点が絡む場合は `// Boundary/Interaction: ...` のように `/` で連結する
 - 観点は検証の主目的に合わせて選び、無理に増やさない
+- このルールは新規テストと、振る舞いを実質的に変更するテストへ適用する。既存テスト全体は、意図した移行作業でない限り一括変更しない
 
-例:
+## Coroutine Test
+
+- suspend 関数や Flow を扱う JVM Unit Test は `kotlinx.coroutines.test.runTest` を使う
+- `runBlocking` は既存テストの保守を除き、新規・更新する JVM Unit Test では使わない
+- 1つのテストで使う `TestDispatcher` は、同じ `TestCoroutineScheduler` を共有する
+- `StandardTestDispatcher` は処理を scheduler にキューイングするため、実行順と仮想時間を明示的に制御したい場合の基本とする
+- `UnconfinedTestDispatcher` は coroutine を即時に開始しやすいが、実行順の保証には使えない。即時開始が必要で順序が検証対象でない場合だけ意図して選ぶ
+- ViewModel の `viewModelScope` を検証するときは、ViewModel 生成前に `Dispatchers.setMain(testDispatcher)` を行い、`@AfterEach` で `Dispatchers.resetMain()` する
+- 終了しない Flow を手動で collect する job は `backgroundScope` で起動する。`StandardTestDispatcher` で起動した場合は、値を送る前に `runCurrent()` で購読開始を進める。即時開始だけが必要で順序が検証対象でない場合は、同じ scheduler の `UnconfinedTestDispatcher` を明示してよい。`backgroundScope` の job はテスト終了時にキャンセルされる
+- `runTest` は仮想時間、TestScope 配下の child coroutine の完了待ち、未処理例外の伝播を支援する。一方で `Dispatchers.Main`、mock、singleton、ファイル、DB などのグローバル状態は復元せず、テスト間の分離も自動では行わない
+
+同じ scheduler を `runTest` と `Dispatchers.Main` で共有する例:
 
 ```kotlin
-@Test
-fun boundaryEmptyTagIdsSkipsTagValidation() = runTest {
-    // Arrange
-    val tagRepository = mockk<TagRepository>()
-    // ...
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import app.cash.turbine.test
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
-    // Act
-    // Boundary/Interaction: empty tag ids do not touch TagRepository
-    useCase(SaveMemoCommand(title = MemoTitle("Title"), body = MemoBody("Body")))
+@OptIn(ExperimentalCoroutinesApi::class)
+class SaveViewModelTest {
+    private val scheduler = TestCoroutineScheduler()
+    private val mainDispatcher = StandardTestDispatcher(scheduler)
 
-    // Assert
-    coVerify(exactly = 0) { tagRepository.getTagsByIds(any()) }
-    confirmVerified(tagRepository)
+    @BeforeEach
+    fun setUp() {
+        Dispatchers.setMain(mainDispatcher)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun stateTransitionSaveStoresSuccessInUiState() = runTest(mainDispatcher) {
+        // Arrange
+        val viewModel = SaveViewModel()
+
+        // Act & Assert
+        // StateTransition: save result remains in UI state until acknowledged
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.save()
+            advanceUntilIdle()
+            assertEquals(SaveUiState(result = SaveResult.Success), awaitItem())
+        }
+    }
 }
-```
 
-Turbine で操作と検証が交錯する場合:
+private data class SaveUiState(
+    val result: SaveResult? = null,
+)
 
-```kotlin
-@Test
-fun flowSaveEmitsOperationErrorWhenMemoSaveFails() = runTest(dispatcher) {
-    // Arrange
-    val viewModel = memoEditViewModel(memoRepository = SaveFailingMemoRepository())
-    advanceUntilIdle()
+private sealed interface SaveResult {
+    data object Success : SaveResult
+}
 
-    // Act & Assert
-    // Flow/Error: save failure emits SaveFailed
-    viewModel.operationErrorEvent.test {
-        viewModel.updateTitle("Title")
-        advanceTimeBy(1_000L)
-        advanceUntilIdle()
-        assertEquals(MemoEditOperationErrorEvent.SaveFailed, awaitItem())
+private class SaveViewModel : ViewModel() {
+    private val mutableState = MutableStateFlow(SaveUiState())
+    val state = mutableState.asStateFlow()
+
+    fun save() {
+        viewModelScope.launch {
+            mutableState.value = SaveUiState(result = SaveResult.Success)
+        }
+    }
+
+    fun acknowledgeSaveResult() {
+        mutableState.value = SaveUiState()
     }
 }
 ```
 
-## Coroutine Test
+## Test Double と Flow の検証手段
 
-- suspend 関数や Flow を扱う Unit Test は `kotlinx.coroutines.test.runTest` を使う
-- `runBlocking` は既存テストの保守を除き、新規・更新する Unit Test では使わない
-- 仮想時間制御、coroutine leak 検出、テスト間の分離を `runTest` に任せる
+- fake は、依存の状態や返却結果を単純に制御したい場合、同じテスト実装を複数箇所で再利用したい場合に使う
+- MockK は、依存の呼び出し有無・回数・順序が主な検証対象の場合に使う。内部実装の細部まで固定する mock は避ける
+- cold Flow の先頭値だけが必要なら `first()`、有限 Flow がちょうど1件であることまで検証するなら `single()` を使う。`StateFlow` の現在値は `value`、操作後の future emission は Turbine または意図を明示した `drop(1).first()` で検証する
+- Turbine は、複数値の順序、未発火、時間制御、キャンセル、長寿命の `StateFlow` / event stream を検証するときに使う
 
 ## Instrumented Test
 
-Android Framework に強く依存する処理は `androidTest`（instrumented test）で検証します。
+instrumented test は JUnit 4 と AndroidX Test の runner / rule を使います。
+テスト関数名、AAA コメント、観点 prefix / comment の方針は JVM Unit Test とそろえ、coroutine を扱う場合だけ `runTest` を使います。
 
-- Room の DAO とマイグレーション
-- DataStore や ContentResolver を使う Repository 実装
-- 必要に応じて Compose UI Test
+## 実行
 
-instrumented test でも、テスト関数名は英語、`runTest` の方針をそろえます。
+Unit Test、coverage、Instrumented Test / Compose UI Test の実行コマンドは、[`development-setup.md`](development-setup.md) を参照します。

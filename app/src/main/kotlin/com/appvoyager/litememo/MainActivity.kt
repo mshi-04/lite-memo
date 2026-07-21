@@ -26,8 +26,8 @@ import com.appvoyager.litememo.ui.auth.AppLockAuthenticator
 import com.appvoyager.litememo.ui.navigation.LiteMemoApp
 import com.appvoyager.litememo.ui.screen.AppLockScreen
 import com.appvoyager.litememo.ui.screen.TutorialScreen
+import com.appvoyager.litememo.ui.state.TutorialUiStatus
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.TutorialStatus
 import com.appvoyager.litememo.ui.viewmodel.MainViewModel
 import com.appvoyager.litememo.ui.widget.common.WidgetLaunchIntents
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,7 +45,9 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         observeAuthenticationRequests()
         observeSecureScreen()
-        handleWidgetIntent(intent)
+        if (savedInstanceState == null) {
+            handleWidgetIntent(intent)
+        }
         setContent {
             LiteMemoContent()
         }
@@ -118,7 +120,6 @@ class MainActivity : FragmentActivity() {
             .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
         val appLockUiState by mainViewModel.appLockUiState.collectAsStateWithLifecycle()
         val tutorialUiState by mainViewModel.tutorialUiState.collectAsStateWithLifecycle()
-        val pendingWidgetNav by mainViewModel.pendingWidgetNav.collectAsStateWithLifecycle()
         val darkTheme = when (themeMode) {
             ThemeMode.SYSTEM -> isSystemInDarkTheme()
             ThemeMode.LIGHT -> false
@@ -136,7 +137,7 @@ class MainActivity : FragmentActivity() {
         ) {
             if (appLockUiState.canShowAppContent) {
                 when (tutorialUiState.status) {
-                    TutorialStatus.LOADING -> {
+                    TutorialUiStatus.LOADING -> {
                         Surface(
                             modifier = Modifier.fillMaxSize(),
                             color = MaterialTheme.colorScheme.background
@@ -144,19 +145,18 @@ class MainActivity : FragmentActivity() {
                         }
                     }
 
-                    TutorialStatus.VISIBLE -> {
+                    TutorialUiStatus.VISIBLE -> {
                         TutorialScreen(
                             onCompleteTutorial = { mainViewModel.completeTutorial() }
                         )
                     }
 
-                    TutorialStatus.HIDDEN -> {
+                    TutorialUiStatus.HIDDEN -> {
                         LiteMemoApp(
                             onRequestAppLockAuthentication = { onResult ->
                                 appLockAuthenticator.authenticate(onResult)
                             },
-                            pendingWidgetNav = pendingWidgetNav,
-                            onConsumeWidgetNav = { mainViewModel.consumeWidgetNav() }
+                            widgetNavEvents = mainViewModel.widgetNavEvent
                         )
                     }
                 }

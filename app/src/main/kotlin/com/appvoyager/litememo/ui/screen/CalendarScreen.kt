@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.AnimatedCalendarGrid
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
@@ -69,12 +70,10 @@ import com.appvoyager.litememo.ui.model.TagUiModel
 import com.appvoyager.litememo.ui.state.CalendarDayUiState
 import com.appvoyager.litememo.ui.state.CalendarUiState
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
-import com.appvoyager.litememo.ui.type.MonthSwipeDirection
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.math.abs
 
 private const val MONTH_SWIPE_THRESHOLD_DP = 72
 private const val CALENDAR_EXPAND_DURATION_MILLIS = 220
@@ -288,8 +287,8 @@ private fun CalendarMonthCard(
                                 onHorizontalDrag = { _, amount -> dragAmount += amount },
                                 onDragEnd = {
                                     when (resolveMonthSwipe(dragAmount, swipeThresholdPx)) {
-                                        MonthSwipeDirection.NEXT -> onNextMonth()
-                                        MonthSwipeDirection.PREVIOUS -> onPreviousMonth()
+                                        MonthSwipeUiDirection.NEXT -> onNextMonth()
+                                        MonthSwipeUiDirection.PREVIOUS -> onPreviousMonth()
                                         null -> Unit
                                     }
                                     dragAmount = 0f
@@ -311,11 +310,6 @@ private fun CalendarMonthCard(
             }
         }
     }
-}
-
-fun resolveMonthSwipe(dragAmount: Float, thresholdPx: Float): MonthSwipeDirection? {
-    if (abs(dragAmount) < thresholdPx) return null
-    return if (dragAmount < 0f) MonthSwipeDirection.NEXT else MonthSwipeDirection.PREVIOUS
 }
 
 @Composable
@@ -447,7 +441,7 @@ private fun CalendarScreenPreview() {
                 id = MemoId("memo-1"),
                 title = "週次レビュー",
                 body = "完了したタスクと来週の優先度を整理する。",
-                tags = listOf(TagUiModel("tag-work", "仕事", 0xFF6750A4)),
+                tags = listOf(TagUiModel(TagId("tag-work"), "仕事", 0xFF6750A4)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isFavorite = false
             ),
@@ -455,7 +449,7 @@ private fun CalendarScreenPreview() {
                 id = MemoId("memo-2"),
                 title = "献立メモ",
                 body = "冷蔵庫の野菜を使い切る。買い足しは卵。",
-                tags = listOf(TagUiModel("tag-life", "生活", 0xFF006D3B)),
+                tags = listOf(TagUiModel(TagId("tag-life"), "生活", 0xFF006D3B)),
                 updatedAtMillis = System.currentTimeMillis(),
                 isFavorite = false
             )

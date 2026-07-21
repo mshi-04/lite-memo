@@ -56,12 +56,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.appvoyager.litememo.R
+import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.ui.component.ErrorContent
 import com.appvoyager.litememo.ui.component.LoadingContent
 import com.appvoyager.litememo.ui.component.MemoImageThumbnail
 import com.appvoyager.litememo.ui.component.toComposeColor
 import com.appvoyager.litememo.ui.state.MemoEditUiState
-import com.appvoyager.litememo.ui.testtag.MemoEditTestTags
 import com.appvoyager.litememo.ui.theme.LiteMemoTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -70,7 +70,7 @@ fun MemoEditScreen(
     uiState: MemoEditUiState,
     onTitleChange: (String) -> Unit,
     onBodyChange: (String) -> Unit,
-    onTagToggle: (String) -> Unit,
+    onTagToggle: (TagId) -> Unit,
     onDelete: () -> Unit,
     onBackRequest: () -> Unit,
     onRetry: () -> Unit,

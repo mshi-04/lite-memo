@@ -3,9 +3,11 @@ package com.appvoyager.litememo.data.mapper
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
@@ -41,6 +43,10 @@ fun Memo.toImageRefs() = images.mapIndexed { index, image ->
     )
 }
 
+fun List<Memo>.toTagRefsByMemoId() = associate { memo -> memo.id.value to memo.toTagRefs() }
+
+fun List<Memo>.toImageRefsByMemoId() = associate { memo -> memo.id.value to memo.toImageRefs() }
+
 fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>, imageRefs: List<MemoImageEntity>): Memo {
     require(tagRefs.all { it.memoId == id }) {
         "All tagRefs must reference memoId=$id."
@@ -66,5 +72,12 @@ fun MemoEntity.toDomain(tagRefs: List<MemoTagRefEntity>, imageRefs: List<MemoIma
         deletedAt = deletedAt?.let { TimestampMillis(it) }
     )
 }
+
+fun MemoSummaryProjection.toDomain() = MemoSummary(
+    id = MemoId(id),
+    title = MemoTitle(title),
+    body = MemoBody(body),
+    isFavorite = isFavorite
+)
 
 fun MemoWithRefs.toDomain() = memo.toDomain(tagRefs, imageRefs)

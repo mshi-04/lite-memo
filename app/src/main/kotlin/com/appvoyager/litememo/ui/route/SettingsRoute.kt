@@ -18,10 +18,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
-import com.appvoyager.litememo.ui.data.SettingsSnackbarMessages
-import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
 import com.appvoyager.litememo.ui.screen.SettingsScreen
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.viewmodel.SettingsSnackbarUiEvent
 import com.appvoyager.litememo.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -37,7 +36,7 @@ private fun defaultExportFileName(): String {
 @Composable
 fun SettingsRoute(
     snackbarHostState: SnackbarHostState,
-    onRequestAppLockAuthentication: ((AppLockAuthenticationResult) -> Unit) -> Unit,
+    onRequestAppLockAuthentication: ((AppLockAuthenticationUiResult) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
     onOpenSourceLicenseClick: () -> Unit = {},
     onTagManageClick: () -> Unit = {},
@@ -63,7 +62,6 @@ fun SettingsRoute(
     val exportSuccessMessage = stringResource(R.string.settings_export_success)
     val exportErrorMessage = stringResource(R.string.settings_export_error)
     val importSuccessMessage = stringResource(R.string.settings_import_success)
-    val importErrorMessage = stringResource(R.string.settings_import_error)
     val appLockAuthenticationFailedMessage = stringResource(R.string.app_lock_auth_failed)
     val appLockAuthenticationCanceledMessage =
         stringResource(R.string.settings_app_lock_auth_canceled)
@@ -94,7 +92,6 @@ fun SettingsRoute(
         exportSuccess = exportSuccessMessage,
         exportError = exportErrorMessage,
         importSuccess = importSuccessMessage,
-        importError = importErrorMessage,
         appLockAuthFailed = appLockAuthenticationFailedMessage,
         appLockAuthCanceled = appLockAuthenticationCanceledMessage,
         appLockNoDeviceCredential = appLockNoDeviceCredentialMessage,
@@ -135,6 +132,7 @@ fun SettingsRoute(
         onImportClick = { launchFilePicker { importLauncher.launch(arrayOf("application/json")) } },
         onConfirmImport = { viewModel.confirmImport() },
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
+        onDismissImportErrorDialog = { viewModel.dismissImportErrorDialog() },
         onPrivacyPolicyClick = {
             launchWithActivityNotFoundSnackbar(
                 launch = {
@@ -151,14 +149,23 @@ fun SettingsRoute(
 
 private fun Uri.toExportFileReference(): ExportFileReference = ExportFileReference(toString())
 
-private fun SettingsSnackbarEvent.toMessage(messages: SettingsSnackbarMessages): String =
+private fun SettingsSnackbarUiEvent.toMessage(messages: SettingsSnackbarMessages): String =
     when (this) {
-        SettingsSnackbarEvent.ExportSuccess -> messages.exportSuccess
-        SettingsSnackbarEvent.ExportError -> messages.exportError
-        SettingsSnackbarEvent.ImportSuccess -> messages.importSuccess
-        SettingsSnackbarEvent.ImportError -> messages.importError
-        SettingsSnackbarEvent.AppLockAuthenticationFailed -> messages.appLockAuthFailed
-        SettingsSnackbarEvent.AppLockAuthenticationCanceled -> messages.appLockAuthCanceled
-        SettingsSnackbarEvent.AppLockNoDeviceCredential -> messages.appLockNoDeviceCredential
-        SettingsSnackbarEvent.AppLockUnavailable -> messages.appLockUnavailable
+        SettingsSnackbarUiEvent.ExportSuccess -> messages.exportSuccess
+        SettingsSnackbarUiEvent.ExportError -> messages.exportError
+        SettingsSnackbarUiEvent.ImportSuccess -> messages.importSuccess
+        SettingsSnackbarUiEvent.AppLockAuthenticationFailed -> messages.appLockAuthFailed
+        SettingsSnackbarUiEvent.AppLockAuthenticationCanceled -> messages.appLockAuthCanceled
+        SettingsSnackbarUiEvent.AppLockNoDeviceCredential -> messages.appLockNoDeviceCredential
+        SettingsSnackbarUiEvent.AppLockUnavailable -> messages.appLockUnavailable
     }
+
+private data class SettingsSnackbarMessages(
+    val exportSuccess: String,
+    val exportError: String,
+    val importSuccess: String,
+    val appLockAuthFailed: String,
+    val appLockAuthCanceled: String,
+    val appLockNoDeviceCredential: String,
+    val appLockUnavailable: String
+)

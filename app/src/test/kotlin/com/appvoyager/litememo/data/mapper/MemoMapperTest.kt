@@ -3,10 +3,12 @@ package com.appvoyager.litememo.data.mapper
 import com.appvoyager.litememo.data.local.entity.MemoEntity
 import com.appvoyager.litememo.data.local.entity.MemoImageEntity
 import com.appvoyager.litememo.data.local.entity.MemoTagRefEntity
+import com.appvoyager.litememo.data.local.model.MemoSummaryProjection
 import com.appvoyager.litememo.data.local.model.MemoWithRefs
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
@@ -203,6 +205,32 @@ class MemoMapperTest {
                 deletedAt = TimestampMillis(3000L)
             ),
             memo
+        )
+    }
+
+    @Test
+    fun normalSummaryProjectionToDomainReturnsExplicitSummary() {
+        // Arrange
+        val projection = MemoSummaryProjection(
+            id = "memo-1",
+            title = "Title",
+            body = "Body",
+            isFavorite = true
+        )
+
+        // Act
+        // Normal: memo-only query data maps to a summary instead of an incomplete Memo aggregate
+        val summary = projection.toDomain()
+
+        // Assert
+        assertEquals(
+            MemoSummary(
+                id = MemoId("memo-1"),
+                title = MemoTitle("Title"),
+                body = MemoBody("Body"),
+                isFavorite = true
+            ),
+            summary
         )
     }
 

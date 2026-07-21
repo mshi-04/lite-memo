@@ -8,11 +8,13 @@ import com.appvoyager.litememo.domain.epochMillis
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.memoImageFixture
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.tagFixture
@@ -178,6 +180,29 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun stateTransitionSearchKeepsSelectedDate() = runTest(dispatcher) {
+        // Arrange
+        val selectedDate = LocalDate.of(2026, 5, 11)
+        val viewModel = calendarViewModel(
+            memoRepository = FakeMemoRepository(
+                listOf(memoFixture(id = "shopping", title = "Shopping list"))
+            )
+        )
+        advanceUntilIdle()
+        viewModel.selectDate(selectedDate)
+
+        // Act
+        // StateTransition: search input and results do not replace Calendar date state.
+        viewModel.toggleSearch()
+        viewModel.updateSearchQuery("shopping")
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.search.results.isNotEmpty() }
+
+        // Assert
+        assertEquals(selectedDate, state.selectedDate)
+    }
+
+    @Test
     fun uiStateMarksOnlyMemoDatesWithDot() = runTest(dispatcher) {
         // Arrange
         val viewModel = calendarViewModel(
@@ -324,6 +349,9 @@ class CalendarViewModelTest {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = delegate.observeActiveMemos()
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> =
+            delegate.observeRecentActiveMemos(limit)
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             if (searchFails) {
                 flow { throw IllegalStateException("Search failed.") }
@@ -331,10 +359,8 @@ class CalendarViewModelTest {
                 delegate.observeActiveMemosBySearchQuery(query)
             }
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = delegate.observeActiveMemosCreatedBetween(from, to)
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            delegate.observeActiveMemosCreatedBetween(range)
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = delegate.observeTrashedMemos()
 
@@ -358,7 +384,5 @@ class CalendarViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = delegate.saveAllMemos(memos)
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) =
-            delegate.importAll(tags, memos)
     }
 }

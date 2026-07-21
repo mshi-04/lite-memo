@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.appvoyager.litememo.R
 import com.appvoyager.litememo.ui.model.MemoUiModel
 import com.appvoyager.litememo.ui.model.TagUiModel
-import com.appvoyager.litememo.ui.testtag.MemoCardTestTags
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

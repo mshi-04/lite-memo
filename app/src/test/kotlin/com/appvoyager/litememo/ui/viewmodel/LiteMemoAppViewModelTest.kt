@@ -1,10 +1,11 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import com.appvoyager.litememo.domain.model.Memo
-import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.usecase.RestoreMemoFromTrashUseCase
 import kotlinx.coroutines.CancellationException
@@ -87,13 +88,14 @@ class LiteMemoAppViewModelTest {
 
         override fun observeActiveMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
+        override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> =
+            flowOf(emptyList())
+
         override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
             flowOf(emptyList())
 
-        override fun observeActiveMemosCreatedBetween(
-            from: TimestampMillis,
-            to: TimestampMillis
-        ): Flow<List<Memo>> = flowOf(emptyList())
+        override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> =
+            flowOf(emptyList())
 
         override fun observeTrashedMemos(): Flow<List<Memo>> = flowOf(emptyList())
 
@@ -115,6 +117,5 @@ class LiteMemoAppViewModelTest {
 
         override suspend fun saveAllMemos(memos: List<Memo>) = Unit
 
-        override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) = Unit
     }
 }

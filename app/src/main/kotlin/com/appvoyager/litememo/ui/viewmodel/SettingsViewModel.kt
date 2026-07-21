@@ -3,22 +3,21 @@ package com.appvoyager.litememo.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.di.AppVersion
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
-import com.appvoyager.litememo.domain.repository.ExportFileRepository
-import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
-import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ExportMemosToFileUseCase
+import com.appvoyager.litememo.domain.usecase.ImportMemosFromFileUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
-import com.appvoyager.litememo.ui.data.SettingsUiFlags
-import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
 import com.appvoyager.litememo.ui.state.SettingsUiState
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -40,9 +39,8 @@ class SettingsViewModel @Inject constructor(
     private val setThemeModeUseCase: SetThemeModeUseCase,
     private val setMemoSortOrderUseCase: SetMemoSortOrderUseCase,
     private val setAppLockEnabledUseCase: SetAppLockEnabledUseCase,
-    private val exportMemosUseCase: ExportMemosUseCase,
-    private val importMemosUseCase: ImportMemosUseCase,
-    private val exportFileRepository: ExportFileRepository,
+    private val exportMemosToFileUseCase: ExportMemosToFileUseCase,
+    private val importMemosFromFileUseCase: ImportMemosFromFileUseCase,
     @param:AppVersion private val appVersion: String
 ) : ViewModel() {
 
@@ -51,11 +49,12 @@ class SettingsViewModel @Inject constructor(
     private val isExporting = MutableStateFlow(false)
     private val isImporting = MutableStateFlow(false)
     private val showImportConfirmDialog = MutableStateFlow(false)
+    private val importErrorDialog = MutableStateFlow<SettingsImportErrorDialogUiState?>(null)
     private var pendingImportReference: ExportFileReference? = null
     private var isAppLockAuthenticating = false
 
-    private val _snackbarEvent = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
-    val snackbarEvent: Flow<SettingsSnackbarEvent> = _snackbarEvent.receiveAsFlow()
+    private val _snackbarEvent = Channel<SettingsSnackbarUiEvent>(Channel.BUFFERED)
+    val snackbarEvent: Flow<SettingsSnackbarUiEvent> = _snackbarEvent.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
         observeThemeModeUseCase(),
@@ -69,8 +68,9 @@ class SettingsViewModel @Inject constructor(
             showImportConfirmDialog
         ) { themeExpanded, expanded, exporting, importing, importDialog ->
             SettingsUiFlags(themeExpanded, expanded, exporting, importing, importDialog)
-        }
-    ) { themeMode, sortOrder, appLockEnabled, flags ->
+        },
+        importErrorDialog
+    ) { themeMode, sortOrder, appLockEnabled, flags, importError ->
         SettingsUiState(
             themeMode = themeMode,
             memoSortOrder = sortOrder,
@@ -80,7 +80,8 @@ class SettingsViewModel @Inject constructor(
             sortOrderExpanded = flags.sortOrderExpanded,
             isExporting = flags.isExporting,
             isImporting = flags.isImporting,
-            showImportConfirmDialog = flags.showImportConfirmDialog
+            showImportConfirmDialog = flags.showImportConfirmDialog,
+            importErrorDialog = importError
         )
     }.stateIn(
         scope = viewModelScope,
@@ -100,32 +101,32 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { runCatching { setAppLockEnabledUseCase(enabled) } }
     }
 
-    /** 認証要求が受け付けられたら true。認証中の重複要求は false を返して無視させる。 */
+    // 認証要求が受け付けられたら true。認証中の重複要求は false を返して無視させる。
     fun beginAppLockAuthentication(): Boolean {
         if (isAppLockAuthenticating) return false
         isAppLockAuthenticating = true
         return true
     }
 
-    fun onAppLockEnableAuthenticationResult(result: AppLockAuthenticationResult) {
+    fun onAppLockEnableAuthenticationResult(result: AppLockAuthenticationUiResult) {
         isAppLockAuthenticating = false
         when (result) {
-            AppLockAuthenticationResult.SUCCEEDED -> setAppLockEnabled(true)
+            AppLockAuthenticationUiResult.SUCCEEDED -> setAppLockEnabled(true)
 
-            AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL -> {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockNoDeviceCredential)
+            AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL -> {
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.AppLockNoDeviceCredential)
             }
 
-            AppLockAuthenticationResult.UNAVAILABLE -> {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockUnavailable)
+            AppLockAuthenticationUiResult.UNAVAILABLE -> {
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.AppLockUnavailable)
             }
 
-            AppLockAuthenticationResult.FAILED -> {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockAuthenticationFailed)
+            AppLockAuthenticationUiResult.FAILED -> {
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.AppLockAuthenticationFailed)
             }
 
-            AppLockAuthenticationResult.CANCELED -> {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.AppLockAuthenticationCanceled)
+            AppLockAuthenticationUiResult.CANCELED -> {
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.AppLockAuthenticationCanceled)
             }
         }
     }
@@ -153,13 +154,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isExporting.value = true
             try {
-                val exportData = exportMemosUseCase()
-                exportFileRepository.write(reference, exportData)
-                _snackbarEvent.trySend(SettingsSnackbarEvent.ExportSuccess)
+                exportMemosToFileUseCase(reference)
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.ExportSuccess)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.ExportError)
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.ExportError)
             } finally {
                 isExporting.value = false
             }
@@ -180,13 +180,16 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isImporting.value = true
             try {
-                val exportData = exportFileRepository.read(reference)
-                importMemosUseCase(exportData)
-                _snackbarEvent.trySend(SettingsSnackbarEvent.ImportSuccess)
+                importMemosFromFileUseCase(reference)
+                _snackbarEvent.trySend(SettingsSnackbarUiEvent.ImportSuccess)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: ImportTagNameConflictException) {
+                importErrorDialog.value = SettingsImportErrorDialogUiState.TagNameConflict(
+                    tagNames = e.tagNames.map { it.value }
+                )
             } catch (_: Throwable) {
-                _snackbarEvent.trySend(SettingsSnackbarEvent.ImportError)
+                importErrorDialog.value = SettingsImportErrorDialogUiState.Generic
             } finally {
                 isImporting.value = false
             }
@@ -198,7 +201,29 @@ class SettingsViewModel @Inject constructor(
         pendingImportReference = null
     }
 
+    fun dismissImportErrorDialog() {
+        importErrorDialog.value = null
+    }
+
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
+
+sealed interface SettingsSnackbarUiEvent {
+    data object ExportSuccess : SettingsSnackbarUiEvent
+    data object ExportError : SettingsSnackbarUiEvent
+    data object ImportSuccess : SettingsSnackbarUiEvent
+    data object AppLockAuthenticationFailed : SettingsSnackbarUiEvent
+    data object AppLockAuthenticationCanceled : SettingsSnackbarUiEvent
+    data object AppLockNoDeviceCredential : SettingsSnackbarUiEvent
+    data object AppLockUnavailable : SettingsSnackbarUiEvent
+}
+
+private data class SettingsUiFlags(
+    val themeDropdownExpanded: Boolean,
+    val sortOrderExpanded: Boolean,
+    val isExporting: Boolean,
+    val isImporting: Boolean,
+    val showImportConfirmDialog: Boolean
+)

@@ -1,7 +1,9 @@
 package com.appvoyager.litememo.domain
 
+import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.Tag
 import com.appvoyager.litememo.domain.model.value.ImageSourceReference
 import com.appvoyager.litememo.domain.model.value.MemoBody
@@ -14,14 +16,17 @@ import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.MemoImageStore
+import com.appvoyager.litememo.domain.repository.MemoImportRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -52,6 +57,18 @@ fun memoImageFixture(id: String = "image-1", fileName: String = "image-1.jpg") =
     fileName = MemoImageFileName(fileName)
 )
 
+fun memoSummaryFixture(
+    id: String = "memo-1",
+    title: String = "Title",
+    body: String = "Body",
+    isFavorite: Boolean = false
+) = MemoSummary(
+    id = MemoId(id),
+    title = MemoTitle(title),
+    body = MemoBody(body),
+    isFavorite = isFavorite
+)
+
 fun tagFixture(
     id: String = "tag-1",
     name: String = "Tag",
@@ -72,7 +89,6 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     private val memos = MutableStateFlow(initialMemos)
     val savedMemos = mutableListOf<Memo>()
-    val importedTags = mutableListOf<Tag>()
     val movedToTrash = mutableListOf<TrashMoveRecord>()
     val restoredIds = mutableListOf<MemoId>()
     val permanentlyDeletedIds = mutableListOf<MemoId>()
@@ -81,6 +97,24 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
 
     override fun observeActiveMemos(): Flow<List<Memo>> =
         memos.map { list -> list.filter { it.deletedAt == null } }
+
+    override fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>> = memos.map { list ->
+        list.filter { it.deletedAt == null }
+            .sortedWith(
+                compareByDescending<Memo> { it.isFavorite }
+                    .thenByDescending { it.updatedAt.value }
+                    .thenByDescending { it.createdAt.value }
+            )
+            .take(limit)
+            .map { memo ->
+                MemoSummary(
+                    id = memo.id,
+                    title = memo.title,
+                    body = memo.body,
+                    isFavorite = memo.isFavorite
+                )
+            }
+    }
 
     override fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>> =
         memos.map { list ->
@@ -91,16 +125,13 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
             }
         }
 
-    override fun observeActiveMemosCreatedBetween(
-        from: TimestampMillis,
-        to: TimestampMillis
-    ): Flow<List<Memo>> {
-        require(from.value < to.value) { "from must be earlier than to." }
+    override fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>> {
+        if (range.isEmpty) return flowOf(emptyList())
         return memos.map { list ->
             list.filter { memo ->
                 memo.deletedAt == null &&
-                    memo.createdAt.value >= from.value &&
-                    memo.createdAt.value < to.value
+                    memo.createdAt.value >= range.fromInclusive.value &&
+                    memo.createdAt.value < range.toExclusive.value
             }
         }
     }
@@ -159,12 +190,17 @@ class FakeMemoRepository(initialMemos: List<Memo> = emptyList()) : MemoRepositor
         memos.forEach { saveMemo(it) }
     }
 
-    override suspend fun importAll(tags: List<Tag>, memos: List<Memo>) {
-        importedTags += tags
-        memos.forEach { saveMemo(it) }
-    }
-
     fun currentMemos(): List<Memo> = memos.value
+
+}
+
+class FakeMemoImportRepository : MemoImportRepository {
+
+    val importedData = mutableListOf<ExportData>()
+
+    override suspend fun import(data: ExportData) {
+        importedData += data
+    }
 
 }
 
@@ -177,6 +213,9 @@ class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
     override fun observeTags(): Flow<List<Tag>> = tags
 
     override suspend fun getTag(id: TagId): Tag? = tags.value.firstOrNull { it.id == id }
+
+    override suspend fun findTagByName(name: TagName): Tag? =
+        tags.value.firstOrNull { it.name == name }
 
     override suspend fun getTagsByIds(ids: List<TagId>): List<Tag> =
         tags.value.filter { it.id in ids }
@@ -192,10 +231,6 @@ class FakeTagRepository(initialTags: List<Tag> = emptyList()) : TagRepository {
     }
 
     override suspend fun getAllTags(): List<Tag> = tags.value
-
-    override suspend fun saveAllTags(tags: List<Tag>) {
-        tags.forEach { saveTag(it) }
-    }
 
     fun currentTags(): List<Tag> = tags.value
 

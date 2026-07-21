@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.glance.material3.ColorProviders
 
 @Composable
 fun LiteMemoTheme(
@@ -69,3 +70,5 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = OutlineVariantLight,
     error = ErrorLight
 )
+
+val WidgetColorProviders = ColorProviders(light = LightColorScheme, dark = DarkColorScheme)

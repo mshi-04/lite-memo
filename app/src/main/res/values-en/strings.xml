@@ -162,6 +162,9 @@
     <string name="settings_import_confirm_title">Import data</string>
     <string name="settings_import_confirm_message">Import data from the file. Memos and tags with the same IDs will be overwritten. Images are not included in export or import, so attached images will be lost when memos with the same IDs are overwritten. Continue?</string>
     <string name="settings_import_confirm_ok">Import</string>
+    <string name="settings_import_error_title">Import failed</string>
+    <string name="settings_import_error_tag_conflict_message">Import was canceled because tags with the same name already exist. Rename the following tags and try again.</string>
+    <string name="settings_import_error_close">Close</string>
     <string name="settings_section_app_info">App information</string>
     <string name="settings_version">Version</string>
     <string name="settings_privacy_policy">Privacy policy</string>

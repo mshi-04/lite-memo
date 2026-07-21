@@ -1,15 +1,20 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import app.cash.turbine.test
+import com.appvoyager.litememo.domain.FakeMemoImportRepository
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
+import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
+import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
 import com.appvoyager.litememo.domain.repository.ExportFileRepository
 import com.appvoyager.litememo.domain.repository.FakeUserSettingsRepository
+import com.appvoyager.litememo.domain.usecase.ExportMemosToFileUseCase
 import com.appvoyager.litememo.domain.usecase.ExportMemosUseCase
+import com.appvoyager.litememo.domain.usecase.ImportMemosFromFileUseCase
 import com.appvoyager.litememo.domain.usecase.ImportMemosUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.ObserveMemoSortOrderUseCase
@@ -17,8 +22,11 @@ import com.appvoyager.litememo.domain.usecase.ObserveThemeModeUseCase
 import com.appvoyager.litememo.domain.usecase.SetAppLockEnabledUseCase
 import com.appvoyager.litememo.domain.usecase.SetMemoSortOrderUseCase
 import com.appvoyager.litememo.domain.usecase.SetThemeModeUseCase
-import com.appvoyager.litememo.ui.event.SettingsSnackbarEvent
-import com.appvoyager.litememo.ui.type.AppLockAuthenticationResult
+import com.appvoyager.litememo.ui.auth.AppLockAuthenticationUiResult
+import com.appvoyager.litememo.ui.state.SettingsImportErrorDialogUiState
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,6 +57,82 @@ class SettingsViewModelTest {
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun interactionExportMemosCallsFileOrchestrationOnce() = runTest(dispatcher) {
+        // Arrange
+        val reference = ExportFileReference("content://export")
+        val exportUseCase = mockk<ExportMemosToFileUseCase>()
+        val importUseCase = mockk<ImportMemosFromFileUseCase>()
+        coEvery { exportUseCase(reference) } returns Unit
+        val viewModel = settingsViewModel(exportUseCase, importUseCase)
+
+        // Act
+        // Interaction: the ViewModel delegates the whole export operation once.
+        viewModel.exportMemos(reference)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { exportUseCase(reference) }
+    }
+
+    @Test
+    fun interactionConfirmImportCallsFileOrchestrationOnce() = runTest(dispatcher) {
+        // Arrange
+        val reference = ExportFileReference("content://import")
+        val exportUseCase = mockk<ExportMemosToFileUseCase>()
+        val importUseCase = mockk<ImportMemosFromFileUseCase>()
+        coEvery { importUseCase(reference) } returns Unit
+        val viewModel = settingsViewModel(exportUseCase, importUseCase)
+        viewModel.onImportFileSelected(reference)
+
+        // Act
+        // Interaction: confirmation delegates the whole import operation once.
+        viewModel.confirmImport()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { importUseCase(reference) }
+    }
+
+    @Test
+    fun stateTransitionExportMemosMaintainsProgressState() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = BlockingExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+
+        // Act
+        // StateTransition: export progress stays active until the file operation finishes.
+        viewModel.exportMemos(ExportFileReference("content://export"))
+        runCurrent()
+        val inProgress = viewModel.uiState.first { it.isExporting }.isExporting
+        exportFileRepository.completeWrite()
+        advanceUntilIdle()
+        val completed = viewModel.uiState.first { !it.isExporting }.isExporting
+
+        // Assert
+        assertEquals(true to false, inProgress to completed)
+    }
+
+    @Test
+    fun stateTransitionConfirmImportMaintainsProgressState() = runTest(dispatcher) {
+        // Arrange
+        val exportFileRepository = BlockingExportFileRepository()
+        val viewModel = settingsViewModel(exportFileRepository)
+        viewModel.onImportFileSelected(ExportFileReference("content://import"))
+
+        // Act
+        // StateTransition: import progress stays active until the file operation finishes.
+        viewModel.confirmImport()
+        runCurrent()
+        val inProgress = viewModel.uiState.first { it.isImporting }.isImporting
+        exportFileRepository.completeRead()
+        advanceUntilIdle()
+        val completed = viewModel.uiState.first { !it.isImporting }.isImporting
+
+        // Assert
+        assertEquals(true to false, inProgress to completed)
     }
 
     @Test
@@ -108,7 +192,7 @@ class SettingsViewModelTest {
         viewModel.snackbarEvent.test {
             viewModel.exportMemos(ExportFileReference("content://export"))
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ExportSuccess, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.ExportSuccess, awaitItem())
         }
         assertEquals(
             listOf(ExportFileReference("content://export")),
@@ -128,7 +212,7 @@ class SettingsViewModelTest {
         viewModel.snackbarEvent.test {
             viewModel.exportMemos(ExportFileReference("content://export"))
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ExportError, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.ExportError, awaitItem())
         }
     }
 
@@ -145,7 +229,7 @@ class SettingsViewModelTest {
         viewModel.snackbarEvent.test {
             viewModel.confirmImport()
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ImportSuccess, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.ImportSuccess, awaitItem())
         }
         assertEquals(false, viewModel.uiState.value.showImportConfirmDialog)
         assertEquals(
@@ -155,22 +239,76 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun flowConfirmImportEmitsErrorSnackbarWhenReadFails() = runTest(dispatcher) {
+    fun flowConfirmImportShowsGenericErrorDialogWithoutSnackbarWhenReadFails() =
+        runTest(dispatcher) {
+            // Arrange
+            val viewModel = settingsViewModel(
+                ImmediateExportFileRepository(readError = IllegalStateException("read failed"))
+            )
+            viewModel.onImportFileSelected(ExportFileReference("content://import"))
+            advanceUntilIdle()
+
+            // Act & Assert
+            // Flow/Error: failed import is held as dialog state instead of a snackbar.
+            viewModel.snackbarEvent.test {
+                viewModel.confirmImport()
+                advanceUntilIdle()
+                expectNoEvents()
+            }
+            val state = viewModel.uiState.first { it.importErrorDialog != null }
+
+            // Assert
+            assertEquals(SettingsImportErrorDialogUiState.Generic, state.importErrorDialog)
+        }
+
+    @Test
+    fun flowConfirmImportShowsAllConflictingTagNamesWhenImportRejectsTagNames() =
+        runTest(dispatcher) {
+            // Arrange
+            val reference = ExportFileReference("content://import")
+            val importUseCase = mockk<ImportMemosFromFileUseCase>()
+            coEvery { importUseCase(reference) } throws ImportTagNameConflictException(
+                listOf(TagName("Home"), TagName("Work"))
+            )
+            val viewModel = settingsViewModel(mockk<ExportMemosToFileUseCase>(), importUseCase)
+            viewModel.onImportFileSelected(reference)
+            advanceUntilIdle()
+
+            // Act & Assert
+            // Flow/Error: tag name conflicts are surfaced as a dialog holding every name.
+            viewModel.snackbarEvent.test {
+                viewModel.confirmImport()
+                advanceUntilIdle()
+                expectNoEvents()
+            }
+            val state = viewModel.uiState.first { it.importErrorDialog != null }
+
+            // Assert
+            assertEquals(
+                SettingsImportErrorDialogUiState.TagNameConflict(listOf("Home", "Work")),
+                state.importErrorDialog
+            )
+        }
+
+    @Test
+    fun stateTransitionDismissImportErrorDialogClearsState() = runTest(dispatcher) {
         // Arrange
         val viewModel = settingsViewModel(
             ImmediateExportFileRepository(readError = IllegalStateException("read failed"))
         )
         viewModel.onImportFileSelected(ExportFileReference("content://import"))
+        viewModel.confirmImport()
         advanceUntilIdle()
+        viewModel.uiState.first { it.importErrorDialog != null }
 
-        // Act & Assert
-        // Flow/Error: failed import is converted to an error snackbar.
-        viewModel.snackbarEvent.test {
-            viewModel.confirmImport()
-            advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.ImportError, awaitItem())
-        }
-        assertEquals(false, viewModel.uiState.value.showImportConfirmDialog)
+        // Act
+        // StateTransition: dismissing the dialog releases the retained failure.
+        viewModel.dismissImportErrorDialog()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.importErrorDialog == null }
+
+        // Assert
+        assertEquals(null, state.importErrorDialog)
     }
 
     @Test
@@ -226,7 +364,7 @@ class SettingsViewModelTest {
         )
 
         // Act
-        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.SUCCEEDED)
+        viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.SUCCEEDED)
         advanceUntilIdle()
 
         // Assert
@@ -245,10 +383,10 @@ class SettingsViewModelTest {
         // Act & Assert
         viewModel.snackbarEvent.test {
             viewModel.onAppLockEnableAuthenticationResult(
-                AppLockAuthenticationResult.NO_DEVICE_CREDENTIAL
+                AppLockAuthenticationUiResult.NO_DEVICE_CREDENTIAL
             )
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockNoDeviceCredential, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockNoDeviceCredential, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -264,9 +402,9 @@ class SettingsViewModelTest {
 
         // Act & Assert
         viewModel.snackbarEvent.test {
-            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.UNAVAILABLE)
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.UNAVAILABLE)
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockUnavailable, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockUnavailable, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -282,9 +420,9 @@ class SettingsViewModelTest {
 
         // Act & Assert
         viewModel.snackbarEvent.test {
-            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.FAILED)
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.FAILED)
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockAuthenticationFailed, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockAuthenticationFailed, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -300,9 +438,9 @@ class SettingsViewModelTest {
 
         // Act & Assert
         viewModel.snackbarEvent.test {
-            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationResult.CANCELED)
+            viewModel.onAppLockEnableAuthenticationResult(AppLockAuthenticationUiResult.CANCELED)
             advanceUntilIdle()
-            assertEquals(SettingsSnackbarEvent.AppLockAuthenticationCanceled, awaitItem())
+            assertEquals(SettingsSnackbarUiEvent.AppLockAuthenticationCanceled, awaitItem())
         }
         assertEquals(false, userSettingsRepository.observeAppLockEnabled().first())
     }
@@ -346,6 +484,24 @@ class SettingsViewModelTest {
         )
 
     private fun settingsViewModel(
+        exportUseCase: ExportMemosToFileUseCase,
+        importUseCase: ImportMemosFromFileUseCase
+    ): SettingsViewModel {
+        val userSettingsRepository = FakeUserSettingsRepository()
+        return SettingsViewModel(
+            observeThemeModeUseCase = ObserveThemeModeUseCase(userSettingsRepository),
+            setThemeModeUseCase = SetThemeModeUseCase(userSettingsRepository),
+            observeMemoSortOrderUseCase = ObserveMemoSortOrderUseCase(userSettingsRepository),
+            setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
+            observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(userSettingsRepository),
+            setAppLockEnabledUseCase = SetAppLockEnabledUseCase(userSettingsRepository),
+            exportMemosToFileUseCase = exportUseCase,
+            importMemosFromFileUseCase = importUseCase,
+            appVersion = "1.0.0"
+        )
+    }
+
+    private fun settingsViewModel(
         exportFileRepository: ExportFileRepository,
         userSettingsRepository: FakeUserSettingsRepository
     ): SettingsViewModel {
@@ -358,15 +514,20 @@ class SettingsViewModelTest {
             setMemoSortOrderUseCase = SetMemoSortOrderUseCase(userSettingsRepository),
             observeAppLockEnabledUseCase = ObserveAppLockEnabledUseCase(userSettingsRepository),
             setAppLockEnabledUseCase = SetAppLockEnabledUseCase(userSettingsRepository),
-            exportMemosUseCase = ExportMemosUseCase(
-                memoRepository = memoRepository,
-                tagRepository = tagRepository,
-                currentTimeProvider = MutableTimeProvider(TimestampMillis(1_000L))
+            exportMemosToFileUseCase = ExportMemosToFileUseCase(
+                exportMemosUseCase = ExportMemosUseCase(
+                    memoRepository = memoRepository,
+                    tagRepository = tagRepository,
+                    currentTimeProvider = MutableTimeProvider(TimestampMillis(1_000L))
+                ),
+                exportFileRepository = exportFileRepository
             ),
-            importMemosUseCase = ImportMemosUseCase(
-                memoRepository = memoRepository
+            importMemosFromFileUseCase = ImportMemosFromFileUseCase(
+                exportFileRepository = exportFileRepository,
+                importMemosUseCase = ImportMemosUseCase(
+                    memoImportRepository = FakeMemoImportRepository()
+                )
             ),
-            exportFileRepository = exportFileRepository,
             appVersion = "1.0.0"
         )
     }

@@ -6,6 +6,7 @@
 
 - ユーザーが base branch、commit、merge-base、対象ファイルを指定した場合は、その比較基準を使う
 - 比較基準が未指定の場合は、現在の branch、追跡先、PR 情報から妥当な base を確認してから差分を読む
+- 対象を限定したレビューでは、確認した範囲と確認していない範囲を分けて報告する
 
 ## 指摘の分類
 
@@ -13,23 +14,47 @@
 
 | ラベル | 意味 |
 |--------|------|
-| **Critical** | マージ前に必ず直す。バグ、セキュリティ、アーキテクチャ違反など |
+| **Critical** | マージ前に必ず直す。再現可能なバグ、セキュリティ・データ損失、ビルド不能、重大な依存方向の破壊など |
 | **Suggestion** | 直すことを推奨。品質・保守性・一貫性に関わるが、マージをブロックするかは判断による |
 | **Nitpick** | 好みや細部の改善。マージをブロックしない |
 
-## 形式
+Clean Architecture の方針との差異は、依存方向、責務、変更容易性への具体的な影響を確認して分類します。
+方針から外れているという理由だけで、自動的に Critical にはしません。
+
+## 指摘の形式
 
 - 指摘には上から通し番号を振る
 - 各指摘に `[Critical]` / `[Suggestion]` / `[Nitpick]` のラベルを先頭に付ける
 - 各指摘に対象ファイルと行番号、問題による影響、問題である理由、修正方針を含める
-- 最後に Critical の件数を示し、マージ可否を明示する
+- 重要度が高い順に並べる
 
 例:
 
 ```markdown
-1. [Critical] `app/src/main/.../Example.kt:20` — `MemoRepository` の実装が domain 層に漏れ、依存方向が逆転する。実装を data 層へ移動する。
-2. [Suggestion] `app/src/main/.../ExampleViewModel.kt:35` — `saveMemo` が Repository を直接呼び、UI と data が結合している。UseCase を経由させる。
+1. [Critical] `app/src/main/.../ExampleMigration.kt:20` — 既存値を移さずテーブルを置き換えるため、アップデート時に保存済みデータを失う。値を引き継ぐ migration と migration test を追加する。
+2. [Suggestion] `app/src/main/.../Example.kt:35` — domain が data の具象型に依存し、差し替えと単体テストが困難になる。抽象を domain、実装を data へ分ける。
 3. [Nitpick] `app/src/main/.../Example.kt:42` — 変数名 `d` から用途を判断できない。`dueDate` など意図を表す名前を検討する。
 ```
 
-**Critical: 1件。マージ前に修正が必要。**
+## 終了時の報告
+
+指摘の有無にかかわらず、最後に次を報告します。
+
+- Critical / Suggestion / Nitpick の全件数
+- レビューした比較基準、ファイル、機能などの範囲
+- 実行したテスト、静的解析、ビルド、目視確認などの検証
+- 未確認事項と残るリスク
+- 確認範囲に応じたマージ可否
+
+差分全体を確認した場合だけ、全体のマージ可否を示します。
+対象限定レビューや静的レビューでは、確認範囲内の判断を示したうえで「PR 全体のマージ可否は未評価」としてよいものとします。
+
+例:
+
+```markdown
+Critical: 0件、Suggestion: 1件、Nitpick: 0件。
+確認範囲: `ui/viewmodel` の差分と対応する Unit Test。
+検証: `:app:testProdDebugUnitTest` 成功。instrumented test は未実施。
+残るリスク: Compose UI の実機上の表示と操作は未確認。
+マージ可否: 確認範囲内にブロッカーなし。PR 全体のマージ可否は未評価。
+```

@@ -1,22 +1,22 @@
 package com.appvoyager.litememo.domain.repository
 
 import com.appvoyager.litememo.domain.model.Memo
-import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.MemoSummary
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
+import com.appvoyager.litememo.domain.model.value.TimestampRange
 import kotlinx.coroutines.flow.Flow
 
 interface MemoRepository {
 
     fun observeActiveMemos(): Flow<List<Memo>>
 
+    fun observeRecentActiveMemos(limit: Int): Flow<List<MemoSummary>>
+
     fun observeActiveMemosBySearchQuery(query: SearchQuery): Flow<List<Memo>>
 
-    fun observeActiveMemosCreatedBetween(
-        from: TimestampMillis,
-        to: TimestampMillis
-    ): Flow<List<Memo>>
+    fun observeActiveMemosCreatedBetween(range: TimestampRange): Flow<List<Memo>>
 
     fun observeTrashedMemos(): Flow<List<Memo>>
 
@@ -37,7 +37,5 @@ interface MemoRepository {
     suspend fun getAllActiveMemos(): List<Memo>
 
     suspend fun saveAllMemos(memos: List<Memo>)
-
-    suspend fun importAll(tags: List<Tag>, memos: List<Memo>)
 
 }

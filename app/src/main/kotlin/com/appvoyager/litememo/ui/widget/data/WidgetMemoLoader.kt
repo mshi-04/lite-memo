@@ -1,41 +1,56 @@
 package com.appvoyager.litememo.ui.widget.data
 
-import com.appvoyager.litememo.domain.model.Memo
-import com.appvoyager.litememo.domain.usecase.ObserveMemosUseCase
+import com.appvoyager.litememo.domain.model.MemoSummary
+import com.appvoyager.litememo.domain.usecase.ObserveRecentMemosUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-class WidgetMemoLoader(private val observeMemosUseCase: ObserveMemosUseCase) {
+class WidgetMemoLoader(private val observeRecentMemosUseCase: ObserveRecentMemosUseCase) {
 
-    suspend fun loadRecent(limit: Int): List<WidgetItem> = observeMemosUseCase().first()
-        .take(limit)
-        .map { it.toWidgetItem() }
+    fun observeRecent(): Flow<List<WidgetItem>> = observeRecentMemosUseCase(RECENT_MEMOS_LIMIT)
+        .map { memos -> memos.map { it.toWidgetItem() } }
 
-    fun observeRecent(limit: Int): Flow<List<WidgetItem>> = observeMemosUseCase()
-        .map { memos -> memos.take(limit).map { it.toWidgetItem() } }
+    suspend fun loadRecent(): List<WidgetItem> = observeRecent().first()
 
 }
 
+private const val RECENT_MEMOS_LIMIT = 8
 private const val MAX_TITLE_LENGTH = 50
 private const val MAX_SNIPPET_LENGTH = 80
 
-private fun Memo.toWidgetItem(): WidgetItem {
+private const val BODY_SCAN_PREFIX = (MAX_TITLE_LENGTH + MAX_SNIPPET_LENGTH) * 4
+
+private fun MemoSummary.toWidgetItem(): WidgetItem {
     val trimmedTitle = title.value.trim()
-    val bodyLines = body.value.trim().lines().map { it.trim() }.filter { it.isNotEmpty() }
+    val bodyLines = body.value.trimStart().take(BODY_SCAN_PREFIX).trim().lines()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
     val primary: String
     val snippet: String
     if (trimmedTitle.isNotEmpty()) {
-        primary = trimmedTitle
+        primary = trimmedTitle.takeCodePointSafe(MAX_TITLE_LENGTH)
         snippet = bodyLines.joinToString(" ")
     } else {
-        primary = bodyLines.firstOrNull().orEmpty()
-        snippet = bodyLines.drop(1).joinToString(" ")
+        val firstLine = bodyLines.firstOrNull().orEmpty()
+        primary = firstLine.takeCodePointSafe(MAX_TITLE_LENGTH)
+        val firstLineRemainder = firstLine.removePrefix(primary).trim()
+        snippet = (listOf(firstLineRemainder) + bodyLines.drop(1))
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
     }
     return WidgetItem(
         id = id,
-        title = primary.take(MAX_TITLE_LENGTH),
-        snippet = snippet.take(MAX_SNIPPET_LENGTH),
+        title = primary.takeCodePointSafe(MAX_TITLE_LENGTH),
+        snippet = snippet.takeCodePointSafe(MAX_SNIPPET_LENGTH),
         isFavorite = isFavorite
     )
+}
+
+private fun String.takeCodePointSafe(maxChars: Int): String {
+    if (maxChars <= 0) return ""
+    if (length <= maxChars) return this
+    val lastIndex = maxChars - 1
+    val end = if (this[lastIndex].isHighSurrogate()) lastIndex else maxChars
+    return substring(0, end)
 }

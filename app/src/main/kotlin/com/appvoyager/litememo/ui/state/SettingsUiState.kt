@@ -12,5 +12,13 @@ data class SettingsUiState(
     val sortOrderExpanded: Boolean = false,
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
-    val showImportConfirmDialog: Boolean = false
+    val showImportConfirmDialog: Boolean = false,
+    val importErrorDialog: SettingsImportErrorDialogUiState? = null
 )
+
+sealed interface SettingsImportErrorDialogUiState {
+
+    data class TagNameConflict(val tagNames: List<String>) : SettingsImportErrorDialogUiState
+
+    data object Generic : SettingsImportErrorDialogUiState
+}

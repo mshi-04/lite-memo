@@ -15,10 +15,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.appvoyager.litememo.domain.model.value.MemoId
-import com.appvoyager.litememo.ui.event.MemoEditNavigationEvent
-import com.appvoyager.litememo.ui.event.MemoEditOperationErrorEvent
 import com.appvoyager.litememo.ui.screen.MemoEditScreen
 import com.appvoyager.litememo.ui.util.launchShareMemo
+import com.appvoyager.litememo.ui.viewmodel.MemoEditNavigationUiEvent
+import com.appvoyager.litememo.ui.viewmodel.MemoEditOperationErrorUiEvent
 import com.appvoyager.litememo.ui.viewmodel.MemoEditViewModel
 
 @Composable
@@ -48,8 +48,8 @@ fun MemoEditRoute(
     LaunchedEffect(viewModel) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                MemoEditNavigationEvent.NavigateBack -> currentOnNavigateBack()
-                is MemoEditNavigationEvent.MemoDeleted -> currentOnMemoDelete(event.memoId)
+                MemoEditNavigationUiEvent.NavigateBack -> currentOnNavigateBack()
+                is MemoEditNavigationUiEvent.MemoDeleted -> currentOnMemoDelete(event.memoId)
             }
         }
     }
@@ -57,9 +57,9 @@ fun MemoEditRoute(
     LaunchedEffect(viewModel) {
         viewModel.operationErrorEvent.collect { event ->
             when (event) {
-                MemoEditOperationErrorEvent.SaveFailed -> currentOnSaveError()
-                MemoEditOperationErrorEvent.DeleteFailed -> currentOnDeleteError()
-                MemoEditOperationErrorEvent.ImageAttachFailed -> currentOnImageAttachError()
+                MemoEditOperationErrorUiEvent.SaveFailed -> currentOnSaveError()
+                MemoEditOperationErrorUiEvent.DeleteFailed -> currentOnDeleteError()
+                MemoEditOperationErrorUiEvent.ImageAttachFailed -> currentOnImageAttachError()
             }
         }
     }
