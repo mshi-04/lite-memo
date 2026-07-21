@@ -3,7 +3,6 @@ package com.appvoyager.litememo.data.export
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.util.zip.ZipInputStream
 
 class MemoArchiveWriterTest {
@@ -99,8 +98,7 @@ class MemoArchiveWriterTest {
         // Act & Assert
         // Boundary: a manifest alone above the limit writes no archive
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
-            MemoArchiveWriter(archiveJson, limits)
-                .write(ByteArrayOutputStream(), manifest) { ByteArrayInputStream(ByteArray(0)) }
+            writeArchive(manifest, limits = limits)
         }
     }
 
