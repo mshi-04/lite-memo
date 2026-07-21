@@ -3,10 +3,6 @@ package com.appvoyager.litememo.data.export
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import com.appvoyager.litememo.data.model.export.MemoImageExportDto
 
-/**
- * manifest だけで判定できる archive の構造を検証する。
- * Import では画像 entry を展開する前に、Export では ZIP へ書き出す前に通す。
- */
 internal object MemoArchiveManifestValidator {
 
     fun validate(manifest: LiteMemoExportDto, limits: MemoArchiveLimits) {
@@ -40,7 +36,6 @@ internal object MemoArchiveManifestValidator {
 
         requireUnique(manifest.tags.map { it.id }, "tag id")
         requireUnique(manifest.memos.map { it.id }, "memo id")
-        // memo_images.id は DB 全体の primary key のため、archive 全体でも重複を許さない。
         requireUnique(images.map { it.id }, "image id")
         requireUnique(images.map { it.archiveEntry }, "archive entry")
     }
@@ -91,7 +86,6 @@ internal object MemoArchiveManifestValidator {
         }
     }
 
-    // Import 時に MemoImageFileName へ移せない値を、archive の段階で弾く。
     private fun requireStorableFileName(fileName: String) {
         val trimmed = fileName.trim()
         val storable = trimmed.isNotBlank() &&

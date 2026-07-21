@@ -17,7 +17,7 @@ class MemoArchiveWriterTest {
         )
 
         // Act
-        // Normal: Import が画像を展開する前に manifest を確定できる順序で書き出す
+        // Normal: entries are ordered so import settles the manifest before extracting images
         val archive = writeArchive(manifest, mapOf(MemoArchiveLayout.imageEntryName(1) to content))
 
         // Assert
@@ -37,7 +37,7 @@ class MemoArchiveWriterTest {
         val archive = writeArchive(manifest, mapOf(MemoArchiveLayout.imageEntryName(1) to content))
 
         // Act
-        // Normal: すでに圧縮された画像も byte-for-byte で復元できる
+        // Normal: already-compressed images are restored byte for byte
         val restored = readArchive(archive).images.getValue(MemoArchiveLayout.imageEntryName(1))
 
         // Assert
@@ -54,7 +54,7 @@ class MemoArchiveWriterTest {
         )
 
         // Act & Assert
-        // Error: metadata 収集後に画像が差し替わっても壊れた archive を残さない
+        // Error: an image swapped after metadata collection leaves no broken archive
         assertArchiveFailure(MemoArchiveFailureReason.CHECKSUM_MISMATCH) {
             writeArchive(manifest, mapOf(MemoArchiveLayout.imageEntryName(1) to actual))
         }
@@ -70,7 +70,7 @@ class MemoArchiveWriterTest {
         )
 
         // Act & Assert
-        // Error: 宣言した size を超える画像は書き出しを打ち切る
+        // Error: an image larger than its declared size aborts the write
         assertArchiveFailure(MemoArchiveFailureReason.SIZE_MISMATCH) {
             writeArchive(manifest, mapOf(MemoArchiveLayout.imageEntryName(1) to larger))
         }
@@ -82,7 +82,7 @@ class MemoArchiveWriterTest {
         val manifest = manifestFixture(version = MemoArchiveLayout.VERSION + 1)
 
         // Act & Assert
-        // Error: writer も reader と同じ manifest 検証を通す
+        // Error: the writer runs the same manifest validation as the reader
         assertArchiveFailure(MemoArchiveFailureReason.UNSUPPORTED_VERSION) {
             writeArchive(manifest)
         }
@@ -97,7 +97,7 @@ class MemoArchiveWriterTest {
         val limits = MemoArchiveLimits.DEFAULT.copy(maxManifestBytes = 64)
 
         // Act & Assert
-        // Boundary: manifest だけで上限を超える場合は archive を書き出さない
+        // Boundary: a manifest alone above the limit writes no archive
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
             MemoArchiveWriter(archiveJson, limits)
                 .write(ByteArrayOutputStream(), manifest) { ByteArrayInputStream(ByteArray(0)) }

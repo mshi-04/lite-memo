@@ -22,7 +22,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Normal: 画像だけを持つメモも archive の構造としては正当
+        // Normal: an image-only memo is a valid archive structure
         assertDoesNotThrow { MemoArchiveManifestValidator.validate(manifest, limits) }
     }
 
@@ -32,7 +32,7 @@ class MemoArchiveManifestValidatorTest {
         val manifest = manifestFixture(version = MemoArchiveLayout.VERSION + 1)
 
         // Act & Assert
-        // Error: 未対応 version は archive 全体を拒否する
+        // Error: an unsupported version rejects the whole archive
         assertArchiveFailure(MemoArchiveFailureReason.UNSUPPORTED_VERSION) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -46,7 +46,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: memo ID の重複を拒否する
+        // Error: duplicate memo ids are rejected
         assertArchiveFailure(MemoArchiveFailureReason.DUPLICATE_IDENTIFIER) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -60,7 +60,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: tag ID の重複を拒否する
+        // Error: duplicate tag ids are rejected
         assertArchiveFailure(MemoArchiveFailureReason.DUPLICATE_IDENTIFIER) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -82,7 +82,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: memo_images.id は DB 全体の primary key のため archive 全体で一意にする
+        // Error: memo_images.id is a database-wide primary key, so it stays unique across the archive
         assertArchiveFailure(MemoArchiveFailureReason.DUPLICATE_IDENTIFIER) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -104,7 +104,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: 同じ archive entry を複数の画像が参照する manifest を拒否する
+        // Error: a manifest pointing several images at one archive entry is rejected
         assertArchiveFailure(MemoArchiveFailureReason.DUPLICATE_IDENTIFIER) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -123,7 +123,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: 生成規則から外れる entry 名は manifest の段階で弾く
+        // Error: entry names off the generation rule are rejected while reading the manifest
         assertArchiveFailure(MemoArchiveFailureReason.INVALID_ENTRY_NAME) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -142,7 +142,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: 保存ファイル名にできない値を archive の段階で弾く
+        // Error: values that cannot become a stored file name are rejected at the archive level
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -159,7 +159,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Error: SHA-256 hex 以外の checksum を持つ manifest を拒否する
+        // Error: a manifest whose checksum is not SHA-256 hex is rejected
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             MemoArchiveManifestValidator.validate(manifest, limits)
         }
@@ -176,7 +176,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Boundary: 単一画像の上限を超える宣言を拒否する
+        // Boundary: a declaration above the single-image limit is rejected
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
             MemoArchiveManifestValidator.validate(manifest, limits.copy(maxImageBytes = 8))
         }
@@ -198,7 +198,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Boundary: 展開後合計 byte 数の上限を超える宣言を拒否する
+        // Boundary: a declaration above the total extracted byte limit is rejected
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
             MemoArchiveManifestValidator.validate(
                 manifest,
@@ -223,7 +223,7 @@ class MemoArchiveManifestValidatorTest {
         )
 
         // Act & Assert
-        // Boundary: manifest を含む entry 総数の上限を超える宣言を拒否する
+        // Boundary: a declaration above the total entry count limit, manifest included, is rejected
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
             MemoArchiveManifestValidator.validate(manifest, limits.copy(maxEntryCount = 2))
         }

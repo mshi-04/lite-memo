@@ -1,9 +1,5 @@
 package com.appvoyager.litememo.data.export
 
-/**
- * ZIP version 1 archive の layout。
- * entry 名は Export 実装が連番から生成し、domain の ID や元のファイル名を ZIP path として使わない。
- */
 internal object MemoArchiveLayout {
 
     const val VERSION = 1
@@ -27,10 +23,6 @@ internal object MemoArchiveLayout {
 
     fun isImageEntryName(name: String): Boolean = imageEntryPattern.matches(name)
 
-    /**
-     * 展開先を archive 外へ逃がす entry 名を弾く。
-     * 生成規則に一致するかどうかとは別に、読み取った entry 名すべてへ適用する。
-     */
     fun isSafeEntryName(name: String): Boolean {
         if (name.isBlank()) return false
         if (name.contains('\\') || name.contains(':')) return false

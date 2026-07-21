@@ -27,7 +27,6 @@ internal fun sha256Hex(bytes: ByteArray): String = MessageDigest.getInstance("SH
     .digest(bytes)
     .joinToString("") { byte -> String.format(Locale.ROOT, "%02x", byte) }
 
-/** deflate で縮まない byte 列。JPEG / PNG のようにすでに圧縮された画像の代わりに使う。 */
 internal fun compressedImageBytes(sizeBytes: Int, seed: Int): ByteArray =
     Random(seed).nextBytes(sizeBytes)
 
@@ -96,7 +95,6 @@ internal fun writeArchive(
     return output.toByteArray()
 }
 
-/** writer の検証を通さずに archive を組み立てる。壊れた archive や不正な entry 名の再現に使う。 */
 internal fun rawArchive(entries: List<Pair<String, ByteArray>>): ByteArray {
     val output = ByteArrayOutputStream()
     ZipOutputStream(output).use { zip ->
@@ -109,10 +107,6 @@ internal fun rawArchive(entries: List<Pair<String, ByteArray>>): ByteArray {
     return output.toByteArray()
 }
 
-/**
- * ZipOutputStream が拒否する重複 entry 名の archive を組み立てる。
- * 先頭 archive の local file header 部分だけを取り出し、後続 archive をそのまま連結する。
- */
 internal fun concatArchives(head: ByteArray, tail: ByteArray): ByteArray =
     head.copyOf(centralDirectoryOffset(head)) + tail
 

@@ -31,7 +31,7 @@ class MemoArchiveReaderTest {
         val archive = writeArchive(manifest, contentsOf(manifest, listOf(first, second)))
 
         // Act
-        // Normal: manifest の内容と画像の並びを往復で維持する
+        // Normal: manifest contents and image order survive the round trip
         val result = readArchive(archive)
 
         // Assert
@@ -56,7 +56,7 @@ class MemoArchiveReaderTest {
         val archive = writeArchive(manifest, contentsOf(manifest, listOf(first, second)))
 
         // Act
-        // Normal: 各画像 entry を宣言どおりの byte 列として復元する
+        // Normal: every image entry is restored as the declared byte sequence
         val restored = readArchive(archive).images.mapValues { it.value.toList() }
 
         // Assert
@@ -81,7 +81,7 @@ class MemoArchiveReaderTest {
         val archive = writeArchive(manifest, contentsOf(manifest, listOf(content)))
 
         // Act
-        // Boundary: title と body が空で画像だけを持つメモも読み取れる
+        // Boundary: a memo with empty title and body but images is readable
         val result = readArchive(archive)
 
         // Assert
@@ -94,7 +94,7 @@ class MemoArchiveReaderTest {
         val notAnArchive = """{"version":1}""".toByteArray(Charsets.UTF_8)
 
         // Act & Assert
-        // Error: standalone JSON など ZIP でない入力を先頭 byte で拒否する
+        // Error: non-ZIP input such as standalone JSON is rejected by its leading bytes
         assertArchiveFailure(MemoArchiveFailureReason.INVALID_SIGNATURE) {
             readArchive(notAnArchive)
         }
@@ -115,7 +115,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: manifest より先に画像 entry が現れる archive を拒否する
+        // Error: an archive whose image entry precedes the manifest is rejected
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             readArchive(archive)
         }
@@ -131,7 +131,7 @@ class MemoArchiveReaderTest {
         val archive = concatArchives(single, single)
 
         // Act & Assert
-        // Error: manifest.json は archive root に 1 件だけとする
+        // Error: manifest.json must appear exactly once at the archive root
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             readArchive(archive)
         }
@@ -149,7 +149,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: manifest にない未知の file entry を許容しない
+        // Error: file entries missing from the manifest are not tolerated
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             readArchive(archive)
         }
@@ -167,7 +167,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: manifest が参照する画像 entry が実在しない archive を拒否する
+        // Error: an archive missing an image entry the manifest references is rejected
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             readArchive(archive)
         }
@@ -185,7 +185,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: zip slip となる entry 名を展開しない
+        // Error: entry names that would cause zip slip are never extracted
         assertArchiveFailure(MemoArchiveFailureReason.INVALID_ENTRY_NAME) {
             readArchive(archive)
         }
@@ -206,7 +206,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: 宣言より大きく展開される entry を読み切る前に打ち切る
+        // Error: an entry expanding beyond its declared size is cut off before it is read out
         assertArchiveFailure(MemoArchiveFailureReason.SIZE_MISMATCH) {
             readArchive(archive)
         }
@@ -228,7 +228,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: SHA-256 が manifest と一致しない画像を拒否する
+        // Error: an image whose SHA-256 differs from the manifest is rejected
         assertArchiveFailure(MemoArchiveFailureReason.CHECKSUM_MISMATCH) {
             readArchive(archive)
         }
@@ -243,7 +243,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: 未対応 version は画像を展開せず archive 全体を拒否する
+        // Error: an unsupported version rejects the archive without extracting images
         assertArchiveFailure(MemoArchiveFailureReason.UNSUPPORTED_VERSION) {
             readArchive(archive)
         }
@@ -258,7 +258,7 @@ class MemoArchiveReaderTest {
         )
 
         // Act & Assert
-        // Error: manifest が JSON として解釈できない archive を拒否する
+        // Error: an archive whose manifest is not parseable JSON is rejected
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             readArchive(archive)
         }
@@ -275,7 +275,7 @@ class MemoArchiveReaderTest {
         val truncated = archive.copyOf(archive.size - TRUNCATED_TAIL_BYTES)
 
         // Act & Assert
-        // Error: 途中で切れた archive を部分的に受け入れない
+        // Error: a truncated archive is never partially accepted
         assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
             readArchive(truncated)
         }
@@ -292,7 +292,7 @@ class MemoArchiveReaderTest {
         val limits = MemoArchiveLimits.DEFAULT.copy(maxArchiveBytes = 1024)
 
         // Act & Assert
-        // Boundary: 事前に size が分からなくても stream の実読込量で上限を強制する
+        // Boundary: the limit is enforced by bytes actually read even when size is unknown upfront
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
             readArchive(archive, limits)
         }
@@ -310,7 +310,7 @@ class MemoArchiveReaderTest {
         val limits = MemoArchiveLimits.DEFAULT.copy(maxManifestBytes = 64)
 
         // Act & Assert
-        // Boundary: manifest の展開量にも上限を効かせる
+        // Boundary: the limit also applies to how far the manifest expands
         assertArchiveFailure(MemoArchiveFailureReason.LIMIT_EXCEEDED) {
             readArchive(archive, limits)
         }
@@ -329,7 +329,7 @@ class MemoArchiveReaderTest {
         val openedEntries = mutableListOf<String>()
 
         // Act
-        // Error/Interaction: 検証に失敗した archive では展開先を一切開かない
+        // Error/Interaction: a failed archive never opens any extraction target
         assertThrows(MemoArchiveException::class.java) {
             MemoArchiveReader(archiveJson, MemoArchiveLimits.DEFAULT)
                 .read(ByteArrayInputStream(archive)) { metadata ->
@@ -351,8 +351,6 @@ class MemoArchiveReaderTest {
         .toMap()
 }
 
-// 圧縮された小さな entry が宣言 size を大きく超えて展開される、zip bomb と同じ形。
 private const val EXPANDED_ENTRY_BYTES = 1024 * 1024
 
-// central directory と EOCD を超えて画像 entry の途中まで削る長さ。
 private const val TRUNCATED_TAIL_BYTES = 512

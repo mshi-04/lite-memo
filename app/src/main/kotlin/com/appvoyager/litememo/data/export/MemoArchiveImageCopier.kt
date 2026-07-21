@@ -5,10 +5,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.security.MessageDigest
 
-/**
- * 画像 byte を stream copy しつつ、manifest が宣言した size と SHA-256 に一致することを検証する。
- * stream の open / close は呼び出し側が持つ。
- */
 internal object MemoArchiveImageCopier {
 
     fun copyVerified(source: InputStream, target: OutputStream, metadata: MemoImageExportDto) {
@@ -21,7 +17,6 @@ internal object MemoArchiveImageCopier {
             if (read < 0) break
 
             totalBytes += read
-            // 宣言より大きい entry は全部読み切る前に打ち切り、展開量を manifest 以内に抑える。
             if (totalBytes > metadata.sizeBytes) {
                 archiveFailure(
                     MemoArchiveFailureReason.SIZE_MISMATCH,

@@ -12,7 +12,7 @@ class MemoArchiveLayoutTest {
     @Test
     fun normalImageEntryNameIsZeroPaddedSequentialPath() {
         // Act
-        // Normal: entry 名は連番から生成し、domain の ID や元のファイル名を使わない
+        // Normal: entry names come from a sequence, never from domain ids or original file names
         val entryName = MemoArchiveLayout.imageEntryName(1)
 
         // Assert
@@ -22,7 +22,7 @@ class MemoArchiveLayoutTest {
     @Test
     fun errorImageEntryNameRejectsNonPositiveIndex() {
         // Act & Assert
-        // Error: 採番は 1 始まりで、0 以下は生成規則から外れる
+        // Error: numbering starts at 1, so zero and negatives fall outside the rule
         assertThrows(IllegalArgumentException::class.java) {
             MemoArchiveLayout.imageEntryName(0)
         }
@@ -31,7 +31,7 @@ class MemoArchiveLayoutTest {
     @Test
     fun boundaryIsImageEntryNameRejectsNamesOutsideGeneratedPattern() {
         // Act
-        // Boundary: 生成規則に一致しない画像 entry 名は受け付けない
+        // Boundary: image entry names off the generation rule are rejected
         val results = listOf(
             "images/1",
             "images/00000001.jpg",
@@ -46,7 +46,7 @@ class MemoArchiveLayoutTest {
     @Test
     fun errorIsSafeEntryNameRejectsNamesThatEscapeTheArchive() {
         // Act & Assert
-        // Error: 絶対 path、親ディレクトリ参照、backslash、control character を含む名前を弾く
+        // Error: absolute paths, parent traversal, backslashes and control characters are rejected
         assertAll(
             { assertFalse(MemoArchiveLayout.isSafeEntryName("../evil.txt")) },
             { assertFalse(MemoArchiveLayout.isSafeEntryName("images/../../evil.txt")) },
@@ -62,7 +62,7 @@ class MemoArchiveLayoutTest {
     @Test
     fun normalIsSafeEntryNameAcceptsGeneratedLayout() {
         // Act
-        // Normal: 生成した layout の entry 名はそのまま安全と判定する
+        // Normal: entry names produced by the layout are accepted as safe
         val results = listOf(
             MemoArchiveLayout.MANIFEST_ENTRY_NAME,
             MemoArchiveLayout.imageEntryName(12345678)

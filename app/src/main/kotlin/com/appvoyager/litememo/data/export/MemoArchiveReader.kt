@@ -13,19 +13,8 @@ import java.io.PushbackInputStream
 import java.util.zip.ZipException
 import java.util.zip.ZipInputStream
 
-/**
- * ZIP version 1 archive を stream で読み取る。
- * 画像本体はメモリへ載せず、[read] に渡された sink へそのまま流す。
- */
 internal class MemoArchiveReader(private val json: Json, private val limits: MemoArchiveLimits) {
 
-    /**
-     * archive を先頭から読み、検証済みの manifest を返す。
-     * 画像 entry ごとに [openImageStream] を呼び、返された stream へ書き出して閉じる。
-     * 検証に失敗した場合は [MemoArchiveException] を投げ、以降の entry を展開しない。
-     *
-     * [source] は読み取り完了時に閉じる。
-     */
     fun read(
         source: InputStream,
         openImageStream: (MemoImageExportDto) -> OutputStream
@@ -65,7 +54,6 @@ internal class MemoArchiveReader(private val json: Json, private val limits: Mem
             entryCount++
             requireEntryCount(entryCount)
             requireSafeEntryName(entry.name)
-            // manifest が参照しない entry は、重複 entry と directory entry も含めて許容しない。
             val metadata = pendingImages.remove(entry.name)
             if (entry.isDirectory || metadata == null) {
                 archiveFailure(
@@ -93,7 +81,6 @@ internal class MemoArchiveReader(private val json: Json, private val limits: Mem
             "Archive contains no entries."
         )
         requireSafeEntryName(entry.name)
-        // 画像を1件も展開しないうちに manifest を確定させるため、先頭 entry に固定する。
         if (entry.name != MemoArchiveLayout.MANIFEST_ENTRY_NAME) {
             archiveFailure(
                 MemoArchiveFailureReason.MALFORMED_ARCHIVE,
@@ -137,7 +124,6 @@ internal class MemoArchiveReader(private val json: Json, private val limits: Mem
         return output.toByteArray()
     }
 
-    // DocumentProvider が返す MIME type や拡張子に依存せず、先頭 byte で ZIP かどうかを判定する。
     private fun requireZipSignature(source: InputStream): InputStream {
         val pushback = PushbackInputStream(source, ZIP_SIGNATURE_LENGTH)
         val header = ByteArray(ZIP_SIGNATURE_LENGTH)
@@ -199,7 +185,6 @@ internal class MemoArchiveReader(private val json: Json, private val limits: Mem
             return read
         }
 
-        // DocumentProvider が size を返さない場合でも、実読込量で上限を強制する。
         private fun countBytes(count: Long) {
             totalBytes += count
             if (totalBytes > limit) {
