@@ -20,5 +20,15 @@ sealed interface SettingsImportErrorDialogUiState {
 
     data class TagNameConflict(val tagNames: List<String>) : SettingsImportErrorDialogUiState
 
+    data object UnsupportedVersion : SettingsImportErrorDialogUiState
+
+    data object InvalidArchive : SettingsImportErrorDialogUiState
+
+    data object InvalidImage : SettingsImportErrorDialogUiState
+
+    data object SizeLimitExceeded : SettingsImportErrorDialogUiState
+
+    data object InsufficientStorage : SettingsImportErrorDialogUiState
+
     data object Generic : SettingsImportErrorDialogUiState
 }

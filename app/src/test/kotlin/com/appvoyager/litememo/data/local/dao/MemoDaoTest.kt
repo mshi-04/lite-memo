@@ -194,6 +194,9 @@ class MemoDaoTest {
             return emptyList()
         }
 
+        override suspend fun findReferencedImageFileNames(fileNames: List<String>): List<String> =
+            emptyList()
+
         override suspend fun getImageFileNamesForTrashedMemosDeletedAtOrBefore(
             cutoff: Long
         ): List<String> = emptyList()

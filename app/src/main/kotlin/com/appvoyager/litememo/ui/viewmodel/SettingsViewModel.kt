@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appvoyager.litememo.di.AppVersion
 import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
+import com.appvoyager.litememo.domain.exception.MemoImportException
+import com.appvoyager.litememo.domain.exception.MemoImportFailureReason
 import com.appvoyager.litememo.domain.model.MemoSortOrder
 import com.appvoyager.litememo.domain.model.ThemeMode
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
@@ -188,6 +190,8 @@ class SettingsViewModel @Inject constructor(
                 importErrorDialog.value = SettingsImportErrorDialogUiState.TagNameConflict(
                     tagNames = e.tagNames.map { it.value }
                 )
+            } catch (e: MemoImportException) {
+                importErrorDialog.value = e.reason.toImportErrorDialogUiState()
             } catch (_: Throwable) {
                 importErrorDialog.value = SettingsImportErrorDialogUiState.Generic
             } finally {
@@ -219,6 +223,22 @@ sealed interface SettingsSnackbarUiEvent {
     data object AppLockNoDeviceCredential : SettingsSnackbarUiEvent
     data object AppLockUnavailable : SettingsSnackbarUiEvent
 }
+
+private fun MemoImportFailureReason.toImportErrorDialogUiState(): SettingsImportErrorDialogUiState =
+    when (this) {
+        MemoImportFailureReason.UNSUPPORTED_VERSION ->
+            SettingsImportErrorDialogUiState.UnsupportedVersion
+
+        MemoImportFailureReason.INVALID_ARCHIVE -> SettingsImportErrorDialogUiState.InvalidArchive
+
+        MemoImportFailureReason.INVALID_IMAGE -> SettingsImportErrorDialogUiState.InvalidImage
+
+        MemoImportFailureReason.SIZE_LIMIT_EXCEEDED ->
+            SettingsImportErrorDialogUiState.SizeLimitExceeded
+
+        MemoImportFailureReason.INSUFFICIENT_STORAGE ->
+            SettingsImportErrorDialogUiState.InsufficientStorage
+    }
 
 private data class SettingsUiFlags(
     val themeDropdownExpanded: Boolean,

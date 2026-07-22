@@ -1,6 +1,7 @@
 package com.appvoyager.litememo.di
 
 import com.appvoyager.litememo.BuildConfig
+import com.appvoyager.litememo.data.export.MemoArchiveLimits
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +26,11 @@ object AppConfigModule {
     @Singleton
     @ImportMaxFileSizeBytes
     fun provideImportMaxFileSizeBytes(): Long = DEFAULT_IMPORT_MAX_FILE_SIZE_BYTES
+
+    @Provides
+    @Singleton
+    @ArchiveLimits
+    fun provideArchiveLimits(): MemoArchiveLimits = MemoArchiveLimits.DEFAULT
 
     private const val DEFAULT_IMPORT_MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024
 

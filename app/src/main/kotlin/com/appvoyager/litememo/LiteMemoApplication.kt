@@ -3,6 +3,7 @@ package com.appvoyager.litememo
 import android.app.Application
 import android.util.Log
 import com.appvoyager.litememo.di.ApplicationScope
+import com.appvoyager.litememo.domain.repository.MemoImportArchiveRepository
 import com.appvoyager.litememo.domain.usecase.ObserveRecentMemosUseCase
 import com.appvoyager.litememo.ui.widget.data.WidgetMemoLoader
 import com.appvoyager.litememo.ui.widget.data.WidgetRefresher
@@ -20,6 +21,7 @@ import javax.inject.Inject
 
 private const val WIDGET_REFRESH_DEBOUNCE_MS = 500L
 private const val WIDGET_REFRESH_TAG = "WidgetRefresh"
+private const val IMPORT_CLEANUP_TAG = "ImportCleanup"
 
 @HiltAndroidApp
 class LiteMemoApplication : Application() {
@@ -31,12 +33,27 @@ class LiteMemoApplication : Application() {
     @Inject
     lateinit var observeRecentMemosUseCase: ObserveRecentMemosUseCase
 
+    @Inject
+    lateinit var memoImportArchiveRepository: MemoImportArchiveRepository
+
     override fun onCreate() {
         super.onCreate()
         applicationScope.launch {
             MobileAds.initialize(this@LiteMemoApplication)
         }
+        deleteUnreferencedImportImages()
         observeMemosForWidgetRefresh()
+    }
+
+    private fun deleteUnreferencedImportImages() {
+        applicationScope.launch {
+            runCatching {
+                memoImportArchiveRepository.deleteUnreferencedImportImages()
+            }.onFailure { error ->
+                if (error is CancellationException) throw error
+                Log.w(IMPORT_CLEANUP_TAG, "Abandoned import image cleanup failed")
+            }
+        }
     }
 
     private fun observeMemosForWidgetRefresh() {
