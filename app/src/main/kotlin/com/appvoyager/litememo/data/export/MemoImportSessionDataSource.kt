@@ -9,7 +9,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,31 +18,49 @@ class MemoImportSessionDataSource @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
-    private val openTokens = ConcurrentHashMap.newKeySet<String>()
+    private val sessionLock = Any()
+    private val ownedTokens = mutableSetOf<String>()
 
     suspend fun open(): MemoImportSessionToken = withContext(ioDispatcher) {
         val token = MemoImportSessionToken(UUID.randomUUID().toString())
-        markerDir().mkdirs()
-        if (!markerFile(token).createNewFile()) {
-            throw IOException("Import session marker already exists.")
+        synchronized(sessionLock) {
+            markerDir().mkdirs()
+            if (!ownedTokens.add(token.value)) {
+                throw IOException("Import session token is already owned.")
+            }
+            var published = false
+            try {
+                if (!markerFile(token).createNewFile()) {
+                    throw IOException("Import session marker already exists.")
+                }
+                stagingDir(token).mkdirs()
+                published = true
+            } finally {
+                if (!published) ownedTokens -= token.value
+            }
         }
-        openTokens += token.value
-        stagingDir(token).mkdirs()
         token
     }
 
     suspend fun close(token: MemoImportSessionToken) {
         withContext(ioDispatcher) {
-            stagingDir(token).deleteRecursively()
-            markerFile(token).delete()
-            openTokens -= token.value
+            synchronized(sessionLock) {
+                stagingDir(token).deleteRecursively()
+                markerFile(token).delete()
+                ownedTokens -= token.value
+            }
         }
     }
 
-    suspend fun abandonedTokens(): List<MemoImportSessionToken> = withContext(ioDispatcher) {
-        markerDir().listFiles().orEmpty()
-            .filter { it.isFile && it.name !in openTokens }
-            .mapNotNull { file -> runCatching { MemoImportSessionToken(file.name) }.getOrNull() }
+    suspend fun claimAbandonedTokens(): List<MemoImportSessionToken> = withContext(ioDispatcher) {
+        synchronized(sessionLock) {
+            markerDir().listFiles().orEmpty()
+                .filter { it.isFile && it.name !in ownedTokens }
+                .mapNotNull { file ->
+                    runCatching { MemoImportSessionToken(file.name) }.getOrNull()
+                }
+                .onEach { token -> ownedTokens += token.value }
+        }
     }
 
     fun stagedImageFile(token: MemoImportSessionToken, archiveEntry: String): File =

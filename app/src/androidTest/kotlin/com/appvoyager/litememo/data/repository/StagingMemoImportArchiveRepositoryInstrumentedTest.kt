@@ -20,6 +20,7 @@ import com.appvoyager.litememo.domain.exception.MemoImportException
 import com.appvoyager.litememo.domain.exception.MemoImportFailureReason
 import com.appvoyager.litememo.domain.model.StagedMemoImport
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
+import com.appvoyager.litememo.domain.model.value.MemoImportSessionToken
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -184,6 +185,27 @@ class StagingMemoImportArchiveRepositoryInstrumentedTest {
     }
 
     @Test
+    fun errorStageMapsInvalidDomainValueToInvalidArchive() = runTest {
+        // Arrange
+        val reference = archiveReference(
+            memo = memoDto(),
+            contents = emptyList(),
+            exportedAt = -1L
+        )
+        val repository = repository()
+
+        // Act
+        // Error: a malformed domain value is reported through the archive failure contract.
+        val failure = runCatching { repository.stageImportImages(reference) }.exceptionOrNull()
+
+        // Assert
+        assertEquals(
+            MemoImportFailureReason.INVALID_ARCHIVE,
+            (failure as? MemoImportException)?.reason
+        )
+    }
+
+    @Test
     fun normalRollbackDeletesImagesAddedByTheStagedImport() = runTest {
         // Arrange
         val content = imageBytes(seed = 7)
@@ -277,6 +299,26 @@ class StagingMemoImportArchiveRepositoryInstrumentedTest {
         )
     }
 
+    @Test
+    fun interactionClaimedAbandonedSessionCannotBeClaimedAgainBeforeClose() = runTest {
+        // Arrange
+        val token = MemoImportSessionToken("abandoned-session")
+        val markerDir = File(context.filesDir, "import_sessions").apply { mkdirs() }
+        File(markerDir, token.value).createNewFile()
+        val sessionDataSource = sessionDataSource()
+
+        // Act
+        // Interaction: discovery claims ownership until cleanup closes the session.
+        val firstClaim = sessionDataSource.claimAbandonedTokens()
+        val secondClaim = sessionDataSource.claimAbandonedTokens()
+
+        // Assert
+        assertEquals(
+            listOf(token) to emptyList<MemoImportSessionToken>(),
+            firstClaim to secondClaim
+        )
+    }
+
     private fun storedFileNames(vararg staged: StagedMemoImport): List<String> = staged
         .flatMap { it.data.memos }
         .flatMap { memo -> memo.images.map { image -> image.fileName.value } }
@@ -332,11 +374,12 @@ class StagingMemoImportArchiveRepositoryInstrumentedTest {
     private fun archiveReference(
         memo: MemoExportDto,
         contents: List<ByteArray>,
-        version: Int = 1
+        version: Int = 1,
+        exportedAt: Long = 5_000L
     ): ExportFileReference {
         val manifest = LiteMemoExportDto(
             version = version,
-            exportedAt = 5_000L,
+            exportedAt = exportedAt,
             tags = emptyList(),
             memos = listOf(memo)
         )

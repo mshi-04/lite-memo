@@ -25,8 +25,13 @@ class ImportMemosFromFileUseCase @Inject constructor(
         val staged = memoImportArchiveRepository.stageImportImages(reference)
         val failure = runCatching { importMemosUseCase(staged.data) }.exceptionOrNull()
         if (failure != null) {
-            withContext(NonCancellable) {
-                memoImportArchiveRepository.rollbackStagedImport(staged.token)
+            val rollbackFailure = runCatching {
+                withContext(NonCancellable) {
+                    memoImportArchiveRepository.rollbackStagedImport(staged.token)
+                }
+            }.exceptionOrNull()
+            if (rollbackFailure != null && rollbackFailure !== failure) {
+                failure.addSuppressed(rollbackFailure)
             }
             throw failure
         }

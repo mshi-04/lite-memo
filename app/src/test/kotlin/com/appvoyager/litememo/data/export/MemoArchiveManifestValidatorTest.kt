@@ -67,6 +67,58 @@ class MemoArchiveManifestValidatorTest {
     }
 
     @Test
+    fun errorValidateRejectsNegativeExportTimestamp() {
+        // Arrange
+        val manifest = manifestFixture(exportedAt = -1L)
+
+        // Act & Assert
+        // Error: values that cannot become a domain timestamp invalidate the archive.
+        assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
+            MemoArchiveManifestValidator.validate(manifest, limits)
+        }
+    }
+
+    @Test
+    fun errorValidateRejectsBlankTagName() {
+        // Arrange
+        val manifest = manifestFixture(tags = listOf(tagDtoFixture(name = " ")))
+
+        // Act & Assert
+        // Error: values that cannot become a tag name invalidate the archive.
+        assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
+            MemoArchiveManifestValidator.validate(manifest, limits)
+        }
+    }
+
+    @Test
+    fun errorValidateRejectsTagColorOutsideArgbRange() {
+        // Arrange
+        val manifest = manifestFixture(
+            tags = listOf(tagDtoFixture().copy(colorArgb = 0x1_00000000L))
+        )
+
+        // Act & Assert
+        // Error: values that cannot become a tag color invalidate the archive.
+        assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
+            MemoArchiveManifestValidator.validate(manifest, limits)
+        }
+    }
+
+    @Test
+    fun errorValidateRejectsMemoUpdatedBeforeCreation() {
+        // Arrange
+        val manifest = manifestFixture(
+            memos = listOf(memoDtoFixture(createdAt = 2_000L, updatedAt = 1_000L))
+        )
+
+        // Act & Assert
+        // Error: values that cannot become a memo aggregate invalidate the archive.
+        assertArchiveFailure(MemoArchiveFailureReason.MALFORMED_ARCHIVE) {
+            MemoArchiveManifestValidator.validate(manifest, limits)
+        }
+    }
+
+    @Test
     fun errorValidateRejectsImageIdSharedByDifferentMemos() {
         // Arrange
         val first = compressedImageBytes(sizeBytes = 64, seed = 1)

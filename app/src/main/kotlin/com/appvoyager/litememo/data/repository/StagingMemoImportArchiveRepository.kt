@@ -41,8 +41,14 @@ class StagingMemoImportArchiveRepository @Inject constructor(
             val staged = runCatching { stage(reference, token) }
             val failure = staged.exceptionOrNull()
             if (failure != null) {
-                withContext(NonCancellable) { rollbackStagedImport(token) }
-                throw failure.asImportFailure()
+                val importFailure = failure.asImportFailure()
+                val rollbackFailure = runCatching {
+                    withContext(NonCancellable) { rollbackStagedImport(token) }
+                }.exceptionOrNull()
+                if (rollbackFailure != null && rollbackFailure !== importFailure) {
+                    importFailure.addSuppressed(rollbackFailure)
+                }
+                throw importFailure
             }
             staged.getOrThrow()
         }
@@ -60,7 +66,7 @@ class StagingMemoImportArchiveRepository @Inject constructor(
 
     override suspend fun deleteUnreferencedImportImages() {
         withContext(ioDispatcher) {
-            sessionDataSource.abandonedTokens().forEach { token ->
+            sessionDataSource.claimAbandonedTokens().forEach { token ->
                 deleteUnreferencedImagesOf(token)
                 sessionDataSource.close(token)
             }

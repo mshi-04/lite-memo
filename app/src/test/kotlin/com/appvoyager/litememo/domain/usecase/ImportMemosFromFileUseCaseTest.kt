@@ -5,6 +5,7 @@ import com.appvoyager.litememo.domain.FakeMemoImportRepository
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
+import com.appvoyager.litememo.domain.model.StagedMemoImport
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.domain.model.value.MemoImportSessionToken
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
@@ -16,6 +17,7 @@ import io.mockk.coVerifySequence
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -171,6 +173,72 @@ class ImportMemosFromFileUseCaseTest {
         assertEquals(
             listOf(FakeMemoImportArchiveRepository.TOKEN) to emptyList<MemoImportSessionToken>(),
             archiveRepository.rolledBackTokens to archiveRepository.completedTokens
+        )
+    }
+
+    @Test
+    fun errorArchivePersistenceFailureRemainsPrimaryWhenRollbackFails() {
+        // Arrange
+        val reference = ExportFileReference("content://import.zip")
+        val data = exportData(memos = listOf(memoFixture()))
+        val persistenceFailure = IllegalStateException("db failed")
+        val rollbackFailure = IllegalStateException("rollback failed")
+        val archiveRepository = mockk<MemoImportArchiveRepository>()
+        val importMemosUseCase = mockk<ImportMemosUseCase>()
+        coEvery { archiveRepository.isArchive(reference) } returns true
+        coEvery { archiveRepository.stageImportImages(reference) } returns StagedMemoImport(
+            token = FakeMemoImportArchiveRepository.TOKEN,
+            data = data
+        )
+        coEvery { importMemosUseCase(data) } throws persistenceFailure
+        coEvery {
+            archiveRepository.rollbackStagedImport(FakeMemoImportArchiveRepository.TOKEN)
+        } throws rollbackFailure
+        val useCase = useCase(mockk(), archiveRepository, importMemosUseCase)
+
+        // Act
+        // Error: rollback diagnostics do not replace the persistence failure.
+        val actual = assertThrows(IllegalStateException::class.java) {
+            runTest { useCase(reference) }
+        }
+
+        // Assert
+        assertAll(
+            { assertSame(persistenceFailure, actual) },
+            { assertEquals(rollbackFailure.message, actual.suppressed.single().message) }
+        )
+    }
+
+    @Test
+    fun coroutineArchiveCancellationRemainsPrimaryWhenRollbackFails() {
+        // Arrange
+        val reference = ExportFileReference("content://import.zip")
+        val data = exportData(memos = listOf(memoFixture()))
+        val cancellation = CancellationException("cancelled")
+        val rollbackFailure = IllegalStateException("rollback failed")
+        val archiveRepository = mockk<MemoImportArchiveRepository>()
+        val importMemosUseCase = mockk<ImportMemosUseCase>()
+        coEvery { archiveRepository.isArchive(reference) } returns true
+        coEvery { archiveRepository.stageImportImages(reference) } returns StagedMemoImport(
+            token = FakeMemoImportArchiveRepository.TOKEN,
+            data = data
+        )
+        coEvery { importMemosUseCase(data) } throws cancellation
+        coEvery {
+            archiveRepository.rollbackStagedImport(FakeMemoImportArchiveRepository.TOKEN)
+        } throws rollbackFailure
+        val useCase = useCase(mockk(), archiveRepository, importMemosUseCase)
+
+        // Act
+        // Coroutine: archive cancellation is rethrown after best-effort rollback.
+        val actual = assertThrows(CancellationException::class.java) {
+            runTest { useCase(reference) }
+        }
+
+        // Assert
+        assertAll(
+            { assertSame(cancellation, actual) },
+            { assertEquals(rollbackFailure.message, actual.suppressed.single().message) }
         )
     }
 
