@@ -85,6 +85,9 @@ interface MemoDao {
     @Query("SELECT fileName FROM memo_images WHERE memoId IN (:memoIds)")
     suspend fun getImageFileNamesForMemos(memoIds: List<String>): List<String>
 
+    @Query("SELECT fileName FROM memo_images WHERE fileName IN (:fileNames)")
+    suspend fun findReferencedImageFileNames(fileNames: List<String>): List<String>
+
     @Query(
         """
         SELECT fileName FROM memo_images

@@ -160,10 +160,15 @@
     <string name="settings_import_success">Import completed</string>
     <string name="settings_import_error">Could not read the file</string>
     <string name="settings_import_confirm_title">Import data</string>
-    <string name="settings_import_confirm_message">Import data from the file. Memos and tags with the same IDs will be overwritten. Images are not included in export or import, so attached images will be lost when memos with the same IDs are overwritten. Continue?</string>
+    <string name="settings_import_confirm_message">Imports memos, tags, and images from the ZIP file. Memos and tags with the same IDs are overwritten with the imported content, including their attached images. Continue?</string>
     <string name="settings_import_confirm_ok">Import</string>
     <string name="settings_import_error_title">Import failed</string>
     <string name="settings_import_error_tag_conflict_message">Import was canceled because tags with the same name already exist. Rename the following tags and try again.</string>
+    <string name="settings_import_error_unsupported_version">This file format version is not supported. Update the app and try again.</string>
+    <string name="settings_import_error_invalid_archive">The file could not be imported because its format is invalid. Choose a ZIP file created by export.</string>
+    <string name="settings_import_error_invalid_image">The file could not be imported because an image inside it is damaged. Your data was left unchanged.</string>
+    <string name="settings_import_error_size_limit">The file could not be imported because it is too large.</string>
+    <string name="settings_import_error_insufficient_storage">The file could not be imported because there is not enough free space. Free up space and try again.</string>
     <string name="settings_import_error_close">Close</string>
     <string name="settings_section_app_info">App information</string>
     <string name="settings_version">Version</string>

@@ -732,6 +732,9 @@ class RoomMemoRepositoryTest {
         override suspend fun getImageFileNamesForMemos(memoIds: List<String>): List<String> =
             memoIds.flatMap { imageFileNamesByMemoId[it].orEmpty() }
 
+        override suspend fun findReferencedImageFileNames(fileNames: List<String>): List<String> =
+            imageFileNamesByMemoId.values.flatten().filter { it in fileNames }
+
         override suspend fun getImageFileNamesForTrashedMemosDeletedAtOrBefore(
             cutoff: Long
         ): List<String> = imageFileNamesForPurge

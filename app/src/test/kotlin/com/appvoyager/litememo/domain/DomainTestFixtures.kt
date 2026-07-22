@@ -4,12 +4,15 @@ import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
 import com.appvoyager.litememo.domain.model.MemoImage
 import com.appvoyager.litememo.domain.model.MemoSummary
+import com.appvoyager.litememo.domain.model.StagedMemoImport
 import com.appvoyager.litememo.domain.model.Tag
+import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.domain.model.value.ImageSourceReference
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
 import com.appvoyager.litememo.domain.model.value.MemoImageFileName
 import com.appvoyager.litememo.domain.model.value.MemoImageId
+import com.appvoyager.litememo.domain.model.value.MemoImportSessionToken
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.SearchQuery
 import com.appvoyager.litememo.domain.model.value.TagColor
@@ -21,6 +24,7 @@ import com.appvoyager.litememo.domain.provider.CurrentTimeProvider
 import com.appvoyager.litememo.domain.provider.MemoIdProvider
 import com.appvoyager.litememo.domain.provider.TagIdProvider
 import com.appvoyager.litememo.domain.repository.MemoImageStore
+import com.appvoyager.litememo.domain.repository.MemoImportArchiveRepository
 import com.appvoyager.litememo.domain.repository.MemoImportRepository
 import com.appvoyager.litememo.domain.repository.MemoRepository
 import com.appvoyager.litememo.domain.repository.TagRepository
@@ -200,6 +204,43 @@ class FakeMemoImportRepository : MemoImportRepository {
 
     override suspend fun import(data: ExportData) {
         importedData += data
+    }
+
+}
+
+class FakeMemoImportArchiveRepository(
+    private val isArchive: Boolean = false,
+    private val stagedData: ExportData? = null
+) : MemoImportArchiveRepository {
+
+    val stagedReferences = mutableListOf<ExportFileReference>()
+    val completedTokens = mutableListOf<MemoImportSessionToken>()
+    val rolledBackTokens = mutableListOf<MemoImportSessionToken>()
+    var stageError: Throwable? = null
+    var deleteUnreferencedCallCount = 0
+
+    override suspend fun isArchive(reference: ExportFileReference): Boolean = isArchive
+
+    override suspend fun stageImportImages(reference: ExportFileReference): StagedMemoImport {
+        stagedReferences += reference
+        stageError?.let { throw it }
+        return StagedMemoImport(token = TOKEN, data = requireNotNull(stagedData))
+    }
+
+    override suspend fun completeStagedImport(token: MemoImportSessionToken) {
+        completedTokens += token
+    }
+
+    override suspend fun rollbackStagedImport(token: MemoImportSessionToken) {
+        rolledBackTokens += token
+    }
+
+    override suspend fun deleteUnreferencedImportImages() {
+        deleteUnreferencedCallCount++
+    }
+
+    companion object {
+        val TOKEN = MemoImportSessionToken("session-1")
     }
 
 }

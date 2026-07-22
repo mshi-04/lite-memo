@@ -28,6 +28,8 @@ import java.time.format.DateTimeFormatter
 
 private const val PRIVACY_POLICY_URL = "https://mshi-04.github.io/lite-memo/privacy/"
 
+private val IMPORT_MIME_TYPES = arrayOf("application/zip", "application/json")
+
 private fun defaultExportFileName(): String {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
     return "lite-memo-export-${LocalDateTime.now().format(formatter)}.json"
@@ -129,7 +131,7 @@ fun SettingsRoute(
         onTagManageClick = onTagManageClick,
         onTrashClick = onTrashClick,
         onExportClick = { launchFilePicker { exportLauncher.launch(defaultExportFileName()) } },
-        onImportClick = { launchFilePicker { importLauncher.launch(arrayOf("application/json")) } },
+        onImportClick = { launchFilePicker { importLauncher.launch(IMPORT_MIME_TYPES) } },
         onConfirmImport = { viewModel.confirmImport() },
         onDismissImportConfirmDialog = { viewModel.dismissImportConfirmDialog() },
         onDismissImportErrorDialog = { viewModel.dismissImportErrorDialog() },

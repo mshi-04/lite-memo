@@ -1,11 +1,14 @@
 package com.appvoyager.litememo.ui.viewmodel
 
 import app.cash.turbine.test
+import com.appvoyager.litememo.domain.FakeMemoImportArchiveRepository
 import com.appvoyager.litememo.domain.FakeMemoImportRepository
 import com.appvoyager.litememo.domain.FakeMemoRepository
 import com.appvoyager.litememo.domain.FakeTagRepository
 import com.appvoyager.litememo.domain.MutableTimeProvider
 import com.appvoyager.litememo.domain.exception.ImportTagNameConflictException
+import com.appvoyager.litememo.domain.exception.MemoImportException
+import com.appvoyager.litememo.domain.exception.MemoImportFailureReason
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.value.ExportFileReference
 import com.appvoyager.litememo.domain.model.value.TagName
@@ -291,6 +294,42 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun flowConfirmImportShowsUnsupportedVersionDialogWhenImportRejectsVersion() =
+        runTest(dispatcher) {
+            // Arrange
+            val viewModel = importFailingSettingsViewModel(
+                MemoImportFailureReason.UNSUPPORTED_VERSION
+            )
+
+            // Act
+            // Flow/Error: an unsupported archive version has its own dialog variant.
+            viewModel.confirmImport()
+            advanceUntilIdle()
+            val state = viewModel.uiState.first { it.importErrorDialog != null }
+
+            // Assert
+            assertEquals(
+                SettingsImportErrorDialogUiState.UnsupportedVersion,
+                state.importErrorDialog
+            )
+        }
+
+    @Test
+    fun flowConfirmImportShowsInvalidImageDialogWhenArchiveImageIsCorrupt() = runTest(dispatcher) {
+        // Arrange
+        val viewModel = importFailingSettingsViewModel(MemoImportFailureReason.INVALID_IMAGE)
+
+        // Act
+        // Flow/Error: a corrupt image is distinguished from a generic import failure.
+        viewModel.confirmImport()
+        advanceUntilIdle()
+        val state = viewModel.uiState.first { it.importErrorDialog != null }
+
+        // Assert
+        assertEquals(SettingsImportErrorDialogUiState.InvalidImage, state.importErrorDialog)
+    }
+
+    @Test
     fun stateTransitionDismissImportErrorDialogClearsState() = runTest(dispatcher) {
         // Arrange
         val viewModel = settingsViewModel(
@@ -477,6 +516,14 @@ class SettingsViewModelTest {
         assertEquals(false to true, state.themeDropdownExpanded to state.sortOrderExpanded)
     }
 
+    private fun importFailingSettingsViewModel(reason: MemoImportFailureReason): SettingsViewModel {
+        val reference = ExportFileReference("content://import")
+        val importUseCase = mockk<ImportMemosFromFileUseCase>()
+        coEvery { importUseCase(reference) } throws MemoImportException(reason, "import failed")
+        return settingsViewModel(mockk<ExportMemosToFileUseCase>(), importUseCase)
+            .also { it.onImportFileSelected(reference) }
+    }
+
     private fun settingsViewModel(exportFileRepository: ExportFileRepository): SettingsViewModel =
         settingsViewModel(
             exportFileRepository = exportFileRepository,
@@ -524,6 +571,7 @@ class SettingsViewModelTest {
             ),
             importMemosFromFileUseCase = ImportMemosFromFileUseCase(
                 exportFileRepository = exportFileRepository,
+                memoImportArchiveRepository = FakeMemoImportArchiveRepository(),
                 importMemosUseCase = ImportMemosUseCase(
                     memoImportRepository = FakeMemoImportRepository()
                 )

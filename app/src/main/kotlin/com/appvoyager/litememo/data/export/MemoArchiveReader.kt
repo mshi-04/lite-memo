@@ -125,29 +125,14 @@ internal class MemoArchiveReader(private val json: Json, private val limits: Mem
     }
 
     private fun requireZipSignature(source: InputStream): InputStream {
-        val pushback = PushbackInputStream(source, ZIP_SIGNATURE_LENGTH)
-        val header = ByteArray(ZIP_SIGNATURE_LENGTH)
-        var filled = 0
-        while (filled < header.size) {
-            val read = pushback.read(header, filled, header.size - filled)
-            if (read < 0) break
-            filled += read
-        }
-        if (filled > 0) pushback.unread(header, 0, filled)
-
-        if (filled < header.size || bigEndianInt(header) != ZIP_LOCAL_FILE_HEADER_SIGNATURE) {
+        val pushback = PushbackInputStream(source, MemoArchiveSignature.LENGTH)
+        if (!MemoArchiveSignature.matches(pushback)) {
             archiveFailure(
                 MemoArchiveFailureReason.INVALID_SIGNATURE,
                 "Input does not start with a ZIP local file header."
             )
         }
         return pushback
-    }
-
-    private fun bigEndianInt(bytes: ByteArray): Int {
-        var value = 0
-        bytes.forEach { byte -> value = (value shl BITS_PER_BYTE) or (byte.toInt() and BYTE_MASK) }
-        return value
     }
 
     private fun requireEntryCount(entryCount: Int) {
@@ -198,8 +183,3 @@ internal class MemoArchiveReader(private val json: Json, private val limits: Mem
     }
 
 }
-
-private const val ZIP_LOCAL_FILE_HEADER_SIGNATURE = 0x504B0304
-private const val ZIP_SIGNATURE_LENGTH = 4
-private const val BITS_PER_BYTE = 8
-private const val BYTE_MASK = 0xFF

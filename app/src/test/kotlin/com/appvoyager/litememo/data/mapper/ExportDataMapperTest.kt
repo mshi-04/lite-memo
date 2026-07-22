@@ -2,11 +2,15 @@ package com.appvoyager.litememo.data.mapper
 
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import com.appvoyager.litememo.data.model.export.MemoExportDto
+import com.appvoyager.litememo.data.model.export.MemoImageExportDto
 import com.appvoyager.litememo.data.model.export.TagExportDto
 import com.appvoyager.litememo.domain.memoFixture
 import com.appvoyager.litememo.domain.model.ExportData
+import com.appvoyager.litememo.domain.model.MemoImage
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoImageFileName
+import com.appvoyager.litememo.domain.model.value.MemoImageId
 import com.appvoyager.litememo.domain.model.value.MemoTitle
 import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
@@ -269,5 +273,89 @@ class ExportDataMapperTest {
                 dto.toDomain()
             }
         }
+    }
+
+    @Nested
+    inner class ImportDtoToDomain {
+
+        @Test
+        fun normalToDomainKeepsImageIdsAndOrderWithStoredFileNames() {
+            // Arrange
+            val dto = manifestDto(
+                images = listOf(imageDto(id = "image-1"), imageDto(id = "image-2"))
+            )
+            val storedFileNames = mapOf(
+                "image-1" to MemoImageFileName("session-00000001.jpg"),
+                "image-2" to MemoImageFileName("session-00000002.png")
+            )
+
+            // Act
+            // Normal: image ids and order survive while file names are replaced by stored ones.
+            val data = dto.toDomain(storedFileNames)
+
+            // Assert
+            assertEquals(
+                listOf(
+                    MemoImage(MemoImageId("image-1"), MemoImageFileName("session-00000001.jpg")),
+                    MemoImage(MemoImageId("image-2"), MemoImageFileName("session-00000002.png"))
+                ),
+                data.memos.single().images
+            )
+        }
+
+        @Test
+        fun boundaryToDomainAcceptsImageOnlyMemo() {
+            // Arrange
+            val dto = manifestDto(title = "", body = "", images = listOf(imageDto()))
+            val storedFileNames = mapOf("image-1" to MemoImageFileName("session-00000001.jpg"))
+
+            // Act
+            // Boundary: a memo with empty title and body keeps its images.
+            val data = dto.toDomain(storedFileNames)
+
+            // Assert
+            assertEquals(1, data.memos.single().images.size)
+        }
+
+        @Test
+        fun errorToDomainRejectsImageWithoutStoredFileName() {
+            // Arrange
+            val dto = manifestDto(images = listOf(imageDto()))
+
+            // Act & Assert
+            // Error: an image the store did not accept must not reach the domain model.
+            assertThrows(IllegalArgumentException::class.java) {
+                dto.toDomain(emptyMap())
+            }
+        }
+
+        private fun manifestDto(
+            title: String = "Title",
+            body: String = "Body",
+            images: List<MemoImageExportDto> = emptyList()
+        ) = LiteMemoExportDto(
+            version = 1,
+            exportedAt = 5000L,
+            tags = emptyList(),
+            memos = listOf(
+                MemoExportDto(
+                    id = "memo-1",
+                    title = title,
+                    body = body,
+                    createdAt = 1000L,
+                    updatedAt = 2000L,
+                    isFavorite = false,
+                    images = images
+                )
+            )
+        )
+
+        private fun imageDto(id: String = "image-1") = MemoImageExportDto(
+            id = id,
+            fileName = "picked.jpg",
+            archiveEntry = "images/00000001",
+            sizeBytes = 16L,
+            sha256 = "0".repeat(64)
+        )
     }
 }

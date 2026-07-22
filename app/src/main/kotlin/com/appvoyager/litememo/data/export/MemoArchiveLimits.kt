@@ -1,6 +1,6 @@
 package com.appvoyager.litememo.data.export
 
-internal data class MemoArchiveLimits(
+data class MemoArchiveLimits(
     val maxArchiveBytes: Long,
     val maxManifestBytes: Long,
     val maxImageBytes: Long,

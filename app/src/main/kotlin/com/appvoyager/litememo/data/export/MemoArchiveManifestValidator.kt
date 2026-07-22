@@ -2,6 +2,12 @@ package com.appvoyager.litememo.data.export
 
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import com.appvoyager.litememo.data.model.export.MemoImageExportDto
+import com.appvoyager.litememo.domain.model.value.MemoId
+import com.appvoyager.litememo.domain.model.value.MemoImageId
+import com.appvoyager.litememo.domain.model.value.TagColor
+import com.appvoyager.litememo.domain.model.value.TagId
+import com.appvoyager.litememo.domain.model.value.TagName
+import com.appvoyager.litememo.domain.model.value.TimestampMillis
 
 internal object MemoArchiveManifestValidator {
 
@@ -16,6 +22,7 @@ internal object MemoArchiveManifestValidator {
         val images = manifest.memos.flatMap { it.images }
         validateEntryCount(images, limits)
         validateIdentifiers(manifest, images)
+        validateDomainValues(manifest)
         validateImages(images, limits)
     }
 
@@ -38,6 +45,33 @@ internal object MemoArchiveManifestValidator {
         requireUnique(manifest.memos.map { it.id }, "memo id")
         requireUnique(images.map { it.id }, "image id")
         requireUnique(images.map { it.archiveEntry }, "archive entry")
+    }
+
+    private fun validateDomainValues(manifest: LiteMemoExportDto) {
+        requireDomainValue("export timestamp") { TimestampMillis(manifest.exportedAt) }
+        manifest.tags.forEach { tag ->
+            requireDomainValue("tag id") { TagId(tag.id) }
+            requireDomainValue("tag name") { TagName(tag.name) }
+            requireDomainValue("tag color") { TagColor(tag.colorArgb) }
+            requireDomainValue("tag timestamp") { TimestampMillis(tag.createdAt) }
+        }
+        manifest.memos.forEach { memo ->
+            requireDomainValue("memo id") { MemoId(memo.id) }
+            requireDomainValue("memo creation timestamp") { TimestampMillis(memo.createdAt) }
+            requireDomainValue("memo update timestamp") { TimestampMillis(memo.updatedAt) }
+            if (memo.updatedAt < memo.createdAt) {
+                archiveFailure(
+                    MemoArchiveFailureReason.MALFORMED_ARCHIVE,
+                    "Archive contains a memo updated before it was created."
+                )
+            }
+            memo.tagIds.forEach { tagId ->
+                requireDomainValue("memo tag id") { TagId(tagId) }
+            }
+            memo.images.forEach { image ->
+                requireDomainValue("image id") { MemoImageId(image.id) }
+            }
+        }
     }
 
     private fun validateImages(images: List<MemoImageExportDto>, limits: MemoArchiveLimits) {
@@ -125,6 +159,18 @@ internal object MemoArchiveManifestValidator {
             archiveFailure(
                 MemoArchiveFailureReason.DUPLICATE_IDENTIFIER,
                 "Archive contains a duplicated $label."
+            )
+        }
+    }
+
+    private inline fun requireDomainValue(label: String, create: () -> Unit) {
+        try {
+            create()
+        } catch (failure: IllegalArgumentException) {
+            archiveFailure(
+                MemoArchiveFailureReason.MALFORMED_ARCHIVE,
+                "Archive contains an invalid $label.",
+                failure
             )
         }
     }
