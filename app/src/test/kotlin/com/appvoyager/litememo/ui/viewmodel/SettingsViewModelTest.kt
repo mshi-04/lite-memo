@@ -161,6 +161,28 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun interactionDelayedPickerResultAfterCancelDoesNotWriteDiscardedArchive() =
+        runTest(dispatcher) {
+            // Arrange
+            val discardGate = CompletableDeferred<Unit>()
+            val repository = FakeMemoExportArchiveRepository(discardGate = discardGate)
+            val viewModel = viewModel(repository)
+            viewModel.prepareExport()
+            advanceUntilIdle()
+
+            // Act
+            // Interaction: cancel releases ownership before asynchronous file deletion completes.
+            viewModel.cancelPreparedExport()
+            viewModel.writePreparedExport(DESTINATION)
+            runCurrent()
+            discardGate.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertEquals(emptyList<Pair<MemoExportToken, ExportFileReference>>(), repository.writes)
+        }
+
+    @Test
     fun flowWritePreparedExportEmitsSuccessAndDiscardsArchive() = runTest(dispatcher) {
         // Arrange
         val repository = FakeMemoExportArchiveRepository()
@@ -625,7 +647,8 @@ class SettingsViewModelTest {
     private class FakeMemoExportArchiveRepository(
         private val prepareGate: CompletableDeferred<Unit>? = null,
         private val prepareError: Throwable? = null,
-        private val writeError: Throwable? = null
+        private val writeError: Throwable? = null,
+        private val discardGate: CompletableDeferred<Unit>? = null
     ) : MemoExportArchiveRepository {
 
         val preparedData = mutableListOf<ExportData>()
@@ -646,6 +669,7 @@ class SettingsViewModelTest {
 
         override suspend fun discard(token: MemoExportToken) {
             discardedTokens += token
+            discardGate?.await()
         }
 
         override suspend fun deleteAbandonedPreparedExports() = Unit

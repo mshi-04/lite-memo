@@ -217,12 +217,13 @@ class SettingsViewModel @Inject constructor(
 
     fun cancelPreparedExport() {
         val token = pendingExportToken ?: return
+        pendingExportToken = null
         exportPickerRequestId.value = null
+        isExporting.value = false
         viewModelScope.launch {
             withContext(NonCancellable) {
                 runCatching { memoExportArchiveRepository.discard(token) }
             }
-            clearPreparedExport(token)
         }
     }
 
