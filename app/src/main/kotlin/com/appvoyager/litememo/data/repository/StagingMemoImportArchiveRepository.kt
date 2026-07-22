@@ -66,9 +66,20 @@ class StagingMemoImportArchiveRepository @Inject constructor(
 
     override suspend fun deleteUnreferencedImportImages() {
         withContext(ioDispatcher) {
+            val failures = mutableListOf<Throwable>()
             sessionDataSource.claimAbandonedTokens().forEach { token ->
-                deleteUnreferencedImagesOf(token)
-                sessionDataSource.close(token)
+                val failure = runCatching {
+                    deleteUnreferencedImagesOf(token)
+                    sessionDataSource.close(token)
+                }.exceptionOrNull() ?: return@forEach
+                if (failure is CancellationException) throw failure
+                failures += failure
+            }
+            failures.firstOrNull()?.let { primaryFailure ->
+                failures.drop(1)
+                    .filterNot { it === primaryFailure }
+                    .forEach(primaryFailure::addSuppressed)
+                throw primaryFailure
             }
         }
     }

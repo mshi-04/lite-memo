@@ -45,8 +45,14 @@ class MemoImportSessionDataSource @Inject constructor(
     suspend fun close(token: MemoImportSessionToken) {
         withContext(ioDispatcher) {
             synchronized(sessionLock) {
-                stagingDir(token).deleteRecursively()
-                markerFile(token).delete()
+                val stagingDir = stagingDir(token)
+                if (!stagingDir.deleteRecursively() && stagingDir.exists()) {
+                    throw IOException("Failed to delete the import staging directory.")
+                }
+                val markerFile = markerFile(token)
+                if (!markerFile.delete() && markerFile.exists()) {
+                    throw IOException("Failed to delete the import session marker.")
+                }
                 ownedTokens -= token.value
             }
         }
