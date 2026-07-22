@@ -225,17 +225,22 @@ class StagingMemoImportArchiveRepositoryInstrumentedTest {
     }
 
     @Test
-    fun boundaryIsArchiveRejectsStandaloneJsonInput() = runTest {
+    fun errorStageRejectsStandaloneJsonInput() = runTest {
         // Arrange
         val file = importFile("json").apply { writeText("""{"version":1}""") }
         val repository = repository()
 
         // Act
-        // Boundary: format detection relies on the leading bytes, not on the file extension.
-        val isArchive = repository.isArchive(ExportFileReference(Uri.fromFile(file).toString()))
+        // Error: standalone JSON is no longer an import format.
+        val failure = runCatching {
+            repository.stageImportImages(ExportFileReference(Uri.fromFile(file).toString()))
+        }.exceptionOrNull()
 
         // Assert
-        assertEquals(false, isArchive)
+        assertEquals(
+            MemoImportFailureReason.INVALID_ARCHIVE,
+            (failure as MemoImportException).reason
+        )
     }
 
     @Test

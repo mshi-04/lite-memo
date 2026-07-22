@@ -2,6 +2,7 @@ package com.appvoyager.litememo.data.mapper
 
 import com.appvoyager.litememo.data.model.export.LiteMemoExportDto
 import com.appvoyager.litememo.data.model.export.MemoExportDto
+import com.appvoyager.litememo.data.model.export.MemoImageExportDto
 import com.appvoyager.litememo.data.model.export.TagExportDto
 import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.Memo
@@ -16,13 +17,6 @@ import com.appvoyager.litememo.domain.model.value.TagColor
 import com.appvoyager.litememo.domain.model.value.TagId
 import com.appvoyager.litememo.domain.model.value.TagName
 import com.appvoyager.litememo.domain.model.value.TimestampMillis
-
-fun ExportData.toDto() = LiteMemoExportDto(
-    version = version,
-    exportedAt = exportedAt.value,
-    tags = tags.map { it.toExportDto() },
-    memos = memos.map { it.toExportDto() }
-)
 
 fun LiteMemoExportDto.toDomain() = ExportData(
     version = version,
@@ -49,14 +43,15 @@ fun MemoExportDto.toDomain(imageFileNames: Map<String, MemoImageFileName>) = toD
     }
 )
 
-fun Memo.toExportDto() = MemoExportDto(
+fun Memo.toExportDto(images: List<MemoImageExportDto>) = MemoExportDto(
     id = id.value,
     title = title.value,
     body = body.value,
     createdAt = createdAt.value,
     updatedAt = updatedAt.value,
     isFavorite = isFavorite,
-    tagIds = tagIds.map { it.value }
+    tagIds = tagIds.map { it.value },
+    images = images
 )
 
 fun MemoExportDto.toDomain() = Memo(

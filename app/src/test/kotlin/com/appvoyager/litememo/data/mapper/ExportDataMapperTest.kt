@@ -5,7 +5,6 @@ import com.appvoyager.litememo.data.model.export.MemoExportDto
 import com.appvoyager.litememo.data.model.export.MemoImageExportDto
 import com.appvoyager.litememo.data.model.export.TagExportDto
 import com.appvoyager.litememo.domain.memoFixture
-import com.appvoyager.litememo.domain.model.ExportData
 import com.appvoyager.litememo.domain.model.MemoImage
 import com.appvoyager.litememo.domain.model.value.MemoBody
 import com.appvoyager.litememo.domain.model.value.MemoId
@@ -24,79 +23,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class ExportDataMapperTest {
-
-    @Nested
-    inner class ExportDataToDto {
-
-        @Test
-        fun convertsDomainToDto() {
-            // Arrange
-            val tag = tagFixture(id = "tag-1", name = "Work", color = 0xFF6750A4, createdAt = 1000L)
-            val memo = memoFixture(
-                id = "memo-1",
-                title = "Title",
-                body = "Body",
-                createdAt = 2000L,
-                updatedAt = 3000L,
-                isFavorite = true,
-                tagIds = listOf(TagId("tag-1"))
-            )
-            val exportData = ExportData(
-                version = 1,
-                exportedAt = TimestampMillis(5000L),
-                tags = listOf(tag),
-                memos = listOf(memo)
-            )
-
-            // Act
-            val dto = exportData.toDto()
-
-            // Assert
-            assertEquals(1, dto.version)
-            assertEquals(5000L, dto.exportedAt)
-            assertEquals(1, dto.tags.size)
-            assertEquals(
-                TagExportDto(
-                    id = "tag-1",
-                    name = "Work",
-                    colorArgb = 0xFF6750A4,
-                    createdAt = 1000L
-                ),
-                dto.tags[0]
-            )
-            assertEquals(1, dto.memos.size)
-            assertEquals(
-                MemoExportDto(
-                    id = "memo-1",
-                    title = "Title",
-                    body = "Body",
-                    createdAt = 2000L,
-                    updatedAt = 3000L,
-                    isFavorite = true,
-                    tagIds = listOf("tag-1")
-                ),
-                dto.memos[0]
-            )
-        }
-
-        @Test
-        fun convertsEmptyLists() {
-            // Arrange
-            val exportData = ExportData(
-                version = 1,
-                exportedAt = TimestampMillis(5000L),
-                tags = emptyList(),
-                memos = emptyList()
-            )
-
-            // Act
-            val dto = exportData.toDto()
-
-            // Assert
-            assertEquals(emptyList<TagExportDto>(), dto.tags)
-            assertEquals(emptyList<MemoExportDto>(), dto.memos)
-        }
-    }
 
     @Nested
     inner class DtoToDomain {
@@ -182,7 +108,7 @@ class ExportDataMapperTest {
             )
 
             // Act
-            val roundTripped = original.toExportDto().toDomain()
+            val roundTripped = original.toExportDto(emptyList()).toDomain()
 
             // Assert
             assertEquals(original.id, roundTripped.id)

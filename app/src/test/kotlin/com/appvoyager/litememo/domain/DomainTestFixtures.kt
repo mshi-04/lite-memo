@@ -208,18 +208,14 @@ class FakeMemoImportRepository : MemoImportRepository {
 
 }
 
-class FakeMemoImportArchiveRepository(
-    private val isArchive: Boolean = false,
-    private val stagedData: ExportData? = null
-) : MemoImportArchiveRepository {
+class FakeMemoImportArchiveRepository(private val stagedData: ExportData? = null) :
+    MemoImportArchiveRepository {
 
     val stagedReferences = mutableListOf<ExportFileReference>()
     val completedTokens = mutableListOf<MemoImportSessionToken>()
     val rolledBackTokens = mutableListOf<MemoImportSessionToken>()
     var stageError: Throwable? = null
     var deleteUnreferencedCallCount = 0
-
-    override suspend fun isArchive(reference: ExportFileReference): Boolean = isArchive
 
     override suspend fun stageImportImages(reference: ExportFileReference): StagedMemoImport {
         stagedReferences += reference

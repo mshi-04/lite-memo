@@ -11,7 +11,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.io.InputStream
-import java.io.PushbackInputStream
 import javax.inject.Inject
 
 class MemoImportArchiveExtractor @Inject constructor(
@@ -20,14 +19,6 @@ class MemoImportArchiveExtractor @Inject constructor(
     @param:ArchiveLimits private val limits: MemoArchiveLimits,
     private val sessionDataSource: MemoImportSessionDataSource
 ) {
-
-    fun isArchive(reference: ExportFileReference): Boolean = runCatching {
-        openInputStream(reference).use { source ->
-            MemoArchiveSignature.matches(
-                PushbackInputStream(source, MemoArchiveSignature.LENGTH)
-            )
-        }
-    }.getOrDefault(false)
 
     fun extractImages(
         reference: ExportFileReference,
