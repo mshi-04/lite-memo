@@ -156,6 +156,7 @@
     <string name="settings_import">インポート</string>
     <string name="settings_export_success">エクスポートが完了しました</string>
     <string name="settings_export_error">エクスポートに失敗しました</string>
+    <string name="settings_export_destination_write_error">保存に失敗しました。保存先のファイルは不完全な可能性があります</string>
     <string name="settings_import_success">取り込みが完了しました</string>
     <string name="settings_import_error">ファイルの読み込みに失敗しました</string>
     <string name="settings_import_confirm_title">データの取り込み</string>

@@ -6,8 +6,6 @@ import com.appvoyager.litememo.domain.model.value.MemoImportSessionToken
 
 interface MemoImportArchiveRepository {
 
-    suspend fun isArchive(reference: ExportFileReference): Boolean
-
     suspend fun stageImportImages(reference: ExportFileReference): StagedMemoImport
 
     suspend fun completeStagedImport(token: MemoImportSessionToken)

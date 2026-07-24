@@ -74,6 +74,8 @@ class MemoImageFileDataSource @Inject constructor(
 
     fun imageFilePath(fileName: String): String = File(imagesDir(), fileName).absolutePath
 
+    fun imageFile(fileName: String): File = File(imagesDir(), fileName)
+
     private fun imagesDir(): File = File(context.filesDir, IMAGES_DIR)
 
     companion object {

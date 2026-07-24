@@ -157,6 +157,7 @@
     <string name="settings_import">Import</string>
     <string name="settings_export_success">Export completed</string>
     <string name="settings_export_error">Export failed</string>
+    <string name="settings_export_destination_write_error">Saving failed. The file at the destination may be incomplete</string>
     <string name="settings_import_success">Import completed</string>
     <string name="settings_import_error">Could not read the file</string>
     <string name="settings_import_confirm_title">Import data</string>

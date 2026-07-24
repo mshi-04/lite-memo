@@ -11,6 +11,7 @@ data class SettingsUiState(
     val themeDropdownExpanded: Boolean = false,
     val sortOrderExpanded: Boolean = false,
     val isExporting: Boolean = false,
+    val exportPickerRequestId: Long? = null,
     val isImporting: Boolean = false,
     val showImportConfirmDialog: Boolean = false,
     val importErrorDialog: SettingsImportErrorDialogUiState? = null

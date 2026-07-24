@@ -32,9 +32,6 @@ class StagingMemoImportArchiveRepository @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : MemoImportArchiveRepository {
 
-    override suspend fun isArchive(reference: ExportFileReference): Boolean =
-        withContext(ioDispatcher) { extractor.isArchive(reference) }
-
     override suspend fun stageImportImages(reference: ExportFileReference): StagedMemoImport =
         withContext(ioDispatcher) {
             val token = sessionDataSource.open()
